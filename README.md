@@ -10,11 +10,10 @@ The complete twelve-factors methodologies that the IDSS Engine Project adheres t
 
 ## 5. Build, Release, and Run
 
-### Build
-how to build here
-
-### Release
-how to pair to env config
-
-### Run
-how to run here
+### Python Microservices Base Image
+Any python based microservice within IDSS Engine should use this image as it's base.
+> **Image Name** `idss.engine.commons.service`
+> **Recommended Tags** development `:dev` stable release `:major.minor` ie. `:1.0` targeted environment `:aws`
+#### Build
+`$ cd python/microservice/docker`
+`$ docker build -t idss.engine.commons.service:dev .` 
