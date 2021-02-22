@@ -15,5 +15,5 @@ RUN echo "Installing python" && \
 
 WORKDIR /idss-engine
 
-COPY requirements.txt /idss-engine/
+COPY ./python/service/docker/requirements.txt /idss-engine/
 RUN pip install -r requirements.txt
