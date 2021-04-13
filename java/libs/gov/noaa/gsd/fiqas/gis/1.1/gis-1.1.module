@@ -1,0 +1,79 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "gov.noaa.gsd.fiqas",
+    "module": "gis",
+    "version": "1.1",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "6.6",
+      "buildId": "fghbpmfa4rf33pzzdpkwxbgusy"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "gov.noaa.gsd.fiqas",
+          "module": "cartography",
+          "version": {
+            "requires": "1.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "gis-1.1.jar",
+          "url": "gis-1.1.jar",
+          "size": 55860,
+          "sha512": "f642d4a0428efefebf6ebc82457c3533e88c51c9e9517d18951995fcae1caced710b40a7d59c5b304d989dba1e2a1d6dc87ea63f5516132b519772bdcf164610",
+          "sha256": "e80fb8facd77a012b999f68c97b6ad1d37ea8e2574b7499a4726afde4fdc13a5",
+          "sha1": "4cc62e8c5b11e4f929e20131b14d1456aa141aab",
+          "md5": "aa447c474dc120386e9e1f7cc6935cdc"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "gov.noaa.gsd.fiqas",
+          "module": "cartography",
+          "version": {
+            "requires": "1.1"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "gis-1.1.jar",
+          "url": "gis-1.1.jar",
+          "size": 55860,
+          "sha512": "f642d4a0428efefebf6ebc82457c3533e88c51c9e9517d18951995fcae1caced710b40a7d59c5b304d989dba1e2a1d6dc87ea63f5516132b519772bdcf164610",
+          "sha256": "e80fb8facd77a012b999f68c97b6ad1d37ea8e2574b7499a4726afde4fdc13a5",
+          "sha1": "4cc62e8c5b11e4f929e20131b14d1456aa141aab",
+          "md5": "aa447c474dc120386e9e1f7cc6935cdc"
+        }
+      ]
+    }
+  ]
+}

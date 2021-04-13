@@ -1,0 +1,37 @@
+group = 'gov.noaa.gsl.idssEngine'
+apply plugin: 'eclipse'
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'maven-publish'
+apply plugin: 'maven'
+
+
+version = '1.0'
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+  maven {
+    url uri("${projectDir}/libs")
+  }
+  maven { url "https://repo.maven.apache.org/maven2" }
+  maven { url "https://repo1.maven.org/maven2/" }
+}
+
+description = 'common'
+dependencies {
+    compile group: 'joda-time', name: 'joda-time', version:'2.1'
+    compile group: 'org.locationtech.jts', name: 'jts-core', version: '1.16.0'
+    compile group: 'org.apache.commons', name: 'commons-math', version: '2.2'
+    compile group: 'gov.noaa.gsd.fiqas', name: 'cartography', version:'1.1'
+}
+
+publishing {
+  publications {
+      mavenJava(MavenPublication) {
+          from components.java
+      }
+  }
+}
+

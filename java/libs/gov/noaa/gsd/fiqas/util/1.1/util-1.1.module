@@ -1,0 +1,177 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "gov.noaa.gsd.fiqas",
+    "module": "util",
+    "version": "1.1",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "6.7",
+      "buildId": "clhukwlaz5fm7ju6ixm7qitmwm"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "gov.noaa.gsd.fiqas",
+          "module": "math",
+          "version": {
+            "requires": "1.1"
+          }
+        },
+        {
+          "group": "joda-time",
+          "module": "joda-time",
+          "version": {
+            "requires": "2.1"
+          }
+        },
+        {
+          "group": "jfree",
+          "module": "jfreechart",
+          "version": {
+            "requires": "1.0.5"
+          }
+        },
+        {
+          "group": "org.apache.commons",
+          "module": "commons-math",
+          "version": {
+            "requires": "2.2"
+          }
+        },
+        {
+          "group": "ucar",
+          "module": "netcdfAll",
+          "version": {
+            "requires": "4.6"
+          }
+        },
+        {
+          "group": "org.json",
+          "module": "json",
+          "version": {
+            "requires": "20200518"
+          }
+        },
+        {
+          "group": "org.postgresql",
+          "module": "postgresql",
+          "version": {
+            "requires": "9.3-1104-jdbc41"
+          }
+        },
+        {
+          "group": "mysql",
+          "module": "mysql-connector-java",
+          "version": {
+            "requires": "5.1.39"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "util-1.1.jar",
+          "url": "util-1.1.jar",
+          "size": 740793,
+          "sha512": "ada055879b172be99ca1d6018717491685487e0eafdd1bb0032c21bd07546eb8c6a1039391a6c4c23d3bec69a94ab4863a1e425b1af1977a2964b6e59df626cb",
+          "sha256": "f7ac1d7be7fba7e6e27c0f9af4f827571624c8a88917bf5269bb4fa5f1305d01",
+          "sha1": "9bd211a19439f0482a509f7b046ce1449b305268",
+          "md5": "e8407cf4cc308be33a7b61f52fa9bfb0"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 8,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "gov.noaa.gsd.fiqas",
+          "module": "math",
+          "version": {
+            "requires": "1.1"
+          }
+        },
+        {
+          "group": "joda-time",
+          "module": "joda-time",
+          "version": {
+            "requires": "2.1"
+          }
+        },
+        {
+          "group": "jfree",
+          "module": "jfreechart",
+          "version": {
+            "requires": "1.0.5"
+          }
+        },
+        {
+          "group": "org.apache.commons",
+          "module": "commons-math",
+          "version": {
+            "requires": "2.2"
+          }
+        },
+        {
+          "group": "ucar",
+          "module": "netcdfAll",
+          "version": {
+            "requires": "4.6"
+          }
+        },
+        {
+          "group": "org.json",
+          "module": "json",
+          "version": {
+            "requires": "20200518"
+          }
+        },
+        {
+          "group": "org.postgresql",
+          "module": "postgresql",
+          "version": {
+            "requires": "9.3-1104-jdbc41"
+          }
+        },
+        {
+          "group": "mysql",
+          "module": "mysql-connector-java",
+          "version": {
+            "requires": "5.1.39"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "util-1.1.jar",
+          "url": "util-1.1.jar",
+          "size": 740793,
+          "sha512": "ada055879b172be99ca1d6018717491685487e0eafdd1bb0032c21bd07546eb8c6a1039391a6c4c23d3bec69a94ab4863a1e425b1af1977a2964b6e59df626cb",
+          "sha256": "f7ac1d7be7fba7e6e27c0f9af4f827571624c8a88917bf5269bb4fa5f1305d01",
+          "sha1": "9bd211a19439f0482a509f7b046ce1449b305268",
+          "md5": "e8407cf4cc308be33a7b61f52fa9bfb0"
+        }
+      ]
+    }
+  ]
+}
