@@ -36,7 +36,7 @@ public class ImsEventReader {
     public static void main(String[] args) throws IOException, JSONException {
         System.out.println("Start ImsEventReader...");
         
-        String fileName = "/Users/glayne/idssEngine/iris_sample.json";
+        String fileName = "/input-dir/iris_sample.json";
         ImsEvent[] imsEvents = ImsEventReader.fromJsonFile(fileName);
         for(ImsEvent ie : imsEvents)
             for(ImsThreshold it : ie.thresholdSets[0].thresholds) System.out.println(it);
