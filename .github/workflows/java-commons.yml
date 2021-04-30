@@ -26,4 +26,4 @@ jobs:
     - name: Build with Gradle
       run:  |
             cd ./java
-            gradlew build
+            ./gradlew build
