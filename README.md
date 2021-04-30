@@ -20,3 +20,9 @@ Any python based microservice within IDSS Engine should use this image as it's b
 #### Build
 From the project root directory `idss-engine-commons`:
 `$ docker build -t idss.engine.commons.python.service:<tag> -f ./python/service/docker/Dockerfile .`
+
+### Java Commons
+
+#### Build
+From the `idss-engine-commons/java` directory:
+`$ ./gradlew build` will produce a jar file: `idss-engine-commons/java/build/libs/idss-engine-common-1.0.jar`
