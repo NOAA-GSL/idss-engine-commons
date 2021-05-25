@@ -26,3 +26,13 @@ From the project root directory `idss-engine-commons`:
 #### Build
 From the `idss-engine-commons/java` directory:
 `$ ./gradlew build` will produce a jar file: `idss-engine-commons/java/build/libs/idss-engine-common-1.0.jar`
+
+### RabbitMQ Server
+
+
+docker build -t idss.engine.commons.rabbitmq.server:dev .
+
+docker run --rm --name rmqtest --network idss_test -e RABBITMQ_USER=idss -e RABBITMQ_PASSWORD=password -p 15672:15672 idss.engine.commons.rabbitmq.server:dev
+
+
+
