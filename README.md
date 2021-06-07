@@ -26,7 +26,7 @@ The general guidelines for logging are as follows:
 |`WARN`|Designates potentially harmful situations of an application that should be recorded but don't necessarily have an impact in the execution of code|
 |`ERROR`|Designates severe error events that will presumably lead the application to fail.|
 
-5. All `INFO` and `ERROR` messages shall be written to a shared RabbitMQ queue. See the IDSS Engine [Status](https://github.com/NOAA-GSL/engine-status) project for information on how to use the service.
+5. All `INFO` and `ERROR` messages shall be written to a shared RabbitMQ exchange. See the IDSS Engine [Status](https://github.com/NOAA-GSL/engine-status) project for information on how to use the service.
 6. Use the following structure for all log messages so that they can be parsed by the [Status](https://github.com/NOAA-GSL/engine-status) service:
 
 >
