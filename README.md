@@ -8,6 +8,41 @@ The `idss-engine-commons` is responsible for defining all implicit common depend
 
 The complete twelve-factors methodologies that the IDSS Engine Project adheres to can be found in the umbrella [idss-engine](https://github.com/NOAA-GSL/idss-engine) repository. The subset of the twelve factors that follows are specifics to this app only.
 
+## Logging
+---
+To support some standardization and best practices for IDSS Engine, developers should utilize the [idss-engine-commons logging](https://github.com/NOAA-GSL/idss-engine-commons) Java and python packages.
+
+The general guidelines for logging are as follows:
+
+1. All log messages shall be written to `stdout`
+2. For Python: all logging should make use of `idss-engine-commons/python/service/logger`
+3. For Java: all logging should make use of `idss-engine-commons/java/service/logger`
+4. Use appropriate log levels:
+
+| Level | Usage |
+|-|-|
+|`DEBUG`|Coarse and fine-grained informational events that are useful for debugging an application as well as highlighting the progress of the application as it executes.|
+|`INFO`|Coarse-grained informational events that are particularly useful for communicating health and status of IDSS Engine to system administrators and users|
+|`WARN`|Designates potentially harmful situations of an application that should be recorded but don't necessarily have an impact in the execution of code|
+|`ERROR`|Designates severe error events that will presumably lead the application to fail.|
+
+5. All `INFO` and `ERROR` messages shall be written to a shared RabbitMQ queue. See the IDSS Engine [Logging](https://github.com/NOAA-GSL/logging) project for information on how to use the service.
+6. Use the following structure for all log messages so that they can be parsed by the [Logging](https://github.com/NOAA-GSL/logging) service:
+
+>
+> System Identifier (SID): `UUID:source:forecast:issuehour:service;message`
+
+**Examples:**
+
+
+The IMS Request service received a new event criteria definition:
+
+> `INFO: 529c9038-c3ba-11eb-8529-0242ac130003:ims:nbm:12:imsrequest;Recieved new event criteria definition: winter-wx at BOU`
+
+The Data Manager was unable to find all forecast data:
+
+> `ERROR: 529c9038-c3ba-11eb-8529-0242ac130003:ims:nbm:12:datamanager;No forecast data found for NBM on 061220210600 originating from AWS`
+
 ## Build, Release, and Run
 
 ### Python Microservices Base Image
