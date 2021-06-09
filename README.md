@@ -26,22 +26,23 @@ The general guidelines for logging are as follows:
 |`WARN`|Designates potentially harmful situations of an application that should be recorded but don't necessarily have an impact in the execution of code|
 |`ERROR`|Designates severe error events that will presumably lead the application to fail.|
 
-5. All `INFO` and `ERROR` messages shall be written to a shared RabbitMQ exchange. See the IDSS Engine [Status](https://github.com/NOAA-GSL/engine-status) project for information on how to use the service.
+5. All log messages shall be written to a shared RabbitMQ exchange. See the IDSS Engine [Status](https://github.com/NOAA-GSL/engine-status) project for information on how to use the service.
 6. Use the following structure for all log messages so that they can be parsed by the [Status](https://github.com/NOAA-GSL/engine-status) service:
 
 >
-> System Identifier (SID): `UUID:source:forecast:issuehour:service;message`
+> System Identifier (SID): `UUID:source:issuehour:issuemin:service;message`
+> Where issue (hour/min) are UTC
 
 **Examples:**
 
 
 The IMS Request service received a new event criteria definition:
 
-> `INFO: 529c9038-c3ba-11eb-8529-0242ac130003:ims:nbm:12:imsrequest;Recieved new event criteria definition: winter-wx at BOU`
+> `INFO: 529c9038-c3ba-11eb-8529-0242ac130003:ims:12:00:imsrequest;Recieved new event criteria definition: winter-wx at BOU`
 
 The Data Manager was unable to find all forecast data:
 
-> `ERROR: 529c9038-c3ba-11eb-8529-0242ac130003:ims:nbm:12:datamanager;No forecast data found for NBM on 061220210600 originating from AWS`
+> `ERROR: 529c9038-c3ba-11eb-8529-0242ac130003:ims:12:00:datamanager;No forecast data found for NBM on 061220210600 originating from AWS`
 
 ## Build, Release, and Run
 
