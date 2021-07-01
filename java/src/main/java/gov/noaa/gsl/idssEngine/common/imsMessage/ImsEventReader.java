@@ -193,9 +193,18 @@ System.out.println(jsonObject);
         String[] observationSites = null;
         if(obsArray!=null) observationSites = getObservationSites(obsArray);
         int buffer = jsonObject.getInt("buffer");
-        if(bufferedGeometry==null) bufferedGeometry = geometry.buffer(buffer);
+
+        if(bufferedGeometry==null) {
+            if(buffer==0) bufferedGeometry = geometry;
+            else bufferedGeometry = geometry.buffer(buffer);
+        }
          UUID id = UUID.fromString(jsonObject.getString("id"));
          String name = jsonObject.getString("name");
+
+System.out.println("geometry: "+geometry); 
+System.out.println("buffer: "+buffer); 
+System.out.println("bufferedGeometry: "+bufferedGeometry); 
+//if(true) throw new RuntimeException("Trace back");
 
         return new ImsLocation(id, name, geometry, buffer, bufferedGeometry, observationSites);
     }
