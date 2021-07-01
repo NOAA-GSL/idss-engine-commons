@@ -4,77 +4,22 @@
  * Contributors:
  *     Geary Layne
 *********************************************************************************/
+package gov.noaa.gsl.idssEngine.common;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.concurrent.TimeoutException;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.json.JSONArray;
+import org.joda.time.DateTime;
 import org.json.JSONObject;
 
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
-import gov.noaa.gsd.fiqas.cartography.Projection;
-import gov.noaa.gsd.fiqas.util.config.ConfigureFile;
-import gov.noaa.gsl.idssEngine.common.ProductType;
-import gov.noaa.gsl.idssEngine.dataMan.DataManAccess;
-
-
 public class Logging {
-
-    public static void main(String[] args) {       
-        
-          System.out.println("Start "+Logging.getName()+"...");
-          
-      
-        // create options
-        Options options = new Options();
-        
-        // add options   
-        Option cOpt = Option.builder("c")
-                .longOpt("config-file")
-                .desc("the configuration json filename (required)")
-                .hasArg()
-                .argName("complete path to file")
-                .required()
-                .build();
-        options.addOption(cOpt);        
-        
-        // parse args
-        CommandLineParser parser = new DefaultParser();
-        CommandLine cmd = null;
-
-        try {
-            cmd = parser.parse(options, args);
-            
-            if(cmd.hasOption('c')) {
-               String configFileName = cmd.getOptionValue("c");
-System.out.println("config file: "+configFileName);
-               ConfigureFile.setFileName(configFileName);
-           }
-            
-        } catch(ParseException e) {
-            HelpFormatter formatter = new HelpFormatter();
-            formatter.printHelp(DataManAccess.class.getSimpleName(), options );
-            System.exit(0);
-        }   
-        
-        Logging logging = new Logging(configFileName);
-
-        System.out.println("Finish "+Logging.getName());
-    }
 
     public final String DEBUG = "DEBUG: ";
     public final String INFO = "INFO: ";
@@ -92,7 +37,14 @@ System.out.println("config file: "+configFileName);
         String rabMqHost;
         int rabMqPortNum;
 
-        JSONObject configObj = ConfigureFile.getJsonObj();
+        JSONObject configObj = null;
+        try {
+            final byte[] encoded = Files.readAllBytes(Paths.get(configFileName));
+            final String jsonString = new String(encoded, StandardCharsets.UTF_8);
+            configObj = new JSONObject(jsonString);
+        } catch (Exception e) {
+            throw new RuntimeException(String.format("Unable to read cofiguration file (%s)", configFileName));
+        }    
         
          JSONObject mqObj = null;
          if(configObj.has("rabbitMQ")) 
@@ -133,38 +85,58 @@ System.out.println("portNum: "+rabMqPortNum);
         factory.setHost(rabMqHost);
         factory.setPort(rabMqPortNum);
         
-        connection = factory.newConnection();
-        channel = connection.createChannel();
-        
-        channel.exchangeDeclare(logExchName, logExchType);
+        try {
+            connection = factory.newConnection();
+            channel = connection.createChannel();
+            
+            channel.exchangeDeclare(logExchName, logExchType);
+        } catch( IOException | TimeoutException e ) {
+            throw new RuntimeException("Uanble to make rabbitMQ connection or create channel", e);
+        } 
     }
     
     public void close() throws IOException {
         connection.close();
     }
     
-    public void debug(String uuid, String source, DateTime time String service, String message) {
-        String formatStr = String.format("%s:%s:%02d:%02d:%s;%s", uuid, source, time.getHourOfDay(), time.getMinOfHour(), service, message);
+    public void debug(String uuid, String source, DateTime time, String service, String message) {
+        String formatStr = String.format("%s:%s:%02d:%02d:%s;%s", uuid, source, time.getHourOfDay(), time.getMinuteOfHour(), service, message);
         System.out.println(DEBUG+formatStr);
-        channel.basicPublish(log, DEBUG, null, formatStr.getBytes(StandardCharsets.UTF_8));
+        try {
+            channel.basicPublish(logExchName, DEBUG, null, formatStr.getBytes(StandardCharsets.UTF_8));
+        } catch( IOException e ) {
+            throw new RuntimeException("Uanble to publish to rabbitMQ", e);  
+        }
     }
     
-    public void info(String uuid, String source, DateTime time String service, String message) {
-        String formatStr = String.format("%s:%s:%02d:%02d:%s;%s", uuid, source, time.getHourOfDay(), time.getMinOfHour(), service, message);
+    public void info(String uuid, String source, DateTime time, String service, String message) {
+        String formatStr = String.format("%s:%s:%02d:%02d:%s;%s", uuid, source, time.getHourOfDay(), time.getMinuteOfHour(), service, message);
         System.out.println(INFO+formatStr);
-        channel.basicPublish(log, INFO, null, formatStr.getBytes(StandardCharsets.UTF_8));
+        try {
+            channel.basicPublish(logExchName, INFO, null, formatStr.getBytes(StandardCharsets.UTF_8));
+        } catch( IOException e ) {
+            throw new RuntimeException("Uanble to publish to rabbitMQ", e);   
+        }
     }
 
-    public void info(String uuid, String source, DateTime time String service, String message) {
-        String formatStr = String.format("%s:%s:%02d:%02d:%s;%s", uuid, source, time.getHourOfDay(), time.getMinOfHour(), service, message);
+    public void warn(String uuid, String source, DateTime time, String service, String message) {
+        String formatStr = String.format("%s:%s:%02d:%02d:%s;%s", uuid, source, time.getHourOfDay(), time.getMinuteOfHour(), service, message);
         System.out.println(WARN+formatStr);
-        channel.basicPublish(log, WARN, null, formatStr.getBytes(StandardCharsets.UTF_8));
+        try {
+            channel.basicPublish(logExchName, WARN, null, formatStr.getBytes(StandardCharsets.UTF_8));
+        } catch( IOException e ) {
+            throw new RuntimeException("Uanble to publish to rabbitMQ", e); 
+        }
     }
 
-    public void info(String uuid, String source, DateTime time String service, String message) {
-        String formatStr = String.format("%s:%s:%02d:%02d:%s;%s", uuid, source, time.getHourOfDay(), time.getMinOfHour(), service, message);
+    public void error(String uuid, String source, DateTime time, String service, String message) {
+        String formatStr = String.format("%s:%s:%02d:%02d:%s;%s", uuid, source, time.getHourOfDay(), time.getMinuteOfHour(), service, message);
         System.err.println(ERROR+formatStr);
-        channel.basicPublish(log, ERROR, null, formatStr.getBytes(StandardCharsets.UTF_8));
+        try {
+            channel.basicPublish(logExchName, ERROR, null, formatStr.getBytes(StandardCharsets.UTF_8));
+        } catch( IOException e ) {
+            throw new RuntimeException("Uanble to publish to rabbitMQ", e); 
+        }
     }
 
 }
