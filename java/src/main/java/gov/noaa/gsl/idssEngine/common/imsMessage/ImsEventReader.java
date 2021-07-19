@@ -25,7 +25,7 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.MultiPolygon;
 import org.locationtech.jts.geom.Polygon;
 
-import gov.noaa.gsl.idssEngine.common.aspect.Condition;
+import gov.noaa.gsl.idssEngine.common.aspect.Relational;
 import gov.noaa.gsl.idssEngine.common.aspect.Field;
 import gov.noaa.gsl.idssEngine.common.aspect.Model;
 import gov.noaa.gsl.idssEngine.common.aspect.Units;
@@ -149,13 +149,13 @@ public class ImsEventReader {
 //        Units units = Field.getUnits(element);
         boolean isProb = wxElmtObj.getBoolean("isProbabilityBased");
         
-        Condition condition = Condition.get(jsonObject.getString("condition"));
+        Relational condition = Relational.get(jsonObject.getString("condition"));
         double value = jsonObject.getDouble("value");
         double secondaryValue = Double.NaN;
         double prob = Double.NaN;
 
         if(isProb) prob = jsonObject.getDouble("probability");
-        if(condition==Condition.BETWEEN) 
+        if(condition==Relational.BETWEEN) 
             secondaryValue = jsonObject.getDouble("secondaryValue");
         
         UUID id = null;     

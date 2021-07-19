@@ -9,7 +9,7 @@ package gov.noaa.gsl.idssEngine.common.aspect;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum Condition {
+public enum Relational {
     
     // new Condition type must be added to lookup map
     EQUAL,
@@ -20,15 +20,15 @@ public enum Condition {
     BETWEEN;
 
     
-    public static Condition get(String conditionString) {
-        Condition ie = map.get(conditionString);
+    public static Relational get(String conditionString) {
+        Relational ie = map.get(conditionString);
         if(ie == null)  
             throw new IllegalArgumentException("Invalid condition string ("+conditionString+")");
         return ie;
     }
     
     // Declaring the static lookup map 
-    private static Map<String, Condition> map; 
+    private static Map<String, Relational> map; 
   
     // Instantiating the static map, must be on entry per IrisCondition type
     static

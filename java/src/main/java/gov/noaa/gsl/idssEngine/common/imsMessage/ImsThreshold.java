@@ -8,7 +8,7 @@ package gov.noaa.gsl.idssEngine.common.imsMessage;
 
 import java.util.UUID;
 
-import gov.noaa.gsl.idssEngine.common.aspect.Condition;
+import gov.noaa.gsl.idssEngine.common.aspect.Relational;
 import gov.noaa.gsl.idssEngine.common.aspect.Field;
 import gov.noaa.gsl.idssEngine.common.aspect.Model;
 import gov.noaa.gsl.idssEngine.common.aspect.Units;
@@ -19,7 +19,7 @@ public class ImsThreshold {
     private final UUID id;
     public final Field element;
     public final Units units;
-    public final Condition condition;
+    public final Relational condition;
 //    public final WxType wxType;
 //    public final Model model;
     public final double thresh;
@@ -27,16 +27,16 @@ public class ImsThreshold {
     public final boolean isProb;
     public final double probThresh;
     
-    public ImsThreshold(UUID id, Field element, Units units, Condition condition, double value) {
+    public ImsThreshold(UUID id, Field element, Units units, Relational condition, double value) {
         this(id, element, units, condition, value, Double.NaN, false, Double.NaN);
     }
-    public ImsThreshold(UUID id, Field element, Units units, Condition condition, double value, boolean isProb, double prob) {
+    public ImsThreshold(UUID id, Field element, Units units, Relational condition, double value, boolean isProb, double prob) {
         this(id, element, units, condition, value, Double.NaN, isProb, prob);
     }
-    public ImsThreshold(UUID id, Field element, Units units, Condition condition, double value, double secondaryValue) {
+    public ImsThreshold(UUID id, Field element, Units units, Relational condition, double value, double secondaryValue) {
         this(id, element, units, condition, value, secondaryValue, false, Double.NaN);
     }
-    public ImsThreshold(UUID id, Field element, Units units, Condition condition, double value, double secondaryValue, boolean isProb, double prob) {
+    public ImsThreshold(UUID id, Field element, Units units, Relational condition, double value, double secondaryValue, boolean isProb, double prob) {
 //        this(id, element, units, condition, value, secondaryValue, isProb, prob, WxType.NONE, Model.NONE);
 //    }
 //    public ImsThreshold(UUID id, Field element, Units units, Condition condition, double value, double secondaryValue,

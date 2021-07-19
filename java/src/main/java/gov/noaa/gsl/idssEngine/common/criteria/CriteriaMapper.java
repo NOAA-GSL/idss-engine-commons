@@ -11,7 +11,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import gov.noaa.gsl.idssEngine.common.aspect.Condition;
+import gov.noaa.gsl.idssEngine.common.aspect.Relational;
 
 public class CriteriaMapper {
     
@@ -29,71 +29,71 @@ public class CriteriaMapper {
             }
     } 
     
-    public static CriteriaMapper newLinearMapper(Condition condition, double[] minMax, double thresh) {
-        return newLinearMapper(condition, minMax[0], minMax[1], thresh);
+    public static CriteriaMapper newLinearMapper(Relational relational, double[] minMax, double thresh) {
+        return newLinearMapper(relational, minMax[0], minMax[1], thresh);
     }
-    public static CriteriaMapper newLinearMapper(Condition condition, double[] minMax, double thresh, double secThresh) {
-        return newLinearMapper(condition, minMax[0], minMax[1], thresh, secThresh);
+    public static CriteriaMapper newLinearMapper(Relational relational, double[] minMax, double thresh, double secThresh) {
+        return newLinearMapper(relational, minMax[0], minMax[1], thresh, secThresh);
     }
-    public static CriteriaMapper newLinearMapper(Condition condition, double[] minMax, double thresh, boolean clip) {
-        return newLinearMapper(condition, minMax[0], minMax[1], thresh, clip);
+    public static CriteriaMapper newLinearMapper(Relational relational, double[] minMax, double thresh, boolean clip) {
+        return newLinearMapper(relational, minMax[0], minMax[1], thresh, clip);
    }
-    public static CriteriaMapper newLinearMapper(Condition condition, double[] minMax, double thresh, double secThresh, boolean clip) {
-        return newLinearMapper(condition, minMax[0], minMax[1], thresh, secThresh, clip);
+    public static CriteriaMapper newLinearMapper(Relational relational, double[] minMax, double thresh, double secThresh, boolean clip) {
+        return newLinearMapper(relational, minMax[0], minMax[1], thresh, secThresh, clip);
     }
-    public static CriteriaMapper newLinearMapper(Condition condition, double[] minMax, double thresh, double secThresh, double fillValue, boolean clip) {
-        return newLinearMapper(condition, minMax[0], minMax[1], thresh, secThresh, fillValue, clip);
+    public static CriteriaMapper newLinearMapper(Relational relational, double[] minMax, double thresh, double secThresh, double fillValue, boolean clip) {
+        return newLinearMapper(relational, minMax[0], minMax[1], thresh, secThresh, fillValue, clip);
     }    
     
-    public static CriteriaMapper newLinearMapper(Condition condition, double min, double max, double thresh) {
-        return newLinearMapper(condition, min,  max, thresh, Double.NaN, defaultFillValue, defaultClip);
+    public static CriteriaMapper newLinearMapper(Relational relational, double min, double max, double thresh) {
+        return newLinearMapper(relational, min,  max, thresh, Double.NaN, defaultFillValue, defaultClip);
     }
-    public static CriteriaMapper newLinearMapper(Condition condition, double min, double max, double thresh, double secThresh) {
-        return newLinearMapper(condition, min,  max, thresh, secThresh, defaultFillValue, defaultClip);
+    public static CriteriaMapper newLinearMapper(Relational relational, double min, double max, double thresh, double secThresh) {
+        return newLinearMapper(relational, min,  max, thresh, secThresh, defaultFillValue, defaultClip);
     }
-    public static CriteriaMapper newLinearMapper(Condition condition, double min, double max, double thresh, boolean clip) {
-        return newLinearMapper(condition, min, max, thresh, Double.NaN, defaultFillValue, clip);
+    public static CriteriaMapper newLinearMapper(Relational relational, double min, double max, double thresh, boolean clip) {
+        return newLinearMapper(relational, min, max, thresh, Double.NaN, defaultFillValue, clip);
     }
-    public static CriteriaMapper newLinearMapper(Condition condition, double min, double max, double thresh, double secThresh, boolean clip) {
-        return newLinearMapper(condition, min, max, thresh, secThresh, defaultFillValue, clip);
+    public static CriteriaMapper newLinearMapper(Relational relational, double min, double max, double thresh, double secThresh, boolean clip) {
+        return newLinearMapper(relational, min, max, thresh, secThresh, defaultFillValue, clip);
     }
-    public static CriteriaMapper newLinearMapper(Condition condition, double min, double max, double thresh, double secThresh, double fillValue, boolean clip) {
+    public static CriteriaMapper newLinearMapper(Relational relational, double min, double max, double thresh, double secThresh, double fillValue, boolean clip) {
         double[][] controlData = getControlData(min, max, thresh, clip);
-        return new CriteriaMapper(condition, controlData[0], controlData[1], controlData[2], thresh, secThresh, fillValue);
+        return new CriteriaMapper(relational, controlData[0], controlData[1], controlData[2], thresh, secThresh, fillValue);
     }
 
-    public CriteriaMapper(Condition condition, double[] endPoints, 
+    public CriteriaMapper(Relational relational, double[] controlPoints, 
                                                 double[] startWeights, double[] endWeights, 
                                                 double thresh) {
-        this(condition, endPoints, startWeights, endWeights, thresh, Double.NaN, defaultFillValue);
+        this(relational, controlPoints, startWeights, endWeights, thresh, Double.NaN, defaultFillValue);
     }
     
-    public CriteriaMapper(Condition condition, double[] endPoints, 
+    public CriteriaMapper(Relational relational, double[] controlPoints, 
                                                 double[] startWeights, double[] endWeights, 
                                                 double thresh, double secondaryThresh, double fillValue) {
-        switch(condition) {
+        switch(relational) {
         case BETWEEN:
             if(!Double.isFinite(secondaryThresh))
-                throw new RuntimeException("If condition = BETWEEN, than there must be a secondary threshold");
-            core = new CmBetween(endPoints, startWeights, endWeights, thresh,
-                                                              endPoints, startWeights, endWeights, secondaryThresh,
+                throw new RuntimeException("If relational = BETWEEN, than there must be a secondary threshold");
+            core = new CmBetween(controlPoints, startWeights, endWeights, thresh,
+                                                              controlPoints, startWeights, endWeights, secondaryThresh,
                                                               (thresh+secondaryThresh)/2.0);
             break;
         case GREATERTHAN:
-            core = new CmGreaterThan(endPoints, startWeights, endWeights, thresh);
+            core = new CmGreaterThan(controlPoints, startWeights, endWeights, thresh);
             break;
         case GREATERTHANOREQUAL:
-            core = new CmGreaterThanEqual(endPoints, startWeights, endWeights, thresh);
+            core = new CmGreaterThanEqual(controlPoints, startWeights, endWeights, thresh);
             break;
         case LESSTHAN:
-            core = new CmLessThan(endPoints, startWeights, endWeights, thresh);
+            core = new CmLessThan(controlPoints, startWeights, endWeights, thresh);
             break;
         case LESSTHANOREQUAL:
-            core = new CmLessThanEqual(endPoints, startWeights, endWeights, thresh);
+            core = new CmLessThanEqual(controlPoints, startWeights, endWeights, thresh);
             break;
        default:
            core = null;
-           throw new RuntimeException("Condition ("+condition+") not supported");
+           throw new RuntimeException("relational ("+relational+") not supported");
         }
         core.setFill(fillValue);
     }
@@ -103,26 +103,26 @@ public class CriteriaMapper {
         return mapGteLinearMapper(grid, min, max, thresh, defaultFillValue);
     }
     public static float mapGteLinearMapper(float grid, double min, double max, double thresh, double fillValue) {
-        return map(grid, newLinearMapper(Condition.GREATERTHANOREQUAL, min, max, thresh, fillValue));
+        return map(grid, newLinearMapper(relational.GREATERTHANOREQUAL, min, max, thresh, fillValue));
     }
     public static float mapLteLinearMapper(float grid, double min, double max, double thresh) {
         return mapLteLinearMapper(grid, min, max, thresh, defaultFillValue);
    }
     public static float mapLteLinearMapper(float grid, double min, double max, double thresh, double fillValue) {
-        return map(grid, newLinearMapper(Condition.LESSTHANOREQUAL, min, max, thresh, fillValue));
+        return map(grid, newLinearMapper(relational.LESSTHANOREQUAL, min, max, thresh, fillValue));
     }
     
     public static float[][] mapGteLinearMapper(float[][] grid, double min, double max, double thresh) {
         return mapGteLinearMapper(grid, min, max, thresh, defaultFillValue);
     }
     public static float[][] mapGteLinearMapper(float[][] grid, double min, double max, double thresh, double fillValue) {
-        return map(grid, newLinearMapper(Condition.GREATERTHANOREQUAL, min, max, thresh, fillValue), null);
+        return map(grid, newLinearMapper(relational.GREATERTHANOREQUAL, min, max, thresh, fillValue), null);
     }
     public static float[][] mapLteLinearMapper(float[][] grid, double min, double max, double thresh) {
         return mapLteLinearMapper(grid, min, max, thresh, defaultFillValue);
    }
     public static float[][] mapLteLinearMapper(float[][] grid, double min, double max, double thresh, double fillValue) {
-        return map(grid, newLinearMapper(Condition.LESSTHANOREQUAL, min, max, thresh, fillValue), null);
+        return map(grid, newLinearMapper(relational.LESSTHANOREQUAL, min, max, thresh, fillValue), null);
     }
 */
 

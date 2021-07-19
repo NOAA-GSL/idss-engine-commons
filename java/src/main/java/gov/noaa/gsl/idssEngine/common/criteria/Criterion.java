@@ -6,7 +6,7 @@
  *******************************************************************************/
 package gov.noaa.gsl.idssEngine.common.criteria;
 
-import gov.noaa.gsl.idssEngine.common.aspect.Condition;
+import gov.noaa.gsl.idssEngine.common.aspect.Relational;
 import gov.noaa.gsl.idssEngine.common.aspect.Field;
 import gov.noaa.gsl.idssEngine.common.aspect.Units;
 
@@ -15,31 +15,31 @@ public class Criterion {
     public final String name;
     public final Field field;
     public final Units units;
-    public final Condition condition;
+    public final Relational relational;
     public final double thresh;
     public final double secThresh;
 
-    public Criterion(String name, Field field, Units units, Condition condition, double thresh) {
-        this(name, field, units, condition, thresh, Double.NaN);
-        if(condition==Condition.BETWEEN) 
-            throw new RuntimeException("A criterion with condition==BETWEEN must be given a secondaryValue");
+    public Criterion(String name, Field field, Units units, Relational relational, double thresh) {
+        this(name, field, units, relational, thresh, Double.NaN);
+        if(relational==Relational.BETWEEN) 
+            throw new RuntimeException("A criterion with relational==BETWEEN must be given a secondaryValue");
     }
     
-    public Criterion(String name, Field field, Units units, Condition condition, double thresh, double secThresh) {
+    public Criterion(String name, Field field, Units units, Relational relational, double thresh, double secThresh) {
         this.name = name;
         this.field = field;
         this.units = units;
-        this.condition = condition;
+        this.relational = relational;
         this.thresh = thresh;
         this.secThresh = secThresh;
     }
     
     public Criterion copy() {
-        return new Criterion(this.name, this.field, this.units, this.condition, this.thresh, this.secThresh);
+        return new Criterion(this.name, this.field, this.units, this.relational, this.thresh, this.secThresh);
     }
     
     public String toString() {
-        return String.format("Criterion(%s, %s, %s, %s, %f, %f)", name, field, units, condition, thresh, secThresh);
+        return String.format("Criterion(%s, %s, %s, %s, %f, %f)", name, field, units, relational, thresh, secThresh);
     }
 
     public String getKey() {
@@ -48,13 +48,13 @@ public class Criterion {
     
     public String getKey(boolean includeName) {
         String str, valueStr = String.format("%3.2f", thresh);
-        if(condition==Condition.BETWEEN) {
+        if(relational==Relational.BETWEEN) {
             valueStr += String.format(" %3.2f", secThresh);
         } 
         if(includeName)
-            str = String.format("%s %s %s %s %s", name, field, units, condition.toShortString(), valueStr);
+            str = String.format("%s %s %s %s %s", name, field, units, relational.toShortString(), valueStr);
         else 
-            str = String.format("%s %s %s %s", field, units, condition.toShortString(), valueStr);
+            str = String.format("%s %s %s %s", field, units, relational.toShortString(), valueStr);
             
         return str;
     }
