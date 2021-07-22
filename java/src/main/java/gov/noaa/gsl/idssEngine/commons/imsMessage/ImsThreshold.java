@@ -4,15 +4,15 @@
  * Contributors:
  *     Geary Layne
  *******************************************************************************/
-package gov.noaa.gsl.idssEngine.common.imsMessage;
+package gov.noaa.gsl.idssEngine.commons.imsMessage;
 
 import java.util.UUID;
 
-import gov.noaa.gsl.idssEngine.common.aspect.Relational;
-import gov.noaa.gsl.idssEngine.common.aspect.Field;
-import gov.noaa.gsl.idssEngine.common.aspect.Model;
-import gov.noaa.gsl.idssEngine.common.aspect.Units;
-import gov.noaa.gsl.idssEngine.common.aspect.WxType;
+import gov.noaa.gsl.idssEngine.commons.aspect.Field;
+import gov.noaa.gsl.idssEngine.commons.aspect.WxModel;
+import gov.noaa.gsl.idssEngine.commons.aspect.Relational;
+import gov.noaa.gsl.idssEngine.commons.aspect.Units;
+import gov.noaa.gsl.idssEngine.commons.aspect.WxType;
 
 public class ImsThreshold {
 

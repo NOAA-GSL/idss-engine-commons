@@ -4,7 +4,7 @@
  * Contributors:
  *     Geary Layne
  *******************************************************************************/
-package gov.noaa.gsl.idssEngine.common;
+package gov.noaa.gsl.idssEngine.commons;
 
 import org.joda.time.DateTime;
 import org.joda.time.Days;

@@ -4,7 +4,7 @@
  * Contributors:
  *     Geary Layne
  *******************************************************************************/
-package gov.noaa.gsl.idssEngine.common.imsMessage;
+package gov.noaa.gsl.idssEngine.commons.imsMessage;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -25,11 +25,11 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.MultiPolygon;
 import org.locationtech.jts.geom.Polygon;
 
-import gov.noaa.gsl.idssEngine.common.aspect.Relational;
-import gov.noaa.gsl.idssEngine.common.aspect.Field;
-import gov.noaa.gsl.idssEngine.common.aspect.Model;
-import gov.noaa.gsl.idssEngine.common.aspect.Units;
-import gov.noaa.gsl.idssEngine.common.aspect.WxType;
+import gov.noaa.gsl.idssEngine.commons.aspect.Field;
+import gov.noaa.gsl.idssEngine.commons.aspect.WxModel;
+import gov.noaa.gsl.idssEngine.commons.aspect.Relational;
+import gov.noaa.gsl.idssEngine.commons.aspect.Units;
+import gov.noaa.gsl.idssEngine.commons.aspect.WxType;
 
 public class ImsEventReader {
     
@@ -109,14 +109,14 @@ public class ImsEventReader {
         double arealPct = jsonObjCpy.getDouble("arealPercentage");
         jsonObjCpy.remove("arealPercentage");
 
-        Set<Model> models = null;
+        Set<WxModel> models = null;
         if(jsonObjCpy.has("models")) {
             JSONArray modelArray = jsonObjCpy.getJSONArray("models");
             jsonObjCpy.remove("models");
             int numModels = modelArray.length();
             models = new HashSet<>();
             for(int i=0; i<numModels; i++) {
-                models.add(Model.get(modelArray.getString(i)));
+                models.add(WxModel.get(modelArray.getString(i)));
             }
         }
         

@@ -4,11 +4,11 @@
  * Contributors:
  *     Geary Layne
  *******************************************************************************/
-package gov.noaa.gsl.idssEngine.common.criteria;
+package gov.noaa.gsl.idssEngine.commons.criteria;
 
-import gov.noaa.gsl.idssEngine.common.aspect.Relational;
-import gov.noaa.gsl.idssEngine.common.aspect.Field;
-import gov.noaa.gsl.idssEngine.common.aspect.Units;
+import gov.noaa.gsl.idssEngine.commons.aspect.Field;
+import gov.noaa.gsl.idssEngine.commons.aspect.Relational;
+import gov.noaa.gsl.idssEngine.commons.aspect.Units;
 
 public class Criterion {
     

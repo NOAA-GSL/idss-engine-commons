@@ -4,7 +4,7 @@
  * Contributors:
  *     Geary Layne
  *******************************************************************************/
-package gov.noaa.gsl.idssEngine.common.criteria;
+package gov.noaa.gsl.idssEngine.commons.criteria;
 
 import java.awt.Point;
 import java.util.ArrayList;

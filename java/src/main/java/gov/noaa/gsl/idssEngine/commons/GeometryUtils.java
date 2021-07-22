@@ -4,7 +4,7 @@
  * Contributors:
  *     Geary Layne
  *******************************************************************************/
-package gov.noaa.gsl.idssEngine.common;
+package gov.noaa.gsl.idssEngine.commons;
 
 import java.awt.Point;
 import java.util.HashSet;

@@ -4,7 +4,7 @@
  * Contributors:
  *     Geary Layne
 *********************************************************************************/
-package gov.noaa.gsl.idssEngine.common;
+package gov.noaa.gsl.idssEngine.commons;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

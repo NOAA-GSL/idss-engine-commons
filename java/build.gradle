@@ -19,7 +19,7 @@ repositories {
   maven { url "https://repo1.maven.org/maven2/" }
 }
 
-description = 'common'
+description = 'commons'
 dependencies {
     compile group: 'joda-time', name: 'joda-time', version:'2.1'
     compile group: 'org.locationtech.jts', name: 'jts-core', version: '1.16.0'

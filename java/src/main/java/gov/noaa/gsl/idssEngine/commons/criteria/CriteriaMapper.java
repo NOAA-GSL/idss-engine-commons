@@ -4,14 +4,14 @@
  * Contributors:
  *     Geary Layne
  *******************************************************************************/
-package gov.noaa.gsl.idssEngine.common.criteria;
+package gov.noaa.gsl.idssEngine.commons.criteria;
 
 import java.awt.Point;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-import gov.noaa.gsl.idssEngine.common.aspect.Relational;
+import gov.noaa.gsl.idssEngine.commons.aspect.Relational;
 
 public class CriteriaMapper {
     

@@ -4,7 +4,7 @@
  * Contributors:
  *     Geary Layne
 *********************************************************************************/
-package gov.noaa.gsl.idssEngine.common.aspect;
+package gov.noaa.gsl.idssEngine.commons.aspect;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -4,7 +4,7 @@
  * Contributors:
  *     Geary Layne
  *******************************************************************************/
-package gov.noaa.gsl.idssEngine.common.imsMessage;
+package gov.noaa.gsl.idssEngine.commons.imsMessage;
 
 import java.util.Arrays;
 import java.util.HashMap;
@@ -13,7 +13,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import gov.noaa.gsl.idssEngine.common.aspect.Model;
+import gov.noaa.gsl.idssEngine.commons.aspect.WxModel;
 
 public class ImsThresholdSet {
 
@@ -28,7 +28,7 @@ public class ImsThresholdSet {
     private static final String arealPct = "arealPercentage";
     private static final String specModels = "specModel";
     
-    public ImsThresholdSet(boolean useFcst, boolean useObs, double duration, double arealPct, Set<Model> specModels, Map<String, Object> attrMap, ImsThreshold[] thresholds) {
+    public ImsThresholdSet(boolean useFcst, boolean useObs, double duration, double arealPct, Set<WxModel> specModels, Map<String, Object> attrMap, ImsThreshold[] thresholds) {
         this.attrMap.putAll(attrMap);
         this.thresholds = Arrays.copyOf(thresholds, thresholds.length);
         this.attrMap.put(ImsThresholdSet.useFcst, useFcst);
@@ -80,7 +80,7 @@ public class ImsThresholdSet {
         }
     }
     
-    public Set<Model> getSpecModel() {
+    public Set<WxModel> getSpecModel() {
         return getModels(attrMap.get(specModels));
     }
     
@@ -112,7 +112,7 @@ public class ImsThresholdSet {
 //        throw new IllegalArgumentException();
 //    }      
     
-   private Set<Model> getModels(Object obj) {
+   private Set<WxModel> getModels(Object obj) {
         if(obj==null)
             return null;
 //System.out.println(obj.getClass());
@@ -121,18 +121,18 @@ public class ImsThresholdSet {
             Set<?> set = (Set<?>)obj;
             if(set.size()==0) return null;
 //System.out.println(set.iterator().next().getClass());
-            if(set.iterator().next().getClass() == Model.class) {
-                Set<Model> modelSet = new HashSet<Model>();
+            if(set.iterator().next().getClass() == WxModel.class) {
+                Set<WxModel> modelSet = new HashSet<WxModel>();
                 for(Object model : set) {
-                    switch((Model)model) {
+                    switch((WxModel)model) {
                         case ALL:
-                            for(Model m : Model.allModels) modelSet.add(m);
+                            for(WxModel m : WxModel.allModels) modelSet.add(m);
                             break;
                         case ANY:
-                            modelSet.add(Model.allModels[0]);
+                            modelSet.add(WxModel.allModels[0]);
                             break;
                         default:
-                            modelSet.add((Model)model); 
+                            modelSet.add((WxModel)model); 
                     }
                 }
 //TODO GJL remove hack to limit to only HRRR

@@ -4,13 +4,13 @@
  * Contributors:
  *     Geary Layne
 *********************************************************************************/
-package gov.noaa.gsl.idssEngine.common.aspect;
+package gov.noaa.gsl.idssEngine.commons.aspect;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
-public enum Model {
+public enum WxModel {
 
     ALL,
     ANY,
@@ -26,10 +26,10 @@ public enum Model {
     ;
     
 //    public static Model[] allModels = {GFS, GEFS,  HRRR, HRRRE, SREF, HREF, NBM, NDFD};
-    public static Model[] allModels = {HRRR};
+    public static WxModel[] allModels = {HRRR};
     
     // Declaring the static lookup map 
-    private static Map<String, Model> map; 
+    private static Map<String, WxModel> map; 
   
     // Instantiating the static map, must be on entry per Weather Type
     static
@@ -50,8 +50,8 @@ public enum Model {
         map.put("None", NONE);
     } 
 
-    public static Model get(String modelString) {
-        Model model = map.get(modelString);
+    public static WxModel get(String modelString) {
+        WxModel model = map.get(modelString);
         if(model == null)  
             model = valueOf(modelString);
         if(model == null)
@@ -59,7 +59,7 @@ public enum Model {
         return model;
     }
 
-    public static Model[] getAllModels() {
+    public static WxModel[] getAllModels() {
         return Arrays.copyOf(allModels, allModels.length);
     }
     
@@ -67,7 +67,7 @@ public enum Model {
         int len = allModels.length;
         String[] modelStrings = new String[len];
         int idx =0;
-        for(Model model : allModels) modelStrings[idx++] = model.toString(); 
+        for(WxModel model : allModels) modelStrings[idx++] = model.toString(); 
         return modelStrings;
     }
 }

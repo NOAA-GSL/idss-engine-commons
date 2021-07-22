@@ -4,9 +4,9 @@
  * Contributors:
  *     Geary Layne
  *******************************************************************************/
-package gov.noaa.gsl.idssEngine.common;
+package gov.noaa.gsl.idssEngine.commons;
 
-import gov.noaa.gsl.idssEngine.common.aspect.Units;
+import gov.noaa.gsl.idssEngine.commons.aspect.Units;
 
 public class UnitsConvertion {
     

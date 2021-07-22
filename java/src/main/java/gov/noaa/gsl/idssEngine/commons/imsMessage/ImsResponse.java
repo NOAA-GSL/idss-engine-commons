@@ -4,7 +4,7 @@
  * Contributors:
  *     Geary Layne
  *******************************************************************************/
-package gov.noaa.gsl.idssEngine.common.imsMessage;
+package gov.noaa.gsl.idssEngine.commons.imsMessage;
 
 import java.util.UUID;
 
