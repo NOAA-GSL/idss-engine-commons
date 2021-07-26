@@ -1,0 +1,199 @@
+{
+  "$schema": "http://json-schema.org/draft/2020-12/schema#",
+  "$id": "https://idss.engine.com/data.request.schema.json",
+
+  "$def": {
+    "projection": {
+      "description": "Specification for a projection",
+      "type": "object",
+      "properties": {
+        "projSpec": {
+          "type": "string"
+        },
+        "gridSpec": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "projSpec",
+        "gridSpec"
+      ]
+    },
+
+    "source": {
+      "description": "Specification for re-projection of data",
+      "type": "object",
+      "properties": {
+        "label": {
+          "description": "A label indicate that this source is to be return, and is the name to be used",
+          "type": "string"
+        },
+        "sourceType": {
+          "desciption": "The type of the source object",
+          "type": "string"
+        },
+        "sourceObj": {
+          "desciption": "The source object",
+          "oneOf": [
+            {"$ref": "#/$def/data"},
+            {"$ref": "#/$def/format"},
+            {"$ref": "#/$def/slice"},
+            {"$ref": "#/$def/reproject"},
+            {"$ref": "#/$def/criteria"},
+            {"$ref": "#/$def/units"}
+          ]
+        }
+      },
+      "required": [
+        "sourceType",
+        "sourceObj"
+      ]
+    },
+
+    "indices": {
+      "properties": {
+        "dim": {
+          "type": "integer"
+        },
+        "indexs": {
+          "type": "array",
+          "items": {
+            "type": "integer"
+          },
+          "minitems": 1
+        },
+        "indexBuild": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "dim",
+        "oneOf": [
+          { "required": ["indexs"] },
+          { "required": ["indexBuild"] }
+        ]
+      ]
+    },
+
+   "slice": {
+      "description": "Specification for slicing the data",
+      "type": "object",
+      "properties": {
+        "indicies": {
+          "desciption": "List one dim slicing",
+          "type": "array",
+          "items": {
+            "$ref": "#/$def/indices"
+          },
+          "minitems": 1
+        },
+        "source": {
+          "$ref": "#/$def/source"
+        }
+      },
+      "required": [
+        "indicies",
+        "source"
+      ] 
+    },
+
+    "reproject": {
+      "description": "Specification for re-projection of data",
+      "type": "object",
+      "properties": {
+        "srcProj": {
+          "desciption": "The projection the data is on",
+          "$ref": "#/$def/projeciton"
+        },
+        "destProj": {
+          "desciption": "The projection that the data is to be mapped onto",
+          "$ref": "#/$def/projeciton"
+        },
+        "method": {
+          "description": "The type of reprojection (nearest neighbor, bilinear, push, pull)",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$def/source"
+        }
+      },
+      "required": [
+        "srcProj",
+        "destProj",
+        "method",
+        "source"
+      ] 
+    },
+
+    "format": {
+      "description": "Specification for the format to return the data in",
+      "type": "object",
+      "properties": {
+	"format": {"type": "string"}
+      },
+      "required": [
+        "format"
+      ]
+    },
+
+    "data": {
+      "description": "Specification for raw data",
+      "type": "object",
+      "properties": {
+        "model": {"type": "string"},
+        "issueDt": {"type": "string"},
+        "validDt": {"type": "string"},
+        "varName": {"type": "string"}
+      },
+      "required": [
+        "model",
+        "issueDt",
+        "validDt",
+        "varName"
+      ]
+    },
+
+    "criteria": {
+      "description": "Specification for applying a critera, needs to reference criteriaObj",
+      "type": "object"
+
+    },
+
+    "units": {
+      "description": "Specification for units conversion",
+      "type": "object",
+      "properties": {
+        "preUnits": {
+          "desciption": "The units of the input data",
+          "type": "string"
+        },
+        "postUnits": {
+          "desciption": "The units of the output data",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$def/source"
+        }
+      },
+      "required": [
+        "preUnits",
+        "postUnits",
+        "source"
+      ] 
+    }
+  },
+
+  "title": "Data Request",
+  "description": "Full specification for a Data Request",
+  "type": "object",
+  "properties": {
+    "source": {
+      "$ref": "#/$def/source"
+    },
+    "required": [
+      "source"
+    ]
+  }
+}
+
+

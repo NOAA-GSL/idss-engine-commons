@@ -20,10 +20,10 @@ public enum Relational {
     BETWEEN;
 
     
-    public static Relational get(String conditionString) {
-        Relational ie = map.get(conditionString);
+    public static Relational get(String relationalString) {
+        Relational ie = map.get(relationalString);
         if(ie == null)  
-            throw new IllegalArgumentException("Invalid condition string ("+conditionString+")");
+            throw new IllegalArgumentException("Invalid condition string ("+relationalString+")");
         return ie;
     }
     

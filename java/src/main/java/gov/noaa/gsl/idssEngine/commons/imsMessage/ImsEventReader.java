@@ -29,7 +29,6 @@ import gov.noaa.gsl.idssEngine.commons.aspect.Field;
 import gov.noaa.gsl.idssEngine.commons.aspect.WxModel;
 import gov.noaa.gsl.idssEngine.commons.aspect.Relational;
 import gov.noaa.gsl.idssEngine.commons.aspect.Units;
-import gov.noaa.gsl.idssEngine.commons.aspect.WxType;
 
 public class ImsEventReader {
     
