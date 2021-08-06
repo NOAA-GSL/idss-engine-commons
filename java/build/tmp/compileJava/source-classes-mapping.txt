@@ -1,72 +1,40 @@
-gov/noaa/gsl/idssEngine/commons/criteriaStore/CriteriaStore.java
- gov.noaa.gsl.idssEngine.commons.criteriaStore.CriteriaStore
-gov/noaa/gsl/idssEngine/commons/imsMessage/ImsResponse.java
- gov.noaa.gsl.idssEngine.commons.imsMessage.ImsResponse
- gov.noaa.gsl.idssEngine.commons.imsMessage.ImsResponse$ThreatPeriod
-gov/noaa/gsl/idssEngine/commons/criteria/CriteriaUtil.java
- gov.noaa.gsl.idssEngine.commons.criteria.CriteriaUtil
-gov/noaa/gsl/idssEngine/commons/ProductType.java
- gov.noaa.gsl.idssEngine.commons.ProductType
-gov/noaa/gsl/idssEngine/commons/aspect/WxType.java
- gov.noaa.gsl.idssEngine.commons.aspect.WxType
-gov/noaa/gsl/idssEngine/commons/aspect/Field.java
- gov.noaa.gsl.idssEngine.commons.aspect.Field
- gov.noaa.gsl.idssEngine.commons.aspect.Field$1
-gov/noaa/gsl/idssEngine/commons/criteriaStore/GeoSumStore.java
- gov.noaa.gsl.idssEngine.commons.criteriaStore.GeoSumStore
-gov/noaa/gsl/idssEngine/commons/WbgtCalc.java
- gov.noaa.gsl.idssEngine.commons.WbgtCalc
-gov/noaa/gsl/idssEngine/commons/criteriaStore/CriteriaGridStore.java
- gov.noaa.gsl.idssEngine.commons.criteriaStore.CriteriaGridStore
-gov/noaa/gsl/idssEngine/commons/criteria/Criteria.java
- gov.noaa.gsl.idssEngine.commons.criteria.Criteria
-gov/noaa/gsl/idssEngine/commons/criteria/CriteriaJoin.java
- gov.noaa.gsl.idssEngine.commons.criteria.CriteriaJoin
- gov.noaa.gsl.idssEngine.commons.criteria.CriteriaJoin$1
- gov.noaa.gsl.idssEngine.commons.criteria.CriteriaJoin$Type
-gov/noaa/gsl/idssEngine/commons/Logging.java
- gov.noaa.gsl.idssEngine.commons.Logging
-gov/noaa/gsl/idssEngine/commons/criteria/CriteriaMapper.java
- gov.noaa.gsl.idssEngine.commons.criteria.CriteriaMapper
- gov.noaa.gsl.idssEngine.commons.criteria.CriteriaMapper$1
- gov.noaa.gsl.idssEngine.commons.criteria.CriteriaMapper$CmBetween
- gov.noaa.gsl.idssEngine.commons.criteria.CriteriaMapper$CmCore
- gov.noaa.gsl.idssEngine.commons.criteria.CriteriaMapper$CmGreaterThan
- gov.noaa.gsl.idssEngine.commons.criteria.CriteriaMapper$CmGreaterThanEqual
- gov.noaa.gsl.idssEngine.commons.criteria.CriteriaMapper$CmLessThan
- gov.noaa.gsl.idssEngine.commons.criteria.CriteriaMapper$CmLessThanEqual
-gov/noaa/gsl/idssEngine/commons/GeoSummary.java
- gov.noaa.gsl.idssEngine.commons.GeoSummary
-gov/noaa/gsl/idssEngine/commons/UnitsConvertion.java
- gov.noaa.gsl.idssEngine.commons.UnitsConvertion
- gov.noaa.gsl.idssEngine.commons.UnitsConvertion$1
+gov/noaa/gsl/idssEngine/commons/imsMessage/ImsEvent.java
+ gov.noaa.gsl.idssEngine.commons.imsMessage.ImsEvent
+gov/noaa/gsl/idssEngine/commons/aspect/WxModel.java
+ gov.noaa.gsl.idssEngine.commons.aspect.WxModel
 gov/noaa/gsl/idssEngine/commons/aspect/Relational.java
  gov.noaa.gsl.idssEngine.commons.aspect.Relational
  gov.noaa.gsl.idssEngine.commons.aspect.Relational$1
+gov/noaa/gsl/idssEngine/commons/imsMessage/ImsResponse.java
+ gov.noaa.gsl.idssEngine.commons.imsMessage.ImsResponse
+ gov.noaa.gsl.idssEngine.commons.imsMessage.ImsResponse$ThreatPeriod
+gov/noaa/gsl/idssEngine/commons/ProductType.java
+ gov.noaa.gsl.idssEngine.commons.ProductType
 gov/noaa/gsl/idssEngine/commons/GridUtils.java
  gov.noaa.gsl.idssEngine.commons.GridUtils
  gov.noaa.gsl.idssEngine.commons.GridUtils$MaxInHood
 gov/noaa/gsl/idssEngine/commons/aspect/Units.java
  gov.noaa.gsl.idssEngine.commons.aspect.Units
-gov/noaa/gsl/idssEngine/commons/criteria/Criterion.java
- gov.noaa.gsl.idssEngine.commons.criteria.Criterion
-gov/noaa/gsl/idssEngine/commons/imsMessage/ImsLocation.java
- gov.noaa.gsl.idssEngine.commons.imsMessage.ImsLocation
-gov/noaa/gsl/idssEngine/commons/criteriaStore/CriteriaPointStore.java
- gov.noaa.gsl.idssEngine.commons.criteriaStore.CriteriaPointStore
-gov/noaa/gsl/idssEngine/commons/GeometryUtils.java
- gov.noaa.gsl.idssEngine.commons.GeometryUtils
-gov/noaa/gsl/idssEngine/commons/CriteriaSummary.java
- gov.noaa.gsl.idssEngine.commons.CriteriaSummary
- gov.noaa.gsl.idssEngine.commons.CriteriaSummary$Type
-gov/noaa/gsl/idssEngine/commons/imsMessage/ImsEvent.java
- gov.noaa.gsl.idssEngine.commons.imsMessage.ImsEvent
-gov/noaa/gsl/idssEngine/commons/aspect/WxModel.java
- gov.noaa.gsl.idssEngine.commons.aspect.WxModel
+gov/noaa/gsl/idssEngine/commons/aspect/WxType.java
+ gov.noaa.gsl.idssEngine.commons.aspect.WxType
+gov/noaa/gsl/idssEngine/commons/aspect/Field.java
+ gov.noaa.gsl.idssEngine.commons.aspect.Field
+ gov.noaa.gsl.idssEngine.commons.aspect.Field$1
 gov/noaa/gsl/idssEngine/commons/imsMessage/ImsThreshold.java
  gov.noaa.gsl.idssEngine.commons.imsMessage.ImsThreshold
 gov/noaa/gsl/idssEngine/commons/imsMessage/ImsThresholdSet.java
  gov.noaa.gsl.idssEngine.commons.imsMessage.ImsThresholdSet
  gov.noaa.gsl.idssEngine.commons.imsMessage.ImsThresholdSet$1
+gov/noaa/gsl/idssEngine/commons/imsMessage/ImsLocation.java
+ gov.noaa.gsl.idssEngine.commons.imsMessage.ImsLocation
+gov/noaa/gsl/idssEngine/commons/GeometryUtils.java
+ gov.noaa.gsl.idssEngine.commons.GeometryUtils
+gov/noaa/gsl/idssEngine/commons/Logging.java
+ gov.noaa.gsl.idssEngine.commons.Logging
+gov/noaa/gsl/idssEngine/commons/WbgtCalc.java
+ gov.noaa.gsl.idssEngine.commons.WbgtCalc
 gov/noaa/gsl/idssEngine/commons/imsMessage/ImsEventReader.java
  gov.noaa.gsl.idssEngine.commons.imsMessage.ImsEventReader
+gov/noaa/gsl/idssEngine/commons/UnitsConvertion.java
+ gov.noaa.gsl.idssEngine.commons.UnitsConvertion
+ gov.noaa.gsl.idssEngine.commons.UnitsConvertion$1
