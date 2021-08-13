@@ -185,7 +185,7 @@
         "field"
       ]
     },
-    
+
     "units": {
       "description": "Specification for units conversion",
       "type": "object",
