@@ -80,7 +80,7 @@ class DataRequest:
 class ConditionJoin(DataRequest):
     def __init__(self, type, sources, label=None):
         self.dataRequest = {}
-        task = {'type': type,
+        task = {'join': type,
                 'sources': [source.dataRequest['source'] for source in sources]}
         source = {'sourceType': 'conditionJoin',
                   'sourceObj': task}
@@ -100,9 +100,9 @@ def nbmTemp():
                'indices': '1,2,3,5,8,13'}
     sliceD3 = {'dim': 3,
                'indices': '10:200'}
-    sliceParams = {'join': 'cross',
+    sliceParams = {'combine': 'cross',
                    'dims': [
-                       {'join': 'zip',
+                       {'combine': 'zip',
                         'dims': [
                             sliceD1,
                             sliceD2
@@ -120,14 +120,14 @@ def nbmTemp():
     max = 42
     clip = True
 
-    raw_label = f'{product}_{field}_{units}'
-    condition_label = f'{product}_{field}_{relational}_{thresh}_{units}'
+    raw_label = f'{product}-{field}-{units}'.replace(' ', '_')
+    tempCondition_label = f'{product}-{field}-{relational}-{thresh}-{units}'.replace(' ', '_')
     tempCondition = DataRequest(product, field, issueDt, validDt) \
                         .permute([1,0]) \
                         .slice(sliceParams) \
-                        .units(units, raw_label) \
+                        .units(units, label=raw_label) \
                         .condition(relational, min, max, clip,
-                                   thresh, label=condition_label)
+                                   thresh, label=tempCondition_label)
 
     field = 'WIND SPEED'
     units = 'MPH'
@@ -136,36 +136,38 @@ def nbmTemp():
     min = 0
     max = 20
     clip = True
-    raw_label = f'{product}_{field}_{units}'
-    condition_label = f'{product}_{field}_{relational}_{thresh}_{units}'
+    raw_label = f'{product}-{field}-{units}'.replace(' ', '_')
+    windCondition_label = f'{product}-{field}-{relational}-{thresh}-{units}'.replace(' ', '_')
     windCondition = DataRequest(product, field, issueDt, validDt) \
-                        .units(units, raw_label) \
+                        .units(units, label=raw_label) \
                         .condition(relational, min, max, clip,
-                                   thresh, label=condition_label)
+                                   thresh, label=tempCondition_label)
 
     relational = 'GTE'
     thresh = 40
     min = 0
     max = 60
     clip = True
-    raw_label = f'{product}_{field}_{units}'
-    condition_label = f'{product}_{field}_{relational}_{thresh}_{units}'
+    raw_label = f'{product}-{field}-{units}'.replace(' ', '_')
+    highWindCondition_label = f'{product}-{field}-{relational}-{thresh}-{units}'.replace(' ', '_')
     highWindCondition = DataRequest(product, field, issueDt, validDt) \
-                        .units(units, raw_label) \
+                        .units(units, label=raw_label) \
                         .condition(relational, min, max, clip,
-                                   thresh, label=condition_label)
+                                   thresh, label=highWindCondition_label)
 
-    # print(tempCondition)
-    print(tempCondition.toJson())
-    # print(windCondition)
-    print(windCondition.toJson())
-    print(highWindCondition.toJson())
+    # print(tempCondition.toJson())
+    # print(windCondition.toJson())
+    # print(highWindCondition.toJson())
 
-    tempAndWindCondition = ConditionJoin('AND', [tempCondition, windCondition])
+    join = 'AND'
+    tempAndWindCondition_label = f'~{tempCondition_label}~{join}~{windCondition_label}~'.replace(' ', '_')
+    tempAndWindCondition = ConditionJoin('AND', [tempCondition, windCondition], label=tempAndWindCondition_label)
 
-    print(tempAndWindCondition.toJson())
+    # print(tempAndWindCondition.toJson())
 
-    orCondition = ConditionJoin('OR', [tempAndWindCondition, highWindCondition]).format("Netcdf")
+    join = 'OR'
+    orCondition_label = f'~{tempAndWindCondition_label}~{join}~{windCondition_label}~'.replace(' ', '_')
+    orCondition = ConditionJoin('OR', [tempAndWindCondition, highWindCondition], label=orCondition_label).format("Netcdf")
 
     print(orCondition.toJson())
 

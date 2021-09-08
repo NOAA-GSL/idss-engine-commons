@@ -19,7 +19,7 @@ import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
 
-public class Logging {
+public class Logger {
 
     public final String DEBUG = "DEBUG: ";
     public final String INFO = "INFO: ";
@@ -30,7 +30,7 @@ public class Logging {
     private final Connection connection;
     private final Channel channel;
         
-    public Logging(String configFileName) {
+    public Logger(String configFileName) {
         String rabMqUser;
         String rabMqPwd;
         String rabMqVhost;
@@ -99,9 +99,11 @@ System.out.println("portNum: "+rabMqPortNum);
         connection.close();
     }
     
-    public void debug(String uuid, String source, DateTime time, String service, String message) {
-        String formatStr = String.format("%s:%s:%02d:%02d:%s;%s", uuid, source, time.getHourOfDay(), time.getMinuteOfHour(), service, message);
-        System.out.println(DEBUG+formatStr);
+    public void debug(Sid sid, String service, String message) {
+        String formatStr = String.format("%s:%s:%02d:%02d:%s;%s", 
+                                                                            sid.key, sid.originator, sid.issueDt.getHourOfDay(), sid.issueDt.getMinuteOfHour(), 
+                                                                            service, message);
+        System.out.println(DEBUG+": "+formatStr);
         try {
             channel.basicPublish(logExchName, DEBUG, null, formatStr.getBytes(StandardCharsets.UTF_8));
         } catch( IOException e ) {
@@ -109,9 +111,11 @@ System.out.println("portNum: "+rabMqPortNum);
         }
     }
     
-    public void info(String uuid, String source, DateTime time, String service, String message) {
-        String formatStr = String.format("%s:%s:%02d:%02d:%s;%s", uuid, source, time.getHourOfDay(), time.getMinuteOfHour(), service, message);
-        System.out.println(INFO+formatStr);
+    public void info(Sid sid, String service, String message) {
+        String formatStr = String.format("%s:%s:%02d:%02d:%s;%s", 
+                                                                            sid.key, sid.originator, sid.issueDt.getHourOfDay(), sid.issueDt.getMinuteOfHour(), 
+                                                                            service, message);
+        System.out.println(INFO+": "+formatStr);
         try {
             channel.basicPublish(logExchName, INFO, null, formatStr.getBytes(StandardCharsets.UTF_8));
         } catch( IOException e ) {
@@ -119,9 +123,11 @@ System.out.println("portNum: "+rabMqPortNum);
         }
     }
 
-    public void warn(String uuid, String source, DateTime time, String service, String message) {
-        String formatStr = String.format("%s:%s:%02d:%02d:%s;%s", uuid, source, time.getHourOfDay(), time.getMinuteOfHour(), service, message);
-        System.out.println(WARN+formatStr);
+    public void warn(Sid sid, String service, String message) {
+        String formatStr = String.format("%s:%s:%02d:%02d:%s;%s", 
+                                                                            sid.key, sid.originator, sid.issueDt.getHourOfDay(), sid.issueDt.getMinuteOfHour(), 
+                                                                            service, message);
+        System.out.println(WARN+": "+formatStr);
         try {
             channel.basicPublish(logExchName, WARN, null, formatStr.getBytes(StandardCharsets.UTF_8));
         } catch( IOException e ) {
@@ -129,9 +135,11 @@ System.out.println("portNum: "+rabMqPortNum);
         }
     }
 
-    public void error(String uuid, String source, DateTime time, String service, String message) {
-        String formatStr = String.format("%s:%s:%02d:%02d:%s;%s", uuid, source, time.getHourOfDay(), time.getMinuteOfHour(), service, message);
-        System.err.println(ERROR+formatStr);
+    public void error(Sid sid, String service, String message) {
+        String formatStr = String.format("%s:%s:%02d:%02d:%s;%s", 
+                                                                            sid.key, sid.originator, sid.issueDt.getHourOfDay(), sid.issueDt.getMinuteOfHour(), 
+                                                                            service, message);
+        System.err.println(ERROR+": "+formatStr);
         try {
             channel.basicPublish(logExchName, ERROR, null, formatStr.getBytes(StandardCharsets.UTF_8));
         } catch( IOException e ) {
