@@ -58,6 +58,8 @@ public enum Units  {
         map.put("MILES", Miles); 
         map.put("m", Meters);
         map.put("meters", Meters);
+        map.put("Meters", Meters);
+        map.put("METERS", Meters);
         map.put("gpm", Meters);  //TODO, approximately true
         map.put("kg.m-2", KgPerM2);
         map.put("kgPerM2", KgPerM2);

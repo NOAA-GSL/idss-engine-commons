@@ -22,7 +22,7 @@ public class Logger {
         DEBUG, INFO, WARN, ERROR; //must be ordered from least to most
         
         public boolean below(Level level) {
-            return this.compareTo(level) < 0;
+            return this.compareTo(level) > 0;
         }
     };
 

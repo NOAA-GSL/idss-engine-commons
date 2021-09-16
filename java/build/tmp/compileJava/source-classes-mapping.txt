@@ -40,3 +40,4 @@ gov/noaa/gsl/idssEngine/commons/Sid.java
  gov.noaa.gsl.idssEngine.commons.Sid
 gov/noaa/gsl/idssEngine/commons/Logger.java
  gov.noaa.gsl.idssEngine.commons.Logger
+ gov.noaa.gsl.idssEngine.commons.Logger$Level

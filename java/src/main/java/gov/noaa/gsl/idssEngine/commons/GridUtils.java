@@ -190,6 +190,7 @@ public class GridUtils {
         return grid;
     }
     
+    // Output is in Fahrenheit
     public static float[][] getHeatIndexGrid(float[][] rhInPercent, float[][] tempInFahrenheit) {    
         if(rhInPercent==null || tempInFahrenheit==null) return null;
         
