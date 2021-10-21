@@ -37,6 +37,7 @@ public enum Relational {
         map.put("equal", EQUAL); 
         map.put("Equal", EQUAL); 
         map.put("EQUAL", EQUAL); 
+        map.put("EQ", EQUAL); 
         
         map.put("greaterthan", GREATERTHAN); 
         map.put("Greaterthan", GREATERTHAN); 
@@ -44,6 +45,10 @@ public enum Relational {
         map.put("greater than", GREATERTHAN); 
         map.put("Greater Than", GREATERTHAN); 
         map.put("GREATER THAN", GREATERTHAN); 
+       map.put("more than", GREATERTHAN); 
+        map.put("More Than", GREATERTHAN); 
+        map.put("MORE THAN", GREATERTHAN); 
+        map.put("GT", GREATERTHAN); 
         
         map.put("greaterthanorequal", GREATERTHANOREQUAL); 
         map.put("Greaterthanorequal", GREATERTHANOREQUAL); 
@@ -57,6 +62,7 @@ public enum Relational {
         map.put("greater than or equal to", GREATERTHANOREQUAL); 
         map.put("Greater Than Or Equal To", GREATERTHANOREQUAL); 
         map.put("GREATER THAN OR EQUAL TO", GREATERTHANOREQUAL); 
+        map.put("GTE", GREATERTHANOREQUAL); 
         
         map.put("lessthan", LESSTHAN); 
         map.put("Lessthan", LESSTHAN); 
@@ -64,6 +70,7 @@ public enum Relational {
         map.put("less than", LESSTHAN); 
         map.put("Less Than", LESSTHAN); 
         map.put("LESS THAN", LESSTHAN); 
+        map.put("LH", LESSTHAN); 
         
         map.put("lessthanorequal", LESSTHANOREQUAL); 
         map.put("Lessthanorequal", LESSTHANOREQUAL); 
@@ -77,10 +84,12 @@ public enum Relational {
         map.put("less than or equal to", LESSTHANOREQUAL); 
         map.put("Less Than Or Equal To", LESSTHANOREQUAL); 
         map.put("LESS THAN OR EQUAL TO", LESSTHANOREQUAL); 
+        map.put("LTE", LESSTHANOREQUAL); 
         
         map.put("between", BETWEEN); 
         map.put("Between", BETWEEN); 
         map.put("BETWEEN", BETWEEN); 
+        map.put("BT", BETWEEN); 
     }
 
     public String toShortString() {
