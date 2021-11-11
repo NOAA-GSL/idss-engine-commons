@@ -70,7 +70,7 @@ public enum Relational {
         map.put("less than", LESSTHAN); 
         map.put("Less Than", LESSTHAN); 
         map.put("LESS THAN", LESSTHAN); 
-        map.put("LH", LESSTHAN); 
+        map.put("LT", LESSTHAN); 
         
         map.put("lessthanorequal", LESSTHANOREQUAL); 
         map.put("Lessthanorequal", LESSTHANOREQUAL); 
@@ -93,7 +93,11 @@ public enum Relational {
     }
 
     public String toShortString() {
-        switch(this) {
+        return toShortString(this);
+    } 
+    
+    public static String toShortString(Relational relational) {
+        switch(relational) {
         case EQUAL: return "EQ";
         case GREATERTHAN: return "GT";
         case GREATERTHANOREQUAL: return "GTE";
@@ -103,7 +107,6 @@ public enum Relational {
         }
         return null;
     } 
-
 
 }
 
