@@ -32,6 +32,7 @@ public enum Units  {
     WattsPerM2,
     Level,
     Cat,
+    Bool,
     None;
     
     public static Units get(String unitString) {
@@ -88,6 +89,8 @@ public enum Units  {
         map.put("wattsPerM2", WattsPerM2);
         map.put("level", Level);
         map.put("catagory", Cat);
+        map.put("bool", Bool);
+        map.put("BOOL", Bool);
     } 
 
 

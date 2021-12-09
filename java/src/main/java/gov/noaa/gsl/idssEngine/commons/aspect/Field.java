@@ -9,8 +9,6 @@ package gov.noaa.gsl.idssEngine.commons.aspect;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.google.common.util.concurrent.ForwardingListenableFuture;
-
 public enum Field {
     
     // new ImsElement type should be added to lookup map    
@@ -50,6 +48,8 @@ public enum Field {
     WXSNOW,
     WXFRZR,
     WXTHDR,
+
+    WXFRZP,
 
     WBGT,
     ;
@@ -133,6 +133,10 @@ public enum Field {
         map.put("WEATHER TYPE INCLUDES SNOW", WXSNOW);
         map.put("WEATHER TYPE INCLUDES FREEZING RAIN", WXFRZR);
         map.put("WEATHER TYPE INCLUDES THUNDERSTORM", WXTHDR);
+
+        map.put("WEATHER TYPE INCLUDES FREEZING PRECIP", WXFRZP);
+        map.put("FREEZING PRECIP", WXFRZP);
+
 
     } 
 
@@ -232,6 +236,10 @@ public enum Field {
                 return Units.Cat;
             case WPCRAINFALL:
                 return Units.Percent;
+            case WXFRZR:
+                return Units.Bool;
+            case WXFRZP:
+                return Units.Bool;
 
             default:
                 throw new RuntimeException("Passed Field does not have orresponding Units");

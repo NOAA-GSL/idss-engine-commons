@@ -20,17 +20,17 @@ import gov.noaa.gsd.fiqas.util.image.draw.PolyDrawler;
 
 public class GeometryUtils {
 
-    public static Set<Point> getCoords(Geometry geometry, Projection proj) {
-        
-        Set<Point> coords = new HashSet<>();
-        
-        for(int i=0; i<geometry.getNumGeometries(); i++) {
-            coords.addAll(getCoordsSingle(geometry.getGeometryN(i), proj));
-        }
-        return coords;        
-    }
+//    public static GeoCoords getCoords(Geometry geometry, Projection proj) {
+//        
+//        Set<Point> coords = new HashSet<>();
+//        
+//        for(int i=0; i<geometry.getNumGeometries(); i++) {
+//            coords.addAll(getCoordsSingle(geometry.getGeometryN(i), proj));
+//        }
+//        return coords;        
+//    }
     
-    public static Set<Point> getCoordsSingle(Geometry geometry, Projection proj) {
+    public static GeoCoords getCoordsSingle(Geometry geometry, Projection proj) {
         
         Set<Point> coords = null;
         
@@ -44,30 +44,44 @@ public class GeometryUtils {
                 if(coord != null) {
                     coords = new HashSet<>();
                     coords.add(new Point(coord[0], coord[1]));
+                    return new GeoCoords(coords);
                 }
           } else {
             int len = bdryCoords.length;
             double[][] xyBdryCoords = new double[len][2];
-            for(int i=0; i<len; i++) {
-                xyBdryCoords[i] = proj.mapLatLon(bdryCoords[i].y, bdryCoords[i].x);
+            double[] xy = proj.mapLatLon(bdryCoords[0].y, bdryCoords[0].x);
+            xyBdryCoords[0] = xy;
+            double minX=xy[0], maxX=xy[0];
+            double minY=xy[1], maxY=xy[1];
+            for(int i=1; i<len; i++) {
+                xy = proj.mapLatLon(bdryCoords[i].y, bdryCoords[i].x);
+                final double x=xy[0];
+                final double y=xy[1];
+                if(minX>x) minX=x;
+                if(maxX<x) maxX=x;
+                if(minY>y) minY=y;
+                if(maxY<y) maxY=y;
+                xyBdryCoords[i] = xy;
             }
          
             Set<int[]> coordSet = null;
             switch(geoType) {
                 case "Polygon":
-                    coordSet = PolyDrawler.drawPolygon(new Polygon(xyBdryCoords, true));
-                    break;
+                    int xOffset = (int)minX;
+                    int yOffset = (int)minY;
+                    int width = (int)maxX-xOffset+1;
+                    int height = (int)maxY-yOffset+1;
+                    byte[][] grid = PolyDrawler.drawPolygon(new Polygon(xyBdryCoords, true), (byte)1, width, height);
+                    return new GeoCoords(xOffset, yOffset, grid);
                 case "LineString":
                     coordSet = PolyDrawler.drawPolyline(new Polyline(xyBdryCoords, true));
-                    break;
+                    coords = new HashSet<>(coordSet.size());
+                    for(int[] coord : coordSet) coords.add(new Point(coord[0], coord[1]));
+                    return new GeoCoords(coords);
                 default:
                     throw new UnsupportedOperationException("Geometry type ("+geoType+") not currently supported");
             }
-            
-            coords = new HashSet<>(coordSet.size());
-            for(int[] coord : coordSet) coords.add(new Point(coord[0], coord[1]));
         }
-
-        return coords;
+        return null;
     }
 }
