@@ -170,7 +170,12 @@ public class Logger {
         try {
             connection = factory.newConnection();
         } catch( IOException | TimeoutException e ) {
-            throw new ExceptionInInitializerError("Unable to connect Logger to queue");
+            throw new ExceptionInInitializerError("Unable to connect Logger to queue, with: "+
+                                                                                     rabMqUser+", "+
+                                                                                     rabMqPwd+", "+
+                                                                                     rabMqVhost+", "+
+                                                                                     rabMqHost+", "+
+                                                                                     rabMqPortNum);
         } 
         return connection;
     }

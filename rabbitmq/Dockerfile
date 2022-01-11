@@ -1,8 +1,8 @@
 FROM rabbitmq:3.8.17
 
 # Define environment variables.
-ENV RABBITMQ_USER user
-ENV RABBITMQ_PASSWORD user
+ENV RABBITMQ_USER idss 
+ENV RABBITMQ_PASSWORD idss
 
 ENV RABBITMQ_PID_FILE /var/lib/rabbitmq/mnesia/rabbitmq
 
