@@ -466,22 +466,88 @@ public class UnitsConversion {
     ////////////////////////////////////// convert Miles /////////////////////////////////////////////////
 
     public static float convertMiles(Units destUnits, float value) {
-        throw new UnsupportedOperationException("Implement this convertion");
+        switch(destUnits) {
+        case Inches:
+            return milesToInches(value);                        
+        case Feet:
+            return milesToFeet(value);            
+        case Miles:
+            return value;
+        case Meters:
+            return milesToMeters(value);            
+        default:
+        }
+        throw new UnsupportedOperationException("Units covertion from miles to ("+destUnits+") not currently supported");
     }
     public static double convertMiles(Units destUnits, double value) {
-        throw new UnsupportedOperationException("Implement this convertion");
+        switch(destUnits) {
+        case Inches:
+            return milesToInches(value);                        
+        case Feet:
+            return milesToFeet(value);            
+        case Miles:
+            return value;
+        case Meters:
+            return milesToMeters(value);            
+        default:
+        }
+        throw new UnsupportedOperationException("Units covertion from miles to ("+destUnits+") not currently supported");
     }
     public static float[] convertMiles(Units destUnits, float[] array) {
-        throw new UnsupportedOperationException("Implement this convertion");
+        switch(destUnits) {
+        case Inches:
+            return milesToInches(array);                        
+        case Feet:
+            return milesToFeet(array);            
+        case Miles:
+            return array;
+        case Meters:
+            return milesToMeters(array);            
+        default:
+        }
+        throw new UnsupportedOperationException("Units covertion from miles to ("+destUnits+") not currently supported");
     }
     public static float[][] convertMiles(Units destUnits, float[][] grid) {
-        throw new UnsupportedOperationException("Implement this convertion");
+        switch(destUnits) {
+        case Inches:
+            return milesToInches(grid);                        
+        case Feet:
+            return milesToFeet(grid);            
+        case Miles:
+            return grid;
+        case Meters:
+            return milesToMeters(grid);            
+        default:
+        }
+        throw new UnsupportedOperationException("Units covertion from miles to ("+destUnits+") not currently supported");
     }
     public static double[] convertMiles(Units destUnits, double[] array) {
-        throw new UnsupportedOperationException("Implement this convertion");
+        switch(destUnits) {
+        case Inches:
+            return milesToInches(array);                        
+        case Feet:
+            return milesToFeet(array);            
+        case Miles:
+            return array;
+        case Meters:
+            return milesToMeters(array);            
+        default:
+        }
+        throw new UnsupportedOperationException("Units covertion from miles to ("+destUnits+") not currently supported");
     }
     public static double[][] convertMiles(Units destUnits, double[][] grid) {
-        throw new UnsupportedOperationException("Implement this convertion");
+        switch(destUnits) {
+        case Inches:
+            return milesToInches(grid);                        
+        case Feet:
+            return milesToFeet(grid);            
+        case Miles:
+            return grid;
+        case Meters:
+            return milesToMeters(grid);         
+        default:
+        }
+        throw new UnsupportedOperationException("Units covertion from miles to ("+destUnits+") not currently supported");
     }
     
     ////////////////////////////////////// convert Miles /////////////////////////////////////////////////
@@ -1373,12 +1439,115 @@ public class UnitsConversion {
         return grid;
     }
     
+    //// miles to -- /////
+    public static float milesToInches(float mile) {
+        return (float)(mile*63360);
+    }
+    public static double milesToInches(double mile) {
+        return mile*1609.344;
+    }    
+    public static float[] milesToInches(float[] array) {
+        for(int i=array.length-1; i>=0; i--) {
+            array[i] = (float)(array[i]*63360);
+        }
+        return array;
+    }
+    public static double[] milesToInches(double[] array) {
+        for(int i=array.length-1; i>=0; i--) {
+            array[i] = array[i]*63360;
+        }
+        return array;
+    }    
+        public static float[][] milesToInches(float[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = (float)(grid[i][j] * 63360);
+            }
+        }
+        return grid;
+    }
+    public static double[][] milesToInches(double[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = (grid[i][j] * 63360);
+            }
+        }
+        return grid;
+    }
+        public static float milesToFeet(float mile) {
+        return (float)(mile*5280);
+    }
+    public static double milesToFeet(double mile) {
+        return mile*1609.344;
+    }    
+    public static float[] milesToFeet(float[] array) {
+        for(int i=array.length-1; i>=0; i--) {
+            array[i] = (float)(array[i]*5280);
+        }
+        return array;
+    }
+    public static double[] milesToFeet(double[] array) {
+        for(int i=array.length-1; i>=0; i--) {
+            array[i] = array[i]*5280;
+        }
+        return array;
+    }    
+        public static float[][] milesToFeet(float[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = (float)(grid[i][j] * 5280);
+            }
+        }
+        return grid;
+    }
+    public static double[][] milesToFeet(double[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = grid[i][j] * 5280;
+            }
+        }
+        return grid;
+    }
     public static float milesToMeters(float mile) {
         return (float)(mile*1609.344);
     }
     public static double milesToMeters(double mile) {
         return mile*1609.344;
     }    
+    public static float[] milesToMeters(float[] array) {
+        for(int i=array.length-1; i>=0; i--) {
+            array[i] = (float)(array[i]*1609.344);
+        }
+        return array;
+    }
+    public static double[] milesToMeters(double[] array) {
+        for(int i=array.length-1; i>=0; i--) {
+            array[i] = array[i]*1609.344;
+        }
+        return array;
+    }    
+        public static float[][] milesToMeters(float[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = (float)(grid[i][j] * 1609.344);
+            }
+        }
+        return grid;
+    }
+    public static double[][] milesToMeters(double[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = (grid[i][j] * 1609.344);
+            }
+        }
+        return grid;
+    }
     
     //// inches to -- /////
     public static float inchesToFeet(float inches) {

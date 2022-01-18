@@ -7,36 +7,46 @@
 package gov.noaa.gsl.idssEngine.commons;
 
 import java.awt.Point;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 
+import gov.noaa.gsd.fiqas.cartography.GreatCircle;
 import gov.noaa.gsd.fiqas.cartography.Projection;
 import gov.noaa.gsd.fiqas.math.coord.cartesian.Polygon;
 import gov.noaa.gsd.fiqas.math.coord.cartesian.Polyline;
-import gov.noaa.gsd.fiqas.util.grid.tool.GridSummary;
+import gov.noaa.gsd.fiqas.util.grid.tool.MathMorph;
+import gov.noaa.gsd.fiqas.util.grid.tool.RadialHood;
 import gov.noaa.gsd.fiqas.util.image.draw.PolyDrawler;
+import gov.noaa.gsl.idssEngine.commons.aspect.Units;
 
 public class GeometryUtils {
 
     public static GeoCoords getCoords(Geometry geometry, Projection proj) {
-        
+        return getCoords(geometry, proj, 0);
+    }
+    
+    public static GeoCoords getCoords(Geometry geometry, Projection proj, double dilateRadius) {
+      
         int numGeo = geometry.getNumGeometries();
         
-        if(numGeo==1) return addCoords(geometry, proj, null);
+        if(numGeo==1) return addCoords(geometry, proj, dilateRadius, null);
         
-        GeoCoords geoCoords = addCoords(geometry.getGeometryN(0), proj, null);
+        GeoCoords geoCoords = addCoords(geometry.getGeometryN(0), proj, dilateRadius, null);
         
         for(int i=1; i<geometry.getNumGeometries(); i++) {
-            addCoords(geometry.getGeometryN(i), proj, geoCoords);
+            addCoords(geometry.getGeometryN(i), proj, dilateRadius, geoCoords);
         }
         return geoCoords;        
     }
     
     public static GeoCoords addCoords(Geometry geometry, Projection proj, GeoCoords geoCoords) {
+        return addCoords(geometry, proj, 0, geoCoords);
+    }
+    
+    public static GeoCoords addCoords(Geometry geometry, Projection proj, double dilateRadius, GeoCoords geoCoords) {
         
         Coordinate[] bdryCoords =  geometry.getCoordinates();
 
@@ -47,7 +57,10 @@ public class GeometryUtils {
                 int[] coord = proj.mapLatLonToPixel(bdryCoords[0].y, bdryCoords[0].x);
                 if(coord != null) {
                     Set<Point> coordSet = new HashSet<>();
-                    coordSet.add(new Point(coord[0], coord[1]));
+                    Set<int[]> hood = RadialHood.getOffsets(dilateRadius, true);
+                    final int x = coord[0], y = coord[1];
+                    for(int[] offset : hood)
+                                coordSet.add(new Point(x+offset[0], y+offset[1]));
                     if(geoCoords == null)
                         return new GeoCoords(coordSet);
                     return geoCoords.add(coordSet);
@@ -83,6 +96,7 @@ public class GeometryUtils {
                         xyBdryCoords[i][1] -= yOffset;
                     }
                     byte[][] grid = PolyDrawler.drawPolygon(new Polygon(xyBdryCoords, true), (byte)1, width, height);
+                    grid = MathMorph.dilate(grid, dilateRadius);
 //GridSummary.printDistribution(grid);
 
                     if(geoCoords == null)
@@ -104,7 +118,17 @@ public class GeometryUtils {
 //System.out.println("lineString");
                     Set<int[]> coords = PolyDrawler.drawPolyline(new Polyline(xyBdryCoords, true));
                     Set<Point> coordSet = new HashSet<>(coords.size());
-                    for(int[] coord : coords) coordSet.add(new Point(coord[0], coord[1]));
+                    if(dilateRadius==0)
+                        for(int[] coord : coords) coordSet.add(new Point(coord[0], coord[1]));
+                    else {
+                        Set<int[]> hood = RadialHood.getOffsets(dilateRadius, true);
+System.out.println("hood size: "+hood.size());
+                        for(int[] coord : coords) {
+                            final int x = coord[0], y = coord[1];
+                            for(int[] offset : hood)
+                                coordSet.add(new Point(x+offset[0], y+offset[1]));
+                        }
+                    }
                     if(geoCoords == null)
                         return new GeoCoords(coordSet);
                     return geoCoords.add(coordSet);
