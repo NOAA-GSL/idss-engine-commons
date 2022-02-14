@@ -22,8 +22,11 @@ dependencies {
     implementation 'joda-time:joda-time:2.1'
     implementation 'org.locationtech.jts:jts-core:1.16.0'
     implementation 'org.apache.commons:commons-math:2.2'
+    implementation 'org.json:json:20201115'
     implementation 'com.rabbitmq:amqp-client:5.12.0'
     implementation 'gov.noaa.gsd.fiqas:cartography:1.1'
+    implementation 'gov.noaa.gsd.fiqas:math:1.1'
+    implementation 'gov.noaa.gsd.fiqas:util:1.1'
 }
 publishing {
   publications {

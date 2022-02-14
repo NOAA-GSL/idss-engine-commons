@@ -13,14 +13,12 @@ import java.util.Set;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 
-import gov.noaa.gsd.fiqas.cartography.GreatCircle;
 import gov.noaa.gsd.fiqas.cartography.Projection;
 import gov.noaa.gsd.fiqas.math.coord.cartesian.Polygon;
 import gov.noaa.gsd.fiqas.math.coord.cartesian.Polyline;
 import gov.noaa.gsd.fiqas.util.grid.tool.MathMorph;
 import gov.noaa.gsd.fiqas.util.grid.tool.RadialHood;
 import gov.noaa.gsd.fiqas.util.image.draw.PolyDrawler;
-import gov.noaa.gsl.idssEngine.commons.aspect.Units;
 
 public class GeometryUtils {
 
