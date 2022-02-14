@@ -10,8 +10,7 @@
   },
   "createdBy": {
     "gradle": {
-      "version": "6.6",
-      "buildId": "fghbpmfa4rf33pzzdpkwxbgusy"
+      "version": "7.0"
     }
   },
   "variants": [
@@ -24,31 +23,15 @@
         "org.gradle.libraryelements": "jar",
         "org.gradle.usage": "java-api"
       },
-      "dependencies": [
-        {
-          "group": "gov.noaa.gsd.fiqas",
-          "module": "math",
-          "version": {
-            "requires": "1.1"
-          }
-        },
-        {
-          "group": "gov.noaa.gsd.fiqas",
-          "module": "util",
-          "version": {
-            "requires": "1.1"
-          }
-        }
-      ],
       "files": [
         {
           "name": "cartography-1.1.jar",
           "url": "cartography-1.1.jar",
-          "size": 67751,
-          "sha512": "fc1446dda28d84b59d542bbfdb0a2c64d5762bc9a1c863855fdaea350efa579ba503fd8fcc6acb0a5b7665d57e824d4684948ff21a805f9f1c62e0b07a5dcdf1",
-          "sha256": "a75ed9f690af961101a3385c172dec3472db85f0f808ddf1567067166a0e769a",
-          "sha1": "2ac604e23954c808c3dc453edd75a6923e37ce5a",
-          "md5": "80a190a9efbaedbfb4c735a2c83926d1"
+          "size": 73166,
+          "sha512": "ab112729ea5d7bd663783f3cb16d997068fba916c6279ed109d928223e9bdc84f36180cb945b9ded4045f894f0135830310ff553ac16f208ee594b1f125ca996",
+          "sha256": "d1363670127f3be0ce9a34e1e48adef4679e23d5ecf3daf11a25fa17fc960982",
+          "sha1": "6b8abda30aea8129fb2974bb79039683c7d56847",
+          "md5": "bfb762d207f85764e1f0145320761db9"
         }
       ]
     },
@@ -63,6 +46,20 @@
       },
       "dependencies": [
         {
+          "group": "com.google.guava",
+          "module": "guava",
+          "version": {
+            "requires": "16+"
+          }
+        },
+        {
+          "group": "ucar",
+          "module": "netcdfAll",
+          "version": {
+            "requires": "4.6"
+          }
+        },
+        {
           "group": "gov.noaa.gsd.fiqas",
           "module": "math",
           "version": {
@@ -81,11 +78,11 @@
         {
           "name": "cartography-1.1.jar",
           "url": "cartography-1.1.jar",
-          "size": 67751,
-          "sha512": "fc1446dda28d84b59d542bbfdb0a2c64d5762bc9a1c863855fdaea350efa579ba503fd8fcc6acb0a5b7665d57e824d4684948ff21a805f9f1c62e0b07a5dcdf1",
-          "sha256": "a75ed9f690af961101a3385c172dec3472db85f0f808ddf1567067166a0e769a",
-          "sha1": "2ac604e23954c808c3dc453edd75a6923e37ce5a",
-          "md5": "80a190a9efbaedbfb4c735a2c83926d1"
+          "size": 73166,
+          "sha512": "ab112729ea5d7bd663783f3cb16d997068fba916c6279ed109d928223e9bdc84f36180cb945b9ded4045f894f0135830310ff553ac16f208ee594b1f125ca996",
+          "sha256": "d1363670127f3be0ce9a34e1e48adef4679e23d5ecf3daf11a25fa17fc960982",
+          "sha1": "6b8abda30aea8129fb2974bb79039683c7d56847",
+          "md5": "bfb762d207f85764e1f0145320761db9"
         }
       ]
     }

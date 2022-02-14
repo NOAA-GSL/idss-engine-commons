@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
+<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns="http://maven.apache.org/POM/4.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
   <!-- This module was also published with a richer model, Gradle metadata,  -->
   <!-- which should be used instead. Do not delete the following line which  -->
@@ -12,16 +12,28 @@
   <version>1.1</version>
   <dependencies>
     <dependency>
+      <groupId>com.google.guava</groupId>
+      <artifactId>guava</artifactId>
+      <version>16+</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
+      <groupId>ucar</groupId>
+      <artifactId>netcdfAll</artifactId>
+      <version>4.6</version>
+      <scope>runtime</scope>
+    </dependency>
+    <dependency>
       <groupId>gov.noaa.gsd.fiqas</groupId>
       <artifactId>math</artifactId>
       <version>1.1</version>
-      <scope>compile</scope>
+      <scope>runtime</scope>
     </dependency>
     <dependency>
       <groupId>gov.noaa.gsd.fiqas</groupId>
       <artifactId>util</artifactId>
       <version>1.1</version>
-      <scope>compile</scope>
+      <scope>runtime</scope>
     </dependency>
   </dependencies>
 </project>

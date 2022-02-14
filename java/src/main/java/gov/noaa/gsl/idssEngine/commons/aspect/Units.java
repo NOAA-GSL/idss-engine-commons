@@ -76,7 +76,9 @@ public enum Units  {
         map.put("Kelvin", Kelvin); 
         map.put("C", Celcius); 
         map.put("Celcius", Celcius);         
-        map.put("%", Percent); 
+        map.put("%", Percent);         
+        map.put("Percent", Percent); 
+        map.put("PERCENT", Percent); 
         map.put("strikes", Strikes); 
         map.put("DegreesN", DegreesNorth); 
         map.put("DEG N", DegreesNorth); 

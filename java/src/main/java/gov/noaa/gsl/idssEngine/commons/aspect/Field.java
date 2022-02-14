@@ -139,13 +139,16 @@ public enum Field {
         map.put("WEATHER TYPE INCLUDES FREEZING PRECIP", WXFRZP);
         map.put("FREEZING PRECIP", WXFRZP);
 
+        map.put("RDSBFRZP", RDSBFRZP);
+        map.put("Road Subfreeze", RDSBFRZP);
+        map.put("ROAD SUBFREEZE", RDSBFRZP);
 
     } 
 
     public static Field get(String fieldString) {
         if(fieldString.startsWith("CHANCE OF ")) fieldString = fieldString.substring(10);
         else if(fieldString.startsWith("PROB OF ")) fieldString = fieldString.substring(8);
-        
+System.out.println("->"+fieldString+"<-");
         Field field = map.get(fieldString);
         if(field == null)  
             field = valueOf(fieldString);
