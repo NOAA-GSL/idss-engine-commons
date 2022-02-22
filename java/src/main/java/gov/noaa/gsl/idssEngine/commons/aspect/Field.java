@@ -148,7 +148,7 @@ public enum Field {
     public static Field get(String fieldString) {
         if(fieldString.startsWith("CHANCE OF ")) fieldString = fieldString.substring(10);
         else if(fieldString.startsWith("PROB OF ")) fieldString = fieldString.substring(8);
-System.out.println("->"+fieldString+"<-");
+//System.out.println("->"+fieldString+"<-");
         Field field = map.get(fieldString);
         if(field == null)  
             field = valueOf(fieldString);
