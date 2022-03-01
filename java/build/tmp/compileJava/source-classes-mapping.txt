@@ -32,8 +32,8 @@ gov/noaa/gsl/idssEngine/commons/imsMessage/ImsLocation.java
 gov/noaa/gsl/idssEngine/commons/imsMessage/ImsThresholdSet.java
  gov.noaa.gsl.idssEngine.commons.imsMessage.ImsThresholdSet
  gov.noaa.gsl.idssEngine.commons.imsMessage.ImsThresholdSet$1
-gov/noaa/gsl/idssEngine/commons/GeometryUtils.java
- gov.noaa.gsl.idssEngine.commons.GeometryUtils
+gov/noaa/gsl/idssEngine/commons/WbgtCalc.java
+ gov.noaa.gsl.idssEngine.commons.WbgtCalc
 gov/noaa/gsl/idssEngine/commons/GeoCoords.java
  gov.noaa.gsl.idssEngine.commons.GeoCoords
  gov.noaa.gsl.idssEngine.commons.GeoCoords$GridGeoCoords
@@ -44,5 +44,5 @@ gov/noaa/gsl/idssEngine/commons/UnitsConversion.java
  gov.noaa.gsl.idssEngine.commons.UnitsConversion$1
 gov/noaa/gsl/idssEngine/commons/imsMessage/ImsEventReader.java
  gov.noaa.gsl.idssEngine.commons.imsMessage.ImsEventReader
-gov/noaa/gsl/idssEngine/commons/WbgtCalc.java
- gov.noaa.gsl.idssEngine.commons.WbgtCalc
+gov/noaa/gsl/idssEngine/commons/GeometryUtils.java
+ gov.noaa.gsl.idssEngine.commons.GeometryUtils

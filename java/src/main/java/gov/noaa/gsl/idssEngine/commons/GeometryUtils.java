@@ -94,7 +94,10 @@ public class GeometryUtils {
                         xyBdryCoords[i][1] -= yOffset;
                     }
                     byte[][] grid = PolyDrawler.drawPolygon(new Polygon(xyBdryCoords, true), (byte)1, width, height);
-                    grid = MathMorph.dilate(grid, dilateRadius);
+         
+//System.out.println("dilateRadius: "+dilateRadius);
+                    if(dilateRadius>=1.)
+                        grid = MathMorph.dilate(grid, dilateRadius);
 //GridSummary.printDistribution(grid);
 
                     if(geoCoords == null)
