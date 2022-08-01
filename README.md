@@ -123,7 +123,7 @@ From the `idss-engine-commons/rabbitmq` directory:
 A data directory on the host system (outside the container) and mount this to a directory visible from inside the container. This places the database files in a known location on the host system, and makes it easy for tools and applications on the host system to access the files.
 
 > ```
--v <local dir>:/opt/couchdb/data
+> -v <local dir>:/opt/couchdb/data
 > ```
 
 The ```-v <local dir>:/opt/couchdb/data``` part of the command mounts the ```<local dir>``` directory from the underlying host system as ```/opt/couchdb/data``` inside the container, where CouchDB by default will write its data files.
