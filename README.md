@@ -9,7 +9,6 @@ The `idss-engine-commons` is responsible for defining all implicit common depend
 The complete twelve-factors methodologies that the IDSS Engine Project adheres to can be found in the umbrella [idss-engine](https://github.com/NOAA-GSL/idss-engine) repository. The subset of the twelve factors that follows are specifics to this app only.
 
 ## Logging
----
 To support some standardization and best practices for IDSS Engine, developers should utilize the [idss-engine-commons logging](https://github.com/NOAA-GSL/idss-engine-commons) Java and python packages.
 
 The general guidelines for logging are as follows:
@@ -50,7 +49,7 @@ Any python based microservice within IDSS Engine should use this image as it's b
 
 > **Image Name** `idss.engine.commons.python.service`
 
-> **Recommended Tags** development `:dev` stable release `:major.minor` ie. `:1.0` targeted environment `:aws`
+> **Recommended Tags** development `:dev` stable release `:release` ie. `:alder` targeted environment `:aws`
 
 #### Build
 From the project root directory `idss-engine-commons`:
