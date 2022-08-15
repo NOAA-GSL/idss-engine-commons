@@ -66,10 +66,13 @@ public enum Units  {
         map.put("kgPerM2", KgPerM2);
         map.put("mph", MilesPerHour); 
         map.put("MPH", MilesPerHour); 
+        map.put("milesPerHour", MilesPerHour); 
+        map.put("MilesPerHour", MilesPerHour); 
         map.put("m/h", MetersPerHour); 
         map.put("m.s-1", MetersPerSecond); 
         map.put("m/s", MetersPerSecond); 
         map.put("metersPerSecond", MetersPerSecond); 
+        map.put("MetersPerSecond", MetersPerSecond); 
         map.put("F", Fahrenheit); 
         map.put("DEG F", Fahrenheit); 
         map.put("K", Kelvin); 
