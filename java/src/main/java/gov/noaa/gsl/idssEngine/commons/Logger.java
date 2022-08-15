@@ -31,7 +31,7 @@ public class Logger {
     private final String exchName;
     private final String service;
     private final Level level;
-    private Sid sid = Sid.Empty
+    private Sid sid = Sid.Empty;
     private boolean closed = true;
     
     public Logger(Connection connection, Channel channel, String exchName, String service, Level level) {
@@ -257,7 +257,7 @@ public class Logger {
         warn(sid, service, message);
     }
     public void warn(String service, String message) {
-        warn(sid, service, message)
+        warn(sid, service, message);
     }
     public void warn(Sid sid, String service, String message) {
         if(!level.below(Level.WARN)) {
