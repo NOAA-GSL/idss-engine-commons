@@ -31,6 +31,7 @@ public class Logger {
     private final String exchName;
     private final String service;
     private final Level level;
+    private Sid sid = Sid.Empty
     private boolean closed = true;
     
     public Logger(Connection connection, Channel channel, String exchName, String service, Level level) {
@@ -194,10 +195,22 @@ public class Logger {
         closed = true;
     }
     
+    public void setSid(Sid sid) {
+        Sid old_sid = this.sid;
+        this.sid = sid;
+        return old_sid;
+    }
+    public void clearSid() {
+        return setSid(Sid.Empty);
+    }
+    
     public void debug(String message) {
-        debug(Sid.Empty, service, message);
+        debug(sid, service, message);
     }
     public void debug(Sid sid, String message) {
+        debug(sid, service, message);
+    }
+    public void debug(String service, String message) {
         debug(sid, service, message);
     }
     public void debug(Sid sid, String service, String message) {
@@ -215,9 +228,12 @@ public class Logger {
     }
     
     public void info(String message) {
-        info(Sid.Empty, service, message);
+        info(sid, service, message);
     }    
     public void info(Sid sid, String message) {
+        info(sid, service, message);
+    }
+    public void info(String service, String message) {
         info(sid, service, message);
     }
     public void info(Sid sid, String service, String message) {
@@ -235,10 +251,13 @@ public class Logger {
     }
 
     public void warn(String message) {
-        warn(Sid.Empty, service, message);
+        warn(sid, service, message);
     }
     public void warn(Sid sid, String message) {
         warn(sid, service, message);
+    }
+    public void warn(String service, String message) {
+        warn(sid, service, message)
     }
     public void warn(Sid sid, String service, String message) {
         if(!level.below(Level.WARN)) {
@@ -255,13 +274,13 @@ public class Logger {
     }
     
     public void error(String message) {
-        error(Sid.Empty, service, message, null, true);
+        error(sid, service, message, null, true);
     }
     public void error(Sid sid, String message) {
         error(sid, service, message, null, true);
     }
     public void error(String service, String message) {
-        error(Sid.Empty, service, message, null, true);
+        error(sid, service, message, null, true);
     }
     public void error(Sid sid, String service, String message) {
         error(sid, service, message, null, true);
