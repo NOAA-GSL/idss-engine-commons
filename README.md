@@ -9,7 +9,6 @@ The `idss-engine-commons` is responsible for defining all implicit common depend
 The complete twelve-factors methodologies that the IDSS Engine Project adheres to can be found in the umbrella [idss-engine](https://github.com/NOAA-GSL/idss-engine) repository. The subset of the twelve factors that follows are specifics to this app only.
 
 ## Logging
----
 To support some standardization and best practices for IDSS Engine, developers should utilize the [idss-engine-commons logging](https://github.com/NOAA-GSL/idss-engine-commons) Java and python packages.
 
 The general guidelines for logging are as follows:
@@ -50,7 +49,7 @@ Any python based microservice within IDSS Engine should use this image as it's b
 
 > **Image Name** `idss.engine.commons.python.service`
 
-> **Recommended Tags** development `:dev` stable release `:major.minor` ie. `:1.0` targeted environment `:aws`
+> **Recommended Tags** development `:dev` stable release `:release` ie. `:alder` targeted environment `:aws`
 
 #### Build
 From the project root directory `idss-engine-commons`:
@@ -108,3 +107,51 @@ URLs:
 
 Using the port mapping `-p 15672:15672` allows access to the RabbitMQ Web UI Management Console: http://localhost:15672/
 
+### Couchdb Server
+---
+
+` idss.engine.commons.couchdb.server:<tag>`
+
+> **Recommended Tags** development `:dev` stable release `:major.minor` ie. `:1.0` targeted environment `:aws` test `:test`
+From the `idss-engine-commons/rabbitmq` directory:
+
+#### Build
+
+`$ docker build -t idss.engine.commons.couchdb.server:<tag> .`
+
+#### Volumes
+A data directory on the host system (outside the container) and mount this to a directory visible from inside the container. This places the database files in a known location on the host system, and makes it easy for tools and applications on the host system to access the files.
+
+> ```
+> -v <local dir>:/opt/couchdb/data
+> ```
+
+The ```-v <local dir>:/opt/couchdb/data``` part of the command mounts the ```<local dir>``` directory from the underlying host system as ```/opt/couchdb/data``` inside the container, where CouchDB by default will write its data files.
+
+**NOTE:** specifying a volume is **required** for data persistance. Any data creation, modification, or removal will not be persisted without a volume mapping will be lost if the container is stopped or removed.
+
+#### Run
+
+**Required arguments**:
+> ```
+> -e COUCHDB_USER=<couchdb default user>
+> -e COUCHDB_PASSWORD=<couchdb default password>
+> ```
+
+**Optional arguments**
+
+Use `--name` if running on a container network
+
+> ```
+> -v <local_dir>:/opt/couchdb/data
+> --network <network>
+> --rm
+> --name <host name (used by other containers as a name for connection)>
+> -p 5984:5984
+> ```
+
+Examples:
+
+`$ docker run --rm -d --name couchtest --network couch-test-network -e COUCHDB_USER=idss -e COUCHDB_PASSWORD=idss -p 5984:5984 idss.engine.commons.couchdb.server:<tag>`
+
+`$ docker run --rm -d --name couchtest --network couch-test-network -e COUCHDB_USER=idss -e COUCHDB_PASSWORD=idss -p 5984:5984 -v ~/Desktop/couchdb/data:/opt/couchdb/data idss.engine.commons.couchdb.server:<tag>`
