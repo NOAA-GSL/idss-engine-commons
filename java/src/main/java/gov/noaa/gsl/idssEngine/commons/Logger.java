@@ -195,12 +195,12 @@ public class Logger {
         closed = true;
     }
     
-    public void setSid(Sid sid) {
+    public Sid setSid(Sid sid) {
         Sid old_sid = this.sid;
         this.sid = sid;
         return old_sid;
     }
-    public void clearSid() {
+    public Sid clearSid() {
         return setSid(Sid.Empty);
     }
     
