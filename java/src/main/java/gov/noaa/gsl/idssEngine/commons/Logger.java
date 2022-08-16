@@ -286,19 +286,19 @@ public class Logger {
         error(sid, service, message, null, true);
     }
     public void error(String message, Exception e) {
-        error(Sid.Empty, service, message, e, true);
+        error(sid, service, message, e, true);
     }
     public void error(Sid sid, String message, Exception e) {
         error(sid, service, message, e, true);
     }
     public void error(String service, String message, Exception e) {
-        error(Sid.Empty, service, message, e, true);
+        error(sid, service, message, e, true);
     }
     public void error(Sid sid, String service, String message, Exception e) {
         error(sid, service, message, e, true);
     }
     public void error(String message, Exception e, boolean sendToQueue) {
-        error(Sid.Empty, service, message, e, sendToQueue);
+        error(sid, service, message, e, sendToQueue);
     }
     public void error(Sid sid, String message, Exception e, boolean sendToQueue) {
         error(sid, service, message, e, sendToQueue);
