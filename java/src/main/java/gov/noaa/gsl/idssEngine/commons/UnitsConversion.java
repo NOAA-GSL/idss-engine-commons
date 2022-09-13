@@ -34,6 +34,10 @@ public class UnitsConversion {
             return convertCelcius(destUnits, value);
         case MetersPerSecond:
             return convertMetersPerSecond(destUnits, value);
+        case MilesPerHour:
+            return convertMilesPerHour(destUnits, value);
+        case Knots:
+            return convertKnots(destUnits, value);
         case Pascals:
             return convertPascals(destUnits, value);
         default:
@@ -61,6 +65,10 @@ public class UnitsConversion {
             return convertCelcius(destUnits, value);
         case MetersPerSecond:
             return convertMetersPerSecond(destUnits, value);
+         case MilesPerHour:
+            return convertMilesPerHour(destUnits, value);
+        case Knots:
+            return convertKnots(destUnits, value);
         case Pascals:
             return convertPascals(destUnits, value);
         default:
@@ -89,7 +97,11 @@ public class UnitsConversion {
             return convertCelcius(destUnits, array);
         case MetersPerSecond:
             return convertMetersPerSecond(destUnits, array);
-        case Pascals:
+        case MilesPerHour:
+            return convertMilesPerHour(destUnits, array);
+        case Knots:
+            return convertKnots(destUnits, array);
+         case Pascals:
             return convertPascals(destUnits, array);
         default:
         }
@@ -117,6 +129,10 @@ public class UnitsConversion {
             return convertCelcius(destUnits, array);
         case MetersPerSecond:
             return convertMetersPerSecond(destUnits, array);
+        case MilesPerHour:
+            return convertMilesPerHour(destUnits, array);
+        case Knots:
+            return convertKnots(destUnits, array);
         case Pascals:
             return convertPascals(destUnits, array);
         default:
@@ -145,6 +161,10 @@ public class UnitsConversion {
             return convertCelcius(destUnits, grid);
         case MetersPerSecond:
             return convertMetersPerSecond(destUnits, grid);
+        case MilesPerHour:
+            return convertMilesPerHour(destUnits, grid);
+        case Knots:
+            return convertKnots(destUnits, grid);
         case Pascals:
             return convertPascals(destUnits, grid);
         default:
@@ -157,10 +177,10 @@ public class UnitsConversion {
         switch(srcUnits) {
         case Inches:
             return convertInches(destUnits, grid);                        
-//        case Feet:
-//            return convertFeet(destUnits, grid);            
-//        case Miles:
-//            return convertMiles(destUnits, grid);
+        case Feet:
+            return convertFeet(destUnits, grid);            
+        case Miles:
+            return convertMiles(destUnits, grid);
         case KgPerM2:
             return convertKgPerM2(destUnits, grid);
         case Meters:
@@ -173,6 +193,10 @@ public class UnitsConversion {
             return convertCelcius(destUnits, grid);
         case MetersPerSecond:
             return convertMetersPerSecond(destUnits, grid);
+        case MilesPerHour:
+            return convertMilesPerHour(destUnits, grid);
+        case Knots:
+            return convertKnots(destUnits, grid);
          case Pascals:
             return convertPascals(destUnits, grid);
        default:
@@ -859,7 +883,9 @@ public class UnitsConversion {
         case MilesPerHour:
             return metersPerSecToMilesPerHour(value);                        
         case MetersPerHour:
-            return metersPerSecToMetersPerHour(value);                        
+            return metersPerSecToMetersPerHour(value);    
+        case Knots:
+            return metersPerSecToKnots(value);
         default:
         }
         throw new UnsupportedOperationException("Implement this convertion for ("+destUnits+")");
@@ -871,6 +897,8 @@ public class UnitsConversion {
             return metersPerSecToMilesPerHour(value);                        
         case MetersPerHour:
             return metersPerSecToMetersPerHour(value);                        
+        case Knots:
+            return metersPerSecToKnots(value);
         default:
         }
         throw new UnsupportedOperationException("Implement this convertion for ("+destUnits+")");
@@ -882,6 +910,8 @@ public class UnitsConversion {
             return metersPerSecToMilesPerHour(array);                        
         case MetersPerHour:
             return metersPerSecToMetersPerHour(array);                        
+        case Knots:
+            return metersPerSecToKnots(array);
         default:
         }
         throw new UnsupportedOperationException("Implement this convertion for ("+destUnits+")");
@@ -893,6 +923,8 @@ public class UnitsConversion {
             return metersPerSecToMilesPerHour(array);                        
         case MetersPerHour:
             return metersPerSecToMetersPerHour(array);                        
+        case Knots:
+            return metersPerSecToKnots(array);
         default:
         }
         throw new UnsupportedOperationException("Implement this convertion for ("+destUnits+")");
@@ -903,6 +935,8 @@ public class UnitsConversion {
             return metersPerSecToMilesPerHour(grid);                        
         case MetersPerHour:
             return metersPerSecToMetersPerHour(grid);                        
+        case Knots:
+            return metersPerSecToKnots(grid);
         default:
         }
         throw new UnsupportedOperationException("Implement this convertion for ("+destUnits+")");
@@ -913,12 +947,93 @@ public class UnitsConversion {
             return metersPerSecToMilesPerHour(grid);                        
         case MetersPerHour:
             return metersPerSecToMetersPerHour(grid);                        
+        case Knots:
+            return metersPerSecToKnots(grid);
         default:
         }
         throw new UnsupportedOperationException("Implement this convertion for ("+destUnits+")");
     }
     
     ////////////////////////////////////// convert MetersPerSecond /////////////////////////////////    
+    ////////////////////////////////////// convert MilesPerHour ////////////////////////////////////////    
+
+    public static float convertMilesPerHour(Units destUnits, float value) {
+        switch(destUnits) {
+        case MetersPerSec:
+            return milesPerHourToMetersPerSec(value);                        
+        case MetersPerHour:
+            return milesPerHourToMetersPerHour(value);    
+        case Knots:
+            return milesPerHourToKnots(value);
+        default:
+        }
+        throw new UnsupportedOperationException("Implement this convertion for ("+destUnits+")");
+    }
+    
+    public static double convertMilesPerHour(Units destUnits, double value) {
+        switch(destUnits) {
+        case MetersPerSec:
+            return milesPerHourToMetersPerSec(value);                        
+        case MetersPerHour:
+            return milesPerHourToMetersPerHour(value);                        
+        case Knots:
+            return milesPerHourToKnots(value);
+        default:
+        }
+        throw new UnsupportedOperationException("Implement this convertion for ("+destUnits+")");
+    }
+
+    public static float[] convertMilesPerHour(Units destUnits, float[] array) {
+        switch(destUnits) {
+        case MetersPerSec:
+            return milesPerHourToMetersPerSec(array);                        
+        case MetersPerHour:
+            return milesPerHourToMetersPerHour(array);                        
+        case Knots:
+            return milesPerHourToKnots(array);
+        default:
+        }
+        throw new UnsupportedOperationException("Implement this convertion for ("+destUnits+")");
+    }
+    
+    public static double[] convertMilesPerHour(Units destUnits, double[] array) {
+        switch(destUnits) {
+        case MetersPerSec:
+            return milesPerHourToMetersPerSec(array);                        
+        case MetersPerHour:
+            return milesPerHourToMetersPerHour(array);                        
+        case Knots:
+            return milesPerHourToKnots(array);
+        default:
+        }
+        throw new UnsupportedOperationException("Implement this convertion for ("+destUnits+")");
+    }
+    public static float[][] convertMilesPerHour(Units destUnits, float[][] grid) {
+        switch(destUnits) {
+        case MetersPerSec:
+            return milesPerHourToMetersPerSec(grid);                        
+        case MetersPerHour:
+            return milesPerHourToMetersPerHour(grid);                        
+        case Knots:
+            return milesPerHourToKnots(grid);
+        default:
+        }
+        throw new UnsupportedOperationException("Implement this convertion for ("+destUnits+")");
+    }
+    public static double[][] convertMilesPerHour(Units destUnits, double[][] grid) {
+        switch(destUnits) {
+        case MetersPerSec:
+            return milesPerHourToMetersPerSec(grid);                        
+        case MetersPerHour:
+            return milesPerHourToMetersPerHour(grid);                        
+        case Knots:
+            return milesPerHourToKnots(grid);
+        default:
+        }
+        throw new UnsupportedOperationException("Implement this convertion for ("+destUnits+")");
+    }
+    
+    ////////////////////////////////////// convert MilesPerHour //////////////////////////////////////    
     ////////////////////////////////////// convert Fahrenheit ///////////////////////////////////////////
 
     public static float fahrenheitToKelvin(float value) {
@@ -1228,8 +1343,274 @@ public class UnitsConversion {
         }
         return grid;
     }
+    
+    public static float metersPerSecToKnots(float value) {
+        return (float)(value * 1.94384449);
+    }
+    public static double metersPerSecToKnots(double value) {
+        return (value * 1.94384449);
+    }
+    public static float[] metersPerSecToKnots(float[] array) {
+         for(int i=array.length-1; i>=0; i--) {
+            array[i] = (float)((array[i] * 1.94384449));
+        }
+        return array;
+    }    
+    public static double[] metersPerSecToKnots(double[] array) {
+         for(int i=array.length-1; i>=0; i--) {
+            array[i] = (array[i] * 1.94384449);
+        }
+        return array;
+    }
+    public static float[][] metersPerSecToKnots(float[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = (float)((grid[i][j] * 1.94384449));
+            }
+        }
+        return grid;
+    }    
+    public static double[][] metersPerSecToKnots(double[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = (grid[i][j] * 1.94384449);
+            }
+        }
+        return grid;
+    }
+    
     ////////////////////////////////////// convert MetersPerSec ///////////////////////////////////////
-    ////////////////////////////////////// convert Feet ///////////////////////////////////////////////////
+    ////////////////////////////////////// convert MilesPerHour ////////////////////////////////////////
+   
+    public static float milesPerHourToMetersPerSec(float value) {
+        return (float)(value * 0.44704);
+    }
+    public static double milesPerHourToMetersPerSec(double value) {
+        return (value * 0.44704);
+    }
+    public static float[] milesPerHourToMetersPerSec(float[] array) {
+         for(int i=array.length-1; i>=0; i--) {
+            array[i] = (float)((array[i] * 0.44704));
+        }
+        return array;
+    }    
+    public static double[] milesPerHourToMetersPerSec(double[] array) {
+         for(int i=array.length-1; i>=0; i--) {
+            array[i] = (array[i] * 0.44704);
+        }
+        return array;
+    }
+    public static float[][] milesPerHourToMetersPerSec(float[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = (float)((grid[i][j] * 0.44704));
+            }
+        }
+        return grid;
+    }    
+    public static double[][] milesPerHourToMetersPerSec(double[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = (grid[i][j] * 0.44704);
+            }
+        }
+        return grid;
+    }
+    
+    public static float milesPerHourToMetersPerHour(float value) {
+        return (float)(value * 1609.344);
+    }
+    public static double milesPerHourToMetersPerHour(double value) {
+        return (value * 1609.344);
+    }
+    public static float[] milesPerHourToMetersPerHour(float[] array) {
+         for(int i=array.length-1; i>=0; i--) {
+            array[i] = (float)((array[i] * 1609.344));
+        }
+        return array;
+    }    
+    public static double[] milesPerHourToMetersPerHour(double[] array) {
+         for(int i=array.length-1; i>=0; i--) {
+            array[i] = (array[i] * 1609.344);
+        }
+        return array;
+    }
+    public static float[][] milesPerHourToMetersPerHour(float[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = (float)((grid[i][j] * 1609.344));
+            }
+        }
+        return grid;
+    }    
+    public static double[][] milesPerHourToMetersPerHour(double[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = (grid[i][j] * 1609.344);
+            }
+        }
+        return grid;
+    }
+    
+    public static float milesPerHourToKnots(float value) {
+        return (float)(value * 0.868976242);
+    }
+    public static double milesPerHourToKnots(double value) {
+        return (value * 0.868976242);
+    }
+    public static float[] milesPerHourToKnots(float[] array) {
+         for(int i=array.length-1; i>=0; i--) {
+            array[i] = (float)((array[i] * 0.868976242));
+        }
+        return array;
+    }    
+    public static double[] milesPerHourToKnots(double[] array) {
+         for(int i=array.length-1; i>=0; i--) {
+            array[i] = (array[i] * 0.868976242);
+        }
+        return array;
+    }
+    public static float[][] milesPerHourToKnots(float[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = (float)((grid[i][j] * 0.868976242));
+            }
+        }
+        return grid;
+    }    
+    public static double[][] milesPerHourToKnots(double[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = (grid[i][j] * 0.868976242);
+            }
+        }
+        return grid;
+    }
+    
+    ////////////////////////////////////// convert MilesPerHour ////////////////////////////////////////
+    ////////////////////////////////////// convert Knots ////////////////////////////////////////////////////
+   
+    public static float knotsToMetersPerSec(float value) {
+        return (float)(value * 0.514444445);
+    }
+    public static double knotsToMetersPerSec(double value) {
+        return (value * 0.514444445);
+    }
+    public static float[] knotsToMetersPerSec(float[] array) {
+         for(int i=array.length-1; i>=0; i--) {
+            array[i] = (float)((array[i] * 0.514444445));
+        }
+        return array;
+    }    
+    public static double[] knotsToMetersPerSec(double[] array) {
+         for(int i=array.length-1; i>=0; i--) {
+            array[i] = (array[i] * 0.514444445);
+        }
+        return array;
+    }
+    public static float[][] knotsToMetersPerSec(float[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = (float)((grid[i][j] * 0.514444445));
+            }
+        }
+        return grid;
+    }    
+    public static double[][] knotsToMetersPerSec(double[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = (grid[i][j] * 0.514444445);
+            }
+        }
+        return grid;
+    }
+    
+    public static float knotsToMetersPerHour(float value) {
+        return (float)(value * 1852.0);
+    }
+    public static double knotsToMetersPerHour(double value) {
+        return (value * 1852.0);
+    }
+    public static float[] knotsToMetersPerHour(float[] array) {
+         for(int i=array.length-1; i>=0; i--) {
+            array[i] = (float)((array[i] * 1852.0));
+        }
+        return array;
+    }    
+    public static double[] knotsToMetersPerHour(double[] array) {
+         for(int i=array.length-1; i>=0; i--) {
+            array[i] = (array[i] * 1852.0);
+        }
+        return array;
+    }
+    public static float[][] knotsToMetersPerHour(float[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = (float)((grid[i][j] * 1852.0));
+            }
+        }
+        return grid;
+    }    
+    public static double[][] knotsToMetersPerHour(double[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = (grid[i][j] * 1852.0);
+            }
+        }
+        return grid;
+    }
+    
+    public static float knotsToMilesPerHour(float value) {
+        return (float)(value * 1.150779448);
+    }
+    public static double knotsToMilesPerHour(double value) {
+        return (value * 1.150779448);
+    }
+    public static float[] knotsToMilesPerHour(float[] array) {
+         for(int i=array.length-1; i>=0; i--) {
+            array[i] = (float)((array[i] * 1.150779448));
+        }
+        return array;
+    }    
+    public static double[] knotsToMilesPerHour(double[] array) {
+         for(int i=array.length-1; i>=0; i--) {
+            array[i] = (array[i] * 1.150779448);
+        }
+        return array;
+    }
+    public static float[][] knotsToMilesPerHour(float[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = (float)((grid[i][j] * 1.150779448));
+            }
+        }
+        return grid;
+    }    
+    public static double[][] knotsToMilesPerHour(double[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = (grid[i][j] * 1.150779448);
+            }
+        }
+        return grid;
+    }
+    
+    ////////////////////////////////////// convert Knots ////////////////////////////////////////////////////
+    ////////////////////////////////////// convert Feet //////////////////////////////////////////////////////
 
     public static float feetToInches(float feet) {
         return (float)(feet*12.0);
@@ -1444,7 +1825,7 @@ public class UnitsConversion {
         return (float)(mile*63360);
     }
     public static double milesToInches(double mile) {
-        return mile*1609.344;
+        return mile*63360;
     }    
     public static float[] milesToInches(float[] array) {
         for(int i=array.length-1; i>=0; i--) {
@@ -1480,7 +1861,7 @@ public class UnitsConversion {
         return (float)(mile*5280);
     }
     public static double milesToFeet(double mile) {
-        return mile*1609.344;
+        return mile*5280;
     }    
     public static float[] milesToFeet(float[] array) {
         for(int i=array.length-1; i>=0; i--) {

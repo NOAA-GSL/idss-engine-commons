@@ -20,6 +20,7 @@ public enum Units  {
     MilesPerHour,
     MetersPerSecond,
     MetersPerHour,
+    Knots,
     Fahrenheit,
     Kelvin,
     Celcius,
@@ -73,6 +74,13 @@ public enum Units  {
         map.put("m/s", MetersPerSecond); 
         map.put("metersPerSecond", MetersPerSecond); 
         map.put("MetersPerSecond", MetersPerSecond); 
+        map.put("KNOTS", Knots); 
+        map.put("knots", Knots); 
+        map.put("KNOT", Knots); 
+        map.put("Knot", Knots); 
+        map.put("knot", Knots); 
+        map.put("KN", Knots); 
+        map.put("kn", Knots); 
         map.put("F", Fahrenheit); 
         map.put("DEG F", Fahrenheit); 
         map.put("K", Kelvin); 
