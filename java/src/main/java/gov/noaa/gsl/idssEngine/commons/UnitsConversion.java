@@ -384,6 +384,22 @@ public class UnitsConversion {
         default:
         }
         throw new UnsupportedOperationException("Units covertion from feet to ("+destUnits+") not currently supported");
+    } 
+    public static double[][] convertFeet(Units destUnits, double[][] grid) {
+        switch(destUnits) {
+        case Inches:
+            return feetToInches(grid);                        
+        case Feet:
+            return grid;            
+        case Miles:
+            return feetToMiles(grid);
+        case Meters:
+            return feetToMeters(grid);            
+        case KgPerM2:
+            return feetToKgPerM2(grid);
+        default:
+        }
+        throw new UnsupportedOperationException("Units covertion from feet to ("+destUnits+") not currently supported");
     }    
     ////////////////////////////////////// convert Feet //////////////////////////////////////////////////
     ////////////////////////////////////// convert Meters ///////////////////////////////////////////////
@@ -959,7 +975,7 @@ public class UnitsConversion {
 
     public static float convertMilesPerHour(Units destUnits, float value) {
         switch(destUnits) {
-        case MetersPerSec:
+        case MetersPerSecond:
             return milesPerHourToMetersPerSec(value);                        
         case MetersPerHour:
             return milesPerHourToMetersPerHour(value);    
@@ -972,7 +988,7 @@ public class UnitsConversion {
     
     public static double convertMilesPerHour(Units destUnits, double value) {
         switch(destUnits) {
-        case MetersPerSec:
+        case MetersPerSecond:
             return milesPerHourToMetersPerSec(value);                        
         case MetersPerHour:
             return milesPerHourToMetersPerHour(value);                        
@@ -985,7 +1001,7 @@ public class UnitsConversion {
 
     public static float[] convertMilesPerHour(Units destUnits, float[] array) {
         switch(destUnits) {
-        case MetersPerSec:
+        case MetersPerSecond:
             return milesPerHourToMetersPerSec(array);                        
         case MetersPerHour:
             return milesPerHourToMetersPerHour(array);                        
@@ -998,7 +1014,7 @@ public class UnitsConversion {
     
     public static double[] convertMilesPerHour(Units destUnits, double[] array) {
         switch(destUnits) {
-        case MetersPerSec:
+        case MetersPerSecond:
             return milesPerHourToMetersPerSec(array);                        
         case MetersPerHour:
             return milesPerHourToMetersPerHour(array);                        
@@ -1010,7 +1026,7 @@ public class UnitsConversion {
     }
     public static float[][] convertMilesPerHour(Units destUnits, float[][] grid) {
         switch(destUnits) {
-        case MetersPerSec:
+        case MetersPerSecond:
             return milesPerHourToMetersPerSec(grid);                        
         case MetersPerHour:
             return milesPerHourToMetersPerHour(grid);                        
@@ -1022,7 +1038,7 @@ public class UnitsConversion {
     }
     public static double[][] convertMilesPerHour(Units destUnits, double[][] grid) {
         switch(destUnits) {
-        case MetersPerSec:
+        case MetersPerSecond:
             return milesPerHourToMetersPerSec(grid);                        
         case MetersPerHour:
             return milesPerHourToMetersPerHour(grid);                        
@@ -1033,7 +1049,86 @@ public class UnitsConversion {
         throw new UnsupportedOperationException("Implement this convertion for ("+destUnits+")");
     }
     
-    ////////////////////////////////////// convert MilesPerHour //////////////////////////////////////    
+    ////////////////////////////////////// convert MilesPerHour ////////////////////////////////////////    
+    ////////////////////////////////////// convert Knots ////////////////////////////////////////////////////    
+
+    public static float convertKnots(Units destUnits, float value) {
+        switch(destUnits) {
+        case MetersPerSecond:
+            return knotsToMetersPerSec(value);                        
+        case MetersPerHour:
+            return knotsToMetersPerHour(value);    
+        case MilesPerHour:
+            return knotsToMilesPerHour(value);
+        default:
+        }
+        throw new UnsupportedOperationException("Implement this convertion for ("+destUnits+")");
+    }
+    
+    public static double convertKnots(Units destUnits, double value) {
+        switch(destUnits) {
+        case MetersPerSecond:
+            return knotsToMetersPerSec(value);                        
+        case MetersPerHour:
+            return knotsToMetersPerHour(value);                        
+        case MilesPerHour:
+            return knotsToMilesPerHour(value);
+        default:
+        }
+        throw new UnsupportedOperationException("Implement this convertion for ("+destUnits+")");
+    }
+
+    public static float[] convertKnots(Units destUnits, float[] array) {
+        switch(destUnits) {
+        case MetersPerSecond:
+            return knotsToMetersPerSec(array);                        
+        case MetersPerHour:
+            return knotsToMetersPerHour(array);                        
+        case MilesPerHour:
+            return knotsToMilesPerHour(array);
+        default:
+        }
+        throw new UnsupportedOperationException("Implement this convertion for ("+destUnits+")");
+    }
+    
+    public static double[] convertKnots(Units destUnits, double[] array) {
+        switch(destUnits) {
+        case MetersPerSecond:
+            return knotsToMetersPerSec(array);                        
+        case MetersPerHour:
+            return knotsToMetersPerHour(array);                        
+        case MilesPerHour:
+            return knotsToMilesPerHour(array);
+        default:
+        }
+        throw new UnsupportedOperationException("Implement this convertion for ("+destUnits+")");
+    }
+    public static float[][] convertKnots(Units destUnits, float[][] grid) {
+        switch(destUnits) {
+        case MetersPerSecond:
+            return knotsToMetersPerSec(grid);                        
+        case MetersPerHour:
+            return knotsToMetersPerHour(grid);                        
+        case MilesPerHour:
+            return knotsToMilesPerHour(grid);
+        default:
+        }
+        throw new UnsupportedOperationException("Implement this convertion for ("+destUnits+")");
+    }
+    public static double[][] convertKnots(Units destUnits, double[][] grid) {
+        switch(destUnits) {
+        case MetersPerSecond:
+            return knotsToMetersPerSec(grid);                        
+        case MetersPerHour:
+            return knotsToMetersPerHour(grid);                        
+        case MilesPerHour:
+            return knotsToMilesPerHour(grid);
+        default:
+        }
+        throw new UnsupportedOperationException("Implement this convertion for ("+destUnits+")");
+    }
+    
+    ////////////////////////////////////// convert Knots //////////////////////////////////////////////////    
     ////////////////////////////////////// convert Fahrenheit ///////////////////////////////////////////
 
     public static float fahrenheitToKelvin(float value) {
@@ -1639,6 +1734,16 @@ public class UnitsConversion {
         }
         return grid;
     }
+    public static double[][] feetToInches(double[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = (grid[i][j]*12.0);
+            }
+        }
+        return grid;
+    }
+    
     public static float feetToMiles(float feet) {
         return (float)(feet/5280.0);
     }
@@ -1666,6 +1771,16 @@ public class UnitsConversion {
         }
         return grid;
     }  
+    public static double[][] feetToMiles(double[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = (grid[i][j]/5280.0);
+            }
+        }
+        return grid;
+    }  
+    
     public static float feetToMeters(float feet) {
         return (float)(feet/0.3048);
     }
@@ -1693,6 +1808,16 @@ public class UnitsConversion {
         }
         return grid;
     }  
+    public static double[][] feetToMeters(double[][] grid) {
+        int d1=grid.length, d2=grid[0].length;
+        for(int i=0; i<d1; i++) {
+            for(int j=0; j<d2; j++) {
+                grid[i][j] = (grid[i][j]/0.3048);
+            }
+        }
+        return grid;
+    }  
+    
     public static float feetToKgPerM2(float feet) {
         throw new UnsupportedOperationException("Implement this convertion");
     }
@@ -1706,6 +1831,9 @@ public class UnitsConversion {
         throw new UnsupportedOperationException("Implement this convertion");
     }
     public static float[][] feetToKgPerM2(float[][] grid) {
+        throw new UnsupportedOperationException("Implement this convertion");
+    }  
+    public static double[][] feetToKgPerM2(double[][] grid) {
         throw new UnsupportedOperationException("Implement this convertion");
     }  
     
