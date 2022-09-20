@@ -34,6 +34,10 @@ public class Logger {
     private Sid sid = Sid.Empty;
     private boolean closed = true;
     
+    public Logger(String service, Level level) {
+        this((Connection)null, (Channel)null, (String)null, service, level);
+    }
+    
     public Logger(Connection connection, Channel channel, String exchName, String service, Level level) {
         this.connection = connection;
         this.channel = channel;
@@ -220,7 +224,8 @@ public class Logger {
                                                                                 service, message);
             System.out.println(Level.DEBUG+": "+formatStr);
             try {
-                channel.basicPublish(exchName, Level.DEBUG.toString(), null, formatStr.getBytes(StandardCharsets.UTF_8));
+                if(channel != null)
+                    channel.basicPublish(exchName, Level.DEBUG.toString(), null, formatStr.getBytes(StandardCharsets.UTF_8));
             } catch(IOException e) {
                 error(sid, service, "Unable to publish log to queue", e, false);
             }
@@ -243,7 +248,8 @@ public class Logger {
                                                                                 service, message);
             System.out.println(Level.INFO+": "+formatStr);
             try {
-                channel.basicPublish(exchName, Level.INFO.toString(), null, formatStr.getBytes(StandardCharsets.UTF_8));
+                if(channel != null)
+                    channel.basicPublish(exchName, Level.INFO.toString(), null, formatStr.getBytes(StandardCharsets.UTF_8));
             } catch(IOException e) {
                 error(sid, service, "Unable to publish log to queue", e, false);
             }
@@ -266,7 +272,8 @@ public class Logger {
                                                                                 service, message);
             System.out.println(Level.WARN+": "+formatStr);
             try {
-                channel.basicPublish(exchName, Level.WARN.toString(), null, formatStr.getBytes(StandardCharsets.UTF_8));
+                if(channel != null)
+                    channel.basicPublish(exchName, Level.WARN.toString(), null, formatStr.getBytes(StandardCharsets.UTF_8));
             } catch(IOException e) {
                 error(sid, service, "Unable to publish log to queue", e, false);
             }   
@@ -318,7 +325,8 @@ public class Logger {
         }
         System.err.println(Level.ERROR+": "+formatStr);
         try {
-            channel.basicPublish(exchName, Level.ERROR.toString(), null, formatStr.getBytes(StandardCharsets.UTF_8));
+            if(channel != null)
+                channel.basicPublish(exchName, Level.ERROR.toString(), null, formatStr.getBytes(StandardCharsets.UTF_8));
         } catch(IOException e) {
             error(sid, service, "Unable to publish log to queue", e, false);
         }
