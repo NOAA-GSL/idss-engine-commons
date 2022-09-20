@@ -13,7 +13,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 
 import gov.noaa.gsd.fiqas.util.time.DateTimeFactory;
-import gov.noaa.gsl.idssEngine.riskProc.RiskProcessor;
 
 public class Sid {
     
@@ -56,7 +55,7 @@ public class Sid {
     }
     
     @Override
-    public int toString() {
+    public String toString() {
         return String.format("Sid(%s, %s, %s)", key, originator, issueDt);
     }
     
