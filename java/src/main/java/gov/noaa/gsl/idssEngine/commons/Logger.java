@@ -61,11 +61,8 @@ public class Logger {
         if(connection!=null) closed = false;
         
         if(level.equals(Level.DEBUG)) {
-            debug("user: "+rabMqUser);
-            debug("pass: "+rabMqPwd);
-            debug("vHost: "+rabMqVhost);
-            debug("host: "+rabMqHost);
-            debug("portNum: "+rabMqPortNum);
+            debug(String.format("Logger(user: \"%s\", pass: \"%s\", vHost: \"%s\", host: \"%s\", portNum: %d)",
+                                                                    rabMqUser, rabMqPwd, rabMqVhost, rabMqHost, rabMqPortNum));
         }
     }
     
