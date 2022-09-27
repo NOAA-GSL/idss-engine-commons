@@ -74,8 +74,12 @@ public class Logger {
         String rabMqVhost = null;
         String rabMqHost = null;
         int rabMqPortNum = 0;
-        Level level = null;
+        Level level = Level.INFO;
         
+         try {
+             if(configObj.has("logLevel")) level = Level.valueOf(configObj.getString("logLevel")); 
+         } catch(Exception e) {}
+         
          JSONObject mqObj = null;
          try {
              mqObj = configObj.getJSONObject("rabbitMQ"); 
@@ -123,12 +127,6 @@ public class Logger {
              exchType = mqObj.getString("logExchangeType"); 
          } catch(Exception e) {
              error(service, "Config file must specify logExchangeType", e);
-         }
-        
-        try {
-             level = Level.valueOf(mqObj.getString("logLevel")); 
-         } catch(Exception e) {
-             level = Level.INFO;
          }
         
         this.connection = initRabbitMqConnection(rabMqVhost, rabMqHost, rabMqPortNum, rabMqUser, rabMqPwd);
