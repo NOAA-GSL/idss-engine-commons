@@ -31,6 +31,7 @@ public enum Units  {
     MilliBars,
     InchesOfMercury,
     WattsPerM2,
+    ThreatLevel,
     Level,
     Cat,
     Bool,
