@@ -126,10 +126,10 @@ public class ImsThresholdSet {
                 for(Object model : set) {
                     switch((WxModel)model) {
                         case ALL:
-                            for(WxModel m : WxModel.allModels) modelSet.add(m);
+                            for(WxModel m : WxModel.values()) modelSet.add(m);
                             break;
                         case ANY:
-                            modelSet.add(WxModel.allModels[0]);
+                            modelSet.add(WxModel.values()[0]);
                             break;
                         default:
                             modelSet.add((WxModel)model); 

@@ -10,16 +10,22 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
-class WxTypeTest {
+class RelationalTest {
 
     @Test
     void shouldNotAllowInvalidType() {
-        assertThrows(IllegalArgumentException.class, () -> WxType.get("ice_cream"));
+        assertThrows(IllegalArgumentException.class, () -> Relational.get("penultimate"));
     }
 
     @Test
     void canGetSpelledOutType() {
-        WxType wxType = WxType.get("Thunderstorms");
-        assertEquals(WxType.THUNDER, wxType);
+        Relational relational = Relational.get("Greater than or equal");
+        assertEquals(Relational.GREATERTHANOREQUAL, relational);
+    }
+
+    @Test
+    void canGetValidFromShortName() {
+        Relational relational = Relational.get(Relational.get("BETWEEN").toShortString());
+        assertEquals(Relational.BETWEEN, relational);
     }
 }

@@ -10,16 +10,16 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
-class WxTypeTest {
+class WxModelTest {
 
     @Test
     void shouldNotAllowInvalidType() {
-        assertThrows(IllegalArgumentException.class, () -> WxType.get("ice_cream"));
+        assertThrows(IllegalArgumentException.class, () -> WxModel.get("Cindy Crawford"));
     }
 
     @Test
     void canGetSpelledOutType() {
-        WxType wxType = WxType.get("Thunderstorms");
-        assertEquals(WxType.THUNDER, wxType);
+        WxModel wxModel = WxModel.get("Any Model");
+        assertEquals(WxModel.ANY, wxModel);
     }
 }

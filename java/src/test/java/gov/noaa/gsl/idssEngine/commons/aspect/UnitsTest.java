@@ -10,16 +10,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
-class WxTypeTest {
+class UnitsTest {
 
     @Test
     void shouldNotAllowInvalidType() {
-        assertThrows(IllegalArgumentException.class, () -> WxType.get("ice_cream"));
+        assertThrows(IllegalArgumentException.class, () -> Units.get("1.21 gigawatts"));
     }
 
     @Test
     void canGetSpelledOutType() {
-        WxType wxType = WxType.get("Thunderstorms");
-        assertEquals(WxType.THUNDER, wxType);
+        Units units = Units.get("Catagory");
+        assertEquals(Units.Cat, units);
     }
+
 }

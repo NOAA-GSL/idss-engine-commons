@@ -100,36 +100,58 @@ public enum Field {
         map.put("Temperature", TEMP);
         map.put("TEMPERATURE", TEMP);
         
+        map.put("relative Humidity", RH);
         map.put("Relative Humidity", RH);
         map.put("RELATIVE HUMIDITY", RH);
+        map.put("RELATIVEHUMIDITY", RH);
 
+        map.put("dewpoint", TD);
+        map.put("dew point", TD);
         map.put("Dewpoint", TD);
+        map.put("Dew point", TD);
         map.put("DEWPOINT", TD);
+        map.put("DEW POINT", TD);
+        map.put("dew point temperature", TD);
+        map.put("Dew point temperature", TD);
+        map.put("Dew Point Temperature", TD);
+        map.put("DewPointTemperature", TD);
 
+        map.put("visibility", VIS);
         map.put("Visibility", VIS);
         map.put("VISIBILITY", VIS);
 
+        map.put("ceiling", CIG);
         map.put("Ceiling", CIG);
         map.put("CEILING", CIG);
 
+        map.put("wind speed", WINDSPEED);
+        map.put("Wind speed", WINDSPEED);
         map.put("Wind Speed", WINDSPEED);
         map.put("Wind Speed (Sustained)", WINDSPEED);
         map.put("WIND SPEED", WINDSPEED);
 
+        map.put("wind gust", WINDGUST);
+        map.put("Wind gust", WINDGUST);
         map.put("Wind Gust", WINDGUST);
         map.put("WIND GUST", WINDGUST);
         
+        map.put("wind direction", WINDDIR);
+        map.put("Wind direction", WINDDIR);
         map.put("Wind Direction", WINDDIR);
         map.put("WIND DIRECTION", WINDDIR);
         
+        map.put("wind chill", WINDCHILL);
+        map.put("Wind chill", WINDCHILL);
         map.put("Wind Chill", WINDCHILL);
         map.put("WIND CHILL", WINDCHILL);
 
+        map.put("heat index", HEATINDEX);
+        map.put("Heat index", HEATINDEX);
         map.put("Heat Index", HEATINDEX);
         map.put("HEAT INDEX", HEATINDEX);
         
+        map.put("lightning", LIGHTNING);
         map.put("Lightning", LIGHTNING);
-        map.put("LIGHTNING", LIGHTNING);
 
         map.put("WEATHER TYPE INCLUDES RAIN", WXRAIN);
         map.put("WEATHER TYPE INCLUDES SNOW", WXSNOW);
@@ -142,7 +164,6 @@ public enum Field {
         map.put("RDSBFRZP", RDSBFRZP);
         map.put("Road Subfreeze", RDSBFRZP);
         map.put("ROAD SUBFREEZE", RDSBFRZP);
-
     } 
 
     public static Field get(String fieldString) {
@@ -157,50 +178,9 @@ public enum Field {
         return field;
     }
     
+    /*
     public static Units getUnits(Field elm) {
         switch(elm) {
-//            case Ceiling:
-//                return Units.Feet;
-//            case Dewpoint:
-//                return Units.Fahrenheit;
-//            case HeatIndex:
-//                return Units.Fahrenheit;
-//            case IceAccumulation:
-//                return Units.Inches;
-//            case Lightning:
-//                return Units.Strikes;
-//            case ProbPrecipGT1in1:
-//                return Units.Percent;
-//            case ProbPrecipGT1in3:
-//                return Units.Percent;
-//            case ProbPrecipGT2in1:
-//                return Units.Percent;
-//            case ProbPrecipGT2in3:
-//                return Units.Percent;
-//            case ProbPrecipGT3in3:
-//                return Units.Percent;
-//            case Rainfall:
-//                return Units.Inches;
-//            case RelativeHumidity:
-//                return Units.Percent;
-//            case RiverStage:
-//                return Units.Inches;
-//            case Snowfall:
-//                return Units.Inches;
-//            case Temperature:
-//                return Units.Fahrenheit;
-//            case Visibility:
-//                return Units.Miles;
-//            case WBGT:
-//                return Units.Fahrenheit;
-//            case WindChill:
-//                return Units.Fahrenheit;
-//            case WindDirection:
-//                return Units.DegreesNorth;
-//            case WindGust:
-//                return Units.MilesPerHour;
-//            case WindSpeed:
-//                return Units.MilesPerHour;
             case RAIN1HR:
             case RAIN3HR:
             case RAIN6HR:
@@ -250,7 +230,7 @@ public enum Field {
                 throw new RuntimeException("Passed Field does not have orresponding Units");
         }
     }
-    
+    */
    
 
 

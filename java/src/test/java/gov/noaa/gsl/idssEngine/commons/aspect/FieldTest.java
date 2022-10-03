@@ -10,16 +10,17 @@ import static org.junit.jupiter.api.Assertions.*;
 
 import org.junit.jupiter.api.Test;
 
-class WxTypeTest {
+class FieldTest {
 
     @Test
     void shouldNotAllowInvalidType() {
-        assertThrows(IllegalArgumentException.class, () -> WxType.get("ice_cream"));
+        assertThrows(IllegalArgumentException.class, () -> Field.get("Folsom"));
     }
 
     @Test
     void canGetSpelledOutType() {
-        WxType wxType = WxType.get("Thunderstorms");
-        assertEquals(WxType.THUNDER, wxType);
+        Field field = Field.get("Dew point");
+        assertEquals(Field.TD, field);
     }
+
 }
