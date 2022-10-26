@@ -54,6 +54,8 @@ public enum Field {
     WBGT,
     
     RDSBFRZP,
+    
+    WINDADVY,
     ;
 
     // Declaring the static lookup map 
