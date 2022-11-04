@@ -113,7 +113,7 @@ Using the port mapping `-p 15672:15672` allows access to the RabbitMQ Web UI Man
 ` idss.engine.commons.couchdb.server:<tag>`
 
 > **Recommended Tags** development `:dev` stable release `:major.minor` ie. `:1.0` targeted environment `:aws` test `:test`
-From the `idss-engine-commons/rabbitmq` directory:
+From the `idss-engine-commons/couchdb` directory:
 
 #### Build
 
