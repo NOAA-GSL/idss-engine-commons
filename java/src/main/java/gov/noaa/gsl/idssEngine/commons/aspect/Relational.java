@@ -38,7 +38,6 @@ public enum Relational {
         map = new HashMap<>(); 
         map.put("equal", EQUAL); 
         map.put("Equal", EQUAL); 
-        map.put("EQ", EQUAL); 
         map.put("equal to", EQUAL); 
         map.put("Equal to", EQUAL); 
         map.put("EQUALTO", EQUAL); 
