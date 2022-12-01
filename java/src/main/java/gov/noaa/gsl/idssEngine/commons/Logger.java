@@ -19,10 +19,11 @@ import com.rabbitmq.client.ConnectionFactory;
 public class Logger {
 
     public enum Level {
-        DEBUG, INFO, WARN, ERROR; //must be ordered from least to most
+        DEBUG, INFO, WARN, ERROR, STATUS; //must be ordered from least to most
         
-        public boolean below(Level level) {
-            return this.compareTo(level) > 0;
+        public boolean notBelow(Level level) {
+            if(level == null) return true;
+            return this.compareTo(level) >= 0;
         }
     };
 
@@ -43,6 +44,11 @@ public class Logger {
         this.channel = channel;
         this.exchName = exchName;
         this.service = service;
+        if(level == null) level = Level.ERROR;
+        if(level.equals(Level.STATUS)) {
+            warn("Highest level allowed is ERROR, using ERROR instead of "+level);
+            level = Level.ERROR;
+        }
         this.level = level;
         if(connection!=null) closed = false;
     }
@@ -57,6 +63,11 @@ public class Logger {
         this.channel = initRabbitMqChannel(connection, exchName, exchType);
         this.exchName = exchName;
         this.service = service;
+        if(level == null) level = Level.ERROR;
+        if(level.equals(Level.STATUS)) {
+            warn("Highest level allowed is ERROR, using ERROR instead of "+level);
+            level = Level.ERROR;
+        }
         this.level = level;
         if(connection!=null) closed = false;
         
@@ -133,6 +144,11 @@ public class Logger {
         this.channel = initRabbitMqChannel(connection, exchName, exchType);
         this.exchName = exchName;
         this.service = service;
+        if(level == null) level = Level.ERROR;
+        if(level.equals(Level.STATUS)) {
+            warn("Highest level allowed is ERROR, using ERROR instead of "+level);
+            level = Level.ERROR;
+        }
         this.level = level;
         if(connection!=null) closed = false;
         
@@ -234,7 +250,8 @@ public class Logger {
         info(sid, service, message);
     }
     public void info(Sid sid, String service, String message) {
-        if(!level.below(Level.INFO)) {
+//        if(!level.notBelow(Level.INFO)) {
+        if(Level.INFO.notBelow(level)) {
             String formatStr = String.format("%s:%s:%02d:%02d:%s; %s", 
                                                                                 sid.key, sid.originator, sid.issueDt.getHourOfDay(), sid.issueDt.getMinuteOfHour(), 
                                                                                 service, message);
@@ -258,7 +275,7 @@ public class Logger {
         warn(sid, service, message);
     }
     public void warn(Sid sid, String service, String message) {
-        if(!level.below(Level.WARN)) {
+        if(Level.WARN.notBelow(level)) {
             String formatStr = String.format("%s:%s:%02d:%02d:%s; %s", 
                                                                                 sid.key, sid.originator, sid.issueDt.getHourOfDay(), sid.issueDt.getMinuteOfHour(), 
                                                                                 service, message);
@@ -323,5 +340,27 @@ public class Logger {
             error(sid, service, "Unable to publish log to queue", e, false);
         }
         System.exit(1);
+    }
+    
+    public void status(int numComplete, int totalSteps) {
+        status(sid, service, numComplete, totalSteps);
+    }
+    public void status(Sid sid, int numComplete, int totalSteps) {
+        status(sid, service, numComplete, totalSteps);
+    }
+    public void status(String service, int numComplete, int totalSteps) {
+        status(sid, service, numComplete, totalSteps);
+    }
+    public void status(Sid sid, String service, int numComplete, int totalSteps) {
+            String formatStr = String.format("%s:%s:%02d:%02d:%s; %d/%d", 
+                                                                                sid.key, sid.originator, sid.issueDt.getHourOfDay(), sid.issueDt.getMinuteOfHour(), 
+                                                                                service, numComplete, totalSteps);
+            System.out.println(Level.STATUS+": "+formatStr);
+            try {
+                if(channel != null)
+                    channel.basicPublish(exchName, Level.STATUS.toString(), null, formatStr.getBytes(StandardCharsets.UTF_8));
+            } catch(IOException e) {
+                error(sid, service, "Unable to publish log to queue", e, false);
+            }   
     }
 }
