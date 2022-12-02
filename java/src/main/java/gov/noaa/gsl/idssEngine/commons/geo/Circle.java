@@ -40,5 +40,9 @@ public class Circle extends Point {
         return radius;
     }
     
+    @Override
+    public String toString() {
+        return String.format("CIRCLE (%s, RADIUS (%f))", super.toString(), radius);
+    }
 
 }

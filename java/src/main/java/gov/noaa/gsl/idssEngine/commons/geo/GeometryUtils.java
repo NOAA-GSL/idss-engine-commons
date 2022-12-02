@@ -20,8 +20,6 @@ import gov.noaa.gsd.fiqas.math.coord.cartesian.Polyline;
 import gov.noaa.gsd.fiqas.util.grid.tool.MathMorph;
 import gov.noaa.gsd.fiqas.util.grid.tool.RadialHood;
 import gov.noaa.gsd.fiqas.util.image.draw.PolyDrawler;
-import gov.noaa.gsl.idssEngine.commons.UnitsConversion;
-import gov.noaa.gsl.idssEngine.commons.aspect.Units;
 
 public class GeometryUtils {
 
