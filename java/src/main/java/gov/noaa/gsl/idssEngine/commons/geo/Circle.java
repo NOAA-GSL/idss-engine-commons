@@ -7,6 +7,7 @@
 package gov.noaa.gsl.idssEngine.commons.geo;
 
 import org.locationtech.jts.geom.CoordinateSequence;
+import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 
@@ -34,6 +35,11 @@ public class Circle extends Point {
     @Override
     public String getGeometryType() {
         return circle;
+    }
+    
+    @Override
+    public Geometry copy() {
+        return new Circle((Point)super.copy(), radius);
     }
     
     public double getRadius() {

@@ -12,10 +12,6 @@ import java.util.concurrent.TimeoutException;
 
 import org.json.JSONObject;
 
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-
 public class Logger {
 
     public enum Level {
@@ -27,184 +23,55 @@ public class Logger {
         }
     };
 
-    private final Connection connection;
-    private final Channel channel;
-    private final String exchName;
+    private final RabbitmqPublish statusRp;
     private final String service;
     private final Level level;
     private Sid sid = Sid.Empty;
-    private boolean closed = true;
+    
+    public Logger(String service) {
+        this(service, null, null);
+    }
     
     public Logger(String service, Level level) {
-        this((Connection)null, (Channel)null, (String)null, service, level);
+        this(service, level, null);
     }
     
-    public Logger(Connection connection, Channel channel, String exchName, String service, Level level) {
-        this.connection = connection;
-        this.channel = channel;
-        this.exchName = exchName;
-        this.service = service;
-        if(level == null) level = Level.ERROR;
-        if(level.equals(Level.STATUS)) {
-            warn("Highest level allowed is ERROR, using ERROR instead of "+level);
-            level = Level.ERROR;
-        }
-        this.level = level;
-        if(connection!=null) closed = false;
+    public Logger(String service, JSONObject configObj) {
+        this(service, null, configObj);
     }
     
-    public Logger(Connection connection, String exchName, String exchType, String service, Level level) throws ExceptionInInitializerError {
-        this(connection, initRabbitMqChannel(connection, exchName, exchType), exchName, service, level);
-    }
-    
-    public Logger(String rabMqVhost, String rabMqHost, int rabMqPortNum, String rabMqUser, String rabMqPwd, 
-                                  String exchName, String exchType, String service, Level level) throws ExceptionInInitializerError {
-        this.connection = initRabbitMqConnection(rabMqVhost, rabMqHost, rabMqPortNum, rabMqUser, rabMqPwd);
-        this.channel = initRabbitMqChannel(connection, exchName, exchType);
-        this.exchName = exchName;
-        this.service = service;
-        if(level == null) level = Level.ERROR;
-        if(level.equals(Level.STATUS)) {
-            warn("Highest level allowed is ERROR, using ERROR instead of "+level);
-            level = Level.ERROR;
-        }
-        this.level = level;
-        if(connection!=null) closed = false;
+    public Logger(String service, Level level, JSONObject configObj) {
         
-        if(level.equals(Level.DEBUG)) {
-            debug(String.format("Logger(user: \"%s\", pass: \"%s\", vHost: \"%s\", host: \"%s\", portNum: %d)",
-                                                                    rabMqUser, rabMqPwd, rabMqVhost, rabMqHost, rabMqPortNum));
-        }
-    }
-    
-    public Logger(JSONObject configObj, String service) {
-        String exchName = null;
-        String exchType = null;
-        String rabMqUser = null;
-        String rabMqPwd = null;
-        String rabMqVhost = null;
-        String rabMqHost = null;
-        int rabMqPortNum = 0;
-        Level level = Level.INFO;
-        
-         try {
-             if(configObj.has("logLevel")) level = Level.valueOf(configObj.getString("logLevel")); 
-         } catch(Exception e) {}
-         
-         JSONObject mqObj = null;
-         try {
-             mqObj = configObj.getJSONObject("rabbitMQ"); 
-         } catch(Exception e) {
-             error(service, "Config file must specify a rabbitMQ object", e);
-         }
-         
-         try {
-             rabMqUser = mqObj.getString("userName"); 
-         } catch(Exception e) {
-             error(service, "Config file must specify userName", e);
-         }
-         
-         try {
-            rabMqPwd = mqObj.getString("password"); 
-         } catch(Exception e) {
-             error(service, "Config file must specify password", e);
-         }
-         
-         try {
-            rabMqVhost = mqObj.getString("virtualHost"); 
-         } catch(Exception e) {
-             error(service, "Config file must specify virtualHost", e);
-         }
-         
-         try {
-             rabMqHost = mqObj.getString("hostName"); 
-         } catch(Exception e) {
-             error(service, "Config file must specify hostName", e);
-         }
-         
-         try {
-             rabMqPortNum = mqObj.getInt("portNumber"); 
-         } catch(Exception e) {
-             error(service, "Config file must specify portNumber", e);
-         }
-
-         try {
-             exchName = mqObj.getString("logExchangeName"); 
-         } catch(Exception e) {
-             error(service, "Config file must specify logExchangeName", e);
-         }
-       
-        try {
-             exchType = mqObj.getString("logExchangeType"); 
-         } catch(Exception e) {
-             error(service, "Config file must specify logExchangeType", e);
-         }
-        
-        this.connection = initRabbitMqConnection(rabMqVhost, rabMqHost, rabMqPortNum, rabMqUser, rabMqPwd);
-        this.channel = initRabbitMqChannel(connection, exchName, exchType);
-        this.exchName = exchName;
-        this.service = service;
-        if(level == null) level = Level.ERROR;
-        if(level.equals(Level.STATUS)) {
-            warn("Highest level allowed is ERROR, using ERROR instead of "+level);
-            level = Level.ERROR;
-        }
-        this.level = level;
-        if(connection!=null) closed = false;
-        
-        if(level.equals(Level.DEBUG)) {
-            debug(String.format("Logger(user: \"%s\", pass: \"%s\", vHost: \"%s\", host: \"%s\", portNum: %d)",
-                                                                    rabMqUser, rabMqPwd, rabMqVhost, rabMqHost, rabMqPortNum));
-        }
-    }
-    
-    public static Channel initRabbitMqChannel(Connection connection, String exchName, String exchType) throws ExceptionInInitializerError {
-        Channel channel = null;
-        try {
-            channel = connection.createChannel();
-            channel.exchangeDeclare(exchName, exchType);
-        } catch(IOException e) {
-            throw new ExceptionInInitializerError("Unable to connect Logger to queue");
-        } 
-        return channel;
-    }
-    
-    public static Connection initRabbitMqConnection(String rabMqVhost, String rabMqHost, int rabMqPortNum,
-                                                                                                          String rabMqUser, String rabMqPwd)  throws ExceptionInInitializerError{
-
-        ConnectionFactory factory = new ConnectionFactory();
-        factory.setUsername(rabMqUser);
-        factory.setPassword(rabMqPwd);
-        factory.setVirtualHost(rabMqVhost);
-        factory.setHost(rabMqHost);
-        factory.setPort(rabMqPortNum);
-        
-        Connection connection = null;
-        try {
-            connection = factory.newConnection();
-        } catch( IOException | TimeoutException e ) {
-            throw new ExceptionInInitializerError("Unable to connect Logger to queue, with: "+
-                                                                                     rabMqUser+", "+
-                                                                                     rabMqPwd+", "+
-                                                                                     rabMqVhost+", "+
-                                                                                     rabMqHost+", "+
-                                                                                     rabMqPortNum);
-        } 
-        return connection;
-    }
-
-    public void finalize() {
-        if(!closed)
-            try {
-                close();
-            } catch( IOException e ) {
-                error("Unable to close connection", e);
+        if(level == null) {
+            if(configObj == null) {
+                level = Level.ERROR;
+            } else {
+                try {
+                    if(configObj.has("logLevel")) level = Level.valueOf(configObj.getString("logLevel")); 
+                } catch(Exception e) {
+                    warn("Failed to read log level json config file, using default level: "+Level.ERROR);
+                    level = Level.ERROR;
+                }
             }
-    }
-    
-    public void close() throws IOException {
-        connection.close();
-        closed = true;
+        }
+                 
+        this.service = service;
+        if(level.equals(Level.STATUS)) {
+            warn("Highest level allowed is ERROR, using ERROR instead of "+level);
+            level = Level.ERROR;
+        }
+        this.level = level;
+        
+        if(configObj == null) {
+            this.statusRp = null;
+            warn("No config file was provided, thus STATUS messages will not to sent via RabbitMQ");
+        } else {
+            try {
+                this.statusRp = new RabbitmqPublish("rabbitMQ", configObj);
+            } catch(Exception e) {
+                throw new IllegalArgumentException(e);
+            }
+        }
     }
     
     public Sid setSid(Sid sid) {
@@ -231,12 +98,6 @@ public class Logger {
                                                                                 sid.key, sid.originator, sid.issueDt.getHourOfDay(), sid.issueDt.getMinuteOfHour(), 
                                                                                 service, message);
             System.out.println(Level.DEBUG+": "+formatStr);
-            try {
-                if(channel != null)
-                    channel.basicPublish(exchName, Level.DEBUG.toString(), null, formatStr.getBytes(StandardCharsets.UTF_8));
-            } catch(IOException e) {
-                error(sid, service, "Unable to publish log to queue", e, false);
-            }
         }
     }
     
@@ -250,18 +111,11 @@ public class Logger {
         info(sid, service, message);
     }
     public void info(Sid sid, String service, String message) {
-//        if(!level.notBelow(Level.INFO)) {
         if(Level.INFO.notBelow(level)) {
             String formatStr = String.format("%s:%s:%02d:%02d:%s; %s", 
                                                                                 sid.key, sid.originator, sid.issueDt.getHourOfDay(), sid.issueDt.getMinuteOfHour(), 
                                                                                 service, message);
             System.out.println(Level.INFO+": "+formatStr);
-            try {
-                if(channel != null)
-                    channel.basicPublish(exchName, Level.INFO.toString(), null, formatStr.getBytes(StandardCharsets.UTF_8));
-            } catch(IOException e) {
-                error(sid, service, "Unable to publish log to queue", e, false);
-            }
         }
     }
 
@@ -280,12 +134,6 @@ public class Logger {
                                                                                 sid.key, sid.originator, sid.issueDt.getHourOfDay(), sid.issueDt.getMinuteOfHour(), 
                                                                                 service, message);
             System.out.println(Level.WARN+": "+formatStr);
-            try {
-                if(channel != null)
-                    channel.basicPublish(exchName, Level.WARN.toString(), null, formatStr.getBytes(StandardCharsets.UTF_8));
-            } catch(IOException e) {
-                error(sid, service, "Unable to publish log to queue", e, false);
-            }   
         }
     }
     
@@ -333,13 +181,6 @@ public class Logger {
             formatStr = builder.toString();
         }
         System.err.println(Level.ERROR+": "+formatStr);
-        try {
-            if(channel != null)
-                channel.basicPublish(exchName, Level.ERROR.toString(), null, formatStr.getBytes(StandardCharsets.UTF_8));
-        } catch(IOException e) {
-            error(sid, service, "Unable to publish log to queue", e, false);
-        }
-        System.exit(1);
     }
     
     public void status(int numComplete, int totalSteps) {
@@ -356,11 +197,11 @@ public class Logger {
                                                                                 sid.key, sid.originator, sid.issueDt.getHourOfDay(), sid.issueDt.getMinuteOfHour(), 
                                                                                 service, numComplete, totalSteps);
             System.out.println(Level.STATUS+": "+formatStr);
-            try {
-                if(channel != null)
-                    channel.basicPublish(exchName, Level.STATUS.toString(), null, formatStr.getBytes(StandardCharsets.UTF_8));
-            } catch(IOException e) {
-                error(sid, service, "Unable to publish log to queue", e, false);
+            if(statusRp!=null) try {
+                boolean s = statusRp.basicPublish(Level.STATUS.toString(), null,  formatStr.getBytes(StandardCharsets.UTF_8));
+                debug("Status set to rabbitMQ: "+s);
+            } catch(IOException | TimeoutException e) {
+                error(sid, service, "Unable to publish status to queue", e, false);
             }   
     }
 }

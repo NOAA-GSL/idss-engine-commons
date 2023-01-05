@@ -48,13 +48,13 @@ public class GeometryUtils {
     public static GeoCoords addCoords(Geometry geometry, Projection proj, double dilateRadiusInKm, GeoCoords geoCoords) {
         
         Coordinate[] bdryCoords =  geometry.getCoordinates();
-
-System.out.println(geometry.getClass());
-//System.exit(0);
+        
         if(geometry instanceof org.locationtech.jts.geom.Point) {
           
             if(geometry instanceof Circle) 
                 dilateRadiusInKm += ((Circle)geometry).radius;
+            else if(geometry instanceof Annulus) 
+                dilateRadiusInKm += ((Annulus)geometry).outerRadius;
             
             int[] coord = proj.mapLatLonToPixel(bdryCoords[0].y, bdryCoords[0].x);
             double dilateRadiusInPixel = getDistInPixel(proj, coord, dilateRadiusInKm);
@@ -63,8 +63,20 @@ System.out.println(geometry.getClass());
                 Set<Point> coordSet = new HashSet<>();
                 Set<int[]> hood = RadialHood.getOffsets(dilateRadiusInPixel, true);
                 final int x = coord[0], y = coord[1];
-                for(int[] offset : hood)
+                for(int[] offset : hood) {
                     coordSet.add(new Point(x+offset[0], y+offset[1]));
+                }
+                
+                //remove inner hole, mind dilateRadius
+                if(geometry instanceof Annulus) {
+                    double radiusInKm = ((Annulus)geometry).outerRadius - dilateRadiusInKm;
+                    dilateRadiusInPixel = getDistInPixel(proj, coord, radiusInKm);
+                    hood = RadialHood.getOffsets(dilateRadiusInPixel, true);
+                    for(int[] offset : hood) {
+                        coordSet.remove(new Point(x+offset[0], y+offset[1]));
+                    }
+                }
+                
                 if(geoCoords == null)
                     return new GeoCoords(coordSet);
                 return geoCoords.add(coordSet);
