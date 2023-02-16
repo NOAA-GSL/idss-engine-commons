@@ -1,0 +1,39 @@
+version: '3.7'
+ 
+services:
+    elasticsearch:
+      image: docker.elastic.co/elasticsearch/elasticsearch:7.12.0
+      container_name: elasticsearch
+      environment:
+          - discovery.type=single-node
+          - bootstrap.memory_lock=true
+          - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+          - ELASTIC_PASSWORD=$ELASTIC_PASSWORD
+          - xpack.security.enabled=$ELASTIC_SECURITY
+          - xpack.license.self_generated.type=basic
+      volumes:
+          - elasticsearch-data:/usr/share/elasticsearch/data
+      ports:
+          - 9200:9200
+      networks:
+          - elastic
+    kibana:
+      image: docker.elastic.co/kibana/kibana:7.12.0
+      container_name: kibana
+      environment:
+          - ELASTICSEARCH_USERNAME=elastic
+          - ELASTICSEARCH_PASSWORD=$ELASTIC_PASSWORD
+          - ELASTICSEARCH_URL=http://elasticsearch:9200
+          - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      ports:
+          - 5601:5601
+      depends_on:
+          - elasticsearch
+      networks:
+          - elastic
+volumes:
+    elasticsearch-data:
+        driver: local
+networks:
+    elastic:
+        driver: bridge

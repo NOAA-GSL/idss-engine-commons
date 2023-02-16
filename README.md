@@ -113,7 +113,7 @@ Using the port mapping `-p 15672:15672` allows access to the RabbitMQ Web UI Man
 ` idss.engine.commons.couchdb.server:<tag>`
 
 > **Recommended Tags** development `:dev` stable release `:major.minor` ie. `:1.0` targeted environment `:aws` test `:test`
-From the `idss-engine-commons/rabbitmq` directory:
+From the `idss-engine-commons/couchdb` directory:
 
 #### Build
 
@@ -155,3 +155,10 @@ Examples:
 `$ docker run --rm -d --name couchtest --network couch-test-network -e COUCHDB_USER=idss -e COUCHDB_PASSWORD=idss -p 5984:5984 idss.engine.commons.couchdb.server:<tag>`
 
 `$ docker run --rm -d --name couchtest --network couch-test-network -e COUCHDB_USER=idss -e COUCHDB_PASSWORD=idss -p 5984:5984 -v ~/Desktop/couchdb/data:/opt/couchdb/data idss.engine.commons.couchdb.server:<tag>`
+
+#### Fauxton
+There is a web interface / admin portal available for interacting with the couchdb at:
+
+> http://localhost:5984/_utils/#/_all_dbs
+
+Use login credentials in alignment with `--COUCHDB_USER` and `--COUCHDB_PASSWORD` environment variables set at runtime.
