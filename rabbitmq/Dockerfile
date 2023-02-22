@@ -1,4 +1,4 @@
-FROM rabbitmq:3.8.17
+FROM rabbitmq:3.11.9
 
 # Arguments defined in .env file and passed in from command line or compose build
 ARG maintainer

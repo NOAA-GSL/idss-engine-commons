@@ -28,3 +28,6 @@ RUN apk update && apk upgrade
 # Install any specific packages via apk (alpine package keeper)
 #RUN apk add --no-cache \
 #    apk-tools=2.12.7-r0
+
+# Get the latest package updates to keep security vulnerabilties down
+RUN pip install --upgrade wheel setuptools
