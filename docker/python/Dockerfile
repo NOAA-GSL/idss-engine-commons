@@ -1,5 +1,4 @@
-ARG alpine_version
-FROM alpine:"${alpine_version}"
+FROM alpine:3.12
 
 # reduce python printing to stdout on build
 ENV PYTHONBUFFERED=1
