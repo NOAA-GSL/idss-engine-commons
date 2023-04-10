@@ -14,7 +14,7 @@ RUN echo "Installing python" && \
     if [ ! -e /usr/bin/pip ]; then ln -s pip3 /usr/bin/pip ; fi
 
 # install additional packages base packages common among all microservices
-COPY ./requirements.txt .
+COPY requirements.txt .
 RUN pip3 install --no-cache-dir -r requirements.txt
 
 # Get the latest package updates to keep security vulnerabilities down
