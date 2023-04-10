@@ -14,8 +14,12 @@ RUN echo "Installing python" && \
     if [ ! -e /usr/bin/pip ]; then ln -s pip3 /usr/bin/pip ; fi
 
 # install additional packages base packages common among all microservices
-COPY requirements.txt .
-RUN pip3 install --no-cache-dir -r requirements.txt
+RUN pip3 install --no-cache \
+    pika==1.3.1 \
+    requests==2.28.2 \
+    cherrypy==18.8.0 \
+    python-dateutil==2.8.2 \
+    pycouchdb==1.14.2
 
 # Get the latest package updates to keep security vulnerabilities down
 RUN apk update && apk upgrade
