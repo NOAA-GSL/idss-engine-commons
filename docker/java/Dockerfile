@@ -1,9 +1,7 @@
 # Conda base image
-ARG conda_alpine_version
-FROM continuumio/miniconda3:"${conda_alpine_version}"
+FROM continuumio/miniconda3:4.10.3-alpine
 
 ARG maintainer
-ARG openjdk_version
 
 LABEL maintainer "${maintainer}"
 
@@ -15,12 +13,15 @@ ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8
 
-COPY ./requirements.txt requirements.txt
-
 # Install core dependencies
 RUN conda config --add channels conda-forge && \
-    conda install -y --file requirements.txt && \
-    conda install openjdk="${openjdk_version}" && \
+    conda install \
+    openjdk=8 \
+    pillow=9.3.0 \
+    numpy=1.22.3 \
+    netcdf4=1.6.2 \
+    h5netcdf=1.1.0 \
+    awscli=1.27.60 && \
     conda clean -y --all
 
 # Get the latest package updates to keep security vulnerabilities down
