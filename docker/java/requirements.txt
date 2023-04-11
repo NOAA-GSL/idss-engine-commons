@@ -1,5 +1,0 @@
-pillow=9.3.0
-numpy=1.22.3
-netcdf4=1.6.2
-h5netcdf=1.1.0
-awscli=1.27.60
