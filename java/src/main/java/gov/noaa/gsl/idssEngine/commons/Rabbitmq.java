@@ -7,7 +7,6 @@
 package gov.noaa.gsl.idssEngine.commons;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.concurrent.TimeoutException;
 
 import org.json.JSONObject;
@@ -20,154 +19,81 @@ import com.rabbitmq.client.Consumer;
 
 public class Rabbitmq {
     
-    private final String exchName, exchType, exchRoutingKey;
-    private final String queueName, queueRoutingKey;
-    private final boolean queueDurable, queueExclusive, queueAutoDelete;
-    private Connection connection;
-    private Channel channel;
-    private int numAttempts = 3;
-    private int attemptWait = 5500;
-    private boolean autoAck = false;
-    private boolean multiTag = false;
-    private boolean requeue = false;
-    
-    public Rabbitmq(String rabbitmqObjKey, String topologyKey, JSONObject configObj) throws IOException, TimeoutException {
-        this(topologyKey, getJsonObj(rabbitmqObjKey, configObj));
+    static class ConnectionParams {
+        public final String rabMqVhost;
+        public final String rabMqHost;
+        public final String rabMqPortNum;
+        public final String rabMqUser;
+        public final String rabMqPwd;
+        
+        public ConnectionParams(JSONObject rabbitmqObj) {
+            this(rabbitmqObj.getString("virtualHost"),
+                     rabbitmqObj.getString("hostName"),
+                     Integer.toString(rabbitmqObj.getInt("portNumber")),
+                     rabbitmqObj.getString("userName"),
+                     rabbitmqObj.getString("password"));
+        }
+        public ConnectionParams(String rabMqVhost, String rabMqHost, String rabMqPortNum, 
+                                                           String rabMqUser,  String rabMqPwd) {
+            this.rabMqVhost=rabMqVhost; this.rabMqHost=rabMqHost; this.rabMqPortNum=rabMqPortNum;
+            this.rabMqUser=rabMqUser; this.rabMqPwd=rabMqPwd;
+        }
     }
+    
+    static class Topology {
+        public final String exchName, exchType, exchRoutingKey;
+        public final String queueName, queueRoutingKey;
+        public final boolean queueDurable, queueExclusive, queueAutoDelete;
 
-    public Rabbitmq(String topologyKey, JSONObject rabbitmqObj) throws IOException, TimeoutException {
-        this(topologyKey, getRabbitmqArgs(rabbitmqObj), getTopologyArgs(getJsonObj(topologyKey, rabbitmqObj)));
+        public Topology(String topologyKey, JSONObject rabbitmqObj) {
+            this(rabbitmqObj.getJSONObject(topologyKey));
+        }
+        public Topology(JSONObject topologyObj) {
+            this(topologyObj.getString("exchangeName"),
+                     topologyObj.getString("exchangeType"),
+                     topologyObj.getString("exchangeRoutingKey"),
+                     topologyObj.getString("queueName"),
+                     topologyObj.getString("queueRoutingKey"),
+                     Boolean.parseBoolean(topologyObj.getString("queueDurable")),
+                     Boolean.parseBoolean(topologyObj.getString("queueExclusive")),
+                     Boolean.parseBoolean(topologyObj.getString("queueAutoDelete")));
+        }
+        public Topology(String exchName, String exchType, String exchRoutingKey, String queueName, String queueRoutingKey, 
+                                        boolean queueDurable, boolean queueExclusive, boolean queueAutoDelete) {
+            this.exchName=exchName; this.exchType=exchType; this.exchRoutingKey=exchRoutingKey;
+            this.queueName=queueName; this.queueRoutingKey=queueRoutingKey;
+            this.queueDurable=queueDurable; this.queueExclusive=queueExclusive; this.queueAutoDelete=queueAutoDelete;
+        }
     }
     
-    public Rabbitmq(String connName, String[] configArgs, String[] topologyArgs) throws NumberFormatException, IOException, TimeoutException {
-        this(connName,
-                 configArgs[0], configArgs[1], Integer.parseInt(configArgs[2]), configArgs[3], configArgs[4], 
-                 topologyArgs[0], topologyArgs[1], topologyArgs[2], topologyArgs[3], 
-                 topologyArgs[4], topologyArgs[5], topologyArgs[6], topologyArgs[7]);
+    public static Connection getConnection(String connName, JSONObject rabbitmqOb) {
+        ConnectionParams connParams = new ConnectionParams(rabbitmqOb);
+        return getConnection(connName, connParams);
     }
-    
-//    public Rabbitmq(String rabMqVhost, String rabMqHost, int rabMqPortNum, String rabMqUser, String rabMqPwd,
-//                                     String exchName, String exchType, String exchRoutingKey, String queueName, String queueRoutingKey, 
-//                                     String queueDurable, String queueExclusive, String queueAutoDelete)  throws IOException, TimeoutException {
-//        this(null, rabMqVhost, rabMqHost, rabMqPortNum, rabMqUser, rabMqPwd, exchName, exchType, exchRoutingKey,
-//                 queueName, queueRoutingKey, queueDurable, queueExclusive, queueAutoDelete);
-//    }
-
-    public Rabbitmq(String connName, String rabMqVhost, String rabMqHost, int rabMqPortNum, String rabMqUser, String rabMqPwd,
-                                     String exchName, String exchType, String exchRoutingKey, String queueName, String queueRoutingKey, 
-                                     String queueDurable, String queueExclusive, String queueAutoDelete)  throws IOException, TimeoutException {
-                                                   
+    public static Connection getConnection(String connName, ConnectionParams connParams) {
+        return getConnection(connName,
+                                                   connParams.rabMqVhost, connParams.rabMqHost, connParams.rabMqPortNum, 
+                                                   connParams.rabMqUser,  connParams.rabMqPwd);
+    }
+    public static Connection getConnection(String connName, 
+                                                                                    String rabMqVhost, String rabMqHost, String rabMqPortNum, 
+                                                                                    String rabMqUser,  String rabMqPwd) {
+        return getConnection(connName, rabMqVhost, rabMqHost, Integer.parseInt(rabMqPortNum), rabMqUser, rabMqPwd);
+    }
+    public static Connection getConnection(String connName, 
+                                                                                    String rabMqVhost, String rabMqHost, int rabMqPortNum, 
+                                                                                    String rabMqUser,  String rabMqPwd) {
+        int numAttempts = 5;
+        int attemptWait = 5500;
         ConnectionFactory factory = new ConnectionFactory();
         factory.setUsername(rabMqUser);
         factory.setPassword(rabMqPwd);
         factory.setVirtualHost(rabMqVhost);
         factory.setHost(rabMqHost);
         factory.setPort(rabMqPortNum);
+        factory.setTopologyRecoveryEnabled(true);
+        factory.setAutomaticRecoveryEnabled(true);
         
-        connection = getConnection(factory, connName);
-        
-       this.exchName = exchName;
-       this.exchType = exchType;
-       this.exchRoutingKey = exchRoutingKey;
-       this.queueName = queueName;
-       this.queueRoutingKey = queueRoutingKey;
-       this.queueDurable = Boolean.parseBoolean(queueDurable);
-       this.queueExclusive = Boolean.parseBoolean(queueExclusive);
-       this.queueAutoDelete = Boolean.parseBoolean(queueAutoDelete);
-
-       // build topology
-       Channel topoCannal = connection.createChannel();
-       if(exchName!=null) {
-            topoCannal.exchangeDeclare(this.exchName, this.exchType);
-       }
-       if(queueName!=null) {
-            topoCannal.queueDeclare(queueName, this.queueDurable, this.queueExclusive, this.queueAutoDelete, null);
-            topoCannal.queueBind(queueName, exchName, this.queueRoutingKey);           
-       }
-            
-        channel = connection.createChannel();
-    }
-
-    private static JSONObject getJsonObj(String key, JSONObject jsonObj) {
-        return getJsonObj(new String[] {key}, jsonObj);
-    }
-    
-    private static JSONObject getJsonObj(String[] keys, JSONObject jsonObj) {
-         for(String key : keys) {
-             jsonObj = jsonObj.getJSONObject(key);
-         }
-         return jsonObj;
-    }
-
-    private static String[] getRabbitmqArgs(JSONObject rabbitmqObj) {
-         
-         String[] configArgs = new String[5];
-//         try {
-            configArgs[0] = rabbitmqObj.getString("virtualHost"); 
-//         } catch(Exception e) {
-//             error(service, "Config file must specify virtualHost", e);
-//         }
-         
-//         try {
-             configArgs[1] = rabbitmqObj.getString("hostName"); 
-//         } catch(Exception e) {
-//             error(service, "Config file must specify hostName", e);
-//         }
-         
-//         try {
-             configArgs[2] = Integer.toString(rabbitmqObj.getInt("portNumber")); 
-//         } catch(Exception e) {
-//             error(service, "Config file must specify portNumber", e);
-//         }
-
-//         try {
-             configArgs[3] = rabbitmqObj.getString("userName"); 
-//         } catch(Exception e) {
-//             error(service, "Config file must specify userName", e);
-//         }
-         
-//         try {
-            configArgs[4] = rabbitmqObj.getString("password"); 
-//         } catch(Exception e) {
-//             error(service, "Config file must specify password", e);
-//         }
-
-        return configArgs;
-    }
-
-    private static String[] getTopologyArgs(JSONObject topologyObj) {
-        
-         String[] configArgs = {null, null, null, null, null, null, null, null};
-         
-         try {
-             configArgs[0] = topologyObj.getString("exchangeName"); 
-         } catch (Exception e) {}
-         try {
-             configArgs[1] = topologyObj.getString("exchangeType"); 
-         } catch (Exception e) {}
-         try {
-             configArgs[2] = topologyObj.getString("exchangeRoutingKey"); 
-         } catch (Exception e) {}
-         try {
-             configArgs[3] = topologyObj.getString("queueName"); 
-         } catch (Exception e) {}
-         try {
-             configArgs[4] = topologyObj.getString("queueRoutingKey"); 
-         } catch (Exception e) {}
-         try {
-             configArgs[5] = topologyObj.getString("queueDurable"); 
-         } catch (Exception e) {}
-         try {
-             configArgs[6] = topologyObj.getString("queueExclusive"); 
-         } catch (Exception e) {}
-         try {
-             configArgs[7] = topologyObj.getString("queueAutoDelete"); 
-         } catch (Exception e) {}
-         
-        return configArgs;
-    }
-    
-    private Connection getConnection(ConnectionFactory factory, String connName) {
         Connection connection = null;
         for(int i=0; i<numAttempts; i++) {
             try {
@@ -185,19 +111,61 @@ public class Rabbitmq {
         }
         throw new RuntimeException("Unable to create a RabbitMq Connection");
     }
+
+        
+//    private Connection connection;
+    private Channel topoChannel;
+    private Channel channel;
+    private Topology topology;
+    private int numAttempts = 3;
+    private int attemptWait = 5500;
+    private boolean autoAck = false;
+    private boolean multiTag = false;
+    private boolean requeue = false;
+    
+    public Rabbitmq(Connection connection, String topologyKey, JSONObject rabbitmqObj) throws IOException, TimeoutException {
+        this(connection, new Topology(getJsonObj(topologyKey, rabbitmqObj)));
+    }
+    
+    public Rabbitmq(Connection connection, Topology topology)  throws IOException, TimeoutException {                                             
+       this.topology = topology;
+       
+       // build topology
+       topoChannel = connection.createChannel();
+       if(topology.exchName!=null) {
+            topoChannel.exchangeDeclare(topology.exchName, topology.exchType);
+       }
+       if(topology.queueName!=null) {
+            topoChannel.queueDeclare(topology.queueName, topology.queueDurable, topology.queueExclusive, topology.queueAutoDelete, null);
+            topoChannel.queueBind(topology.queueName, topology.exchName, topology.queueRoutingKey);           
+       }
+            
+        channel = connection.createChannel();
+    }
+
+    private static JSONObject getJsonObj(String key, JSONObject jsonObj) {
+        return getJsonObj(new String[] {key}, jsonObj);
+    }
+    
+    private static JSONObject getJsonObj(String[] keys, JSONObject jsonObj) {
+         for(String key : keys) {
+             jsonObj = jsonObj.getJSONObject(key);
+         }
+         return jsonObj;
+    }
     
     public Channel getChannel() {
         return channel;
     }
     
     public String getExchName() {
-        return exchName;
+        return topology.exchName;
     }
     public String getExchType() {
-        return exchType;
+        return topology.exchType;
     }
     public String getExchRoutingKey() {
-        return exchRoutingKey;
+        return topology.exchRoutingKey;
     }
 
     public boolean setAutoAck(boolean autoAck) {
@@ -239,7 +207,7 @@ public class Rabbitmq {
        IOException exception = null;
        for(int attempt=0; attempt<numAttempts; attempt++) {
            try {
-               channel.basicPublish(exchName, routingKey, props, body);
+               channel.basicPublish(topology.exchName, routingKey, props, body);
                break;
             } catch(IOException e) {
                 exception = e;
@@ -255,7 +223,7 @@ public class Rabbitmq {
        IOException exception = null;
        for(int attempt=0; attempt<numAttempts; attempt++) {
            try {
-               channel.basicConsume(queueName, autoAck, consumerTag, callback);
+               channel.basicConsume(topology.queueName, autoAck, consumerTag, callback);
                break;
             } catch(IOException e) {
                 exception = e;
@@ -297,6 +265,5 @@ public class Rabbitmq {
             }
         }
        if(exception != null) throw exception;
-   }
-   
+   } 
 }

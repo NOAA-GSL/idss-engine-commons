@@ -12,6 +12,8 @@ import java.util.concurrent.TimeoutException;
 
 import org.json.JSONObject;
 
+import com.rabbitmq.client.Connection;
+
 public class Logger {
 
     public enum Level {
@@ -29,19 +31,34 @@ public class Logger {
     private Sid sid = Sid.Empty;
     
     public Logger(String service) {
-        this(service, null, null);
+        this(service, (Level)null, null, null);
     }
     
     public Logger(String service, Level level) {
-        this(service, level, null);
+        this(service, level, null, null);
+    }
+
+    public Logger(String service, Level level, Connection connection) {
+        this(service, level, connection, null);
     }
     
     public Logger(String service, JSONObject configObj) {
-        this(service, null, configObj);
+        this(service, (Level)null, null, configObj);
+    }
+
+    public Logger(String service, Connection connection, JSONObject configObj) {
+        this(service, (Level)null, connection, configObj);
+    }
+
+    public Logger(String service, Level level, JSONObject configObj) {
+        this(service, level, null, configObj);
     }
     
-    public Logger(String service, Level level, JSONObject configObj) {
-        
+    public Logger(String service, String level, Connection connection, JSONObject configObj) {        
+        this(service, Level.valueOf(level), connection, configObj);
+    }
+    
+    public Logger(String service, Level level, Connection connection, JSONObject configObj) {        
         if(level == null) {
             if(configObj == null) {
                 level = Level.ERROR;
@@ -67,7 +84,7 @@ public class Logger {
             warn("No config file was provided, thus STATUS messages will not to sent via RabbitMQ");
         } else {
             try {
-                this.statusRp = new Rabbitmq("rabbitMQ", "status", configObj);
+                this.statusRp = new Rabbitmq(connection, "status", configObj);
             } catch(Exception e) {
                 throw new IllegalArgumentException(e);
             }
