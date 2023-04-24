@@ -19,19 +19,20 @@ import com.rabbitmq.client.Consumer;
 
 public class Rabbitmq {
     
-    static class ConnectionParams {
+    static public class ConnectionParams {
         public final String rabMqVhost;
         public final String rabMqHost;
         public final String rabMqPortNum;
         public final String rabMqUser;
         public final String rabMqPwd;
         
-        public ConnectionParams(JSONObject rabbitmqObj) {
-            this(rabbitmqObj.getString("virtualHost"),
-                     rabbitmqObj.getString("hostName"),
-                     Integer.toString(rabbitmqObj.getInt("portNumber")),
-                     rabbitmqObj.getString("userName"),
-                     rabbitmqObj.getString("password"));
+        static public ConnectionParams fromRabbitmqObj(JSONObject rabbitmqObj) {
+            String vHost = rabbitmqObj.has("virtualHost") ? rabbitmqObj.getString("virtualHost") : null;
+            String hostName = rabbitmqObj.has("hostName") ? rabbitmqObj.getString("hostName") : null;
+            String portNum = rabbitmqObj.has("portNumber") ? Integer.toString(rabbitmqObj.getInt("portNumber")) : null;
+            String userName = rabbitmqObj.has("userName") ? rabbitmqObj.getString("userName") : null;
+            String password = rabbitmqObj.has("password") ? rabbitmqObj.getString("password") : null;
+            return new ConnectionParams(vHost, hostName, portNum, userName, password);
         }
         public ConnectionParams(String rabMqVhost, String rabMqHost, String rabMqPortNum, 
                                                            String rabMqUser,  String rabMqPwd) {
@@ -40,7 +41,7 @@ public class Rabbitmq {
         }
     }
     
-    static class Topology {
+    static public class Topology {
         public final String exchName, exchType, exchRoutingKey;
         public final String queueName, queueRoutingKey;
         public final boolean queueDurable, queueExclusive, queueAutoDelete;
@@ -49,14 +50,14 @@ public class Rabbitmq {
             this(rabbitmqObj.getJSONObject(topologyKey));
         }
         public Topology(JSONObject topologyObj) {
-            this(topologyObj.getString("exchangeName"),
-                     topologyObj.getString("exchangeType"),
-                     topologyObj.getString("exchangeRoutingKey"),
-                     topologyObj.getString("queueName"),
-                     topologyObj.getString("queueRoutingKey"),
-                     Boolean.parseBoolean(topologyObj.getString("queueDurable")),
-                     Boolean.parseBoolean(topologyObj.getString("queueExclusive")),
-                     Boolean.parseBoolean(topologyObj.getString("queueAutoDelete")));
+            this(topologyObj.has("exchangeName") ? topologyObj.getString("exchangeName") : null,
+                     topologyObj.has("exchangeType") ? topologyObj.getString("exchangeType") : null,
+                     topologyObj.has("exchangeRoutingKey") ? topologyObj.getString("exchangeRoutingKey") : null,
+                     topologyObj.has("queueName") ?  topologyObj.getString("queueName") : null,
+                     topologyObj.has("queueRoutingKey") ? topologyObj.getString("queueRoutingKey") : null,
+                     topologyObj.has("queueDurable") ? Boolean.parseBoolean(topologyObj.getString("queueDurable")) : false,
+                     topologyObj.has("queueExclusive") ? Boolean.parseBoolean(topologyObj.getString("queueExclusive")) : false,
+                     topologyObj.has("queueAutoDelete") ? Boolean.parseBoolean(topologyObj.getString("queueAutoDelete")) : false);
         }
         public Topology(String exchName, String exchType, String exchRoutingKey, String queueName, String queueRoutingKey, 
                                         boolean queueDurable, boolean queueExclusive, boolean queueAutoDelete) {
@@ -67,7 +68,7 @@ public class Rabbitmq {
     }
     
     public static Connection getConnection(String connName, JSONObject rabbitmqOb) {
-        ConnectionParams connParams = new ConnectionParams(rabbitmqOb);
+        ConnectionParams connParams = ConnectionParams.fromRabbitmqObj(rabbitmqOb);
         return getConnection(connName, connParams);
     }
     public static Connection getConnection(String connName, ConnectionParams connParams) {
@@ -112,8 +113,6 @@ public class Rabbitmq {
         throw new RuntimeException("Unable to create a RabbitMq Connection");
     }
 
-        
-//    private Connection connection;
     private Channel topoChannel;
     private Channel channel;
     private Topology topology;
