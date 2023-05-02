@@ -75,6 +75,7 @@ public enum Units  {
         map.put("MILES PER HOUR", MilesPerHour); 
         map.put("m/h", MetersPerHour); 
         map.put("m.s-1", MetersPerSecond); 
+        map.put("m s**-1", MetersPerSecond); 
         map.put("m/s", MetersPerSecond); 
         map.put("metersPerSecond", MetersPerSecond); 
         map.put("Meters Per Second", MetersPerSecond); 

@@ -12,6 +12,8 @@ import java.util.concurrent.TimeoutException;
 
 import org.json.JSONObject;
 
+import com.rabbitmq.client.Connection;
+
 public class Logger {
 
     public enum Level {
@@ -23,25 +25,40 @@ public class Logger {
         }
     };
 
-    private final RabbitmqPublish statusRp;
+    private final Rabbitmq statusRp;
     private final String service;
     private final Level level;
     private Sid sid = Sid.Empty;
     
     public Logger(String service) {
-        this(service, null, null);
+        this(service, (Level)null, null, null);
     }
     
     public Logger(String service, Level level) {
-        this(service, level, null);
+        this(service, level, null, null);
+    }
+
+    public Logger(String service, Level level, Connection connection) {
+        this(service, level, connection, null);
     }
     
     public Logger(String service, JSONObject configObj) {
-        this(service, null, configObj);
+        this(service, (Level)null, null, configObj);
+    }
+
+    public Logger(String service, Connection connection, JSONObject configObj) {
+        this(service, (Level)null, connection, configObj);
+    }
+
+    public Logger(String service, Level level, JSONObject configObj) {
+        this(service, level, null, configObj);
     }
     
-    public Logger(String service, Level level, JSONObject configObj) {
-        
+    public Logger(String service, String level, Connection connection, JSONObject configObj) {        
+        this(service, Level.valueOf(level), connection, configObj);
+    }
+    
+    public Logger(String service, Level level, Connection connection, JSONObject configObj) {        
         if(level == null) {
             if(configObj == null) {
                 level = Level.ERROR;
@@ -67,7 +84,7 @@ public class Logger {
             warn("No config file was provided, thus STATUS messages will not to sent via RabbitMQ");
         } else {
             try {
-                this.statusRp = new RabbitmqPublish("rabbitMQ", configObj);
+                this.statusRp = new Rabbitmq(connection, "status", configObj);
             } catch(Exception e) {
                 throw new IllegalArgumentException(e);
             }
@@ -82,7 +99,7 @@ public class Logger {
     public Sid clearSid() {
         return setSid(Sid.Empty);
     }
-    
+        
     public void debug(String message) {
         debug(sid, service, message);
     }
@@ -94,10 +111,7 @@ public class Logger {
     }
     public void debug(Sid sid, String service, String message) {
         if(level.equals(Level.DEBUG)) {
-            String formatStr = String.format("%s:%s:%02d:%02d:%s; %s", 
-                                                                                sid.key, sid.originator, sid.issueDt.getHourOfDay(), sid.issueDt.getMinuteOfHour(), 
-                                                                                service, message);
-            System.out.println(Level.DEBUG+": "+formatStr);
+            System.out.println(Level.DEBUG+": "+formatMessage(sid, service, message));
         }
     }
     
@@ -112,10 +126,7 @@ public class Logger {
     }
     public void info(Sid sid, String service, String message) {
         if(Level.INFO.notBelow(level)) {
-            String formatStr = String.format("%s:%s:%02d:%02d:%s; %s", 
-                                                                                sid.key, sid.originator, sid.issueDt.getHourOfDay(), sid.issueDt.getMinuteOfHour(), 
-                                                                                service, message);
-            System.out.println(Level.INFO+": "+formatStr);
+            System.out.println(Level.INFO+": "+formatMessage(sid, service, message));
         }
     }
 
@@ -130,10 +141,7 @@ public class Logger {
     }
     public void warn(Sid sid, String service, String message) {
         if(Level.WARN.notBelow(level)) {
-            String formatStr = String.format("%s:%s:%02d:%02d:%s; %s", 
-                                                                                sid.key, sid.originator, sid.issueDt.getHourOfDay(), sid.issueDt.getMinuteOfHour(), 
-                                                                                service, message);
-            System.out.println(Level.WARN+": "+formatStr);
+            System.out.println(Level.WARN+": "+formatMessage(sid, service, message));
         }
     }
     
@@ -168,9 +176,7 @@ public class Logger {
         error(sid, service, message, e, sendToQueue);
     }
     public void error(Sid sid, String service, String message, Exception exception, boolean sendToQueue) {
-        String formatStr = String.format("%s:%s:%02d:%02d:%s; %s", 
-                                                                            sid.key, sid.originator, sid.issueDt.getHourOfDay(), sid.issueDt.getMinuteOfHour(), 
-                                                                            service, message);
+        String formatStr = formatMessage(sid, service, message);
         if(exception != null) {
             final StringBuilder builder = new StringBuilder(formatStr);
             builder.append("\n\t"+exception.toString());
@@ -193,15 +199,25 @@ public class Logger {
         status(sid, service, numComplete, totalSteps);
     }
     public void status(Sid sid, String service, int numComplete, int totalSteps) {
-            String formatStr = String.format("%s:%s:%02d:%02d:%s; %d/%d", 
-                                                                                sid.key, sid.originator, sid.issueDt.getHourOfDay(), sid.issueDt.getMinuteOfHour(), 
-                                                                                service, numComplete, totalSteps);
-            System.out.println(Level.STATUS+": "+formatStr);
-            if(statusRp!=null) try {
-                boolean s = statusRp.basicPublish(Level.STATUS.toString(), null,  formatStr.getBytes(StandardCharsets.UTF_8));
-                debug("Status set to rabbitMQ: "+s);
-            } catch(IOException | TimeoutException e) {
+        String formatStr = formatMessage(sid, service, numComplete, totalSteps);
+        System.out.println(Level.STATUS+": "+formatStr);
+        if(statusRp!=null) { 
+            try {
+                statusRp.basicPublish(Level.STATUS.toString(), null,  formatStr.getBytes(StandardCharsets.UTF_8));
+                debug("Status set to rabbitMQ: ");
+            } catch(IOException e) {
                 error(sid, service, "Unable to publish status to queue", e, false);
             }   
+        }
     }
+    
+    private String formatMessage(Sid sid, String service, int numComplete, int totalSteps) {
+        return String.format("%s:%s:%02d:%02d:%s; %d/%d", 
+                                                 sid.key, sid.originator, sid.issueDt.getHourOfDay(), sid.issueDt.getMinuteOfHour(), service, numComplete, totalSteps);
+    }
+    private String formatMessage(Sid sid, String service, String message) {
+        return String.format("%s:%s:%02d:%02d:%s; %s", 
+                                                 sid.key, sid.originator, sid.issueDt.getHourOfDay(), sid.issueDt.getMinuteOfHour(), service, message);
+    }
+
 }
