@@ -1,164 +1,73 @@
 # IDSS Engine Commons
-## idss-engine-commons
+## Overview
+The `idss-engine-commons` project is responsible for defining all implicit common dependencies that are used by the apps that make up the IDSS Engine Project distributed system. This
+repository should be used to house elements that are common across multiple projects to encourage reuse.
 
-The `idss-engine-commons` is responsible for defining all implicit common dependencies that are used by the apps that make up the IDSS Engine Project distributed system.
-
----
 # Twelve-Factors
-
 The complete twelve-factors methodologies that the IDSS Engine Project adheres to can be found in the umbrella [idss-engine](https://github.com/NOAA-GSL/idss-engine) repository. The subset of the twelve factors that follows are specifics to this app only.
 
 ## Logging
-To support some standardization and best practices for IDSS Engine, developers should utilize the [idss-engine-commons logging](https://github.com/NOAA-GSL/idss-engine-commons) Java and python packages.
-
-The general guidelines for logging are as follows:
-
-1. All log messages shall be written to `stdout`
-2. Use appropriate log levels:
-
-| Level | Usage |
-|-|-|
-|`DEBUG`|Coarse and fine-grained informational events that are useful for debugging an application as well as highlighting the progress of the application as it executes.|
-|`INFO`|Coarse-grained informational events that are particularly useful for communicating health and status of IDSS Engine to system administrators and users|
-|`WARN`|Designates potentially harmful situations of an application that should be recorded but don't necessarily have an impact in the execution of code|
-|`ERROR`|Designates severe error events that will presumably lead the application to fail.|
-
-3. All log messages shall be written to a shared RabbitMQ exchange. See the IDSS Engine [Status](https://github.com/NOAA-GSL/engine-status) project for information on how to use the service.
-4. Use the following structure for all log messages so that they can be parsed by the [Status](https://github.com/NOAA-GSL/engine-status) service:
-
->
-> System Identifier (SID): `UUID:source:issuehour:issuemin:service;message`
-> Where issue (hour/min) are UTC
-
-**Examples:**
-
-
-The IMS Request service received a new event criteria definition:
-
-> `INFO: 529c9038-c3ba-11eb-8529-0242ac130003:ims:12:00:imsrequest;Recieved new event criteria definition: winter-wx at BOU`
-
-The Data Manager was unable to find all forecast data:
-
-> `ERROR: 529c9038-c3ba-11eb-8529-0242ac130003:ims:12:00:datamanager;No forecast data found for NBM on 061220210600 originating from AWS`
+To support some standardization and best practices for IDSS Engine, developers should following the logging guide found [here](python/logging.rst)
 
 ## Build, Release, and Run
-
-### Python Microservices Base Image
----
-Any python based microservice within IDSS Engine should use this image as it's base.
-
-> **Image Name** `idss.engine.commons.python.service`
+The subsections below outline how to build the common images within this project. All microservices built with Docker are done within the
+[idss-engine/build](https://github.com/NOAA-GSL/idss-engine/build/) directory.
 
 > **Recommended Tags** development `:dev` stable release `:release` ie. `:alder` targeted environment `:aws`
 
-#### Build
-From the project root directory `idss-engine-commons`:
-
-`$ docker build -t idss.engine.commons.python.service:<tag> -f ./python/service/docker/Dockerfile .`
-
-### Java Commons
+### Python Base Image
 ---
+Any python based microservice within IDSS Engine should use the following image as its base
 
 #### Build
-From the `idss-engine-commons/java` directory:
+From the IDSS Engine project root directory `idss-engine/build/<env>/<arch>/`:
 
-`$ ./gradlew build` will produce a jar file: `idss-engine-commons/java/build/libs/idss-engine-commons-1.0.jar`
+`$ docker-compose build python_base`
+
+> **Image Name** `idsse/commons/python-base:<tag>`
+
+### Java Base Image
+---
+Any java based microservices within IDSS Engine should use the following image as its base
+
+#### Build
+From the IDSS Engine project root directory `idss-engine/build/<env>/<arch>/`:
+
+`$ docker-compose build java_base`
+
+> **Image Name** `idsse/commons/java-base:<tag>`
 
 ### RabbitMQ Server
 ---
+The IDSS Engine can be deployed with Docker and/or Kubernetes. If developers are deploying locally with Docker, they
+can create their own RabbitMQ service as follows:
 
-` idss.engine.commons.rabbitmq.server:<tag>`
-
-> **Recommended Tags** development `:dev` stable release `:major.minor` ie. `:1.0` targeted environment `:aws` test `:test`
-From the `idss-engine-commons/rabbitmq` directory:
+> **Developer Note** if deploying in a kubernetes cluster, it is not necessary to build this image as it will be done via a Helm Chart
 
 #### Build
+From the IDSS Engine project root directory `idss-engine/build/<env>/<arch>/`:
 
-`$ docker build -t idss.engine.commons.rabbitmq.server:<tag> .`
+`$ docker-compose build rabbit_mq`
 
-#### Run
+**Development Image Name** `idss.engine.commons.rabbitmq.server:<tag>`
 
-**Required arguments**:
-> ```
-> -e RABBITMQ_USER=<RabbitMQ default user>
-> -e RABBITMQ_PASSWORD=<RabbitMQ default password>
-> ```
-
-**Developer Note**
-
-Should look in to moving `RABBITMQ_USER` and `RABBITMQ_PASSWORD` to either configuration service or using `docker secrets`
-
-**Optional arguments**
-
-Use `--name` if running on a container network
-
-> ```
-> --network <network>
-> --rm
-> --name <host name (used by other containers as a name for connection)>
-> -p 15672:15672 (for web ui mananagement console)
-> ```
-
-Examples:
-
-`$ docker run --rm --name rmqtest --network idss_test -e RABBITMQ_USER=idss -e RABBITMQ_PASSWORD=password -p 15672:15672 idss.engine.commons.rabbitmq.server:<tag>`
-
-URLs:
-
-Using the port mapping `-p 15672:15672` allows access to the RabbitMQ Web UI Management Console: http://localhost:15672/
+**Packaged/Deployed Image Name** `idsse/commons/rabbitmq:<tag>`
 
 ### Couchdb Server
 ---
+The IDSS Engine can be deployed with Docker and/or Kubernetes. If developers are deploying locally with Docker, they
+can create their own RabbitMQ service as follows:
 
-` idss.engine.commons.couchdb.server:<tag>`
-
-> **Recommended Tags** development `:dev` stable release `:major.minor` ie. `:1.0` targeted environment `:aws` test `:test`
-From the `idss-engine-commons/couchdb` directory:
+> **Developer Note** if deploying in a kubernetes cluster, it is not necessary to build this image as it will be done via a Helm Chart
 
 #### Build
+From the IDSS Engine project root directory `idss-engine/build/<env>/<arch>/`:
+  
+`$ docker-compose build couch_db`
 
-`$ docker build -t idss.engine.commons.couchdb.server:<tag> .`
+**Development Image Name** `idss.engine.commons.couchbase.server:<tag>`
 
-#### Volumes
-A data directory on the host system (outside the container) and mount this to a directory visible from inside the container. This places the database files in a known location on the host system, and makes it easy for tools and applications on the host system to access the files.
+**Packaged/Deployed Image Name** `idsse/commons/couchdb:<tag>`
 
-> ```
-> -v <local dir>:/opt/couchdb/data
-> ```
-
-The ```-v <local dir>:/opt/couchdb/data``` part of the command mounts the ```<local dir>``` directory from the underlying host system as ```/opt/couchdb/data``` inside the container, where CouchDB by default will write its data files.
-
-**NOTE:** specifying a volume is **required** for data persistance. Any data creation, modification, or removal will not be persisted without a volume mapping will be lost if the container is stopped or removed.
-
-#### Run
-
-**Required arguments**:
-> ```
-> -e COUCHDB_USER=<couchdb default user>
-> -e COUCHDB_PASSWORD=<couchdb default password>
-> ```
-
-**Optional arguments**
-
-Use `--name` if running on a container network
-
-> ```
-> -v <local_dir>:/opt/couchdb/data
-> --network <network>
-> --rm
-> --name <host name (used by other containers as a name for connection)>
-> -p 5984:5984
-> ```
-
-Examples:
-
-`$ docker run --rm -d --name couchtest --network couch-test-network -e COUCHDB_USER=idss -e COUCHDB_PASSWORD=idss -p 5984:5984 idss.engine.commons.couchdb.server:<tag>`
-
-`$ docker run --rm -d --name couchtest --network couch-test-network -e COUCHDB_USER=idss -e COUCHDB_PASSWORD=idss -p 5984:5984 -v ~/Desktop/couchdb/data:/opt/couchdb/data idss.engine.commons.couchdb.server:<tag>`
-
-#### Fauxton
-There is a web interface / admin portal available for interacting with the couchdb at:
-
-> http://localhost:5984/_utils/#/_all_dbs
-
-Use login credentials in alignment with `--COUCHDB_USER` and `--COUCHDB_PASSWORD` environment variables set at runtime.
+### Running IDSS Engine
+See the **Build, Release, Run** section within the umbrella project documentation: [idss-engine](https://github.com/NOAA-GSL/idss-engine)
