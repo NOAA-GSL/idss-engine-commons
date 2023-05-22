@@ -70,4 +70,4 @@ From the IDSS Engine project root directory `idss-engine/build/<env>/<arch>/`:
 **Packaged/Deployed Image Name** `idsse/commons/couchdb:<tag>`
 
 ### Running IDSS Engine
-See the **Build, Release, Run** section within the umbrella project documentation: [idss-engine](https://github.com/NOAA-GSL/idss-engine)
+See the **Build, Release, Run** section within the umbrella project documentation: [[idss-engine](https://github.com/NOAA-GSL/idss-engine)](https://github.com/NOAA-GSL/idss-engine/blob/main/README.md#running-idss-engine)
