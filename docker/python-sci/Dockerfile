@@ -3,7 +3,7 @@ FROM continuumio/miniconda3:23.3.1-0-alpine
 ARG maintainer
 LABEL maintainer ${maintainer}
 
-COPY ./docker/local/requirements.txt .
+COPY ./docker/python-sci/requirements.txt .
 
 # Setup ENV
 ENV CONDA_DIR /opt/conda
