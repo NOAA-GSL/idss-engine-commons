@@ -15,7 +15,7 @@ The subsections below outline how to build the common images within this project
 
 > **Recommended Tags** development `:dev` stable release `:release` ie. `:alder` targeted environment `:aws`
 
-### Python Base Image
+### Python Base Image (Basic)
 ---
 Any python based microservice within IDSS Engine should use the following image as its base
 
@@ -25,6 +25,17 @@ From the IDSS Engine project root directory `idss-engine/build/<env>/<arch>/`:
 `$ docker-compose build python_base`
 
 > **Image Name** `idsse/commons/python-base:<tag>`
+
+### Python Base Image (Scientific)
+---
+Any python based microservice within IDSS Engine that requires python scientific packages (numpy, netcdf, etc) should use the following image as its base
+
+#### Build
+From the IDSS Engine project root directory `idss-engine/build/<env>/<arch>/`:
+
+`$ docker-compose build python_base_sci`
+
+> **Image Name** `idsse/commons/python-base-sci:<tag>`
 
 ### Java Base Image
 ---

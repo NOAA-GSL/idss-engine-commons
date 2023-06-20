@@ -24,7 +24,12 @@ RUN conda config --add channels conda-forge && \
     pygrib==2.1.4 \
     && conda clean -y --all
 
-# TODO python-base-sci needs to package these common elements
-
 # Get the latest package updates to keep security vulnerabilities down
 RUN apk update && apk upgrade
+
+# Install idsse common python code
+WORKDIR /python/idsse_common
+
+COPY ./python/idsse_common /python/idsse_common
+
+RUN python /python/idsse_common/setup.py install
