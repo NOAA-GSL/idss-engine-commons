@@ -28,7 +28,7 @@ From the IDSS Engine project root directory `idss-engine/build/<env>/<arch>/`:
 
 ### Python Base Image (Scientific)
 ---
-Any python based microservice within IDSS Engine that requires python scientific packages (numpy, netcdf, etc) should use the following image as its base
+Any python based microservice within IDSS Engine that requires python scientific packages (numpy, netcdf, etc) should use the following image as its base. This base image also includes common python utilities that other services can utilize. For specifics on what these utilities are, see the [README](python/idsse_common/README.md) within the `idsse_commons` directory.
 
 #### Build
 From the IDSS Engine project root directory `idss-engine/build/<env>/<arch>/`:
