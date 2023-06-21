@@ -53,11 +53,13 @@ this. The initial packaging for the project uses [setuptools](https://setuptools
 
 ## Build and Install
 
-To manually install the package on your local instance pull the data-access-service from the repository and go into idsse_common
+To manually install the package on your local instance pull the idss-engine-common from the repository and navigate into idsse_common
 
-From the project root directory `data-access-service/idsse_common`:
+From the directory `/idss-engine-common/python/idsse_common`:
 
 `$ python3 setup.py install`
+
+**NOTE** Python 3.11+ is required to install and use this package, it won't work on earlier versions of python
 
 ## Using the package
 
