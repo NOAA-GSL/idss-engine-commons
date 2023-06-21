@@ -74,5 +74,3 @@ Run pytest coverage with the following CLI command. Note: the path argument can 
 ```
 pytest --cov=python/idsse_common python/idsse_common/test --cov-report=term-missing
 ```
-
-Add the following parameter
