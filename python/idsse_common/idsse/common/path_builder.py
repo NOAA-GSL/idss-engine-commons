@@ -1,4 +1,11 @@
-"""Module for building (and parsing) paths that are dependent on issue, valid, and lead"""
+"""Module for building (and parsing) paths that are dependent on issue, valid, and lead.
+
+In this weather forecasting data context, 
+- issue: the datetime when a given forecast was generated (or at least when generation began)
+- valid: the datetime when a given forecast "expires" or is superceded by newer forecasts
+- lead: the time duration (often in hours) between issue and valid, a sort of forecast "lifespan"
+
+"""
 # -------------------------------------------------------------------------------
 # Created on Thu Feb 16 2023
 #
@@ -39,11 +46,16 @@ class PathBuilder():
 
     @classmethod
     def from_dir_filename(cls, dir_fmt: str, filename_fmt: str) -> Self:
-        """Construct a PathBuilder object from specified directory and filename formats
+        """Construct a PathBuilder object from specified directory and filename formats.
+        Format string args must follow Python format specifications to define expected fields:
+        https://docs.python.org/3/library/string.html#format-specification-mini-language
+        
+        For example, filepaths could be expected to contain "issue" and "lead" fields using format:
+        'blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/{issue.hour:02d}/{lead.hour:03d}/'
 
         Args:
-            dir_fmt (str): Format string for the directory
-            filename_fmt (str): Format string for the filename
+            dir_fmt (str): Python format string for the directory
+            filename_fmt (str): Python format string for the filename
 
         Returns:
             Self: The newly created PathBuilder object
@@ -111,7 +123,7 @@ class PathBuilder():
         """
         if issue is None:
             return None
-        lead = self._insure_lead(issue, valid, lead)
+        lead = self._ensure_lead(issue, valid, lead)
         return self.dir_fmt.format(issue=issue, valid=valid, lead=lead)
 
     def build_filename(self,
@@ -131,7 +143,7 @@ class PathBuilder():
         Returns:
             str: File name as a string
         """
-        lead = self._insure_lead(issue, valid, lead)
+        lead = self._ensure_lead(issue, valid, lead)
         return self.filename_fmt.format(issue=issue, valid=valid, lead=lead)
 
     def build_path(self,
@@ -151,7 +163,7 @@ class PathBuilder():
         Returns:
             str: Path as a string
         """
-        lead = self._insure_lead(issue, valid, lead)
+        lead = self._ensure_lead(issue, valid, lead)
         return self.path_fmt.format(issue=issue, valid=valid, lead=lead)
 
     def parse_dir(self, dir_: str) -> dict:
@@ -237,7 +249,7 @@ class PathBuilder():
                             parsed_args.get('issue.second', 0),
                             parsed_args.get('issue.microsecond', 0))
 
-        if lead is None:
+        if lead is None and 'lead.hour' in parsed_args:
             lead = PathBuilder.get_lead_from_time_args(parsed_args)
 
         if valid is None and 'valid.year' in parsed_args:
@@ -245,6 +257,8 @@ class PathBuilder():
 
         if valid and lead:
             return valid - lead
+
+        return None
 
     @staticmethod
     def get_valid_from_time_args(parsed_args: dict,
@@ -272,7 +286,7 @@ class PathBuilder():
                             parsed_args.get('valid.second', 0),
                             parsed_args.get('valid.microsecond', 0))
 
-        if lead is None:
+        if lead is None and 'lead.hour' in parsed_args:
             lead = PathBuilder.get_lead_from_time_args(parsed_args)
 
         if issue is None and 'issue.year' in parsed_args:
@@ -301,7 +315,7 @@ class PathBuilder():
         return timedelta(hours=time_args['lead.hour'])
 
     @staticmethod
-    def _insure_lead(issue: datetime,
+    def _ensure_lead(issue: datetime,
                      valid: datetime,
                      lead: Union[timedelta, TimeDelta]) -> TimeDelta:
         if lead:
@@ -346,23 +360,3 @@ class PathBuilder():
             parse_args(k, v, time_args)
 
         return time_args
-
-
-def _test():
-    basedir = 's3://noaa-nbm-grib2-pds/'
-    subdir = 'blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/{issue.hour:02d}/core/'
-    file_base = 'blend.t{issue.hour:02d}z.core.f{lead.hour:03d}.co'
-    file_ext = '.grib2.idx'
-
-    # pb = PathBuilder(basedir=basedir, subdir=subdir, file_base=file_base, file_ext=file_ext)
-    pb = PathBuilder.from_dir_filename(basedir+subdir, file_base+file_ext)
-
-    path = 's3://noaa-nbm-grib2-pds/blend.20230211/14/core/blend.t14z.core.f011.co.grib2.idx'
-
-    logging.info(pb)
-    logging.info('valid', pb.get_valid(path))
-
-
-if __name__ == '__main__':
-    import logging
-    _test()

@@ -32,3 +32,9 @@ local.properties
 
 # iOS
 .DS_Store
+
+# Python
+__pycache__
+.venv
+.pytest_cache
+.coverage*
