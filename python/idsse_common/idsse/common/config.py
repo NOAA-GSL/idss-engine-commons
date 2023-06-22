@@ -22,7 +22,7 @@ class Config:
     """Configuration data class"""
 
     def __init__(self,
-                 config: Union[dict, str],
+                 config: Union[dict, list[dict], str],
                  keys: Union[list, str] = None,
                  recursive: bool = False,
                  ignore_missing: bool = False) -> None:
@@ -116,7 +116,7 @@ class Config:
         # update the instance dictionary to hold all configuration attributes
         self.__dict__.update(config_dict)
 
-    def _from_config_dicts(self, config_dicts, keys: str) -> Self:
+    def _from_config_dicts(self, config_dicts: list[dict], keys: str) -> Self:
         self._from_config_dict(config_dicts[0], keys)
         for config_dict in config_dicts[1:]:
             # if inherited class takes only one argument
@@ -127,7 +127,7 @@ class Config:
             self._next._previous = self  # pylint: disable=protected-access
 
 
-def _example():
+def _example(): # pragma: no cover
     class NameAsKeyConfig(Config):
         """Testing config class the uses class name as key"""
         def __init__(self, config: Union[dict, str]) -> None:
@@ -197,7 +197,6 @@ def _example():
     logging.info('Metaphor:', config.metaphor)
 
 
-if __name__ == '__main__':
+if __name__ == '__main__': # pragma: no cover
     import random
-
     _example()
