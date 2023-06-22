@@ -53,10 +53,10 @@ class AwsUtils():
             Sequence[str]: The results sent to stdout from executing an 'ls' on passed path
         """
         try:
-            commands = ["s5cmd",  "--no-sign-request", "ls", path]
+            commands = ['s5cmd',  '--no-sign-request', 'ls', path]
             commands_result = exec_cmd(commands)
         except FileNotFoundError:
-            commands = ["aws", "s3",  "--no-sign-request", "ls", path]
+            commands = ['aws', 's3',  '--no-sign-request', 'ls', path]
             commands_result = exec_cmd(commands)
         except PermissionError:
             return []
@@ -76,13 +76,13 @@ class AwsUtils():
         """
         try:
             logger.debug('First attempt with s5cmd')
-            commands = ["s5cmd", "--no-sign-request",  "cp", path, dest]
+            commands = ['s5cmd', '--no-sign-request',  'cp', path, dest]
             exec_cmd(commands)
             return True
         except FileNotFoundError:
             try:
                 logger.debug('Second attempt with aws command line')
-                commands = ["aws", "s3", "--no-sign-request",  "cp", path, dest]
+                commands = ['aws', 's3', '--no-sign-request',  'cp', path, dest]
                 exec_cmd(commands)
                 return True
             except:

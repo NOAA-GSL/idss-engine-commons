@@ -51,14 +51,14 @@ def mock_exec_cmd(monkeypatch: MonkeyPatch) -> Mock:
 
 def test_get_path(aws_utils: AwsUtils):
     result_path = aws_utils.get_path(EXAMPLE_ISSUE, EXAMPLE_VALID)
-    assert result_path == f"{EXAMPLE_DIR}/blend.t12z.core.f002.co.grib2"
+    assert result_path == f'{EXAMPLE_DIR}/blend.t12z.core.f002.co.grib2'
 
 
 def test_aws_ls(aws_utils: AwsUtils, mock_exec_cmd):
     result = aws_utils.aws_ls(EXAMPLE_DIR)
 
     assert len(result) == len(EXAMPLE_FILES)
-    assert result[0] == f"{EXAMPLE_DIR}/{EXAMPLE_FILES[0]}"
+    assert result[0] == f'{EXAMPLE_DIR}/{EXAMPLE_FILES[0]}'
     mock_exec_cmd.assert_called_once()
 
 
@@ -93,8 +93,8 @@ def test_aws_ls_returns_empty_array_on_error(aws_utils: AwsUtils, monkeypatch: M
 
 
 def test_aws_cp_succeeds(aws_utils: AwsUtils, mock_exec_cmd):
-    path = f"{EXAMPLE_DIR}/file.grib2.idx"
-    dest = f"{EXAMPLE_DIR}/new_file.grib2.idx"
+    path = f'{EXAMPLE_DIR}/file.grib2.idx'
+    dest = f'{EXAMPLE_DIR}/new_file.grib2.idx'
 
     copy_success = aws_utils.aws_cp(path, dest)
     assert copy_success
@@ -153,7 +153,7 @@ def test_get_valids_all(aws_utils: AwsUtils, mock_exec_cmd):
     result = aws_utils.get_valids(EXAMPLE_ISSUE)
 
     assert len(result) == 2
-    assert result[1] == ((EXAMPLE_VALID + timedelta(hours=1)), f"{EXAMPLE_DIR}/{EXAMPLE_FILES[1]}")
+    assert result[1] == ((EXAMPLE_VALID + timedelta(hours=1)), f'{EXAMPLE_DIR}/{EXAMPLE_FILES[1]}')
 
 
 def test_get_valids_with_start_filter(aws_utils: AwsUtils, mock_exec_cmd):
@@ -161,7 +161,7 @@ def test_get_valids_with_start_filter(aws_utils: AwsUtils, mock_exec_cmd):
     result = aws_utils.get_valids(EXAMPLE_ISSUE, valid_start=valid_start)
 
     assert len(result) == 1
-    assert result[0] == (valid_start, f"{EXAMPLE_DIR}/{EXAMPLE_FILES[1]}")
+    assert result[0] == (valid_start, f'{EXAMPLE_DIR}/{EXAMPLE_FILES[1]}')
 
 
 def test_get_valids_with_start_and_end_filer(aws_utils: AwsUtils, mock_exec_cmd):
@@ -170,4 +170,4 @@ def test_get_valids_with_start_and_end_filer(aws_utils: AwsUtils, mock_exec_cmd)
     result = aws_utils.get_valids(EXAMPLE_ISSUE, valid_start=valid_start, valid_end=valid_end)
 
     assert len(result) == 1
-    assert result[0] == (valid_end, f"{EXAMPLE_DIR}/{EXAMPLE_FILES[0]}")
+    assert result[0] == (valid_end, f'{EXAMPLE_DIR}/{EXAMPLE_FILES[0]}')
