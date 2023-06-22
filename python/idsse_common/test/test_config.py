@@ -10,6 +10,8 @@
 # --------------------------------------------------------------------------------
 import json
 import pytest
+from pytest import MonkeyPatch
+from unittest.mock import Mock, mock_open
 
 from idsse.common.config import Config
 
@@ -96,58 +98,60 @@ def test_load_with_ignore_missing_attribute():
     assert config.a_key == 'value for a'
 
 
-def test_load_from_file(mocker):
+def test_load_from_file(monkeypatch: MonkeyPatch):
     class WithoutKeyConfig(Config):
         """Config class that doesn't use a key to find config data"""
         def __init__(self, config: dict) -> None:
             self.y_this_is_a_key = None
             super().__init__(config, '')
 
-    mocker.patch('glob.glob', return_value=['filename'])
+    monkeypatch.setattr('glob.glob', Mock(return_value=['filename']))
 
     read_data = json.dumps({"y_this_is_a_key": "value found in file"})
-    mocker.patch('builtins.open', mocker.mock_open(read_data=read_data))
+    monkeypatch.setattr('builtins.open', mock_open(read_data=read_data))
 
     config = WithoutKeyConfig('path/to/file')
 
     assert config.y_this_is_a_key == "value found in file"
 
 
-def test_load_from_files_with_out_key(mocker):
+def test_load_from_files_with_out_key(monkeypatch: MonkeyPatch):
     class WithoutKeyConfig(Config):
         """Config class that doesn't use a key to find config data"""
         def __init__(self, config: dict) -> None:
             self.y_this_is_a_key = None
             super().__init__(config, [])
 
-    mocker.patch('glob.glob', return_value=['filename1', 'filename2'])
+    monkeypatch.setattr('glob.glob', Mock(return_value=['filename1', 'filename2']))
 
     read_data = [json.dumps({"y_this_is_a_key": "value found in file1"}),
                  json.dumps({"y_this_is_a_key": "value found in file2"})]
-    mock_files = mocker.patch('builtins.open', mocker.mock_open(read_data=read_data[0]))
-    mock_files.side_effect = (mocker.mock_open(read_data=data).return_value for data in read_data)
+    mock_files = Mock(side_effect=(mock_open(read_data=data).return_value for data in read_data))
+    monkeypatch.setattr('builtins.open', mock_files)
 
     config = WithoutKeyConfig('path/to/dir')
 
     assert config.y_this_is_a_key == "value found in file1"
     assert config.next.y_this_is_a_key == "value found in file2"
+    assert mock_files.call_count == 2
 
 
-def test_load_from_files_with_key(mocker):
+def test_load_from_files_with_key(monkeypatch: MonkeyPatch):
     class WithoutKeyConfig(Config):
         """Config class that doesn't use a key to find config data"""
         def __init__(self, config: dict) -> None:
             self.y_this_is_a_key = None
             super().__init__(config, 'config_key')
 
-    mocker.patch('glob.glob', return_value=['filename1', 'filename2'])
+    monkeypatch.setattr('glob.glob', Mock(return_value=['filename1', 'filename2']))
 
     read_data = [json.dumps({"config_key": {"y_this_is_a_key": "value found in file1"}}),
                  json.dumps({"config_key": {"y_this_is_a_key": "value found in file2"}})]
-    mock_files = mocker.patch('builtins.open', mocker.mock_open(read_data=read_data[0]))
-    mock_files.side_effect = (mocker.mock_open(read_data=data).return_value for data in read_data)
+    mock_files = Mock(side_effect=(mock_open(read_data=data).return_value for data in read_data))
+    monkeypatch.setattr('builtins.open', mock_files)
 
     config = WithoutKeyConfig('path/to/dir')
 
     assert config.y_this_is_a_key == "value found in file1"
     assert config.next.y_this_is_a_key == "value found in file2"
+    assert mock_files.call_count == 2
