@@ -53,9 +53,9 @@ this. The initial packaging for the project uses [setuptools](https://setuptools
 
 ## Build and Install
 
-To manually install the package on your local instance pull the `idss-engine-commons` project from the repository and navigate into idsse_common
+To manually install the package on your local instance pull the idss-engine-common from the repository and navigate into idsse_common
 
-From the directory `idss-engine-commons/python/idsse_common`:
+From the directory `/idss-engine-common/python/idsse_common`:
 
 `$ python3 setup.py install`
 
@@ -68,4 +68,11 @@ Once installed elements from the package can be imported directly into code. For
 ---
 > from idsse.common.path_builder import PathBuilder
 
+## Running tests
+### Python
+After installing the project's dependencies, make sure you have the [pytest-cov](https://pytest-cov.readthedocs.io/en/latest/config.html?highlight=missing#reference) plugin installed. 
 
+Run pytest coverage with the following CLI command. Note: the path argument can be removed to run all tests in the project.
+```
+pytest --cov=python/idsse_common python/idsse_common/test --cov-report=term-missing
+```

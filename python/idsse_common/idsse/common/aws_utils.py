@@ -53,10 +53,10 @@ class AwsUtils():
             Sequence[str]: The results sent to stdout from executing an 'ls' on passed path
         """
         try:
-            commands = ["s5cmd",  "--no-sign-request", "ls", path]
+            commands = ['s5cmd',  '--no-sign-request', 'ls', path]
             commands_result = exec_cmd(commands)
         except FileNotFoundError:
-            commands = ["aws", "s3",  "--no-sign-request", "ls", path]
+            commands = ['aws', 's3',  '--no-sign-request', 'ls', path]
             commands_result = exec_cmd(commands)
         except PermissionError:
             return []
@@ -76,18 +76,20 @@ class AwsUtils():
         """
         try:
             logger.debug('First attempt with s5cmd')
-            commands = ["s5cmd", "--no-sign-request",  "cp", path, dest]
+            commands = ['s5cmd', '--no-sign-request',  'cp', path, dest]
             exec_cmd(commands)
             return True
         except FileNotFoundError:
             try:
                 logger.debug('Second attempt with aws command line')
-                commands = ["aws", "s3", "--no-sign-request",  "cp", path, dest]
+                commands = ['aws', 's3', '--no-sign-request',  'cp', path, dest]
                 exec_cmd(commands)
                 return True
+            except:
+                return False
             finally:
                 pass
-        return False
+       
 
     def check_for(self, issue: datetime, valid: datetime) -> Tuple[datetime, str]:
         """Checks if an object passed issue/valid exists
@@ -113,7 +115,7 @@ class AwsUtils():
                    num_issues: int = 1,
                    issue_start: datetime = None,
                    issue_end: datetime = datetime.now(timezone.utc)
-                   ) -> Sequence[Tuple[datetime, str]]:
+                   ) -> Sequence[datetime]:
         """Determine the available issue date/times
 
         Args:
@@ -122,7 +124,7 @@ class AwsUtils():
             issue_end (datetime, optional): The newest date/time to look for. Defaults to None.
 
         Returns:
-            Sequence[Tuple[datetime, str]]: A sequence of issue date/time and filepath
+            Sequence[Tuple[datetime, str]]: A sequence of issue date/times
         """
         issues_found = []
         if issue_start:
@@ -185,29 +187,3 @@ class AwsUtils():
                           if valid <= valid_end]
 
         return valid_file
-
-
-def _test():
-    basedir = 's3://noaa-nbm-grib2-pds/'
-    subdir = 'blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/{issue.hour:02d}/core/'
-    file_base = 'blend.t{issue.hour:02d}z.core.f{lead.hour:03d}'
-    file_ext = '.co.grib2'
-
-    issue = datetime(2023, 2, 12, 14)
-    aws_util = AwsUtils(basedir, subdir, file_base, file_ext)
-    ls_result = [valid for valid, _ in aws_util.get_valids(issue=issue)]
-    logging.info(ls_result)
-
-
-if __name__ == '__main__':
-    import sys
-
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(module)s - %(levelname)s : %(message)s',
-        handlers=[
-            logging.StreamHandler(sys.stdout)
-        ]
-    )
-
-    _test()
