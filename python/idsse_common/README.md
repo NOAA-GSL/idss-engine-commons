@@ -72,7 +72,7 @@ Once installed elements from the package can be imported directly into code. For
 ### Python
 After installing the project's dependencies, make sure you have the [pytest-cov](https://pytest-cov.readthedocs.io/en/latest/config.html?highlight=missing#reference) plugin installed. 
 
-Run pytest coverage with the following CLI command. Note: the path argument can be removed to run all tests in the project.
+Run pytest coverage with the following CLI command. Note: the path argument `=python` can be removed to run all tests in the project.
 ```
-pytest --cov=python/idsse_common python/idsse_common/test --cov-report=term-missing
+pytest --cov=python --cov-report=term-missing
 ```
