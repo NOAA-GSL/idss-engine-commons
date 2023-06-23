@@ -53,26 +53,49 @@ this. The initial packaging for the project uses [setuptools](https://setuptools
 
 ## Build and Install
 
-To manually install the package on your local instance pull the idss-engine-common from the repository and navigate into idsse_common
+For any of the steps below, first clone this idss-engine-commons repository locally from GitHub.
 
-From the directory `/idss-engine-common/python/idsse_common`:
+### Building this library
 
-`$ python3 setup.py install`
+1. `cd` into `/python/idsse_common`
+1. Build the project
+    ```
+    $ python3 setup.py install
+    ```
 
-**NOTE** Python 3.11+ is required to install and use this package, it won't work on earlier versions of python
+**NOTE** Python 3.11+ is required to install and use this package. Install should fail for earlier versions
+
+### Importing this library into other projects
+
+1. `cd` into the project's directory (where you want to use this library)
+1. Make sure you're command line session has a `virtualenv` created and activated
+    1. If you haven't done this, run `python3 -m venv .venv`
+    1. Activate the virtualenv with `source .venv/bin/activate`
+1. Use `pip -e` to install the library using the local path to the cloned repo's `setup.py`. E.g.
+    ```
+    pip install -e /Users/my_user_name/idss-engine-commons/python/idsse_common
+    ```
+
+On success, you should see a message from pip like `Successfully built idsse-1.x`
+
 
 ## Using the package
 
-Once installed elements from the package can be imported directly into code. For example:
+Once installed, elements from the package can be imported directly into code. For example:
 
----
-> from idsse.common.path_builder import PathBuilder
+```
+from idsse.common.path_builder import PathBuilder
+my_path_builder = PathBuilder()
+```
 
 ## Running tests
-### Python
-After installing the project's dependencies, make sure you have the [pytest-cov](https://pytest-cov.readthedocs.io/en/latest/config.html?highlight=missing#reference) plugin installed. 
 
-Run pytest coverage with the following CLI command. Note: the path argument `=python` can be removed to run all tests in the project.
-```
-pytest --cov=python --cov-report=term-missing
-```
+1. Install this library's dependencies as detailed above in [Building this library](#building-this-library)
+1. Install [pytest](https://docs.pytest.org/en/latest/index.html) and the [pytest-cov](https://pytest-cov.readthedocs.io/en/latest/config.html?highlight=missing#reference) plugin if you don't have it
+    ```
+    pip install pytest pytest-cov
+    ```
+1. Generate a pytest coverage report with the following command 
+    ```
+    pytest --cov --cov-report=term-missing
+    ```

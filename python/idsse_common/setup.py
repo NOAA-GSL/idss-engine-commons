@@ -8,6 +8,7 @@ setup(name='idsse',
       author='WIDS',
       author_email='@noaa.gov',
       license='MIT',
+      python_requires=">3.11",
       packages=['idsse.common'],
       # packages=['idsse', 'idsse.common'],
       # packages=find_packages(exclude=['contrib', 'docs', 'tests*']),
@@ -16,4 +17,10 @@ setup(name='idsse',
         'pint',
         'importlib_metadata',
         ],
+      extras_require={
+        'develop': [
+          'pytest',
+          'pytest-cov',
+        ]
+      },
       zip_safe=False)
