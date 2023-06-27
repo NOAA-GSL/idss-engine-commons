@@ -13,7 +13,7 @@ import glob
 import json
 import logging
 from inspect import signature
-from typing import Self, Union
+from typing import Self, Union, List
 
 logger = logging.getLogger(__name__)
 
@@ -22,7 +22,7 @@ class Config:
     """Configuration data class"""
 
     def __init__(self,
-                 config: Union[dict, str],
+                 config: Union[dict, List[dict], str],
                  keys: Union[list, str] = None,
                  recursive: bool = False,
                  ignore_missing: bool = False) -> None:
@@ -116,7 +116,7 @@ class Config:
         # update the instance dictionary to hold all configuration attributes
         self.__dict__.update(config_dict)
 
-    def _from_config_dicts(self, config_dicts, keys: str) -> Self:
+    def _from_config_dicts(self, config_dicts: List[dict], keys: str) -> Self:
         self._from_config_dict(config_dicts[0], keys)
         for config_dict in config_dicts[1:]:
             # if inherited class takes only one argument
@@ -125,79 +125,3 @@ class Config:
             else:
                 self._next = type(self)(config_dict, keys)
             self._next._previous = self  # pylint: disable=protected-access
-
-
-def _example():
-    class NameAsKeyConfig(Config):
-        """Testing config class the uses class name as key"""
-        def __init__(self, config: Union[dict, str]) -> None:
-            """To create a config that uses it's class name when look for nested config,
-            pass None to the super.__init()"""
-            self.idiom = None
-            self.metaphor = None
-            super().__init__(config, None)
-
-    class WithoutKeyConfig(Config):
-        """Testing config class the uses no key"""
-        def __init__(self, config: Union[dict, str]) -> None:
-            """To create a config that does NOT look for config nested under a key,
-            pass an empty string to the super.__init()"""
-            self.idiom = None
-            self.metaphor = None
-            super().__init__(config, '')
-
-    class RequiresKeyConfig(Config):
-        """Testing config class that requires key to be provided"""
-        def __init__(self, config: Union[dict, str], key: Union[list, str]) -> None:
-            """To create a config that requires a user provided name when look for nested config,
-            pass a key as string or list of string to the super.__init()"""
-            self.idiom = None
-            self.metaphor = None
-            super().__init__(config, key)
-
-    def get_config_dict(key: Union[list, str]) -> dict:
-        idioms = ['Out of hand',
-                  'See eye to eye',
-                  'Under the weather',
-                  'Cut the mustard']
-        metaphors = ['blanket of stars',
-                     'weighing on my mind',
-                     'were a glaring light',
-                     'floated down the river']
-        if key is None:
-            return {'idiom': random.choice(idioms),
-                    'metaphor': random.choice(metaphors)}
-        if isinstance(key, str):
-            key = [key]
-        config_dict = {'idiom': random.choice(idioms),
-                       'metaphor': random.choice(metaphors)}
-        for k in reversed(key):
-            config_dict = {k: config_dict}
-        return config_dict
-
-    # example of config that uses class name to identify relevant block of data
-    config_dict = get_config_dict('NameAsKeyConfig')
-    logging.info(config_dict)
-    config = NameAsKeyConfig(config_dict)
-    logging.info('Idiom:', config.idiom)
-    logging.info('Metaphor:', config.metaphor)
-
-    # example of config with block of data at top level
-    config_dict = get_config_dict(None)
-    logging.info(config_dict)
-    config = WithoutKeyConfig(config_dict)
-    logging.info('Idiom:', config.idiom)
-    logging.info('Metaphor:', config.metaphor)
-
-    # example of config with relevant block of data nested
-    config_dict = get_config_dict('NestKey')
-    logging.info(config_dict)
-    config = RequiresKeyConfig(config_dict, 'NestKey')
-    logging.info('Idiom:', config.idiom)
-    logging.info('Metaphor:', config.metaphor)
-
-
-if __name__ == '__main__':
-    import random
-
-    _example()
