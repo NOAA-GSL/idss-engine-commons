@@ -22,6 +22,7 @@ RUN conda config --add channels conda-forge && \
     netcdf4==1.6.3 \
     h5netcdf==1.1.0 \
     pygrib==2.1.4 \
+    awscli==1.27.161 \
     && conda clean -y --all
 
 # Get the latest package updates to keep security vulnerabilities down
