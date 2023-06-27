@@ -30,4 +30,4 @@ jobs:
       #    conda install pytest python-dateutil==2.8.2 pint==0.21
       - name: Test with pytest
         run: |
-          pytest python/idsse_common/test
+          pytest python/idsse_common/test --cov=python/idsse_common python/idsse_common/test --cov-report=term-missing
