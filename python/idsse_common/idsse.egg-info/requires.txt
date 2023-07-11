@@ -1,2 +1,0 @@
-pint
-importlib_metadata

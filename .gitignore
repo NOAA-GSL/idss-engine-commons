@@ -41,6 +41,7 @@ __pycache__
 .venv
 .pytest_cache
 .coverage*
+.python-version
 build/
 dist/
 *.egg*
