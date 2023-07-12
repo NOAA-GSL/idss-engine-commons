@@ -1,0 +1,28 @@
+============================= test session starts ==============================
+platform linux -- Python 3.11.4, pytest-7.4.0, pluggy-1.2.0
+rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
+plugins: cov-4.1.0
+collected 58 items
+
+test_aws_utils.py ...............                                        [ 25%]
+test_config.py ............                                              [ 46%]
+test_path_builder.py .....................                               [ 82%]
+test_utils.py ..........                                                 [100%]
+
+- generated xml file: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/pytest.xml -
+
+---------- coverage: platform linux, python 3.11.4-final-0 -----------
+Name                                                                                                            Stmts   Miss  Cover
+-----------------------------------------------------------------------------------------------------------------------------------
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/__init__.py              0      0   100%
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/aws_utils.py            77      5    94%
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/config.py               74      9    88%
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/json_message.py         22     22     0%
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/log_util.py             38     38     0%
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/path_builder.py        127     10    92%
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/publish_confirm.py     141    141     0%
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/utils.py                78     33    58%
+-----------------------------------------------------------------------------------------------------------------------------------
+TOTAL                                                                                                             557    258    54%
+
+============================== 58 passed in 0.46s ==============================
