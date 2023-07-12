@@ -38,3 +38,12 @@ jobs:
         with:
           pytest-coverage-path: python/idsse_common/test/coverage.txt
           junitxml-path: python/idsse_common/test/pytest.xml
+          junitxml-title: Pytest Unit Test Code Coverage
+          title: Unit Test Coverage
+          badge-title: Unit Test Coverage
+          hide-badge: false
+          hide-report: false
+          create-new-comment: false
+          hide-comment: false
+          report-only-changed-files: false
+          remove-link-from-badge: false
