@@ -1,6 +1,9 @@
 # IDSS Engine Commons
 [![Pytest](https://github.com/NOAA-GSL/idss-engine-commons/actions/workflows/run-tests.yml/badge.svg?branch=main)](https://github.com/NOAA-GSL/idss-engine-commons/actions/workflows/run-tests.yml)
 
+<!-- Pytest Coverage Comment:Begin -->
+<!-- Pytest Coverage Comment:End -->
+
 ## Overview
 The `idss-engine-commons` project is responsible for defining all implicit common dependencies that are used by the apps that make up the IDSS Engine Project distributed system. This
 repository should be used to house elements that are common across multiple projects to encourage reuse.
