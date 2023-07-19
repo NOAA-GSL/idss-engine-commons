@@ -23,7 +23,7 @@ public enum Units  {
     Knots,
     Fahrenheit,
     Kelvin,
-    Celcius,
+    Celsius,
     Percent,
     Strikes,
     DegreesNorth,
@@ -93,8 +93,8 @@ public enum Units  {
         map.put("DEG F", Fahrenheit); 
         map.put("K", Kelvin); 
         map.put("KELVIN", Kelvin); 
-        map.put("C", Celcius); 
-        map.put("CELCIUS", Celcius);         
+        map.put("C", Celsius); 
+        map.put("CELSIUS", Celsius);         
         map.put("%", Percent);         
         map.put("percent", Percent); 
         map.put("PERCENT", Percent); 

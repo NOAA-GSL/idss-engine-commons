@@ -30,7 +30,7 @@ public class UnitsConversion {
             return convertFahrenheit(destUnits, value);
         case Kelvin:
             return convertKelvin(destUnits, value);
-        case Celcius:
+        case Celsius:
             return convertCelcius(destUnits, value);
         case MetersPerSecond:
             return convertMetersPerSecond(destUnits, value);
@@ -61,7 +61,7 @@ public class UnitsConversion {
             return convertFahrenheit(destUnits, value);
         case Kelvin:
             return convertKelvin(destUnits, value);
-        case Celcius:
+        case Celsius:
             return convertCelcius(destUnits, value);
         case MetersPerSecond:
             return convertMetersPerSecond(destUnits, value);
@@ -93,7 +93,7 @@ public class UnitsConversion {
             return convertFahrenheit(destUnits, array);
         case Kelvin:
             return convertKelvin(destUnits, array);
-        case Celcius:
+        case Celsius:
             return convertCelcius(destUnits, array);
         case MetersPerSecond:
             return convertMetersPerSecond(destUnits, array);
@@ -125,7 +125,7 @@ public class UnitsConversion {
             return convertFahrenheit(destUnits, array);
         case Kelvin:
             return convertKelvin(destUnits, array);
-        case Celcius:
+        case Celsius:
             return convertCelcius(destUnits, array);
         case MetersPerSecond:
             return convertMetersPerSecond(destUnits, array);
@@ -157,7 +157,7 @@ public class UnitsConversion {
             return convertFahrenheit(destUnits, grid);
         case Kelvin:
             return convertKelvin(destUnits, grid);
-        case Celcius:
+        case Celsius:
             return convertCelcius(destUnits, grid);
         case MetersPerSecond:
             return convertMetersPerSecond(destUnits, grid);
@@ -189,7 +189,7 @@ public class UnitsConversion {
             return convertFahrenheit(destUnits, grid);
         case Kelvin:
             return convertKelvin(destUnits, grid);
-        case Celcius:
+        case Celsius:
             return convertCelcius(destUnits, grid);
         case MetersPerSecond:
             return convertMetersPerSecond(destUnits, grid);
@@ -707,7 +707,7 @@ public class UnitsConversion {
         switch(destUnits) {
         case Fahrenheit:
             return kelvinToFahrenheit(value);                        
-        case Celcius:
+        case Celsius:
             return kelvinToCelcius(value);                        
         default:
         }
@@ -718,7 +718,7 @@ public class UnitsConversion {
         switch(destUnits) {
         case Fahrenheit:
             return kelvinToFahrenheit(value);                        
-        case Celcius:
+        case Celsius:
             return kelvinToCelcius(value);                        
         default:
         }
@@ -729,7 +729,7 @@ public class UnitsConversion {
         switch(destUnits) {
         case Fahrenheit:
             return kelvinToFahrenheit(array);                        
-        case Celcius:
+        case Celsius:
             return kelvinToCelcius(array);                        
         default:
         }
@@ -739,7 +739,7 @@ public class UnitsConversion {
         switch(destUnits) {
         case Fahrenheit:
             return kelvinToFahrenheit(array);                        
-        case Celcius:
+        case Celsius:
             return kelvinToCelcius(array);                        
         default:
         }
@@ -750,7 +750,7 @@ public class UnitsConversion {
         switch(destUnits) {
         case Fahrenheit:
             return kelvinToFahrenheit(grid);                        
-        case Celcius:
+        case Celsius:
             return kelvinToCelcius(grid);                        
         default:
         }
@@ -760,7 +760,7 @@ public class UnitsConversion {
         switch(destUnits) {
         case Fahrenheit:
             return kelvinToFahrenheit(grid);                        
-        case Celcius:
+        case Celsius:
             return kelvinToCelcius(grid);                        
         default:
         }
