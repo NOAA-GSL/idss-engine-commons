@@ -1,5 +1,12 @@
 name: Run Pytest
-on: [ push, pull_request ]
+on:
+  push:
+    branches:
+      - 'main'
+  pull_request:
+    types:
+      - 'opened'
+      - 'reopened'
 jobs:
   build:
     runs-on: ubuntu-latest
