@@ -11,8 +11,8 @@
 
 import logging
 import os
-from datetime import datetime, timedelta, timezone
-from typing import List, Tuple, Optional, Sequence
+from datetime import datetime, timedelta
+from typing import Sequence, Tuple, Optional
 
 from .path_builder import PathBuilder
 from .utils import TimeDelta, datetime_gen, exec_cmd
@@ -43,7 +43,7 @@ class AwsUtils():
         lead = TimeDelta(valid-issue)
         return self.path_builder.build_path(issue=issue, valid=valid, lead=lead)
 
-    def aws_ls(self, path: str, prepend_path: bool = True) -> List[str]:
+    def aws_ls(self, path: str, prepend_path: bool = True) -> Sequence[str]:
         """Execute an 'ls' on the AWS s3 bucket specified by path
 
         Args:
