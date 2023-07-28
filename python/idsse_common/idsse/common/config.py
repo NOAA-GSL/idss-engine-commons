@@ -49,7 +49,7 @@ class Config:
             filepaths = glob.glob(config, recursive=recursive)
             if len(filepaths) == 0:
                 raise FileNotFoundError
-            elif len(filepaths) == 1:
+            if len(filepaths) == 1:
                 self._from_filepath(filepaths[0], keys)
             else:
                 self._from_filepaths(filepaths, keys)

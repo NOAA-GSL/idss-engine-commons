@@ -12,7 +12,7 @@
 import logging
 import os
 from datetime import datetime, timedelta, timezone
-from typing import Sequence, Tuple
+from typing import List, Tuple, Optional, Sequence
 
 from .path_builder import PathBuilder
 from .utils import TimeDelta, datetime_gen, exec_cmd
@@ -43,7 +43,7 @@ class AwsUtils():
         lead = TimeDelta(valid-issue)
         return self.path_builder.build_path(issue=issue, valid=valid, lead=lead)
 
-    def aws_ls(self, path: str, prepend_path: bool = True) -> Sequence[str]:
+    def aws_ls(self, path: str, prepend_path: bool = True) -> List[str]:
         """Execute an 'ls' on the AWS s3 bucket specified by path
 
         Args:
@@ -85,13 +85,13 @@ class AwsUtils():
                 commands = ['aws', 's3', '--no-sign-request',  'cp', path, dest]
                 exec_cmd(commands)
                 return True
-            except:
+            except Exception:  # pytest: disable=broad-exception-caught
                 return False
             finally:
                 pass
-       
 
-    def check_for(self, issue: datetime, valid: datetime) -> Tuple[datetime, str]:
+
+    def check_for(self, issue: datetime, valid: datetime) -> Optional[Tuple[datetime, str]]:
         """Checks if an object passed issue/valid exists
 
         Args:
@@ -112,9 +112,9 @@ class AwsUtils():
         return None
 
     def get_issues(self,
-                   num_issues: int = 1,
-                   issue_start: datetime = None,
-                   issue_end: datetime = datetime.now(timezone.utc)
+                   num_issues: Optional[int] = 1,
+                   issue_start: Optional[datetime] = None,
+                   issue_end: datetime = datetime.utcnow()
                    ) -> Sequence[datetime]:
         """Determine the available issue date/times
 
@@ -148,8 +148,8 @@ class AwsUtils():
 
     def get_valids(self,
                    issue: datetime,
-                   valid_start: datetime = None,
-                   valid_end: datetime = None) -> Sequence[Tuple[datetime, str]]:
+                   valid_start: Optional[datetime] = None,
+                   valid_end: Optional[datetime] = None) -> Optional[Sequence[Tuple[datetime, str]]]:
         """Get all objects consistent with the passed issue date/time and filter by valid range
 
         Args:
@@ -164,7 +164,8 @@ class AwsUtils():
                                             object's location) and the object's location (path)
         """
         if valid_start and valid_start == valid_end:
-            return [self.check_for(issue, valid_start)]
+            valids_and_filenames = self.check_for(issue, valid_start)
+            return [valids_and_filenames] if valids_and_filenames is not None else None
 
         dir_path = self.path_builder.build_dir(issue=issue)
 
