@@ -85,7 +85,7 @@ class AwsUtils():
                 commands = ['aws', 's3', '--no-sign-request',  'cp', path, dest]
                 exec_cmd(commands)
                 return True
-            except Exception:  # pytest: disable=broad-exception-caught
+            except Exception:  # pylint: disable=broad-exception-caught
                 return False
             finally:
                 pass

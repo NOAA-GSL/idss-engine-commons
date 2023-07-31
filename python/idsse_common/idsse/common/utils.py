@@ -96,8 +96,8 @@ def exec_cmd(commands: Sequence[str], timeout: Optional[int] = None) -> Sequence
         raise OSError(process.returncode, errs.decode())
     try:
         ans = outs.decode().splitlines()
-    except Exception as e:  # pylint: disable=broad-exception-caught
-        raise RuntimeError(e) from e
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        raise RuntimeError(exc) from exc
     return ans
 
 

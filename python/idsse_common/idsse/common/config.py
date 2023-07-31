@@ -13,7 +13,7 @@ import glob
 import json
 import logging
 from inspect import signature
-from typing import Self, Union, List
+from typing import Self, Union, List, Optional
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +23,7 @@ class Config:
 
     def __init__(self,
                  config: Union[dict, List[dict], str],
-                 keys: Union[list, str] = None,
+                 keys: Optional[Union[list, str]] = None,
                  recursive: bool = False,
                  ignore_missing: bool = False) -> None:
 
