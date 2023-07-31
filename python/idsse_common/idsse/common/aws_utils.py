@@ -99,9 +99,9 @@ class AwsUtils():
             valid (datetime): The valid date/time used to format the path to the object's location
 
         Returns:
-            Tuple[datetime, str]: If object exists the valid date/time (indicated by object's
-                                  location) and the object's location (path) is returned as a tuple,
-                                  else the tuple(None, None) is returned
+            Optional[Tuple[datetime, str]]: A tuple of the valid date/time (indicated by object's 
+                                            location) and location (path) of a object, or None 
+                                            if object does not exist
         """
         lead = TimeDelta(valid-issue)
         filenames = self.aws_ls(self.get_path(issue, valid), prepend_path=False)
@@ -112,21 +112,21 @@ class AwsUtils():
         return None
 
     def get_issues(self,
-                   num_issues: Optional[int] = 1,
+                   num_issues: int = 1,
                    issue_start: Optional[datetime] = None,
                    issue_end: datetime = datetime.utcnow()
                    ) -> Sequence[datetime]:
         """Determine the available issue date/times
 
         Args:
-            num_issues (int, optional): Maximum number of issue to return. Defaults to 1.
+            num_issues (int): Maximum number of issue to return. Defaults to 1.
             issue_start (datetime, optional): The oldest date/time to look for. Defaults to None.
-            issue_end (datetime, optional): The newest date/time to look for. Defaults to None.
+            issue_end (datetime): The newest date/time to look for. Defaults to now (UTC).
 
         Returns:
-            Sequence[Tuple[datetime, str]]: A sequence of issue date/times
+            Sequence[datetime]: A sequence of issue date/times
         """
-        issues_found = []
+        issues_found: Sequence[datetime] = []
         if issue_start:
             datetimes = datetime_gen(issue_end, timedelta(hours=-1), issue_start, num_issues)
         else:
@@ -149,7 +149,7 @@ class AwsUtils():
     def get_valids(self,
                    issue: datetime,
                    valid_start: Optional[datetime] = None,
-                   valid_end: Optional[datetime] = None) -> Optional[Sequence[Tuple[datetime, str]]]:
+                   valid_end: Optional[datetime] = None) -> Sequence[Tuple[datetime, str]]:
         """Get all objects consistent with the passed issue date/time and filter by valid range
 
         Args:
@@ -161,11 +161,12 @@ class AwsUtils():
 
         Returns:
             Sequence[Tuple[datetime, str]]: A sequence of tuples with valid date/time (indicated by
-                                            object's location) and the object's location (path)
+                                            object's location) and the object's location (path). 
+                                            Empty Sequence if no valids found for given time range.
         """
         if valid_start and valid_start == valid_end:
             valids_and_filenames = self.check_for(issue, valid_start)
-            return [valids_and_filenames] if valids_and_filenames is not None else None
+            return [valids_and_filenames] if valids_and_filenames is not None else []
 
         dir_path = self.path_builder.build_dir(issue=issue)
 
