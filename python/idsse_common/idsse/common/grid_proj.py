@@ -26,9 +26,9 @@ class GridProj:
                  height: float,
                  dx: float,
                  dy: Optional[float] = None):
-        # pylint: disable=too-many-arguments
+        # pylint: disable=too-many-arguments,unpacking-non-sequence
         self._trans = Transformer.from_crs(crs.geodetic_crs, crs)
-        self._x_offset, self._y_offset = self._trans.transform(longitude, latitude)  # pylint: disable=unpacking-non-sequence
+        self._x_offset, self._y_offset = self._trans.transform(longitude, latitude)
         self._w = width
         self._h = height
         self._dx = dx

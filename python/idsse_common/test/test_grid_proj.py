@@ -16,8 +16,10 @@ from idsse.common.grid_proj import GridProj
 
 # example data
 EXAMPLE_PROJ_SPEC = '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +r=6371200'
-PROJ_SPEC_WITH_OFFSET = ('+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +x_0=3271.152832031251 '
-    '+y_0=263.7934687500001 +r=6371.2, +units=km')
+PROJ_SPEC_WITH_OFFSET = (
+    '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +x_0=3271.152832031251 '
+    '+y_0=263.7934687500001 +r=6371.2, +units=km'
+)
 EXAMPLE_GRID_SPEC = "+dx=2.539703 +dy=2.539703 +w=2345 +h=1597 +lat_ll=19.229 +lon_ll=-126.2766"
 EXAMPLE_PROJECTION = (-126.2766, 19.229)
 EXAMPLE_PIXEL = (0, 1)

@@ -1,6 +1,6 @@
 """Module for building (and parsing) paths that are dependent on issue, valid, and lead.
 
-In this weather forecasting data context, 
+In this weather forecasting data context,
 - issue: the datetime when a given forecast was generated (or at least when generation began)
 - valid: the datetime when a given forecast "expires" or is superceded by newer forecasts
 - lead: the time duration (often in hours) between issue and valid, a sort of forecast "lifespan"
@@ -49,7 +49,7 @@ class PathBuilder():
         """Construct a PathBuilder object from specified directory and filename formats.
         Format string args must follow Python format specifications to define expected fields:
         https://docs.python.org/3/library/string.html#format-specification-mini-language
-        
+
         For example, filepaths could be expected to contain "issue" and "lead" fields using format:
         'blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/{issue.hour:02d}/{lead.hour:03d}/'
 
