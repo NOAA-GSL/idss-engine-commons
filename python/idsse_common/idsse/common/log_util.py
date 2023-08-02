@@ -31,7 +31,7 @@ corr_id_context_var: ContextVar[str] = ContextVar('correlation_id')
 def set_corr_id_context_var(originator: str, key: uuid = None, issue_dt: Union[str, datetime] = None) -> None:
     if not key:
         key = uuid.uuid4()
-        
+
     if issue_dt:
         if not isinstance(issue_dt, str):
             issue_dt = to_iso(issue_dt)
@@ -72,7 +72,7 @@ def get_default_log_config(level, with_corr_id=True):
         format_str = '%(asctime)-15s %(name)-5s %(levelname)-8s %(corr_id)s %(module)s::%(funcName)s(line %(lineno)d) %(message)s'
     else:
         format_str = '%(asctime)-15s %(name)-5s %(levelname)-8s %(module)s::%(funcName)s(line %(lineno)d) %(message)s'
-        
+
     return {
     'version': 1,
     'disable_existing_loggers': False,

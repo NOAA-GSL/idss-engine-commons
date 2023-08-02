@@ -15,7 +15,7 @@ test_utils.py ..........                                                 [100%]
 Name                                                                                                            Stmts   Miss  Cover
 -----------------------------------------------------------------------------------------------------------------------------------
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/__init__.py              0      0   100%
-/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/aws_utils.py            77      5    94%
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/aws_utils.py            78      6    92%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/config.py               74      9    88%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/json_message.py         22     22     0%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/log_util.py             38     38     0%
@@ -23,6 +23,6 @@ Name                                                                            
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/publish_confirm.py     141    141     0%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/utils.py                78     33    58%
 -----------------------------------------------------------------------------------------------------------------------------------
-TOTAL                                                                                                             557    258    54%
+TOTAL                                                                                                             558    259    54%
 
-============================== 58 passed in 0.46s ==============================
+============================== 58 passed in 0.38s ==============================
