@@ -77,6 +77,10 @@ class GridProj:
         """Map geographic coordinates to a projection"""
         return self._trans.transform(x, y, direction=TransformDirection.INVERSE)
 
-    def map_geo_to_pixel(self, x: float, y: float) -> Tuple[float, float]:
-        """Map geographic coordinates to a pixel"""
-        return (x - self._x_offset) / self._dx, (y - self._y_offset) / self._dy
+    def map_geo_to_pixel(self, x: float, y: float) -> Tuple[int, int]:
+        """Map geographic coordinates to a pixel
+        
+        Pixels are only identified by whole numbers when graphically rendered, 
+        so the transformed numerical values (floats) can be safely rounded to ints
+        """
+        return round((x - self._x_offset) / self._dx), round((y - self._y_offset) / self._dy)
