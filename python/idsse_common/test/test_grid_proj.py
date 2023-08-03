@@ -14,7 +14,7 @@ from typing import Tuple
 
 from pytest import fixture, approx
 
-from idsse.common.grid_proj import GridProj
+from idsse.common.grid_proj import GridProj, PixelRounding
 
 # example data
 EXAMPLE_PROJ_SPEC = '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +r=6371200'
@@ -77,7 +77,7 @@ def test_from_proj_grid_spec_with_offset():
 def test_map_proj_to_pixel(grid_proj: GridProj):
     for index, proj in enumerate(EXAMPLE_PROJECTIONS):
         pixel_x, pixel_y = grid_proj.map_proj_to_pixel(*proj)
-        assert (pixel_x, pixel_y) == EXAMPLE_PIXELS[index]
+        assert (round(pixel_x, 6), round(pixel_y, 6)) == EXAMPLE_PIXELS[index]
 
 
 def test_map_proj_to_geo(grid_proj: GridProj):
@@ -104,9 +104,22 @@ def test_map_geo_to_proj(grid_proj: GridProj):
         assert (proj_x, proj_y) == approx_tuple(EXAMPLE_PROJECTIONS[index])
 
 
-def test_geo_to_pixel(grid_proj: GridProj):
+def test_geo_to_pixel_no_rounding(grid_proj: GridProj):
     for index, geo in enumerate(EXAMPLE_GEOS):
         pixel_x, pixel_y = grid_proj.map_geo_to_pixel(*geo)
+        # round result, which will not be precisely the integer that was passed
+        assert (round(pixel_x, 6), round(pixel_y, 6)) == EXAMPLE_PIXELS[index]
+
+
+def test_geo_to_pixel_floor(grid_proj: GridProj):
+    for index, geo in enumerate(EXAMPLE_GEOS):
+        pixel_x, pixel_y = grid_proj.map_geo_to_pixel(*geo, PixelRounding.FLOOR)
+        assert (pixel_x, pixel_y) == EXAMPLE_PIXELS[index]
+
+
+def test_geo_to_pixel_round(grid_proj: GridProj):
+    for index, geo in enumerate(EXAMPLE_GEOS):
+        pixel_x, pixel_y = grid_proj.map_geo_to_pixel(*geo, PixelRounding.ROUND)
         assert (pixel_x, pixel_y) == EXAMPLE_PIXELS[index]
 
 
@@ -122,7 +135,7 @@ def test_compound_tranformations_stay_consistent(grid_proj: GridProj):
 
     # convert geographic coordinates back to pixel, full circle, and data should be unchanged
     pixel_x, pixel_y = grid_proj.map_geo_to_pixel(geo_x, geo_y)
-    assert (pixel_x, pixel_y) == initial_pixel
+    assert (round(pixel_x, 6), round(pixel_y, 6)) == initial_pixel
 
     # convert pixel back to geographic coordinates
     geo_x, geo_y = grid_proj.map_pixel_to_geo(pixel_x, pixel_y)

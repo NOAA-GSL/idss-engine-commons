@@ -10,10 +10,18 @@
 # -------------------------------------------------------------------------------
 # pylint: disable=invalid-name
 
-from typing import Self, Tuple, Any, Optional
+from typing import Self, Tuple, Union, Any, Optional
+from enum import Enum, auto
+from math import floor
 
 from pyproj import CRS, Transformer
 from pyproj.enums import TransformDirection
+
+
+class PixelRounding(Enum):
+    """Transformations to apply to calculated pixels when casting to ints"""
+    ROUND = auto()
+    FLOOR = auto()
 
 
 class GridProj:
@@ -77,10 +85,32 @@ class GridProj:
         """Map geographic coordinates to a projection"""
         return self._trans.transform(x, y, direction=TransformDirection.INVERSE)
 
-    def map_geo_to_pixel(self, x: float, y: float) -> Tuple[int, int]:
+    def map_geo_to_pixel(
+        self, x: float,
+        y: float,
+        rounding: Optional[PixelRounding] = None
+    ) -> Tuple[Union[int, float], Union[int, float]]:
         """Map geographic coordinates to a pixel
-        
-        Pixels are only identified by whole numbers when graphically rendered, 
+
+        Pixels are only identified by whole numbers when graphically rendered,
         so the transformed numerical values (floats) can be safely rounded to ints
+
+        Args:
+            x (float): x geographic coordinate
+            y (float): y geographic coordinate
+            rounding (Optional[PixelRounding]):
+                ROUND to apply round() to pixel values, FLOOR to apply math.floor().
+                By default, pixels are not rounded and will be returned as floats
+
+        Returns:
+            Tuple[Union[int, float], Union[int, float]):
+                x, y values for pixel, rounded to ints if rounding parameter passed, otherwise floats
         """
-        return round((x - self._x_offset) / self._dx), round((y - self._y_offset) / self._dy)
+        pixel_x = (x - self._x_offset) / self._dx
+        pixel_y = (y - self._y_offset) / self._dy
+
+        if rounding is PixelRounding.ROUND:
+            return (round(pixel_x), round(pixel_y))
+        if rounding is PixelRounding.FLOOR:
+            return (floor(pixel_x), floor(pixel_y))
+        return (pixel_x, pixel_y)
