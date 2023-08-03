@@ -90,10 +90,7 @@ class GridProj:
         y: float,
         rounding: Optional[PixelRounding] = None
     ) -> Tuple[Union[int, float], Union[int, float]]:
-        """Map geographic coordinates to a pixel
-
-        Pixels are only identified by whole numbers when graphically rendered,
-        so the transformed numerical values (floats) can be safely rounded to ints
+        """Map geographic coordinates to pixel x and y
 
         Args:
             x (float): x geographic coordinate
