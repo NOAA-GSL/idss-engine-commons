@@ -1,0 +1,372 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "array",
+  "items": [
+    {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "website": {
+          "type": "string"
+        },
+        "createdAt": {
+          "type": "string"
+        },
+        "lastModified": {
+          "type": "null"
+        },
+        "isActive": {
+          "type": "boolean"
+        },
+        "isExpired": {
+          "type": "boolean"
+        },
+        "requiresBriefing": {
+          "type": "boolean"
+        },
+        "requiresOnSiteSupport": {
+          "type": "boolean"
+        },
+        "onSiteSupportApproved": {
+          "type": "boolean"
+        },
+        "briefingApproved": {
+          "type": "boolean"
+        },
+        "briefingTime": {
+          "type": "null"
+        },
+        "timing": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "start": {
+              "type": "string"
+            },
+            "duration": {
+              "type": "null"
+            },
+            "rrule": {
+              "type": "null"
+            },
+            "showOnCalendar": {
+              "type": "boolean"
+            },
+            "validTimes": {
+              "type": "array",
+              "items": {
+                "type": "integer"
+              },
+              "minitems": 1
+            }
+          },
+          "required": [
+            "id",
+            "start",
+            "duration",
+            "rrule",
+            "showOnCalendar",
+            "validTimes"
+          ]
+        },
+        "actions": {
+          "type": "array",
+          "items": {}
+        },
+        "thresholdSets": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "createdAt": {
+                "type": "string"
+              },
+              "lastModified": {
+                "type": "string"
+              },
+              "arealPercentage": {
+                "type": "integer"
+              },
+              "duration": {
+                "type": "integer"
+              },
+              "severity": {
+                "type": "string"
+              },
+              "useForecast": {
+                "type": "boolean"
+              },
+              "useObservations": {
+                "type": "boolean"
+              },
+              "isActive": {
+                "type": "boolean"
+              },
+              "thresholds": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "probability": {
+                      "anyOf": [
+                        {"type": "number"},
+                        {"type": "null"}
+                      ]
+                    },
+                    "weatherElement": {
+                      "type": "object",
+                      "properties": {
+                        "description": {
+                          "type": "string"
+                        },
+                        "units": {
+                          "type": "string"
+                        },
+                        "isProbabilityBased": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "description",
+                        "units",
+                        "isProbabilityBased"
+                      ]
+                    },
+                    "condition": {
+                      "type": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    },
+                      "secondaryValue": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "probability",
+                    "weatherElement",
+                    "condition",
+                    "value",
+                    "secondaryValue"
+                  ]
+                },
+                "models": {
+                  "type": "array",
+                  "items": [
+                    {
+                      "type": "string"
+                    }
+                  ]
+                },
+                "owner": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "jobTitle": {
+                      "type": "string"
+                    },
+                    "employer": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "jobTitle",
+                    "employer"
+                  ]
+                },
+                "nwsOffice": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "officeId": {
+                      "type": "string"
+                    },
+                    "apiKey": {
+                      "type": "string"
+                    },
+                    "location": {
+                      "type": "string"
+                    },
+                    "timezone": {
+                      "type": "string"
+                    },
+                    "parentOffice": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "officeId",
+                    "apiKey",
+                    "location",
+                    "timezone",
+                    "parentOffice"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "createdAt",
+                "lastModified",
+                "arealPercentage",
+                "duration",
+                "severity",
+                "useForecast",
+                "useObservations",
+                "isActive",
+                "thresholds",
+                "models",
+                "owner",
+                "nwsOffice"
+              ]
+            }
+          ]
+        },
+        "location": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "geometry": {
+              "type": "string"
+            },
+            "buffer": {
+              "type": "integer"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "geometry",
+            "buffer"
+          ]
+        },
+        "affectedPopulation": {
+          "type": "null"
+        },
+        "minutesToShelter": {
+          "type": "null"
+        },
+        "nwsOffice": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "officeId": {
+              "type": "string"
+            },
+            "apiKey": {
+              "type": "string"
+            },
+            "location": {
+              "type": "string"
+            },
+            "timezone": {
+              "type": "string"
+            },
+            "parentOffice": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "officeId",
+            "apiKey",
+            "location",
+            "timezone",
+            "parentOffice"
+          ]
+        },
+        "owner": {
+          "type": "object",
+          "properties": {
+            "id": {
+              "type": "string"
+            },
+            "name": {
+              "type": "string"
+            },
+            "jobTitle": {
+              "type": "string"
+            },
+            "employer": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "id",
+            "name",
+            "jobTitle",
+            "employer"
+          ]
+        },
+        "primaryContact": {
+          "type": "null"
+        },
+        "secondaryContact": {
+          "type": "null"
+        },
+        "tertiaryContact": {
+          "type": "null"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "website",
+        "createdAt",
+        "lastModified",
+        "isActive",
+        "isExpired",
+        "requiresBriefing",
+        "requiresOnSiteSupport",
+        "onSiteSupportApproved",
+        "briefingApproved",
+        "briefingTime",
+        "timing",
+        "actions",
+        "thresholdSets",
+        "location",
+        "affectedPopulation",
+        "minutesToShelter",
+        "nwsOffice",
+        "owner",
+        "primaryContact",
+        "secondaryContact",
+        "tertiaryContact"
+      ]
+    }
+  ]
+}

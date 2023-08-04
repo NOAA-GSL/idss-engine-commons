@@ -1,0 +1,380 @@
+{
+  "$schema": "http://json-schema.org/draft-04/schema#",
+  "type": "object",
+  "properties": {
+    "sid": {
+      "type": "object",
+      "properties": {
+        "originator": {
+          "type": "string"
+        },
+        "id": {
+          "type": "string"
+        },
+        "product": {
+          "type": "string"
+        },
+        "issueDt": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "originator",
+        "id",
+        "product",
+        "issueDt"
+      ]
+    },
+    "wfo": {
+      "type": "array",
+      "items": [
+        {
+          "type": "string"
+        }
+      ]
+    },
+    "criteria": {
+      "type": "object",
+      "properties": {
+        "durationInMin": {
+          "type": "integer"
+        },
+        "criterionsName": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "geometry": {
+          "type": "string"
+        },
+        "criterions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "condition": {
+                "type": "string"
+              },
+              "name": {
+                "type": "string"
+              },
+              "keyName": {
+                "type": "string"
+              },
+              "units": {
+                "type": "string"
+              },
+              "value": {
+                "type": "integer"
+              },
+              "element": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "condition",
+              "name",
+              "keyName",
+              "units",
+              "value",
+              "element"
+            ]
+          }
+        },
+        "aerialPercent": {
+          "type": "integer"
+        }
+      },
+      "required": [
+        "durationInMin",
+        "criterionsName",
+        "name",
+        "geometry",
+        "criterions",
+        "aerialPercent"
+      ]
+    },
+    "fcstCriteriaSumMeta": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timeStamp": {
+            "type": "string"
+          },
+          "product": {
+            "type": "string"
+          },
+          "Cessation": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "maxValue": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "isFcst": {
+            "type": "boolean"
+          },
+          "maxAt": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "isObs": {
+            "type": "boolean"
+          },
+          "firstValid": {
+            "type": "string"
+          },
+          "lastValid": {
+           "type": "string"
+          },
+          "Onset": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "timeStamp",
+          "product",
+          "Cessation",
+          "maxValue",
+          "isFcst",
+          "maxAt",
+          "isObs",
+          "firstValid",
+          "lastValid",
+          "Onset"
+        ]
+      }
+    },
+    "fcstCriteriaSummary": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timeStamp": {
+            "type": "string"
+          },
+          "product": {
+            "type": "string"
+          },
+          "geoDists": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "values": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }     
+                },
+                "counts": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "values",
+                "counts"
+              ]
+            }
+          },
+          "criteriaGeoDist": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "values": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "counts": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              },
+              "required": [
+                "name",
+                "values",
+                "counts"
+              ]
+            },
+            "geoSums": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }, 
+                  "product": {
+                    "type": "string"
+                  },
+                  "sums": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "min": {
+                          "type": "number"
+                        },
+                        "size": {
+                          "type": "integer"
+                        },
+                        "max": {
+                          "type": "number"
+                        },
+                        "percentCov": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "min",
+                        "size",
+                        "max",
+                        "percentCov"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "product",
+                  "sum"
+                ]
+              }
+            },
+            "criteriaGeoSum": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string"
+                  }, 
+                  "product": {
+                    "type": "string"
+                  },
+                  "sums": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "min": {
+                          "type": "number"
+                        },
+                        "size": {
+                          "type": "integer"
+                        },
+                        "max": {
+                          "type": "number"
+                        },
+                        "percentCov": {
+                          "type": "integer"
+                        }
+                      },
+                      "required": [
+                        "min",
+                        "size",
+                        "max",
+                        "percentCov"
+                      ]
+                    }
+                  }
+                },
+                "required": [
+                  "name",
+                  "product",
+                  "sum"
+                ]
+              }
+            },
+            "filenames": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "projection": {
+              "type": "object",
+              "properties": {
+                "lowLeftLat": {
+                  "type": "string"
+                },
+                "lowLeftLon": {
+                  "type": "string"
+                },
+                "projectionString": {
+                  "type": "string"
+                },
+                "gridString": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "lowLeftLat",
+                "lowLeftLon",
+                "projectionString",
+                "gridString"
+              ]
+            },
+            "issueDt": {
+              "type": "string"
+            },
+            "validDts": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          "required": [
+            "timeStamp",
+            "product",
+            "geoDists",
+            "geoSums",
+            "filenames",
+            "projection",
+            "issueDt",
+            "validDts"
+          ]
+        }
+      ]
+    },
+    "processor": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "sid",
+    "wfo",
+    "criteria",
+    "fcstCriteriaSumMeta",
+    "fcstCriteriaSummary",
+    "processor"
+  ]
+}

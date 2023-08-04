@@ -1,0 +1,15 @@
+{
+    "description": "Mechanism for making a request",
+    "type": "object",
+    "properties": {
+        "sourceType": {
+            "type": "string",
+            "enum": ["issue", "valid", "lead", "field"]
+        },
+        "sourceObj": {"$ref": "variable.json#/ProductType"}
+    },
+    "required": [
+        "sourceType",
+        "sourceObj"
+    ]
+}

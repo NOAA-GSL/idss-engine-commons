@@ -1,0 +1,290 @@
+{
+  "$schema": "http://json-schema.org/draft/2020-12/schema#",
+  "$id": "https://idss.engine.com/data.request.schema.json",
+
+  "$def": {
+    "source": {
+      "description": "Specification for re-projection of data",
+      "type": "object",
+      "properties": {
+        "label": {
+          "description": "A label indicate that this source is to be return, and is the name to be used",
+          "type": "string"
+        },
+        "sourceType": {
+          "description": "The type of the source object",
+          "type": "string"
+        },
+        "sourceObj": {
+          "description": "The source object",
+          "oneOf": [
+            {"$ref": "#/$def/data"},
+            {"$ref": "#/$def/format"},
+            {"$ref": "#/$def/slice"},
+            {"$ref": "#/$def/units"},
+            {"$ref": "#/$def/permute"},
+            {"$ref": "#/$def/project"},
+            {"$ref": "#/$def/condition"},
+            {"$ref": "#/$def/conditionJoin"}
+          ]
+        }
+      },
+      "required": [
+        "sourceType",
+        "sourceObj"
+      ]
+    },
+
+    "dimParams": {
+      "description": "Specification for slicing one dim",
+      "type": "object",
+      "properties": {
+        "dim": {
+          "type": "integer"
+        },
+        "indices": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "dim",
+        "indices"
+      ]
+    },
+
+    "sliceParams": {
+      "description": "Specification for slicing the data",
+      "type": "object",
+      "properties": {
+        "join": {
+          "description": "Must be cross or zip",
+          "type": "string"
+        },
+        "dims": {
+          "type": "array",
+          "items": [
+            {"$ref": "#/$def/dimParams"},
+            {"$ref": "#/$def/sliceParams"}
+          ],
+          "minItems": 2
+        }
+      },
+      "required": [
+        "join",
+        "dims"
+      ] 
+    },
+
+    "slice": {
+      "description": "Specification for slicing the data",
+      "type": "object",
+      "properties": {
+        "join": {
+          "description": "Must be cross or zip",
+          "type": "string"
+        },
+        "dims": {
+          "type": "array",
+          "items": [
+            {
+              "$ref": "#/$def/dimParams"
+            },
+            {
+              "$ref": "#/$def/sliceParams"
+            }
+          ]
+        },
+        "source": {
+          "$ref": "#/$def/source"
+        }
+      },
+      "required": [
+        "join",
+        "dims",
+        "source"
+      ]
+    },
+
+    "project": {
+      "description": "Specification for re-projection of data",
+      "type": "object",
+      "properties": {
+        "projSpec": {
+          "type": "string"
+        },
+        "gridSpec": {
+          "type": "string"
+        }
+      },
+      "method": {
+        "description": "The type of reprojection (nearest neighbor, bilinear, push, pull)",
+        "type": "string"
+      },
+      "source": {
+        "$ref": "#/$def/source"
+      },
+      "required": [
+        "projSpec",
+        "gridSpec",
+        "method",
+        "source"
+      ] 
+    },
+
+    "permute": {
+      "description": "Specification to permute data",
+      "type": "object",
+      "properties": {
+	    "order": {
+          "type": "array",
+          "items": [
+            {"type": "integer"}
+          ],
+          "minItems": 2
+        },
+        "source": {
+          "$ref": "#/$def/source"
+        }
+      },
+      "required": [
+        "order",
+        "source"
+      ]
+    },
+
+    "format": {
+      "description": "Specification for the format to return the data in",
+      "type": "object",
+      "properties": {
+	    "format": {
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$def/source"
+        }
+      },
+      "required": [
+        "format",
+        "source"
+      ]
+    },
+
+    "data": {
+      "description": "Specification for raw data",
+      "type": "object",
+      "properties": {
+        "product": {"type": "string"},
+        "issueDt": {"type": "string"},
+        "validDt": {"type": "string"},
+        "field": {"type": "string"}
+      },
+      "required": [
+        "product",
+        "issueDt",
+        "validDt",
+        "field"
+      ]
+    },
+
+    "units": {
+      "description": "Specification for units conversion",
+      "type": "object",
+      "properties": {
+        "units": {
+          "description": "The units of the input data",
+          "type": "string"
+        },
+        "source": {
+          "$ref": "#/$def/source"
+        }
+      },
+      "required": [
+        "units",
+        "source"
+      ]
+    },
+
+    "mapping": {
+      "description": "Specification for mapping variable to a linear space when combined with relational and thresh(s)",
+      "type": "object",
+      "properties": {
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "clip": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "min",
+        "max",
+        "clip"
+      ]
+    },
+
+    "condition": {
+      "description": "Specification for applying a condition, needs to reference criteriaObj",
+      "type": "object",
+      "properties": {
+        "relational": {
+          "description": "String relational (GT, GTE, LT, LTE, BW)",
+          "type": "string"
+        },
+        "mapping": {
+          "type": "#/$def/mapping"
+        },
+        "thresh": {
+          "type": "number"
+        },
+        "secThresh": {
+          "type": "number"
+        },
+        "source": {
+          "$ref": "#/$def/source"
+        }
+      },
+      "required": [
+        "relational",
+        "mapping",
+        "thresh",
+        "source"
+      ]
+    },
+
+    "conditionJoin": {
+      "description": "Specification the joining of conditions",
+      "type": "object",
+      "properties": {
+        "type": {
+          "description": "Must be AND or OR",
+          "type": "string"
+        }
+      },
+      "sources": {
+        "type": "array",
+        "items": {
+          "type": "#/$def/source"
+        },
+        "additionalItems": false,
+        "minItems": 2
+      }
+    }
+  },
+
+  "title": "Data Request",
+  "description": "Full specification for a Data Request",
+  "type": "object",
+  "properties": {
+    "source": {
+      "$ref": "#/$def/source"
+    },
+    "required": [
+      "source"
+    ]
+  }
+}
+
+
