@@ -1,0 +1,8 @@
+{
+    "type": "object",
+    "allOf": [
+        {"$ref": "variable.json#/Variable"},
+        {"properties": {"field": {"minItems": 1}}}
+    ]
+
+}

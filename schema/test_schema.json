@@ -1,16 +1,14 @@
 {   
     "type": "object",
     "properties": {   
-        "originator": {"type": "string", "enum": ["IDSSe", "IMS"]},
-        "uuid": {"type": "string", "format": "uuid"},
+        "corrId": {"$ref": "corr_id.json#/CorrId"},
         "issueDt": {"$ref": "timing.json#/Timing"},
         "tags": {"$ref": "tags.json#/Tags"},
         "validDt": {"$ref": "timing.json#/Timing"},
         "location": {"$ref": "location.json#/Location"}
     },
     "required": [
-        "originator",
-        "uuid",
+        "corrId",
         "issueDt",
         "tags",
         "validDt",

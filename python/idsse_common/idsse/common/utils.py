@@ -104,7 +104,7 @@ def exec_cmd(commands: Sequence[str], timeout: int = None) -> Sequence[str]:
 def to_iso(date_time: datetime) -> str:
     """Format a datetime instance to an ISO string"""
     logger.debug(f'Datetime ({datetime}) to iso')
-    return date_time.strftime('%Y-%m-%dT%H:%M:%SZ')
+    return date_time.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
 
 
 def to_compact(date_time: datetime) -> str:
