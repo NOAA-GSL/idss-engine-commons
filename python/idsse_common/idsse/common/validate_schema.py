@@ -12,32 +12,8 @@ import json
 import os
 from typing import Optional
 
-from jsonschema import Validator, validate, FormatChecker, RefResolver
-from jsonschema.exceptions import ValidationError
+from jsonschema import Validator, FormatChecker, RefResolver
 from jsonschema.validators import validator_for
-
-
-def _test_variable():
-    # NewData should broadcast a "Variable", except that "Variable" allows empty fields.
-    # If you look in variable.json, you'll see TEMP and WINDSPEED are currently the only field names
-    schema = json.loads(open('src/schema/variable.json', 'r', encoding='utf8').read())
-    schema['allOf'] = [{"$ref": "#/Variable"}]
-
-    # use this if you want to enforce that fields in NOT empty
-    # schema['allOf'] = [{"$ref": "#/Variable"},
-    #                    {"properties": {"field": {"minItems": 1}}}]
-
-    message = {"product": "NBM",
-               "issueDt": "2023-2-11T14:00:00.000Z",
-               "validDt": "2023-2-11T20:00:00.000Z",
-               "field": ["TEMP", "WINDSPEED"]}
-
-    try:
-        validate(instance=message, schema=schema)
-        print('GOOD JSON')
-    except ValidationError as exc:
-        print("BAD JSON")
-        print(exc)
 
 
 def _get_refs(json_obj: dict, result: Optional[set] = None) -> set:
@@ -87,51 +63,3 @@ def get_validator(schema_name) -> Validator:
                                        store=dependencies)
 
     return validator_for(base)(schema, resolver=resolver, format_checker=FormatChecker())
-
-
-def _test_criteria():
-    schema_name = 'test_schema'
-    validator = get_validator(schema_name)
-
-    try:
-        validator.validate(instance={"corrId": {"originator": "IDSSe",
-                                                "issueDt": "_",
-                                                "uuid": "dc7ad8c1-5ff2-416f-9fee-66c598256189"},
-                                     "issueDt": "2018-11-13T20:20:39+00:00",
-                                     "validDt": {"start": "2018-11-13T21:20:39+00:00",
-                                                 "end": "2018-11-13T23:20:39+00:00"},
-                                     "tags": {"values": ["bob", "uncle"], "keyValues": {}},
-                                     "location": {"features": [{"type": "Feature",
-                                                                "properties": {"innerRadius": 3,
-                                                                               "outerRadius": 4},
-                                                                "geometry": {
-                                                                  "type": "Point",
-                                                                  "coordinates": [
-                                                                    -105.10392834544123,
-                                                                    40.16676831094053]}}],
-                                                  "buffer": 1,
-                                                  "bufferUnits": "miles"}})
-        print("GOOD JSON")
-    except ValidationError as exc:
-        print("BAD JSON")
-        print(exc)
-
-
-def _test_new_data():
-    schema_name = 'new_data_schema'
-    validator = get_validator(schema_name)
-
-    try:
-        validator.validate(instance={"product": "NBM",
-                                     "issueDt": "2023-2-11T14:00:00.000Z",
-                                     "validDt": "2023-2-11T20:00:00.000Z",
-                                     "field": ["TEMP", "WINDSPEED"]})
-        print("GOOD JSON")
-    except ValidationError as exc:
-        print("BAD JSON")
-        print(exc)
-
-
-if __name__ == '__main__':
-    _test_criteria()
-    # _test_new_data()
