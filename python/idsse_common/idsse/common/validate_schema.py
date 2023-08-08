@@ -10,22 +10,28 @@
 # ----------------------------------------------------------------------------------
 import json
 import os
-from typing import Optional
+from typing import Optional, Union
 
 from jsonschema import Validator, FormatChecker, RefResolver
 from jsonschema.validators import validator_for
 
 
-def _get_refs(json_obj: dict, result: Optional[set] = None) -> set:
+def _get_refs(json_obj: Union[dict, list], result: Optional[set] = None) -> set:
     if result is None:
         result = set()
-    for key, value in json_obj.items():
-        if key == '$ref':
-            idx = value.index('#/')
-            if idx > 0:
-                result.add(value[:idx])
-        elif isinstance(value, dict):
-            _get_refs(value, result)
+    if isinstance(json_obj, dict):
+        for key, value in json_obj.items():
+            print(key, ':', value, 'type', type(value))
+            if key == '$ref':
+                idx = value.index('#/')
+                if idx > 0:
+                    result.add(value[:idx])
+            else:
+                _get_refs(value, result)
+    elif isinstance(json_obj, list):
+        print('\tas list')
+        for item in json_obj:
+            _get_refs(item, result)
     return result
 
 
@@ -59,6 +65,7 @@ def get_validator(schema_name) -> Validator:
             new_refs = _get_refs(ref_schema, new_refs)
         refs = {ref for ref in new_refs if ref not in dependencies}
 
+    print(dependencies)
     resolver = RefResolver.from_schema(schema=base,
                                        store=dependencies)
 
