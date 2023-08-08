@@ -9,8 +9,6 @@
 #
 # ----------------------------------------------------------------------------------
 
-from datetime import datetime, timezone, timedelta
-
 from jsonschema.exceptions import ValidationError
 import pytest
 
@@ -20,12 +18,18 @@ from idsse.common.validate_schema import get_validator
 
 
 def test_validate_das_valid_request():
-    request = {'sourceType': 'valid',
+    message = {'sourceType': 'valid',
                'sourceObj': {'product': 'NBM.AWS.GRIB',
                              'region': 'CO',
                              'issueDt': '2022-01-02T12:00:00.000Z',
                              'field': 'TEMP'}}
-    assert request
+
+    schema_name = 'das_request_schema'
+    validator = get_validator(schema_name)
+    try:
+        validator.validate(message)
+    except ValidationError as exc:
+        assert False, f'Validate message raised an exception {exc}'
 
 
 def test_validate_good_criteria_message():
