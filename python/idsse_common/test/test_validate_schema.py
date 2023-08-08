@@ -16,12 +16,7 @@ import pytest
 
 from idsse.common.validate_schema import get_validator
 
-
-def to_iso(dt):
-    # this almost works
-    # dt.isoformat(timespec='milliseconds')
-    return (f'{dt.strftime("%Y-%m-%dT%H:%M")}:{(dt.second + dt.microsecond / 1e6):.3f}'
-            f'{"Z" if dt.tzinfo in [None, timezone.utc] else dt.strftime("%Z")[3:]}')
+# pylint: disable=missing-function-docstring
 
 
 def test_validate_das_valid_request():
@@ -33,7 +28,7 @@ def test_validate_das_valid_request():
     assert request
 
 
-def test_validate_good_message():
+def test_validate_good_criteria_message():
     message = {"corrId": {"originator": "IDSSe",
                           "issueDt": "_",
                           "uuid": "dc7ad8c1-5ff2-416f-9fee-66c598256189"},
@@ -52,7 +47,7 @@ def test_validate_good_message():
                             "buffer": 1,
                             "bufferUnits": "miles"}}
 
-    schema_name = 'test_schema'
+    schema_name = 'criteria_schema'
     validator = get_validator(schema_name)
     try:
         validator.validate(message)
@@ -60,10 +55,10 @@ def test_validate_good_message():
         assert False, f'Validate message raised an exception {exc}'
 
 
-def test_validate_bad_message():
+def test_validate_bad_criteria_message():
     message = {}
 
-    schema_name = 'test_schema'
+    schema_name = 'criteria_schema'
     validator = get_validator(schema_name)
 
     with pytest.raises(ValidationError):

@@ -9,9 +9,9 @@
 #
 # --------------------------------------------------------------------------------
 
-import pytest  # pylint: disable=import-error
 from datetime import datetime, timedelta
 
+import pytest  # pylint: disable=import-error
 
 from idsse.common.utils import TimeDelta
 from idsse.common.utils import datetime_gen, hash_code, to_compact, to_iso
