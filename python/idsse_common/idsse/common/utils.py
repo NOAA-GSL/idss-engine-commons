@@ -105,7 +105,7 @@ def to_iso(date_time: datetime) -> str:
     """Format a datetime instance to an ISO string"""
     logger.debug('Datetime (%s) to iso', datetime)
     return (f'{date_time.strftime("%Y-%m-%dT%H:%M")}:'
-            f'{(date_time.second + date_time.microsecond / 1e6):.3f}'
+            f'{(date_time.second + date_time.microsecond / 1e6):06.3f}'
             f'{"Z" if date_time.tzinfo in [None, timezone.utc] else date_time.strftime("%Z")[3:]}')
 
 

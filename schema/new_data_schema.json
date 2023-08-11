@@ -1,8 +1,6 @@
 {
-    "type": "object",
+    "description": "Mechanism for making a broadcasting an available variable",
     "allOf": [
-        {"$ref": "variable.json#/Variable"},
-        {"properties": {"field": {"minItems": 1}}}
+        {"$ref": "variable.json#/Variable"}
     ]
-
 }

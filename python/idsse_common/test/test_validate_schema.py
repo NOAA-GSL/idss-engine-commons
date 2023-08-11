@@ -101,7 +101,7 @@ def test_validate_das_criteria_request():
                             "issue": "2022-11-11T14:00:00.000Z"}}}},
             "thresh": 60}}
 
-    schema_name = 'junk_schema'
+    schema_name = 'das_request_schema'
     validator = get_validator(schema_name)
     try:
         validator.validate(message)
@@ -211,8 +211,9 @@ def test_validate_bad_criteria_message():
 
 def test_validate_good_new_data_message():
     message = {'product': 'NBM',
-               'issueDt': '2023-2-11T14:00:00.000Z',
-               'validDt': '2023-2-11T20:00:00.000Z',
+               'region': 'AK',
+               'issue': '2023-2-11T14:00:00.000Z',
+               'valid': '2023-2-11T20:00:00.000Z',
                'field': ['TEMP', 'WINDSPEED']}
 
     schema_name = 'new_data_schema'

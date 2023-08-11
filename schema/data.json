@@ -7,23 +7,7 @@
                 "type": "string",
                 "const": "data"
             },
-            "sourceObj": {
-                "type": "object",
-                "properties": {
-                    "product": {"$ref": "product.json#/Product"},
-                    "region": {"$ref": "region.json#/Region"},
-                    "field": {"$ref": "field.json#/Field"},
-                    "issue": {"$ref": "timing.json#/TimeString"},
-                    "valid": {"$ref": "timing.json#/TimeString"}
-                },
-                "required": [
-                    "product",
-                    "region",
-                    "field",
-                    "issue",
-                    "valid"
-                ]
-            }
+            "sourceObj": {"$ref": "variable.json#/Variable"}
         },
         "required": [
             "sourceType",
