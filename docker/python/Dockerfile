@@ -1,4 +1,5 @@
-FROM alpine:3.12
+# alpine:3.18.2 includes python 3.11
+FROM alpine:3.18.2
 
 # reduce python printing to stdout on build
 ENV PYTHONBUFFERED=1
@@ -23,3 +24,10 @@ RUN pip3 install --no-cache \
 
 # Get the latest package updates to keep security vulnerabilities down
 RUN apk update && apk upgrade
+
+# Install idsse common python code
+WORKDIR /python/idsse_common
+
+COPY ./python/idsse_common /python/idsse_common
+
+RUN python3 /python/idsse_common/setup.py install
