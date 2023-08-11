@@ -46,7 +46,7 @@ class Map(dict):
         super(Map, self).__init__(*args, **kwargs)
         for arg in args:
             if isinstance(arg, dict):
-                for k, v in arg.iteritems():
+                for k, v in arg.items():
                     self[k] = v
 
         if kwargs:
@@ -167,6 +167,7 @@ def datetime_gen(dt_: datetime,
     for i in range(0, max_num):
         logger.debug('dt generator %d/%d', i, max_num)
         yield dt_ + time_delta * i
+
 
 def round_half_up(number: float, precision: int = 0) -> Union[int, float]:
     """
