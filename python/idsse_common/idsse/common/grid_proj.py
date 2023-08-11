@@ -11,17 +11,23 @@
 # pylint: disable=invalid-name
 
 from typing import Self, Tuple, Union, Any, Optional
-from enum import Enum, auto
+from enum import Enum
+from decimal import ROUND_HALF_UP, ROUND_FLOOR
 from math import floor
 
 from pyproj import CRS, Transformer
 from pyproj.enums import TransformDirection
 
+from utils import round_half_up
 
-class PixelRounding(Enum):
-    """Transformations to apply to calculated pixels when casting to ints"""
-    ROUND = auto()
-    FLOOR = auto()
+
+Pixel = Tuple[Union[int, float], Union[int, float]]
+
+
+class RoundingMethod(Enum):
+    """Transformations to apply to calculated pixel values when casting to ints"""
+    ROUND_HALF_UP = ROUND_HALF_UP
+    ROUND_FLOOR = ROUND_FLOOR
 
 
 class GridProj:
@@ -65,9 +71,40 @@ class GridProj:
                         int(grid_args['w']), int(grid_args['h']),
                         grid_args['dx'], grid_args['dy'])
 
-    def map_proj_to_pixel(self, x, y) -> Tuple[float, float]:
-        """Map projection to a pixel"""
-        return self.map_geo_to_pixel(*self._trans.transform(x, y))  # pylint: disable=not-an-iterable
+
+    def _round_pixel_maybe(self, pixel: Tuple[float, float], rounding: Optional[Union[str, RoundingMethod]]) -> Pixel:
+        """Round pixel values if caller requested, or return unchanged if no rounding passed"""
+        x, y = pixel
+        # cast str to RoundingMethod enum
+        if isinstance(rounding, str):
+            rounding = RoundingMethod[rounding]  
+
+        if rounding is RoundingMethod.ROUND_HALF_UP:
+            return (round_half_up(x), round_half_up(y))
+        if rounding is RoundingMethod.ROUND_FLOOR:
+            return (floor(x), floor(y))
+        return x, y
+
+    def map_proj_to_pixel(
+        self,
+        x: float,
+        y: float,
+        rounding: Optional[Union[str, RoundingMethod]] = None
+    ) -> Pixel:
+        """Map projection to a pixel.
+        
+        Args:
+            x (float): x geographic coordinate
+            y (float): y geographic coordinate
+            rounding (Optional[Union[str, RoundingMethod]]):
+                ROUND_HALF_UP to apply round_half_up() to pixel values, ROUND_FLOOR to apply math.floor().
+                By default, pixels are not rounded and will be returned as floats
+
+        Returns:
+            Pixel: x, y values of pixel, rounded to ints if rounding parameter passed, otherwise floats
+        """
+        i, j = self.map_geo_to_pixel(*self._trans.transform(x, y))  # pylint: disable=not-an-iterable
+        return self._round_pixel_maybe((i, j), rounding)
 
     def map_pixel_to_proj(self, x: float, y: float) -> Tuple[Any, Any]:
         """Map pixel to a projection"""
@@ -86,28 +123,24 @@ class GridProj:
         return self._trans.transform(x, y, direction=TransformDirection.INVERSE)
 
     def map_geo_to_pixel(
-        self, x: float,
+        self,
+        x: float,
         y: float,
-        rounding: Optional[PixelRounding] = None
-    ) -> Tuple[Union[int, float], Union[int, float]]:
+        rounding: Optional[Union[str, RoundingMethod]] = None
+    ) -> Pixel:
         """Map geographic coordinates to pixel x and y
 
         Args:
             x (float): x geographic coordinate
             y (float): y geographic coordinate
-            rounding (Optional[PixelRounding]):
-                ROUND to apply round() to pixel values, FLOOR to apply math.floor().
+            rounding (Optional[Union[str, RoundingMethod]]):
+                ROUND_HALF_UP to apply round_half_up() to pixel values, ROUND_FLOOR to apply math.floor().
+                Can provide the RoundingMethod enum value or str value.
                 By default, pixels are not rounded and will be returned as floats
 
         Returns:
-            Tuple[Union[int, float], Union[int, float]):
-                x, y values for pixel, rounded to ints if rounding parameter passed, otherwise floats
+            Pixel: x, y values of pixel, rounded to ints if rounding parameter passed, otherwise floats
         """
-        pixel_x = (x - self._x_offset) / self._dx
-        pixel_y = (y - self._y_offset) / self._dy
-
-        if rounding is PixelRounding.ROUND:
-            return (round(pixel_x), round(pixel_y))
-        if rounding is PixelRounding.FLOOR:
-            return (floor(pixel_x), floor(pixel_y))
-        return (pixel_x, pixel_y)
+        i: float = (x - self._x_offset) / self._dx
+        j: float = (y - self._y_offset) / self._dy
+        return self._round_pixel_maybe((i, j), rounding)
