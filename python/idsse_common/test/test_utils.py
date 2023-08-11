@@ -37,7 +37,7 @@ def test_timedelta_day():
     assert td.day == 15
 
 
-def test_map_dict_args():
+def test_map_dict_init_with_args():
     example_dict = {'value': 123, 'metadata': { 'other_data': [100, 200]}}
     example_map = Map(example_dict)
 
@@ -46,12 +46,19 @@ def test_map_dict_args():
     assert example_map.metadata == {'other_data': [100, 200]}
 
 
-def test_map_dict_kwargs():
+def test_map_dict_init_with_kwargs():
     example_map = Map(value=123, metadata={'other_data': [100, 200]})
 
     # pylint: disable=no-member
     assert example_map.value == 123
     assert example_map.metadata == {'other_data': [100, 200]}
+
+
+def test_map_dict_set_value():
+    example_map = Map(value=123, metadata={'other_data': [100, 200]})
+    example_map.value = 321  # change value
+    # pylint: disable=no-member
+    assert example_map.value == 321
 
 
 def test_exec_cmd():
