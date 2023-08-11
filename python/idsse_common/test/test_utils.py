@@ -9,12 +9,12 @@
 #
 # --------------------------------------------------------------------------------
 
-import pytest  # pylint: disable=import-error
 from datetime import datetime, timedelta
+import pytest
 
 
 from idsse.common.utils import TimeDelta
-from idsse.common.utils import datetime_gen, hash_code, to_compact, to_iso
+from idsse.common.utils import datetime_gen, hash_code, to_compact, to_iso, round_half_up
 
 
 # pylint: disable=missing-function-docstring
@@ -85,3 +85,24 @@ def test_datetime_gen_bound():
     assert dts_found == [datetime(2021, 1, 2, 3, 0),
                          datetime(2021, 1, 16, 3, 0),
                          datetime(2021, 1, 30, 3, 0)]
+
+
+@pytest.mark.parametrize('number, expected', [(2.50000, 3), (-14.5000, -15), (3.49999, 3)])
+def test_round_half_up_int(number: float, expected: int):
+    result = round_half_up(number)
+    assert isinstance(result, int)
+    assert result == expected
+
+
+@pytest.mark.parametrize('number, expected', [(9.5432, 9.5), (-0.8765, -0.9)])
+def test_round_half_up_float(number: float, expected: float):
+    result = round_half_up(number, precision=1)
+    assert isinstance(result, float)
+    assert result == expected
+
+
+@pytest.mark.parametrize('number, expected', [(100.987654321, 100.988), (-43.21098, -43.211)])
+def test_round_half_up_with_precision(number: float, expected: float):
+    result = round_half_up(number, precision=3)
+    assert isinstance(result, float)
+    assert result == expected

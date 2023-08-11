@@ -13,7 +13,8 @@ import copy
 import logging
 from datetime import datetime, timedelta
 from subprocess import Popen, PIPE, TimeoutExpired
-from typing import Sequence, Optional, Generator, Any
+from typing import Sequence, Optional, Generator, Union, Any
+from decimal import Decimal, ROUND_HALF_UP
 
 logger = logging.getLogger(__name__)
 
@@ -166,3 +167,18 @@ def datetime_gen(dt_: datetime,
     for i in range(0, max_num):
         logger.debug('dt generator %d/%d', i, max_num)
         yield dt_ + time_delta * i
+
+def round_half_up(number: float, precision: int = 0) -> Union[int, float]:
+    """
+    Round a float to a set number of decimal places, using "ties away from zero" method,
+    in contrast with Python 3's built-in round() or numpy.round() functions, both which 
+    use "ties to even" method. For example, this function will round 2.500000 to 3, not 2.
+
+    Args:
+        precision (int): number of decimal places to preserve.
+
+    Returns:
+        Union[int, float]: rounded number as int if precision is 0 decimal places, otherwise as float
+    """
+    rounded_number = Decimal(number).quantize(Decimal(10) ** -precision, rounding=ROUND_HALF_UP)
+    return int(rounded_number) if precision == 0 else float(rounded_number)
