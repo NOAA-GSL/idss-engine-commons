@@ -1,0 +1,16 @@
+{
+    "Relational": {
+        "description": "Identifier for a known relational inequalities",
+        "type": "string",
+        "enum": [
+            "LT",
+            "LESSTHAN",
+            "LTE",
+            "LESSTHANEQUAL",
+            "GT",
+            "GREATERTHAN",
+            "GTE",
+            "GREATERTHANEQUAL"
+        ]
+    }
+}

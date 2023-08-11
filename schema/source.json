@@ -1,19 +1,12 @@
 {
-    "Request": {
-        "description": "Mechanism for making a request",
-        "type": "object",
-        "properties": {
-            "sourceType": {
-                "type": "string",
-                "enum": ["issue", "valid", "lead", "field"]
-            },
-            "sourceObj": {
-                "type": {"$ref": "#/ProductType"}
-            }
-        },
-        "required": [
-            "sourceType",
-            "sourceObj"
+    "Source": {
+        "description": "Mechanism for specifying an input source, typically for operator",
+        "anyOf": [
+            {"$ref": "data.json#/Data"},
+            {"$ref": "unit_opr.json#/UnitOpr"},
+            {"$ref": "slice_opr.json#/SliceOpr"},
+            {"$ref": "criteria_opr.json#/CriteriaOpr"},
+            {"$ref": "join_opr.json#/JoinOpr"}
         ]
     }
 }

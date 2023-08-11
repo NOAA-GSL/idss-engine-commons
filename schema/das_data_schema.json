@@ -1,0 +1,4 @@
+{
+    "description": "Mechanism for making a request for raw data",
+    "allOf": [{"$ref": "data.json#/Data"}]
+}

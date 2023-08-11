@@ -1,16 +1,6 @@
 {
     "description": "Mechanism for making a DAS request",
-    "type": "object",
-    "properties": {
-        "sourceType": {
-            "type": "string",
-            "enum": ["issue", "valid", "lead", "field"]
-        },
-        "sourceObj": {"$ref": "variable.json#/ProductType"},
-        "corrId": {"$ref": "corr_id.json#/CorrId"}
-    },
-    "required": [
-        "sourceType",
-        "sourceObj"
+    "allOf": [
+        {"$ref": "source.json#/Source"}
     ]
 }

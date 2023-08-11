@@ -1,0 +1,33 @@
+{
+    "Data": {
+        "description": "Mechanism for making a request for data",
+        "type": "object",
+        "properties": {
+            "sourceType": {
+                "type": "string",
+                "const": "data"
+            },
+            "sourceObj": {
+                "type": "object",
+                "properties": {
+                    "product": {"$ref": "product.json#/Product"},
+                    "region": {"$ref": "region.json#/Region"},
+                    "field": {"$ref": "field.json#/Field"},
+                    "issue": {"$ref": "timing.json#/TimeString"},
+                    "valid": {"$ref": "timing.json#/TimeString"}
+                },
+                "required": [
+                    "product",
+                    "region",
+                    "field",
+                    "issue",
+                    "valid"
+                ]
+            }
+        },
+        "required": [
+            "sourceType",
+            "sourceObj"
+        ]
+    }
+}
