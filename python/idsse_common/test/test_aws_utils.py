@@ -107,7 +107,7 @@ def test_aws_cp_retries_with_s3_command_line(aws_utils: AwsUtils, monkeypatch: M
                         mock_exec_cmd_failure)
 
     copy_success = aws_utils.aws_cp('s3:/some/path', 's3:/new/path')
-    assert copy_success == True
+    assert copy_success
     assert mock_exec_cmd_failure.call_count == 2
 
 
@@ -118,7 +118,7 @@ def test_aws_cp_fails(aws_utils: AwsUtils, monkeypatch: MonkeyPatch):
                         mock_exec_cmd_failure)
 
     copy_success = aws_utils.aws_cp('s3:/some/path', 's3:/new/path')
-    assert copy_success == False
+    assert not copy_success
     mock_exec_cmd_failure.call_count == 2
 
 

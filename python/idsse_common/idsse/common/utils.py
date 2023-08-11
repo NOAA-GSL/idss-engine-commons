@@ -13,7 +13,7 @@ import copy
 import logging
 from datetime import datetime, timedelta, timezone
 from subprocess import Popen, PIPE, TimeoutExpired
-from typing import Sequence
+from typing import Sequence, Optional, Generator, Any
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +70,7 @@ class Map(dict):
         del self.__dict__[key]
 
 
-def exec_cmd(commands: Sequence[str], timeout: int = None) -> Sequence[str]:
+def exec_cmd(commands: Sequence[str], timeout: Optional[int] = None) -> Sequence[str]:
     """Execute the passed commands via a Popen call
 
     Args:
@@ -96,8 +96,8 @@ def exec_cmd(commands: Sequence[str], timeout: int = None) -> Sequence[str]:
         raise OSError(process.returncode, errs.decode())
     try:
         ans = outs.decode().splitlines()
-    except Exception as e:  # pylint: disable=broad-exception-caught
-        raise RuntimeError(e) from e
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        raise RuntimeError(exc) from exc
     return ans
 
 
@@ -147,8 +147,8 @@ def dict_copy_with(old_dict: dict, **kwargs) -> dict:
 
 def datetime_gen(dt_: datetime,
                  time_delta: timedelta,
-                 end_dt: datetime = None,
-                 max_num: int = 100) -> datetime:
+                 end_dt: Optional[datetime] = None,
+                 max_num: int = 100) -> Generator[datetime, Any, None]:
     """Create a date/time sequence generator, given a starting date/time and a time stride
 
     Args:
