@@ -18,7 +18,7 @@ from math import floor
 from pyproj import CRS, Transformer
 from pyproj.enums import TransformDirection
 
-from utils import round_half_up
+from .utils import round_half_up
 
 
 Pixel = Tuple[Union[int, float], Union[int, float]]

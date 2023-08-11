@@ -14,7 +14,7 @@ from typing import Tuple
 
 from pytest import fixture, approx
 
-from idsse.common.grid_proj import GridProj, PixelRounding
+from idsse.common.grid_proj import GridProj, RoundingMethod
 
 # example data
 EXAMPLE_PROJ_SPEC = '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +r=6371200'
@@ -113,13 +113,13 @@ def test_geo_to_pixel_no_rounding(grid_proj: GridProj):
 
 def test_geo_to_pixel_floor(grid_proj: GridProj):
     for index, geo in enumerate(EXAMPLE_GEOS):
-        pixel_x, pixel_y = grid_proj.map_geo_to_pixel(*geo, PixelRounding.FLOOR)
+        pixel_x, pixel_y = grid_proj.map_geo_to_pixel(*geo, RoundingMethod.ROUND_FLOOR)
         assert (pixel_x, pixel_y) == EXAMPLE_PIXELS[index]
 
 
 def test_geo_to_pixel_round(grid_proj: GridProj):
     for index, geo in enumerate(EXAMPLE_GEOS):
-        pixel_x, pixel_y = grid_proj.map_geo_to_pixel(*geo, PixelRounding.ROUND)
+        pixel_x, pixel_y = grid_proj.map_geo_to_pixel(*geo, RoundingMethod.ROUND_HALF_UP)
         assert (pixel_x, pixel_y) == EXAMPLE_PIXELS[index]
 
 
