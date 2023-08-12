@@ -2,27 +2,36 @@
 platform linux -- Python 3.11.4, pytest-7.4.0, pluggy-1.2.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
 plugins: cov-4.1.0
-collected 58 items
+collected 58 items / 1 error
 
-test_aws_utils.py ...............                                        [ 25%]
-test_config.py ............                                              [ 46%]
-test_path_builder.py .....................                               [ 82%]
-test_utils.py ..........                                                 [100%]
-
+==================================== ERRORS ====================================
+________________ ERROR collecting test/test_validate_schema.py _________________
+ImportError while importing test module '/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/test_validate_schema.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+/opt/hostedtoolcache/Python/3.11.4/x64/lib/python3.11/importlib/__init__.py:126: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+test_validate_schema.py:12: in <module>
+    from jsonschema.exceptions import ValidationError
+E   ModuleNotFoundError: No module named 'jsonschema'
 - generated xml file: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/pytest.xml -
 
 ---------- coverage: platform linux, python 3.11.4-final-0 -----------
 Name                                                                                                            Stmts   Miss  Cover
 -----------------------------------------------------------------------------------------------------------------------------------
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/__init__.py              0      0   100%
-/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/aws_utils.py            78      6    92%
-/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/config.py               74      9    88%
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/aws_utils.py            78     63    19%
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/config.py               74     53    28%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/json_message.py         22     22     0%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/log_util.py             38     38     0%
-/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/path_builder.py        127     10    92%
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/path_builder.py        127     87    31%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/publish_confirm.py     141    141     0%
-/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/utils.py                78     33    58%
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/utils.py                78     50    36%
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/validate_schema.py      42     42     0%
 -----------------------------------------------------------------------------------------------------------------------------------
-TOTAL                                                                                                             558    259    54%
+TOTAL                                                                                                             600    496    17%
 
-============================== 58 passed in 0.39s ==============================
+=========================== short test summary info ============================
+ERROR test_validate_schema.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+=============================== 1 error in 0.41s ===============================
