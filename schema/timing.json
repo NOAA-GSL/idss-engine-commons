@@ -1,0 +1,38 @@
+{
+    "TimeString": {
+        "description": "String representation of a date/time",
+        "type": "string",
+        "format": "date-time"
+    },
+    
+    "TimeList": {
+        "description": "A list of specific time_string(s)",
+        "type": "array",
+        "items": {"$ref": "#/TimeString"},
+        "minItems": 1
+    },
+    
+    "TimeRange": {
+        "description": "Date/time string specifying the start and end date/ times",
+        "type": "object",
+        "properties": {
+            "start": {"$ref": "#/TimeString"},
+            "end": {"$ref": "#/TimeString"}
+        },
+        "required": [
+            "start",
+            "end"
+        ]
+    },
+    
+    "Timing": {
+        "description": "Either a TimeString, TimeList, or TimeRange",
+        "oneOf": [
+            {"$ref": "#/TimeString"},
+            {"$ref": "#/TimeList"},
+            {"$ref": "#/TimeRange"}
+        ]
+    }
+}    
+
+  

@@ -9,9 +9,9 @@
 #
 # --------------------------------------------------------------------------------
 
-import pytest  # pylint: disable=import-error
 from datetime import datetime, timedelta
 
+import pytest  # pylint: disable=import-error
 
 from idsse.common.utils import TimeDelta
 from idsse.common.utils import datetime_gen, hash_code, to_compact, to_iso
@@ -37,7 +37,7 @@ def test_timedelta_day():
 
 def test_to_iso():
     dt = datetime(2013, 12, 11, 10, 9, 8)
-    assert to_iso(dt) == '2013-12-11T10:09:08Z'
+    assert to_iso(dt) == '2013-12-11T10:09:08.000Z'
 
 
 def test_to_compact():

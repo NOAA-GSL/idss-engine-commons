@@ -1,0 +1,158 @@
+{
+    "PointFeature": {
+        "description": "A Point Geometry with properties",
+        "type": "object",
+        "properties": {
+            "type": {
+                "type": "string",
+                "enum": ["Feature"]
+            },
+            "properties": {
+                "description": "List of key,value pairs related to the geometry",
+                "type": "object",
+                "not": {
+                    "anyOf": [
+                        {"required": ["radius"]},
+                        {"required": ["innerRadius"]},
+                        {"required": ["outRadius"]}
+                    ]
+                }
+            },
+            "geometry": {"$ref": "geometry.json#/Point"}
+        },
+        "required": [
+            "type",
+            "geometry"
+        ]
+    },
+
+    "CircleFeature": {
+        "description": "A Circle Geometry with properties",
+        "type": "object",
+        "properties": {
+            "type": {
+                "type": "string",
+                "enum": ["Feature"]
+            },
+            "properties": {
+                "description": "List of key,value pairs related to the geometry",
+                "type": "object",
+                "properties": {
+                    "radius": {"type": "number"}
+                },
+                "required": ["radius"],
+                "not": {
+                    "anyOf": [
+                        {"required": ["innerRadius"]},
+                        {"required": ["outRadius"]}
+                    ]
+                }
+            },
+            "geometry": {"$ref": "geometry.json#/Point"}
+        },
+        "required": [
+            "type",
+            "geometry"
+        ]
+   },
+
+    "AnnulusFeature": {
+        "description": "A Annulus Geometry with properties",
+        "type": "object",
+        "properties": {
+            "type": {
+                "type": "string",
+                "enum": ["Feature"]
+            },
+            "properties": {
+                "description": "List of key,value pairs related to the geometry",
+                "type": "object",
+                "properties": {
+                    "innerRadius": {"type": "number"},
+                    "outerRadius": {"type": "number"}
+                },
+                "required": ["innerRadius", "outerRadius"],
+                "not": {"required": ["radius"]}
+            },
+            "geometry": {"$ref": "geometry.json#/Point"}
+        },
+        "required": [
+            "type",
+            "geometry"
+        ]
+    },
+
+    "LineStringFeature": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["Feature"]
+          },
+          "properties": {
+            "oneOf": [
+                {"type": "null"},
+                {"type": "object"}
+            ]
+          },
+          "geometry":  {"$ref": "geometry.json#/LineString"},
+          "required": [
+            "type",
+            "properties",
+            "geometry"
+          ]
+        }
+    },
+
+    "PolygonFeature": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["Feature"]
+          },
+          "properties": {
+            "oneOf": [
+                {"type": "null"},
+                {"type": "object"}
+            ]
+          },
+          "geometry":  {"$ref": "geometry.json#/Polygon"},
+          "required": [
+            "type",
+            "properties",
+            "geometry"
+          ]
+        }
+    },
+
+    "Feature": {
+        "description": "Either a PointFeature, CircleFeature, AnnulusFeature, LineStringFeature, PolygonFeature",
+        "anyOf": [
+            {"$ref": "#/PointFeature"},
+            {"$ref": "#/CircleFeature"},
+            {"$ref": "#/AnnulusFeature"},
+            {"$ref": "#/LineStringFeature"},
+            {"$ref": "#/PolygonFeature"}
+        ]
+    }, 
+
+    "Location": {
+        "description": "List of Geometry and their properties",
+        "properties": {
+            "features": {
+                "description": "List of features that make up a location",
+                "type": "array",
+                "items": {"$ref": "#/Feature"},
+                "minItems": 1
+            },
+            "buffer": {"type": "number"},
+            "bufferUnits": {"type": "string", "enum": "miles"}
+        },
+        "required": [
+            "features",
+            "buffer",
+            "bufferUnits"
+        ]
+    }
+}

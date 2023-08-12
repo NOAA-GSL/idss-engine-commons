@@ -11,7 +11,7 @@
 
 import copy
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from subprocess import Popen, PIPE, TimeoutExpired
 from typing import Sequence, Optional, Generator, Any
 
@@ -103,13 +103,15 @@ def exec_cmd(commands: Sequence[str], timeout: Optional[int] = None) -> Sequence
 
 def to_iso(date_time: datetime) -> str:
     """Format a datetime instance to an ISO string"""
-    logger.debug(f'Datetime ({datetime}) to iso')
-    return date_time.strftime('%Y-%m-%dT%H:%M:%SZ')
+    logger.debug('Datetime (%s) to iso', datetime)
+    return (f'{date_time.strftime("%Y-%m-%dT%H:%M")}:'
+            f'{(date_time.second + date_time.microsecond / 1e6):06.3f}'
+            f'{"Z" if date_time.tzinfo in [None, timezone.utc] else date_time.strftime("%Z")[3:]}')
 
 
 def to_compact(date_time: datetime) -> str:
     """Format a datetime instance to an compact string"""
-    logger.debug(f'Datetime ({datetime}) to compact -- {__name__}')
+    logger.debug('Datetime (%s) to compact -- %s', datetime, __name__)
     return date_time.strftime('%Y%m%d%H%M%S')
 
 

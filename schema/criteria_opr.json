@@ -1,0 +1,31 @@
+{
+    "CriteriaOpr": {
+        "description": "Mechanism for making a request for data to be returned with specific units",
+        "type": "object",
+        "properties": {
+            "sourceType": {
+                "type": "string",
+                "enum": ["condition", "criteria"]
+            },
+            "sourceObj": {
+                "type": "object",
+                "properties": {
+                    "thresh": {"type": "number"},
+                    "relational": {"$ref": "relational.json#/Relational"},
+                    "mapping": {"$ref": "criteria_mapping.json#/CriteriaMapping"},
+                    "source": {"$ref": "source.json#/Source"}
+                },
+                "required": [
+                    "thresh",
+                    "relational",
+                    "mapping", 
+                    "source"
+                ]
+            }
+        },
+        "required": [
+            "sourceType",
+            "sourceObj"
+        ]
+    }
+}

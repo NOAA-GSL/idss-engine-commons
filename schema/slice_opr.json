@@ -1,0 +1,27 @@
+{
+    "SliceOpr": {
+        "description": "Mechanism for making a request for data to be returned with specific units",
+        "type": "object",
+        "properties": {
+            "sourceType": {
+                "type": "string",
+                "const": "slice"
+            },
+            "sourceObj": {
+                "type": "object",
+                "properties": {
+                    "slice": {"type": "string"},
+                    "source": {"$ref": "source.json#/Source"}
+                },
+                "required": [
+                    "slice",
+                    "source"
+                ]
+            }
+        },
+        "required": [
+            "sourceType",
+            "sourceObj"
+        ]
+    }
+}
