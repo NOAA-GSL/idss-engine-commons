@@ -122,7 +122,7 @@ class GridProj:
             precision=precision
         )
 
-    def map_pixel_to_proj(self, x: float, y: float) -> Tuple[Any, Any]:
+    def map_pixel_to_proj(self, x: float, y: float) -> Tuple[float, float]:
         """Map pixel to a projection"""
         return self._trans.transform(
             *self.map_pixel_to_geo(x, y),
@@ -137,7 +137,7 @@ class GridProj:
         """Map pixel to geographic coordinates"""
         return x * self._dx + self._x_offset, y * self._dy + self._y_offset
 
-    def map_geo_to_proj(self, x: float, y: float) -> Tuple[Any, Any]:
+    def map_geo_to_proj(self, x: float, y: float) -> Tuple[float, float]:
         """Map geographic coordinates to a projection"""
         return self._trans.transform(x, y, direction=TransformDirection.INVERSE)
 
