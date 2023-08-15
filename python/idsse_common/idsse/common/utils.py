@@ -184,9 +184,9 @@ def _round_toward_zero(number: float) -> int:
 def round_half_away(number: float, precision: int = 0) -> Union[int, float]:
     """
     Round a float to a set number of decimal places, using "ties away from zero" method,
-    in contrast with Python 3's built-in round() or numpy.round() functions, both which 
+    in contrast with Python 3's built-in round() or numpy.round() functions, both which
     use "ties to even" method.
-    
+
     | Input | round() | round_half_away() |
     | ----- | ------- | ----------------- |
     |   2.5 |       2 |                 3 |
