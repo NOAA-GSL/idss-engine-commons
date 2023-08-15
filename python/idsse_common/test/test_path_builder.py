@@ -11,14 +11,14 @@
 # pylint: disable=missing-function-docstring,invalid-name,redefined-outer-name,protected-access
 
 from datetime import datetime, timedelta
-
 import pytest
 
 from idsse.common.utils import TimeDelta
 from idsse.common.path_builder import PathBuilder
 
 
-def test_from_dir_filename_creates_valid_pathbuilder():
+
+def test_from_dir_filename_creates_valid_pathbuilder(): 
     directory = './test_directory'
     filename = 'some_file.txt'
     path_builder = PathBuilder.from_dir_filename(directory, filename)

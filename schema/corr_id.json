@@ -1,0 +1,22 @@
+{
+    "CorrId": {
+        "description": "Either a TimeString, TimeList, or TimeRange",
+        "type": "object",
+        "properties": {
+            "originator": {
+                "type": "string",
+                "enum": ["IDSSe", "IMS"]
+            },
+            "uuid": {
+                "type": "string",
+                "format": "uuid"
+            },
+            "issueDt": {"$ref": "timing.json#/TimeString"}
+        },
+        "required": [
+            "originator",
+            "uuid",
+            "issueDt"
+        ]
+    }
+}

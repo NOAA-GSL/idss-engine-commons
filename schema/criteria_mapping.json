@@ -1,0 +1,28 @@
+{
+    "CriteriaMapping": {
+        "description": "Mechanism for specifying a mapping to criteria space",
+        "type": "object",
+        "properties": {
+            "startWeight": {
+                "type": "array",
+                "items": {"type": "number"},
+                "minItems": 3
+            },
+            "endWeight": {
+                "type": "array",
+                "items": {"type": "number"},
+                "minItems": 3
+            },
+            "controlPoints": {
+                "type": "array",
+                "items": {"type": ["number", "string"]},
+                "minItems": 4
+            }
+        },
+        "required": [
+            "startWeight",
+            "endWeight",
+            "controlPoints"
+        ]
+    }
+}

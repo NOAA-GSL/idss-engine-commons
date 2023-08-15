@@ -11,10 +11,10 @@
 
 import copy
 import logging
-from datetime import datetime, timedelta
+import math
+from datetime import datetime, timedelta, timezone
 from subprocess import Popen, PIPE, TimeoutExpired
 from typing import Sequence, Optional, Generator, Union, Any
-from decimal import Decimal, ROUND_HALF_UP
 
 logger = logging.getLogger(__name__)
 
@@ -104,13 +104,16 @@ def exec_cmd(commands: Sequence[str], timeout: Optional[int] = None) -> Sequence
 
 def to_iso(date_time: datetime) -> str:
     """Format a datetime instance to an ISO string"""
-    logger.debug(f'Datetime ({datetime}) to iso')
-    return date_time.strftime('%Y-%m-%dT%H:%M:%SZ')
+    logger.debug('Datetime (%s) to iso', datetime)
+    return (f'{date_time.strftime("%Y-%m-%dT%H:%M")}:'
+            f'{(date_time.second + date_time.microsecond / 1e6):06.3f}'
+            'Z' if date_time.tzname() in [None, str(timezone.utc)]
+            else date_time.strftime("%Z")[3:])
 
 
 def to_compact(date_time: datetime) -> str:
     """Format a datetime instance to an compact string"""
-    logger.debug(f'Datetime ({datetime}) to compact -- {__name__}')
+    logger.debug('Datetime (%s) to compact -- %s', datetime, __name__)
     return date_time.strftime('%Y%m%d%H%M%S')
 
 
@@ -169,11 +172,25 @@ def datetime_gen(dt_: datetime,
         yield dt_ + time_delta * i
 
 
-def round_half_up(number: float, precision: int = 0) -> Union[int, float]:
+def _round_away_from_zero(number: float) -> int:
+    func = math.floor if number < 0 else math.ceil
+    return func(number)
+
+def _round_toward_zero(number: float) -> int:
+    func = math.ceil if number < 0 else math.floor
+    return func(number)
+
+
+def round_half_away(number: float, precision: int = 0) -> Union[int, float]:
     """
     Round a float to a set number of decimal places, using "ties away from zero" method,
-    in contrast with Python 3's built-in round() or numpy.round() functions, both which 
-    use "ties to even" method. For example, this function will round 2.500000 to 3, not 2.
+    in contrast with Python 3's built-in round() or numpy.round() functions, both which
+    use "ties to even" method.
+
+    | Input | round() | round_half_away() |
+    | ----- | ------- | ----------------- |
+    |   2.5 |       2 |                 3 |
+    | -14.5 |     -14 |               -15 |
 
     Args:
         precision (int): number of decimal places to preserve.
@@ -181,5 +198,12 @@ def round_half_up(number: float, precision: int = 0) -> Union[int, float]:
     Returns:
         Union[int, float]: rounded number as int if precision is 0 decimal places, otherwise as float
     """
-    rounded_number = Decimal(number).quantize(Decimal(10) ** -precision, rounding=ROUND_HALF_UP)
+    factor = 10 ** precision
+    factored_number = number * factor
+    is_less_than_half = abs(factored_number - math.trunc(factored_number)) < 0.5
+
+    rounded_number = (
+        _round_toward_zero(factored_number) if is_less_than_half
+        else _round_away_from_zero(factored_number)
+    ) / factor
     return int(rounded_number) if precision == 0 else float(rounded_number)
