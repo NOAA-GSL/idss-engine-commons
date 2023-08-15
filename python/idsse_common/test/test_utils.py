@@ -15,8 +15,6 @@ from os import path
 from math import pi
 import pytest
 
-import pytest  # pylint: disable=import-error
-
 from idsse.common.utils import TimeDelta, Map
 from idsse.common.utils import datetime_gen, hash_code, exec_cmd, to_compact, to_iso, dict_copy_with, round_half_away
 

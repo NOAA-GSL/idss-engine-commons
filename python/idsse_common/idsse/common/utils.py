@@ -43,15 +43,15 @@ class TimeDelta():
 class Map(dict):
     """Wrapper class for python dictionary with dot access"""
     def __init__(self, *args, **kwargs):
-        super(Map, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         for arg in args:
             if isinstance(arg, dict):
-                for k, v in arg.items():
-                    self[k] = v
+                for key, value in arg.items():
+                    self[key] = value
 
         if kwargs:
-            for k, v in kwargs.items():
-                self[k] = v
+            for key, value in kwargs.items():
+                self[key] = value
 
     def __getattr__(self, attr):
         return self.get(attr)
@@ -60,14 +60,14 @@ class Map(dict):
         self.__setitem__(key, value)
 
     def __setitem__(self, key, value):
-        super(Map, self).__setitem__(key, value)
+        super().__setitem__(key, value)
         self.__dict__.update({key: value})
 
     def __delattr__(self, item):
         self.__delitem__(item)
 
     def __delitem__(self, key):
-        super(Map, self).__delitem__(key)
+        super().__delitem__(key)
         del self.__dict__[key]
 
 
@@ -84,8 +84,7 @@ def exec_cmd(commands: Sequence[str], timeout: Optional[int] = None) -> Sequence
         Sequence[str]: Result of executing the commands
     """
     logger.debug('Making system call %s', commands)
-    # with Popen(commands, stdout=PIPE, stderr=PIPE) as proc:
-    #     out = proc.readlines()
+    # pylint: disable=consider-using-with
     process = Popen(commands, stdout=PIPE, stderr=PIPE)
     try:
         outs, errs = process.communicate(timeout=timeout)
@@ -196,7 +195,7 @@ def round_half_away(number: float, precision: int = 0) -> Union[int, float]:
         precision (int): number of decimal places to preserve.
 
     Returns:
-        Union[int, float]: rounded number as int if precision is 0 decimal places, otherwise as float
+        Union[int, float]: rounded number as int if precision is 0, otherwise as float
     """
     factor = 10 ** precision
     factored_number = number * factor
