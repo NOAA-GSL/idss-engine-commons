@@ -2,7 +2,7 @@
 
 In this weather forecasting data context, 
 - issue: the datetime when a given forecast was generated (or at least when generation began)
-- valid: the datetime when a given forecast "expires" or is superceded by newer forecasts
+- valid: the datetime when a given forecast "expires" or is superseded by newer forecasts
 - lead: the time duration (often in hours) between issue and valid, a sort of forecast "lifespan"
 
 """
@@ -24,7 +24,7 @@ from typing import Dict, Self, Tuple, Union
 from .utils import TimeDelta
 
 
-class PathBuilder():
+class PathBuilder:
     """Path Builder Class"""
 
     def __init__(self,
@@ -175,29 +175,32 @@ class PathBuilder():
         Returns:
             dict: Lookup of all information identified and extracted
         """
-        return self._parse(dir_, self.dir_fmt)
+        #return self._parse(dir_, self.dir_fmt)
+        return self._parse_times(dir_, self.dir_fmt)
 
     def parse_filename(self, filename: str) -> dict:
         """Extracts issue, valid, and/or lead information from the provided filename
 
         Args:
-            dir_ (str): A filename consistent with this PathBuilder
+            filename (str): A filename consistent with this PathBuilder
 
         Returns:
             dict: Lookup of all information identified and extracted
         """
-        return self._parse(filename, self.filename_fmt)
+        # return self._parse(filename, self.filename_fmt)
+        return self._parse_times(filename, self.filename_fmt)
 
     def parse_path(self, path: str) -> dict:
         """Extracts issue, valid, and/or lead information from the provided path
 
         Args:
-            dir_ (str): A path consistent with this PathBuilder
+            path (str): A path consistent with this PathBuilder
 
         Returns:
             dict: Lookup of all information identified and extracted
         """
-        return self._parse(path, self.path_fmt)
+        # return self._parse(path, self.path_fmt)
+        return self._parse_times(path, self.path_fmt)
 
     def get_issue(self, path: str) -> datetime:
         """Retrieves the issue date/time from the provided path
@@ -264,7 +267,7 @@ class PathBuilder():
     def get_valid_from_time_args(parsed_args: dict,
                                  issue: datetime = None,
                                  lead: timedelta = None) -> datetime:
-        """Static method for creating an valid date/time from parsed arguments and optional inputs
+        """Static method for creating a valid date/time from parsed arguments and optional inputs
 
         Args:
             parsed_args (dict): A dictionary of issue, valid and/or lead info resulting from parsing
@@ -299,16 +302,12 @@ class PathBuilder():
 
     @staticmethod
     def get_lead_from_time_args(time_args: dict) -> timedelta:
-        """Static method for creating an lead time from parsed arguments and optional inputs
+        """Static method for creating a lead time from parsed arguments and optional inputs
 
         Args:
-            parsed_args (dict): A dictionary of issue, valid and/or lead info resulting from parsing
-                                a path, dir, or filename
-            issue (datetime, optional): Depending on info found during parsing, issue date/time
-                                        can be useful. Defaults to None.
-            valid (datetime, optional): Depending on info found during parsing, valid date/time
-                                        can be useful. Defaults to None.
-
+            time_args (dict): A dictionary of issue, valid and/or lead info resulting from parsing
+                                a path, dir, or filename. Depending on info found during parsing,
+                                issue or valid date/time.
         Returns:
             timedelta: Lead time
         """
@@ -326,11 +325,38 @@ class PathBuilder():
             return TimeDelta(valid-issue)
         return None
 
+    def _parse_times(self, string: str, format_str: str) -> Dict:
+        def parse_args(key: str, value: str, result: Dict):
+            for arg in key.split('{')[1:]:
+                var_name, var_size = arg.split(':')
+                var_type = var_size[-2:-1]
+                var_size = int(var_size[:-2])
+                match var_type:
+                    case 'd':
+                        result[var_name] = int(value[:var_size])
+                    case _:
+                        raise ValueError(f'Unknown format type: {var_type}')
+                key = key[var_size:]
+                # Check for additional characters following the end of the format element to reach next
+                # offset position for value...
+                value = value[var_size  + len(arg.partition('}')[2]):]
+
+        # Update to more generically handle time formats...
+        dirs = os.path.normpath(format_str).split(os.sep)
+        vals = os.path.normpath(string).split(os.sep)
+        time_args = {}
+        for i, d in enumerate(dirs):
+            res = re.search(r'{.*}', d)
+            if res:
+                parse_args(res.group(), vals[i][res.span()[0]:], time_args)
+
+        return time_args
+
     def _parse(self, string: str, format_str: str) -> Dict:
-        def get_between(string: str, pre: str, post: str) -> Tuple[str, str]:
-            idx1 = string.index(pre) + len(pre)
-            idx2 = string.index(post, idx1)
-            return (string[idx1:idx2], string[idx2:])
+        def get_between(query_str: str, pre_off: str, post_off: str) -> Tuple[str, str]:
+            idx1 = query_str.index(pre_off) + len(pre_off)
+            idx2 = query_str.index(post_off, idx1)
+            return query_str[idx1:idx2], query_str[idx2:]
 
         def parse_args(key: str, value: str, result: Dict):
             for arg in key.split('{')[1:]:
