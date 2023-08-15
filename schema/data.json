@@ -1,0 +1,17 @@
+{
+    "Data": {
+        "description": "Mechanism for making a request for data",
+        "type": "object",
+        "properties": {
+            "sourceType": {
+                "type": "string",
+                "const": "data"
+            },
+            "sourceObj": {"$ref": "variable.json#/Variable"}
+        },
+        "required": [
+            "sourceType",
+            "sourceObj"
+        ]
+    }
+}

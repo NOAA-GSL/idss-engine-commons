@@ -1,0 +1,21 @@
+{
+    "Tags": {
+        "description": "List of values and/or key,value pairs that are meaningful to user",
+        "type": "object",
+        "properties": {
+            "values": {
+                "description": "List of values that are meaningful to user",
+                "type":  [ "array", "null" ],
+                "items": {"type": "string"}, 
+                "required":false
+            },
+            "keyValues": {
+                "description": "List of key,value pairs that are meaningful to user",
+                "type": "object"
+            }
+        },
+        "required": [
+            "keyValues"
+        ]
+    }
+}

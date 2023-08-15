@@ -15,6 +15,7 @@ from os import path
 from math import pi
 import pytest
 
+import pytest  # pylint: disable=import-error
 
 from idsse.common.utils import TimeDelta, Map
 from idsse.common.utils import datetime_gen, hash_code, exec_cmd, to_compact, to_iso, dict_copy_with, round_half_away
@@ -73,7 +74,7 @@ def test_exec_cmd():
 
 def test_to_iso():
     dt = datetime(2013, 12, 11, 10, 9, 8)
-    assert to_iso(dt) == '2013-12-11T10:09:08Z'
+    assert to_iso(dt) == '2013-12-11T10:09:08.000Z'
 
 
 def test_to_compact():
