@@ -12,11 +12,12 @@
 from copy import deepcopy
 from datetime import datetime, timedelta
 from os import path
+from math import pi
 import pytest
 
 
 from idsse.common.utils import TimeDelta, Map
-from idsse.common.utils import datetime_gen, hash_code, exec_cmd, to_compact, to_iso, dict_copy_with, round_half_up
+from idsse.common.utils import datetime_gen, hash_code, exec_cmd, to_compact, to_iso, dict_copy_with, round_half_away
 
 
 # pylint: disable=missing-function-docstring
@@ -143,21 +144,21 @@ def test_datetime_gen_bound():
 
 
 @pytest.mark.parametrize('number, expected', [(2.50000, 3), (-14.5000, -15), (3.49999, 3)])
-def test_round_half_up_int(number: float, expected: int):
-    result = round_half_up(number)
+def test_round_half_away_int(number: float, expected: int):
+    result = round_half_away(number)
     assert isinstance(result, int)
     assert result == expected
 
 
 @pytest.mark.parametrize('number, expected', [(9.5432, 9.5), (-0.8765, -0.9)])
-def test_round_half_up_float(number: float, expected: float):
-    result = round_half_up(number, precision=1)
+def test_round_half_away_float(number: float, expected: float):
+    result = round_half_away(number, precision=1)
     assert isinstance(result, float)
     assert result == expected
 
 
-@pytest.mark.parametrize('number, expected', [(100.987654321, 100.988), (-43.21098, -43.211)])
-def test_round_half_up_with_precision(number: float, expected: float):
-    result = round_half_up(number, precision=3)
+@pytest.mark.parametrize('number, expected', [(100.987654321, 100.988), (-43.21098, -43.211), (pi, 3.142)])
+def test_round_half_away_with_precision(number: float, expected: float):
+    result = round_half_away(number, precision=3)
     assert isinstance(result, float)
     assert result == expected

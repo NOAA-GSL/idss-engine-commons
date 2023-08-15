@@ -11,10 +11,10 @@
 
 import copy
 import logging
+import math
 from datetime import datetime, timedelta
 from subprocess import Popen, PIPE, TimeoutExpired
 from typing import Sequence, Optional, Generator, Union, Any
-from decimal import Decimal, ROUND_HALF_UP
 
 logger = logging.getLogger(__name__)
 
@@ -169,11 +169,25 @@ def datetime_gen(dt_: datetime,
         yield dt_ + time_delta * i
 
 
-def round_half_up(number: float, precision: int = 0) -> Union[int, float]:
+def _round_away_from_zero(number: float) -> int:
+    func = math.floor if number < 0 else math.ceil
+    return func(number)
+
+def _round_toward_zero(number: float) -> int:
+    func = math.ceil if number < 0 else math.floor
+    return func(number)
+
+
+def round_half_away(number: float, precision: int = 0) -> Union[int, float]:
     """
     Round a float to a set number of decimal places, using "ties away from zero" method,
     in contrast with Python 3's built-in round() or numpy.round() functions, both which 
-    use "ties to even" method. For example, this function will round 2.500000 to 3, not 2.
+    use "ties to even" method.
+    
+    | Input | round() | round_half_away() |
+    | ----- | ------- | ----------------- |
+    |   2.5 |       2 |                 3 |
+    | -14.5 |     -14 |               -15 |
 
     Args:
         precision (int): number of decimal places to preserve.
@@ -181,5 +195,12 @@ def round_half_up(number: float, precision: int = 0) -> Union[int, float]:
     Returns:
         Union[int, float]: rounded number as int if precision is 0 decimal places, otherwise as float
     """
-    rounded_number = Decimal(number).quantize(Decimal(10) ** -precision, rounding=ROUND_HALF_UP)
+    factor = 10 ** precision
+    factored_number = number * factor
+    is_less_than_half = abs(factored_number - math.trunc(factored_number)) < 0.5
+
+    rounded_number = (
+        _round_toward_zero(factored_number) if is_less_than_half
+        else _round_away_from_zero(factored_number)
+    ) / factor
     return int(rounded_number) if precision == 0 else float(rounded_number)
