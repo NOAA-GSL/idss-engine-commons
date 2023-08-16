@@ -188,6 +188,7 @@ class PathBuilder:
             dict: Lookup of all information identified and extracted
         """
         # return self._parse(filename, self.filename_fmt)
+        filename = os.path.basename(filename)
         return self._parse_times(filename, self.filename_fmt)
 
     def parse_path(self, path: str) -> dict:
@@ -329,8 +330,8 @@ class PathBuilder:
         def parse_args(key: str, value: str, result: Dict):
             for arg in key.split('{')[1:]:
                 var_name, var_size = arg.split(':')
-                var_type = var_size[-2:-1]
-                var_size = int(var_size[:-2])
+                var_type = var_size[2:3]
+                var_size = int(var_size[0:2])
                 match var_type:
                     case 'd':
                         result[var_name] = int(value[:var_size])
