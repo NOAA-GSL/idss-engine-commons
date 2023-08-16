@@ -312,7 +312,10 @@ class PathBuilder:
         Returns:
             timedelta: Lead time
         """
-        return timedelta(hours=time_args['lead.hour'])
+        if 'lead.hour' in time_args.keys():
+            return timedelta(hours=time_args['lead.hour'])
+
+        return None
 
     @staticmethod
     def _ensure_lead(issue: datetime,
