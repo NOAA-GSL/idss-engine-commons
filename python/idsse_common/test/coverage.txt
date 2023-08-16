@@ -32,11 +32,11 @@ Name                                                                            
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/config.py               74      9    88%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/json_message.py         22     22     0%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/log_util.py             38     38     0%
-/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/path_builder.py        149     38    74%
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/path_builder.py        151     39    74%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/publish_confirm.py     141    141     0%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/utils.py                78     33    58%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/validate_schema.py      42      0   100%
 -----------------------------------------------------------------------------------------------------------------------------------
-TOTAL                                                                                                             622    287    54%
+TOTAL                                                                                                             624    288    54%
 
-======================== 66 passed, 4 warnings in 0.56s ========================
+======================== 66 passed, 4 warnings in 0.57s ========================
