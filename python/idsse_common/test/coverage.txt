@@ -13,8 +13,8 @@ test_validate_schema.py ........                                         [100%]
 =================================== FAILURES ===================================
 _______________________________ test_get_issues ________________________________
 
-aws_utils = <idsse.common.aws_utils.AwsUtils object at 0x7f2926d00050>
-mock_exec_cmd = <Mock id='139814721557392'>
+aws_utils = <idsse.common.aws_utils.AwsUtils object at 0x7f27bcf53010>
+mock_exec_cmd = <Mock id='139808648679056'>
 
     def test_get_issues(aws_utils: AwsUtils, mock_exec_cmd):
 >       result = aws_utils.get_issues(
@@ -48,8 +48,8 @@ E           ValueError: invalid literal for int() with base 10: '02d}z.core'
 ../idsse/common/path_builder.py:333: ValueError
 ______ test_get_issues_returns_latest_issue_from_today_if_no_args_passed _______
 
-aws_utils = <idsse.common.aws_utils.AwsUtils object at 0x7f2926b7a4d0>
-mock_exec_cmd = <Mock id='139814719956368'>
+aws_utils = <idsse.common.aws_utils.AwsUtils object at 0x7f27bcde1e90>
+mock_exec_cmd = <Mock id='139808649126032'>
 
     def test_get_issues_returns_latest_issue_from_today_if_no_args_passed(aws_utils: AwsUtils, mock_exec_cmd):
 >       result = aws_utils.get_issues()
@@ -70,7 +70,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
 
 key = '{issue.hour:02d}z.core.f{lead.hour:03d}'
 value = '12z.core.f002.co.grib2'
-result = {'issue.day': 15, 'issue.hour': 21, 'issue.month': 8, 'issue.year': 2023}
+result = {'issue.day': 16, 'issue.hour': 17, 'issue.month': 8, 'issue.year': 2023}
 
     def parse_args(key: str, value: str, result: Dict):
         for arg in key.split('{')[1:]:
@@ -82,8 +82,8 @@ E           ValueError: invalid literal for int() with base 10: '02d}z.core'
 ../idsse/common/path_builder.py:333: ValueError
 _____________________________ test_get_valids_all ______________________________
 
-aws_utils = <idsse.common.aws_utils.AwsUtils object at 0x7f2926bf4c10>
-mock_exec_cmd = <Mock id='139814720458640'>
+aws_utils = <idsse.common.aws_utils.AwsUtils object at 0x7f27bce5ccd0>
+mock_exec_cmd = <Mock id='139808649628624'>
 
     def test_get_valids_all(aws_utils: AwsUtils, mock_exec_cmd):
 >       result = aws_utils.get_valids(EXAMPLE_ISSUE)
@@ -116,8 +116,8 @@ E           ValueError: invalid literal for int() with base 10: '02d}z.core'
 ../idsse/common/path_builder.py:333: ValueError
 ______________________ test_get_valids_with_start_filter _______________________
 
-aws_utils = <idsse.common.aws_utils.AwsUtils object at 0x7f2926b50250>
-mock_exec_cmd = <Mock id='139814719797392'>
+aws_utils = <idsse.common.aws_utils.AwsUtils object at 0x7f27bcd77a90>
+mock_exec_cmd = <Mock id='139808648685520'>
 
     def test_get_valids_with_start_filter(aws_utils: AwsUtils, mock_exec_cmd):
         valid_start = EXAMPLE_VALID + timedelta(hours=1)
@@ -151,8 +151,8 @@ E           ValueError: invalid literal for int() with base 10: '02d}z.core'
 ../idsse/common/path_builder.py:333: ValueError
 ___________________ test_get_valids_with_start_and_end_filer ___________________
 
-aws_utils = <idsse.common.aws_utils.AwsUtils object at 0x7f2926be4b10>
-mock_exec_cmd = <Mock id='139814720392720'>
+aws_utils = <idsse.common.aws_utils.AwsUtils object at 0x7f27bcdc0750>
+mock_exec_cmd = <Mock id='139808648989456'>
 
     def test_get_valids_with_start_and_end_filer(aws_utils: AwsUtils, mock_exec_cmd):
         valid_start = EXAMPLE_VALID - timedelta(hours=1)
@@ -422,4 +422,4 @@ FAILED test_path_builder.py::test_get_valid_returns_none_when_issue_or_lead_fail
 FAILED test_path_builder.py::test_get_issue_from_time_args - ValueError: invalid literal for int() with base 10: '02d}z.core'
 FAILED test_path_builder.py::test_get_valid_from_time_args_calculates_based_on_lead - ValueError: invalid literal for int() with base 10: '02d}z.core'
 FAILED test_path_builder.py::test_get_lead_from_time_args - ValueError: invalid literal for int() with base 10: '02d}z.core'
-================== 12 failed, 54 passed, 4 warnings in 1.10s ===================
+================== 12 failed, 54 passed, 4 warnings in 1.34s ===================
