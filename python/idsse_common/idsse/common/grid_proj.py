@@ -73,25 +73,6 @@ class GridProj:
                         int(grid_args['w']), int(grid_args['h']),
                         grid_args['dx'], grid_args['dy'])
 
-
-    def _round_pixel_maybe(
-        self,
-        pixel: Tuple[float, float],
-        rounding: Optional[Union[str, RoundingMethod]] = None,
-        precision: int = 0
-    ) -> Pixel:
-        """Round pixel values if caller requested, or return unchanged if no rounding passed"""
-        x, y = pixel
-        # cast str to RoundingMethod enum
-        if isinstance(rounding, str):
-            rounding = RoundingMethod[rounding.upper()]
-
-        if rounding is RoundingMethod.ROUND:
-            return (round_half_away(x, precision), round_half_away(y, precision))
-        if rounding is RoundingMethod.FLOOR:
-            return (math.floor(x), math.floor(y))
-        return x, y
-
     def map_proj_to_pixel(
         self,
         x: float,
@@ -167,3 +148,21 @@ class GridProj:
         i: float = (x - self._x_offset) / self._dx
         j: float = (y - self._y_offset) / self._dy
         return self._round_pixel_maybe((i, j), rounding, precision)
+
+    @staticmethod
+    def _round_pixel_maybe(
+        pixel: Tuple[float, float],
+        rounding: Optional[Union[str, RoundingMethod]] = None,
+        precision: int = 0
+    ) -> Pixel:
+        """Round pixel values if caller requested, or return unchanged if no rounding passed"""
+        x, y = pixel
+        # cast str to RoundingMethod enum
+        if isinstance(rounding, str):
+            rounding = RoundingMethod[rounding.upper()]
+
+        if rounding is RoundingMethod.ROUND:
+            return (round_half_away(x, precision), round_half_away(y, precision))
+        if rounding is RoundingMethod.FLOOR:
+            return (math.floor(x), math.floor(y))
+        return x, y
