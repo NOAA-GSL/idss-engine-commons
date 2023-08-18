@@ -92,7 +92,7 @@ def test_map_proj_to_pixel_round_floor(grid_proj: GridProj):
             rounding=RoundingMethod.FLOOR
         )
         # due to math imprecision internal to pyproj.transform(), some test results are a bit
-        # unpredictable. E.g. returns 0.999994 which is floored to 0, but expected value was 1
+        # unpredictable. E.g. returns 0.999994 which is floored to 0, but expected pixel value is 1
         assert (approx(i, abs=1), approx(j, abs=1)) == EXAMPLE_PIXELS[index]
 
 
@@ -124,7 +124,7 @@ def test_geo_to_pixel_no_rounding(grid_proj: GridProj):
     for index, geo in enumerate(EXAMPLE_GEOS):
         i, j = grid_proj.map_geo_to_pixel(*geo)
         # round result, which will not be precisely the integer that was passed
-        assert (round(i, 6), round(j, 6)) == EXAMPLE_PIXELS[index]
+        assert (round_half_away(i, 6), round_half_away(j, 6)) == EXAMPLE_PIXELS[index]
 
 
 def test_geo_to_pixel_floor(grid_proj: GridProj):
@@ -159,7 +159,7 @@ def test_compound_tranformations_stay_consistent(grid_proj: GridProj):
 
     # convert geographic coordinates back to pixel, full circle, and data should be unchanged
     pixel_x, pixel_y = grid_proj.map_geo_to_pixel(geo_x, geo_y)
-    assert (round(pixel_x, 6), round(pixel_y, 6)) == initial_pixel
+    assert (round_half_away(pixel_x, 6), round_half_away(pixel_y, 6)) == initial_pixel
 
     # convert pixel back to geographic coordinates
     geo_x, geo_y = grid_proj.map_pixel_to_geo(pixel_x, pixel_y)

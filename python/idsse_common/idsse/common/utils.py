@@ -84,16 +84,16 @@ def exec_cmd(commands: Sequence[str], timeout: Optional[int] = None) -> Sequence
         Sequence[str]: Result of executing the commands
     """
     logger.debug('Making system call %s', commands)
-    # pylint: disable=consider-using-with
-    process = Popen(commands, stdout=PIPE, stderr=PIPE)
-    try:
-        outs, errs = process.communicate(timeout=timeout)
-    except TimeoutExpired:
-        process.kill()
+    with Popen(commands, stdout=PIPE, stderr=PIPE) as process:
+        try:
+            outs, errs = process.communicate(timeout=timeout)
+        except TimeoutExpired:
+            process.kill()
         outs, errs = process.communicate()
-    if process.returncode != 0:
-        # the process was not successful
-        raise OSError(process.returncode, errs.decode())
+
+        if process.returncode != 0:
+            # the process was not successful
+            raise OSError(process.returncode, errs.decode())
     try:
         ans = outs.decode().splitlines()
     except Exception as exc:  # pylint: disable=broad-exception-caught
