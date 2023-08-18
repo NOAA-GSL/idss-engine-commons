@@ -10,7 +10,7 @@
 # -------------------------------------------------------------------------------
 # pylint: disable=invalid-name
 
-from typing import Self, Tuple, Union, Any, Optional
+from typing import Self, Tuple, Union, Optional
 from enum import Enum
 import math
 
