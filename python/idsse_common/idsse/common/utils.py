@@ -11,9 +11,10 @@
 
 import copy
 import logging
+import math
 from datetime import datetime, timedelta, timezone
 from subprocess import Popen, PIPE, TimeoutExpired
-from typing import Sequence, Optional, Generator, Any
+from typing import Sequence, Optional, Generator, Union, Any
 
 logger = logging.getLogger(__name__)
 
@@ -42,15 +43,15 @@ class TimeDelta():
 class Map(dict):
     """Wrapper class for python dictionary with dot access"""
     def __init__(self, *args, **kwargs):
-        super(Map, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         for arg in args:
             if isinstance(arg, dict):
-                for k, v in arg.iteritems():
-                    self[k] = v
+                for key, value in arg.items():
+                    self[key] = value
 
         if kwargs:
-            for k, v in kwargs.items():
-                self[k] = v
+            for key, value in kwargs.items():
+                self[key] = value
 
     def __getattr__(self, attr):
         return self.get(attr)
@@ -59,14 +60,14 @@ class Map(dict):
         self.__setitem__(key, value)
 
     def __setitem__(self, key, value):
-        super(Map, self).__setitem__(key, value)
+        super().__setitem__(key, value)
         self.__dict__.update({key: value})
 
     def __delattr__(self, item):
         self.__delitem__(item)
 
     def __delitem__(self, key):
-        super(Map, self).__delitem__(key)
+        super().__delitem__(key)
         del self.__dict__[key]
 
 
@@ -83,17 +84,16 @@ def exec_cmd(commands: Sequence[str], timeout: Optional[int] = None) -> Sequence
         Sequence[str]: Result of executing the commands
     """
     logger.debug('Making system call %s', commands)
-    # with Popen(commands, stdout=PIPE, stderr=PIPE) as proc:
-    #     out = proc.readlines()
-    process = Popen(commands, stdout=PIPE, stderr=PIPE)
-    try:
-        outs, errs = process.communicate(timeout=timeout)
-    except TimeoutExpired:
-        process.kill()
+    with Popen(commands, stdout=PIPE, stderr=PIPE) as process:
+        try:
+            outs, errs = process.communicate(timeout=timeout)
+        except TimeoutExpired:
+            process.kill()
         outs, errs = process.communicate()
-    if process.returncode != 0:
-        # the process was not successful
-        raise OSError(process.returncode, errs.decode())
+
+        if process.returncode != 0:
+            # the process was not successful
+            raise OSError(process.returncode, errs.decode())
     try:
         ans = outs.decode().splitlines()
     except Exception as exc:  # pylint: disable=broad-exception-caught
@@ -169,3 +169,40 @@ def datetime_gen(dt_: datetime,
     for i in range(0, max_num):
         logger.debug('dt generator %d/%d', i, max_num)
         yield dt_ + time_delta * i
+
+
+def _round_away_from_zero(number: float) -> int:
+    func = math.floor if number < 0 else math.ceil
+    return func(number)
+
+def _round_toward_zero(number: float) -> int:
+    func = math.ceil if number < 0 else math.floor
+    return func(number)
+
+
+def round_half_away(number: float, precision: int = 0) -> Union[int, float]:
+    """
+    Round a float to a set number of decimal places, using "ties away from zero" method,
+    in contrast with Python 3's built-in round() or numpy.round() functions, both which
+    use "ties to even" method.
+
+    | Input | round() | round_half_away() |
+    | ----- | ------- | ----------------- |
+    |   2.5 |       2 |                 3 |
+    | -14.5 |     -14 |               -15 |
+
+    Args:
+        precision (int): number of decimal places to preserve.
+
+    Returns:
+        Union[int, float]: rounded number as int if precision is 0, otherwise as float
+    """
+    factor = 10 ** precision
+    factored_number = number * factor
+    is_less_than_half = abs(factored_number - math.trunc(factored_number)) < 0.5
+
+    rounded_number = (
+        _round_toward_zero(factored_number) if is_less_than_half
+        else _round_away_from_zero(factored_number)
+    ) / factor
+    return int(rounded_number) if precision == 0 else float(rounded_number)

@@ -90,7 +90,6 @@ class AwsUtils():
             finally:
                 pass
 
-
     def check_for(self, issue: datetime, valid: datetime) -> Optional[Tuple[datetime, str]]:
         """Checks if an object passed issue/valid exists
 
@@ -99,8 +98,8 @@ class AwsUtils():
             valid (datetime): The valid date/time used to format the path to the object's location
 
         Returns:
-            Optional[Tuple[datetime, str]]: A tuple of the valid date/time (indicated by object's 
-                                            location) and location (path) of a object, or None 
+            Optional[Tuple[datetime, str]]: A tuple of the valid date/time (indicated by object's
+                                            location) and location (path) of a object, or None
                                             if object does not exist
         """
         lead = TimeDelta(valid-issue)
@@ -161,7 +160,7 @@ class AwsUtils():
 
         Returns:
             Sequence[Tuple[datetime, str]]: A sequence of tuples with valid date/time (indicated by
-                                            object's location) and the object's location (path). 
+                                            object's location) and the object's location (path).
                                             Empty Sequence if no valids found for given time range.
         """
         if valid_start and valid_start == valid_end:

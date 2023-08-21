@@ -12,6 +12,7 @@ import json
 import os
 from typing import Optional, Union
 
+# pylint: disable=no-name-in-module
 from jsonschema import Validator, FormatChecker, RefResolver
 from jsonschema.validators import validator_for
 

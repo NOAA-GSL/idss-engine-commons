@@ -11,7 +11,7 @@ from threading import Thread
 import pika
 from pika.exchange_type import ExchangeType
 
-from idsse.common.log_util import get_default_log_config, set_corr_id_context_var
+from idsse.common.log_util import get_default_log_config
 
 logger = logging.getLogger(__name__)
 

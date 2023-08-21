@@ -116,9 +116,8 @@ def test_config_list_of_dicts_succeeds():
             self.b_key = None
             super().__init__(config, '', ignore_missing=True)
 
-    config = WithoutKeyConfig(
-        [{'a_key': 'value for a'}, {'b_key': 'value for b'}])
-    
+    config = WithoutKeyConfig([{'a_key': 'value for a'}, {'b_key': 'value for b'}])
+
     assert config.a_key == 'value for a'
     assert config.next.b_key == 'value for b'
 
