@@ -10,6 +10,7 @@
 # -------------------------------------------------------------------------------
 
 import logging
+import fnmatch
 import os
 from datetime import datetime, timedelta
 from typing import Sequence, Tuple, Optional
@@ -106,7 +107,8 @@ class AwsUtils():
         filenames = self.aws_ls(self.get_path(issue, valid), prepend_path=False)
         filename = self.path_builder.build_filename(issue=issue, valid=valid, lead=lead)
         for fname in filenames:
-            if fname.endswith(filename):
+            # Support wildcard matches - used for '?' as a single wildcard character in issue/valid time specs.
+            if fnmatch.fnmatch(os.path.basename(fname), filename):
                 return (valid, filename)
         return None
 

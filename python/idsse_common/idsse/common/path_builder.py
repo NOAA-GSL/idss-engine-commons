@@ -88,6 +88,16 @@ class PathBuilder:
         return f'{self._file_base}.{self._file_ext}'
 
     @property
+    def base_dir(self):
+        """Provides access to the file base directory format str"""
+        return self._basedir
+
+    @base_dir.setter
+    def base_dir(self, bd):
+        """Set the file extension format str"""
+        self._basedir = bd
+
+    @property
     def file_ext(self):
         """Provides access to the file extension format str"""
         if self._file_ext:
