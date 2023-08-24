@@ -34,19 +34,19 @@ E   ModuleNotFoundError: No module named 'pyproj'
 Name                                                                                                            Stmts   Miss  Cover
 -----------------------------------------------------------------------------------------------------------------------------------
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/__init__.py              0      0   100%
-/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/aws_utils.py            78     63    19%
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/aws_utils.py            79     63    20%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/config.py               74     53    28%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/grid_proj.py            47     43     9%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/json_message.py         22     22     0%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/log_util.py             38     38     0%
-/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/path_builder.py        151    110    27%
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/path_builder.py        157    112    29%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/publish_confirm.py     141    141     0%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/utils.py                91     59    35%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/validate_schema.py      42     35    17%
 -----------------------------------------------------------------------------------------------------------------------------------
-TOTAL                                                                                                             684    564    18%
+TOTAL                                                                                                             691    566    18%
 
 =========================== short test summary info ============================
 ERROR test_grid_proj.py
 !!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
-========================= 4 warnings, 1 error in 0.64s =========================
+========================= 4 warnings, 1 error in 0.50s =========================
