@@ -12,6 +12,8 @@
 import copy
 import logging
 import math
+import pygrib
+import shutil
 from datetime import datetime, timedelta, timezone
 from subprocess import Popen, PIPE, TimeoutExpired
 from typing import Sequence, Optional, Generator, Union, Any
@@ -19,7 +21,7 @@ from typing import Sequence, Optional, Generator, Union, Any
 logger = logging.getLogger(__name__)
 
 
-class TimeDelta():
+class TimeDelta:
     """Wrapper class for datetime.timedelta to add helpful properties"""
     def __init__(self, time_delta: timedelta) -> None:
         self._td = time_delta
@@ -76,7 +78,7 @@ def exec_cmd(commands: Sequence[str], timeout: Optional[int] = None) -> Sequence
 
     Args:
         commands (Sequence[str]): The commands to be executed
-
+        timeout :
     Raises:
         RuntimeError: When execution results in an error code
 
@@ -111,7 +113,7 @@ def to_iso(date_time: datetime) -> str:
 
 
 def to_compact(date_time: datetime) -> str:
-    """Format a datetime instance to an compact string"""
+    """Format a datetime instance to a compact string"""
     logger.debug('Datetime (%s) to compact -- %s', datetime, __name__)
     return date_time.strftime('%Y%m%d%H%M%S')
 
@@ -192,6 +194,7 @@ def round_half_away(number: float, precision: int = 0) -> Union[int, float]:
     | -14.5 |     -14 |               -15 |
 
     Args:
+        number (float):
         precision (int): number of decimal places to preserve.
 
     Returns:
@@ -206,3 +209,43 @@ def round_half_away(number: float, precision: int = 0) -> Union[int, float]:
         else _round_away_from_zero(factored_number)
     ) / factor
     return int(rounded_number) if precision == 0 else float(rounded_number)
+
+def shrink_grib(filename: str, variables: list[str]) -> None:
+    """
+    Shrink a grib file extracting only those variables from the list provided.
+    Notes:
+        1. Variable names may not be unique so several variables with the same
+        name may appear in the result file, e.g. deterministic and probabilistic
+        versions of the same name
+        2. Variables not found in the file are ignored
+        3. The pygrib package when updated may change parameter (variable) names
+        for a given product users should be aware and maintain product mapping names
+        appropriately.
+
+    Args:
+        filename (str): the grib file to be reduced
+        variables: the list af pygrib variable names to be retained
+    Returns:
+        None
+    """
+    if not variables:
+        return  # Nothing to do!!!
+    # Use a set for faster lookups...
+    req_vars = set(variables)
+    try:
+        # Open a work file for the result..
+        grb_out = open(f'{filename}{".tmp"}', 'wb')
+        # Open the GRIB file
+        with pygrib.open(filename) as grb:
+            for g in grb:
+                if g.name in req_vars or f'{"parameterNumber: "}{str(g.parameterNumber)}' in req_vars:
+                    grb_out.write(g.tostring())
+        # Close the out file and clobber the original
+        grb_out.close()
+        shutil.move(f'{filename}{".tmp"}', filename)
+
+    # Create a set from the variable list...
+    except Exception as e:
+        raise RuntimeError(f'{"Unable to shrink provided GRIB file : "}{str(e)}')
+
+    return
