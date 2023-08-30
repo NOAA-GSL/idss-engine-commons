@@ -16,7 +16,7 @@ import pygrib
 import shutil
 from datetime import datetime, timedelta, timezone
 from subprocess import Popen, PIPE, TimeoutExpired
-from typing import Sequence, Optional, Generator, Union, Any
+from typing import Sequence, Optional, Generator, Union, Any, List
 
 logger = logging.getLogger(__name__)
 
@@ -210,7 +210,7 @@ def round_half_away(number: float, precision: int = 0) -> Union[int, float]:
     ) / factor
     return int(rounded_number) if precision == 0 else float(rounded_number)
 
-def shrink_grib(filename: str, variables: list[str]) -> None:
+def shrink_grib(filename: str, variables: List[str]) -> None:
     """
     Shrink a grib file extracting only those variables from the list provided.
     Notes:
@@ -234,18 +234,18 @@ def shrink_grib(filename: str, variables: list[str]) -> None:
     req_vars = set(variables)
     try:
         # Open a work file for the result..
-        grb_out = open(f'{filename}{".tmp"}', 'wb')
-        # Open the GRIB file
-        with pygrib.open(filename) as grb:
-            for g in grb:
-                if g.name in req_vars or f'{"parameterNumber: "}{str(g.parameterNumber)}' in req_vars:
-                    grb_out.write(g.tostring())
-        # Close the out file and clobber the original
-        grb_out.close()
-        shutil.move(f'{filename}{".tmp"}', filename)
+        with open(f'{filename}{".tmp"}', 'wb') as grb_out:
+            # Open the GRIB file
+            with pygrib.open(filename) as grb:
+                for g in grb:
+                    if g.name in req_vars or f'parameterNumber: {str(g.parameterNumber)}' in req_vars:
+                        grb_out.write(g.tostring())
+            # Close the out file and clobber the original
+            grb_out.close()
+            shutil.move(f'{filename}.tmp', filename)
 
     # Create a set from the variable list...
     except Exception as e:
-        raise RuntimeError(f'{"Unable to shrink provided GRIB file : "}{str(e)}')
+        raise RuntimeError(f'Unable to shrink provided GRIB file : {str(e)}')
 
     return

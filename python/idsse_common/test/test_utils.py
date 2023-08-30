@@ -158,6 +158,7 @@ def test_shrink_grib():
     shutil.copy(original, gribfile)
 
     shrink_grib(gribfile, variables)
+    assert (stat(gribfile).st_size > 0)
     assert (stat(gribfile).st_size < stat(original).st_size)
     remove(gribfile)  # Cleanup...
 
