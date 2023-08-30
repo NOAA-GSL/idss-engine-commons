@@ -30,9 +30,9 @@ def set_corr_id_context_var(
     issue_dt: Optional[Union[str, datetime]] = None
 ) -> None:
     """
-    Build and set correlation ID ContextVar for logging module, based on originator and 
+    Build and set correlation ID ContextVar for logging module, based on originator and
     key (or generated UUID). Include issue_dt in correlation ID if provided.
-    
+
     Args:
         originator (str): Function, class, service name, etc. that is using logging module
         key (Optional[uuid.UUID]): a UUID. Default: randomly generated UUID.
@@ -79,16 +79,16 @@ class UTCFormatter(logging.Formatter):
 
 def get_default_log_config(level: str, with_corr_id=True):
     """
-    Get standardized python logging config (formatters, handlers directing to stdout, etc.) 
+    Get standardized python logging config (formatters, handlers directing to stdout, etc.)
     as a dictionary. This dictionary can be passed directly to logging.config.dictConfig:
-    
+
     import logging
     import logging.config
-    
+
     logging.config.dictConfig(get_default_log_config('INFO'))
     logger = logging.getLogger(__name__)
     logger.info('hello world')
-    
+
     Args:
         level (str): logging level, such as 'DEBUG'
         with_corr_id (bool): whether to include correlation ID in log messages. Default: True
