@@ -70,8 +70,10 @@ def get_default_log_config(level, with_corr_id=True):
     set_corr_id_context_var('None', uuid.UUID('00000000-0000-0000-0000-000000000000'))
     if with_corr_id:
         format_str = '%(asctime)-15s %(name)-5s %(levelname)-8s %(corr_id)s %(module)s::%(funcName)s(line %(lineno)d) %(message)s'
+        filter_list = ['corr_id', ]
     else:
         format_str = '%(asctime)-15s %(name)-5s %(levelname)-8s %(module)s::%(funcName)s(line %(lineno)d) %(message)s'
+        filter_list = []
 
     return {
     'version': 1,
@@ -92,7 +94,7 @@ def get_default_log_config(level, with_corr_id=True):
             'class': 'logging.StreamHandler',
             'stream': 'ext://sys.stdout',
             'formatter': 'standard',
-            'filters': ['corr_id', ],
+            'filters': filter_list,
         },
     },
     'loggers': {
