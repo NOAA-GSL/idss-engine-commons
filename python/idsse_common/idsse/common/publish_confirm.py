@@ -319,7 +319,7 @@ class PublishConfirm(Thread):
 def main():
 
     # Connect to localhost:5672 as guest with the password guest and virtual host "/" (%2F)
-    expub = PublishConfirm(
+    expub = EventPublisher(
         'amqp://guest:guest@localhost:5672/%2F?connection_attempts=3&heartbeat=3600',
         'data.available', '_data.check'
     )
