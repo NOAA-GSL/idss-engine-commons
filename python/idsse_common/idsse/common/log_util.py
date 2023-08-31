@@ -2,10 +2,12 @@
 # ------------------------------------------------------------------------------
 # Created on Thu Apr 27 2023
 #
-# Copyright (c) 2023 Regents of the University of Colorado. All rights reserved.
+# Copyright (c) 2023 Regents of the University of Colorado. All rights reserved. (1)
+# Copyright (c) 2023 Colorado State University. All rights reserved. (2)
 #
 # Contributors:
-#     Geary Layne
+#     Geary Layne (1)
+#     Mackenzie Grimes (2)
 #
 # ------------------------------------------------------------------------------
 # pylint: disable=too-few-public-methods
