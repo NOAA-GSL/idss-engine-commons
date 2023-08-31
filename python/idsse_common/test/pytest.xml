@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="4" failures="0" skipped="0" tests="4" time="0.591" timestamp="2023-08-30T20:39:27.315833" hostname="fv-az419-879"><testcase classname="" name="test.test_aws_utils" time="0.000"><error message="collection failure">ImportError while importing test module '/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/test_aws_utils.py'.
+<?xml version="1.0" encoding="utf-8"?><testsuites><testsuite name="pytest" errors="4" failures="0" skipped="0" tests="4" time="0.755" timestamp="2023-08-31T17:27:07.360219" hostname="fv-az168-974"><testcase classname="" name="test.test_aws_utils" time="0.000"><error message="collection failure">ImportError while importing test module '/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/test_aws_utils.py'.
 Hint: make sure your test modules/packages have valid Python names.
 Traceback:
 /opt/hostedtoolcache/Python/3.11.4/x64/lib/python3.11/importlib/__init__.py:126: in import_module

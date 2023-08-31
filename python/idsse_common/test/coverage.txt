@@ -75,13 +75,13 @@ Name                                                                            
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/config.py               74     53    28%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/grid_proj.py            47     43     9%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/json_message.py         22     22     0%
-/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/log_util.py             38     38     0%
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/log_util.py             40     40     0%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/path_builder.py        157    152     3%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/publish_confirm.py     141    141     0%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/utils.py               108    104     4%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/validate_schema.py      42     35    17%
 -----------------------------------------------------------------------------------------------------------------------------------
-TOTAL                                                                                                             708    661     7%
+TOTAL                                                                                                             710    663     7%
 
 =========================== short test summary info ============================
 ERROR test_aws_utils.py
@@ -89,4 +89,4 @@ ERROR test_grid_proj.py
 ERROR test_path_builder.py
 ERROR test_utils.py
 !!!!!!!!!!!!!!!!!!! Interrupted: 4 errors during collection !!!!!!!!!!!!!!!!!!!!
-======================== 4 warnings, 4 errors in 0.58s =========================
+======================== 4 warnings, 4 errors in 0.74s =========================
