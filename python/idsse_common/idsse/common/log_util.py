@@ -2,33 +2,44 @@
 # ------------------------------------------------------------------------------
 # Created on Thu Apr 27 2023
 #
-# Copyright (c) 2023 Regents of the University of Colorado. All rights reserved.
+# Copyright (c) 2023 Regents of the University of Colorado. All rights reserved. (1)
+# Copyright (c) 2023 Colorado State University. All rights reserved. (2)
 #
 # Contributors:
-#     Geary Layne
+#     Geary Layne (1)
+#     Mackenzie Grimes (2)
 #
 # ------------------------------------------------------------------------------
+# pylint: disable=too-few-public-methods
 
 import logging
 import time
 import uuid
 from contextvars import ContextVar
 from datetime import datetime
-from typing import Union
+from typing import Union, Optional
 
 from .utils import to_iso
 
-# flake8: noqa E501
-# pylint: disable=line-too-long
 # cSpell:words gmtime
 
-# correlation_id: ContextVar[uuid.UUID] = \
-#     ContextVar('correlation_id',
-#                default=uuid.UUID('00000000-0000-0000-0000-000000000000'))
 corr_id_context_var: ContextVar[str] = ContextVar('correlation_id')
 
 
-def set_corr_id_context_var(originator: str, key: uuid = None, issue_dt: Union[str, datetime] = None) -> None:
+def set_corr_id_context_var(
+    originator: str,
+    key: Optional[uuid.UUID] = None,
+    issue_dt: Optional[Union[str, datetime]] = None
+) -> None:
+    """
+    Build and set correlation ID ContextVar for logging module, based on originator and
+    key (or generated UUID). Include issue_dt in correlation ID if provided.
+
+    Args:
+        originator (str): Function, class, service name, etc. that is using logging module
+        key (Optional[uuid.UUID]): a UUID. Default: randomly generated UUID.
+        issue_dt (Optional[Union[str, datettime]]): Datetime when a relevant forecast was issued
+    """
     if not key:
         key = uuid.uuid4()
 
@@ -41,10 +52,12 @@ def set_corr_id_context_var(originator: str, key: uuid = None, issue_dt: Union[s
 
 
 def get_corr_id_context_var_str():
+    """Getter for correlation ID ContextVar name"""
     return corr_id_context_var.get()
 
 def get_corr_id_context_var_parts():
-    return tuple([part for part in corr_id_context_var.get().split(';')])
+    """Split correlation ID ContextVar into its parts, such as [originator, key, issue_datetime]"""
+    return corr_id_context_var.get().split(';')
 
 class AddCorrelationIdFilter(logging.Filter):
     """"Provides correlation id parameter for the logger"""
@@ -66,12 +79,35 @@ class UTCFormatter(logging.Formatter):
     converter = time.gmtime
 
 
-def get_default_log_config(level, with_corr_id=True):
+def get_default_log_config(level: str, with_corr_id=True):
+    """
+    Get standardized python logging config (formatters, handlers directing to stdout, etc.)
+    as a dictionary. This dictionary can be passed directly to logging.config.dictConfig:
+
+    import logging
+    import logging.config
+
+    logging.config.dictConfig(get_default_log_config('INFO'))
+    logger = logging.getLogger(__name__)
+    logger.info('hello world')
+
+    Args:
+        level (str): logging level, such as 'DEBUG'
+        with_corr_id (bool): whether to include correlation ID in log messages. Default: True
+    """
     set_corr_id_context_var('None', uuid.UUID('00000000-0000-0000-0000-000000000000'))
     if with_corr_id:
-        format_str = '%(asctime)-15s %(name)-5s %(levelname)-8s %(corr_id)s %(module)s::%(funcName)s(line %(lineno)d) %(message)s'
+        format_str = (
+            '%(asctime)-15s %(name)-5s %(levelname)-8s %(corr_id)s %(module)s::'
+            '%(funcName)s"(line %(lineno)d) %(message)s'
+        )
+        filter_list = ['corr_id', ]
     else:
-        format_str = '%(asctime)-15s %(name)-5s %(levelname)-8s %(module)s::%(funcName)s(line %(lineno)d) %(message)s'
+        format_str = (
+            '%(asctime)-15s %(name)-5s %(levelname)-8s %(module)s::'
+            '%(funcName)s(line %(lineno)d) %(message)s'
+        )
+        filter_list = []
 
     return {
     'version': 1,
@@ -92,7 +128,7 @@ def get_default_log_config(level, with_corr_id=True):
             'class': 'logging.StreamHandler',
             'stream': 'ext://sys.stdout',
             'formatter': 'standard',
-            'filters': ['corr_id', ],
+            'filters': filter_list,
         },
     },
     'loggers': {
