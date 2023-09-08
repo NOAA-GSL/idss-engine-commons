@@ -1,4 +1,14 @@
-# -*- coding: utf-8 -*-
+"""Module for PublishConfirm threaded RabbitMQ publisher"""
+# ----------------------------------------------------------------------------------
+# Created on Fri Jun 23 2023.
+#
+# Copyright (c) 2023 Regents of the University of Colorado. All rights reserved.  (1)
+# Copyright (c) 2023 Colorado State University. All rights reserved. (2)
+#
+# Contributors:
+#     Geary Layne (1)
+#     Paul Hamer (2)
+# ----------------------------------------------------------------------------------
 # pylint: disable=C0111,C0103,R0205
 
 import functools
@@ -319,7 +329,7 @@ class PublishConfirm(Thread):
 def main():
 
     # Connect to localhost:5672 as guest with the password guest and virtual host "/" (%2F)
-    expub = EventPublisher(
+    expub = PublishConfirm(
         'amqp://guest:guest@localhost:5672/%2F?connection_attempts=3&heartbeat=3600',
         'data.available', '_data.check'
     )

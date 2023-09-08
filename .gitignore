@@ -45,4 +45,3 @@ __pycache__
 build/
 dist/
 *.egg*
-*.py
