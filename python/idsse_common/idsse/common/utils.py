@@ -12,11 +12,12 @@
 import copy
 import logging
 import math
-import pygrib
 import shutil
 from datetime import datetime, timedelta, timezone
-from subprocess import Popen, PIPE, TimeoutExpired
-from typing import Sequence, Optional, Generator, Union, Any, List
+from subprocess import PIPE, Popen, TimeoutExpired
+from typing import Any, Generator, List, Optional, Sequence, Union
+
+import pygrib
 
 logger = logging.getLogger(__name__)
 
@@ -210,6 +211,7 @@ def round_half_away(number: float, precision: int = 0) -> Union[int, float]:
     ) / factor
     return int(rounded_number) if precision == 0 else float(rounded_number)
 
+
 def shrink_grib(filename: str, variables: List[str]) -> None:
     """
     Shrink a grib file extracting only those variables from the list provided.
@@ -236,7 +238,7 @@ def shrink_grib(filename: str, variables: List[str]) -> None:
         # Open a work file for the result..
         with open(f'{filename}{".tmp"}', 'wb') as grb_out:
             # Open the GRIB file
-            with pygrib.open(filename) as grb:
+            with pygrib.open(filename) as grb:  # pylint: disable=no-member
                 for g in grb:
                     if g.name in req_vars or f'parameterNumber: {str(g.parameterNumber)}' in req_vars:
                         grb_out.write(g.tostring())
@@ -245,7 +247,5 @@ def shrink_grib(filename: str, variables: List[str]) -> None:
             shutil.move(f'{filename}.tmp', filename)
 
     # Create a set from the variable list...
-    except Exception as e:
-        raise RuntimeError(f'Unable to shrink provided GRIB file : {str(e)}')
-
-    return
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        raise RuntimeError(f'Unable to shrink provided GRIB file : {str(exc)}') from exc
