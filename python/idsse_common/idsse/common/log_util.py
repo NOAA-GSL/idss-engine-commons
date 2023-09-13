@@ -55,15 +55,18 @@ def get_corr_id_context_var_str():
     """Getter for correlation ID ContextVar name"""
     return corr_id_context_var.get()
 
+
 def get_corr_id_context_var_parts():
     """Split correlation ID ContextVar into its parts, such as [originator, key, issue_datetime]"""
     return corr_id_context_var.get().split(';')
+
 
 class AddCorrelationIdFilter(logging.Filter):
     """"Provides correlation id parameter for the logger"""
     def filter(self, record):
         record.corr_id = corr_id_context_var.get()
         return True
+
 
 class CorrIdFilter(logging.Filter):
     """"Provides correlation id parameter for the logger"""
@@ -73,6 +76,7 @@ class CorrIdFilter(logging.Filter):
 
     def filter(self, record):
         return not hasattr(record, 'correlation_id') or self._corr_id == record.corr_id
+
 
 class UTCFormatter(logging.Formatter):
     """"Provides a callable time format converter for the logging"""
@@ -110,31 +114,31 @@ def get_default_log_config(level: str, with_corr_id=True):
         filter_list = []
 
     return {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'formatters': {
-        'standard': {
-            '()': UTCFormatter,
-            'format': format_str
+        'version': 1,
+        'disable_existing_loggers': False,
+        'formatters': {
+            'standard': {
+                '()': UTCFormatter,
+                'format': format_str
+            },
         },
-    },
-    'filters': {
-        'corr_id': {
-            '()': AddCorrelationIdFilter,
+        'filters': {
+            'corr_id': {
+                '()': AddCorrelationIdFilter,
+            },
         },
-    },
-    'handlers': {
-        'default': {
-            'class': 'logging.StreamHandler',
-            'stream': 'ext://sys.stdout',
-            'formatter': 'standard',
-            'filters': filter_list,
+        'handlers': {
+            'default': {
+                'class': 'logging.StreamHandler',
+                'stream': 'ext://sys.stdout',
+                'formatter': 'standard',
+                'filters': filter_list,
+            },
         },
-    },
-    'loggers': {
-        '': {
-            'level': level,
-            'handlers': ['default', ],
-        },
+        'loggers': {
+            '': {
+                'level': level,
+                'handlers': ['default', ],
+            },
+        }
     }
-}
