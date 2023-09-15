@@ -178,6 +178,7 @@ def _round_away_from_zero(number: float) -> int:
     func = math.floor if number < 0 else math.ceil
     return func(number)
 
+
 def _round_toward_zero(number: float) -> int:
     func = math.ceil if number < 0 else math.floor
     return func(number)
@@ -236,15 +237,17 @@ def shrink_grib(filename: str, variables: List[str]) -> None:
     req_vars = set(variables)
     try:
         # Open a work file for the result..
-        with open(f'{filename}{".tmp"}', 'wb') as grb_out:
+        tmp_filename = f'{filename}.tmp'
+        with open(tmp_filename, 'wb') as grb_out:
             # Open the GRIB file
             with pygrib.open(filename) as grb:  # pylint: disable=no-member
-                for g in grb:
-                    if g.name in req_vars or f'parameterNumber: {str(g.parameterNumber)}' in req_vars:
-                        grb_out.write(g.tostring())
+                for grb_record in grb:
+                    if grb_record.name in req_vars or \
+                       f'parameterNumber: {str(grb_record.parameterNumber)}' in req_vars:
+                        grb_out.write(grb_record.tostring())
             # Close the out file and clobber the original
             grb_out.close()
-            shutil.move(f'{filename}.tmp', filename)
+            shutil.move(tmp_filename, filename)
 
     # Create a set from the variable list...
     except Exception as exc:  # pylint: disable=broad-exception-caught
