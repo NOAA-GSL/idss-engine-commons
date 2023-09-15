@@ -20,7 +20,7 @@ from threading import Thread
 
 import pika
 from pika.exchange_type import ExchangeType
-
+from idsse.common.rabbit_utils import Conn
 from idsse.common.log_util import get_default_log_config
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ class PublishConfirm(Thread):
     socket timeouts.
 
     """
-    def __init__(self, url, exchange='data', queue='_data'):
+    def __init__(self, conn: Conn, exchange='data', queue='_data'):
         """Setup the example publisher object, passing in the URL we will use
         to connect to RabbitMQ.
         :param str url: The URL connecting to RabbitMQ
@@ -53,7 +53,8 @@ class PublishConfirm(Thread):
         self._message_number = 0
 
         self._stopping = False
-        self._url = url
+        self._url = (f'amqp://{conn.username}:{conn.password}@{conn.host}'
+                     f':{str(conn.port)}/%2F?connection_attempts=3&heartbeat=3600')
         self._exchange = exchange
         self._queue = queue
 
