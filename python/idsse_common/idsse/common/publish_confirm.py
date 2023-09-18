@@ -20,7 +20,7 @@ from threading import Thread
 
 import pika
 from pika.exchange_type import ExchangeType
-from idsse.common.rabbitmq_utils import Conn
+from idsse.common.rabbitmq_utils import Conn, Exch, Queue
 from idsse.common.log_util import get_default_log_config
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ class PublishConfirm(Thread):
     socket timeouts.
 
     """
-    def __init__(self, conn: Conn, exchange='data', queue='_data'):
+    def __init__(self, conn: Conn, exchange: Exch, queue: Queue):
         """Setup the example publisher object, passing in the URL we will use
         to connect to RabbitMQ.
         :param str url: The RabbitMQ connection detail object
@@ -146,19 +146,19 @@ class PublishConfirm(Thread):
         if not self._stopping:
             self._connection.close()
 
-    def setup_exchange(self, exchange_name):
+    def setup_exchange(self, exchange: Exch):
         """Setup the exchange on RabbitMQ by invoking the Exchange.Declare RPC
         command. When it is complete, the on_exchange_declareok method will
         be invoked by pika.
         :param str|unicode exchange_name: The name of the exchange to declare
         """
-        logger.info('Declaring exchange %s', exchange_name)
+        logger.info('Declaring exchange %s', exchange.name)
         # Note: using functools.partial is not required, it is demonstrating
         # how arbitrary data can be passed to the callback when it is called
         cb = functools.partial(self.on_exchange_declareok,
-                               userdata=exchange_name)
-        self._channel.exchange_declare(exchange=exchange_name,
-                                       exchange_type=ExchangeType.topic,
+                               userdata=exchange.name)
+        self._channel.exchange_declare(exchange=exchange.name,
+                                       exchange_type=exchange.type,
                                        callback=cb)
 
     def on_exchange_declareok(self, _unused_frame, userdata):
@@ -170,14 +170,14 @@ class PublishConfirm(Thread):
         logger.info('Exchange declared: %s', userdata)
         self.setup_queue(self._queue)
 
-    def setup_queue(self, queue_name):
+    def setup_queue(self, queue: Queue):
         """Setup the queue on RabbitMQ by invoking the Queue.Declare RPC
         command. When it is complete, the on_queue_declareok method will
         be invoked by pika.
         :param str|unicode queue_name: The name of the queue to declare.
         """
-        logger.info('Declaring queue %s', queue_name)
-        self._channel.queue_declare(queue=queue_name,
+        logger.info('Declaring queue %s', queue.name)
+        self._channel.queue_declare(queue=queue.name,
                                     callback=self.on_queue_declareok)
 
     def on_queue_declareok(self, _unused_frame):
@@ -188,9 +188,9 @@ class PublishConfirm(Thread):
         be invoked by pika.
         :param pika.frame.Method _unused_frame: The Queue.DeclareOk frame
         """
-        logger.info('Binding %s to %s with %s', self._exchange, self._queue, '#')
-        self._channel.queue_bind(self._queue,
-                                 self._exchange,
+        logger.info('Binding %s to %s with %s', self._exchange.name, self._queue.name, '#')
+        self._channel.queue_bind(self._queue.name,
+                                 self._exchange.name,
                                  routing_key='#',  # Default wildcard key to consume everything
                                  callback=self.on_bindok)
 
@@ -275,7 +275,7 @@ class PublishConfirm(Thread):
             properties = pika.BasicProperties(content_type='application/json',
                                               content_encoding='utf-8')
 
-            self._channel.basic_publish(self._exchange, key,
+            self._channel.basic_publish(self._exchange.name, key,
                                         json.dumps(message, ensure_ascii=True),
                                         properties)
         except Exception as e:
@@ -329,11 +329,11 @@ class PublishConfirm(Thread):
 
 def main():
 
-    # Connect to localhost:5672 as guest with the password guest and virtual host "/" (%2F)
-    expub = PublishConfirm(
-        'amqp://guest:guest@localhost:5672/%2F?connection_attempts=3&heartbeat=3600',
-        'data.available', '_data.check'
-    )
+    # Setup a test instance...
+    conn = Conn('localhost', '/', '5672', 'guest', 'guest')
+    exch = Exch('pub.conf.test', ExchangeType.topic)
+    queue = Queue('pub.conf', '#', False, False, True)
+    expub = PublishConfirm(conn, exch, queue)
     # Start the object thread, give it a moment...
     expub.start()
     time.sleep(1)
@@ -342,7 +342,7 @@ def main():
         try:
             # print('Type JSON message, use Ctl-d to exit')
             msg = input()
-            key = 'new.data.test'
+            key = 'publish.confirm.test'
             expub.publish_message(msg, key)
         except Exception as e:
             # print('Exception in main : ', str(e))
