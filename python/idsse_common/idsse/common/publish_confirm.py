@@ -297,7 +297,7 @@ class PublishConfirm(Thread):
     def run(self):
         """Run the thread, i.e. get connection etc...
         """
-        logging.config.dictConfig(get_default_log_config('INFO', False))
+        logging.config.dictConfig(get_default_log_config('INFO'))
 
         self._connection = self.connect()
         self._connection.ioloop.start()
