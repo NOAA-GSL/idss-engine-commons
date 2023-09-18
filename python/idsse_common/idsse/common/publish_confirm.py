@@ -271,7 +271,7 @@ class PublishConfirm(Thread):
             '%i were acked and %i were nacked', self._message_number,
             len(self._deliveries), self._acked, self._nacked)
 
-    def publish_message(self, message, key='#'):
+    def publish_message(self, message, key=''):
         """If the class is not stopping, publish a message to RabbitMQ,
         appending a list of deliveries with the message number that was sent.
         This list will be used to check for delivery confirmations in the
