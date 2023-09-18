@@ -38,9 +38,9 @@ class PublishConfirm(Thread):
     def __init__(self, conn: Conn, exchange: Exch, queue: Queue):
         """Setup the example publisher object, passing in the URL we will use
         to connect to RabbitMQ.
-        :param str url: The RabbitMQ connection detail object
-        :param str exchange: The RabbitMQ exchange on which to publish
-        :param str queue: The RabbitMQ default queue
+        :param Conn conn: The RabbitMQ connection detail object
+        :param Exch exchange: The RabbitMQ exchange details
+        :param Queue queue: The RabbitMQ queue details
         """
         Thread.__init__(self, daemon=True)
 
@@ -347,7 +347,7 @@ def main():
             # print('Type JSON message, use Ctl-d to exit')
             msg = input()
             key = 'publish.confirm.test'
-            print(expub.publish_message(msg, key))
+            expub.publish_message(msg, key)
         except Exception as e:
             # print('Exception in main : ', str(e))
             logger.info('Exiting from test loop : ' + str(e))
