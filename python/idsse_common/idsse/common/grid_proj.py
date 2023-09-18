@@ -44,7 +44,10 @@ class GridProj:
                  dy: Optional[float] = None):
         # pylint: disable=too-many-arguments,unpacking-non-sequence
         self._trans = Transformer.from_crs(crs.geodetic_crs, crs)
-        self._x_offset, self._y_offset = self._trans.transform(longitude, latitude)
+        self._x_offset = 0
+        self._y_offset = 0
+        if latitude is not None:
+            self._x_offset, self._y_offset = self._trans.transform(longitude, latitude)
         self._w = width
         self._h = height
         self._dx = dx
@@ -68,6 +71,9 @@ class GridProj:
                 pair.split('=') for pair in grid_string.split(' ')
             )
         }
+        if 'lat_ll' not in grid_args:
+            grid_args['lat_ll'] = None
+            grid_args['lon_ll'] = None
         return GridProj(crs,
                         grid_args['lat_ll'], grid_args['lon_ll'],
                         int(grid_args['w']), int(grid_args['h']),

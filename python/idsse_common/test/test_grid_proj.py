@@ -18,13 +18,16 @@ from pytest import fixture, approx
 from idsse.common.grid_proj import GridProj, RoundingMethod
 from idsse.common.utils import round_half_away
 
+
 # example data
 EXAMPLE_PROJ_SPEC = '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +r=6371200'
+EXAMPLE_GRID_SPEC = '+dx=2539.703 +dy=2539.703 +w=2345 +h=1597 +lat_ll=19.229 +lon_ll=-126.2766'
+
 PROJ_SPEC_WITH_OFFSET = (
-    '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +x_0=3271.152832031251 '
-    '+y_0=263.7934687500001 +r=6371.2, +units=km'
+    '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 '
+    '+x_0=3275807.350733357 +y_0=260554.63043505285 +r=6371200'
 )
-EXAMPLE_GRID_SPEC = "+dx=2.539703 +dy=2.539703 +w=2345 +h=1597 +lat_ll=19.229 +lon_ll=-126.2766"
+GRID_SPEC_WITHOUT_LOWER_LEFT = '+dx=2539.703 +dy=2539.703 +w=2345 +h=1597'
 
 EXAMPLE_PIXELS = [
     (0, 0),
@@ -33,13 +36,13 @@ EXAMPLE_PIXELS = [
 ]
 EXAMPLE_PROJECTIONS = [
     (-126.2766, 19.229),
-    (-126.27660549554, 19.229022224607),
-    (-126.23803580508, 19.272773488997)
+    (-126.28209649530142, 19.251224896946418),
+    (-71.12860760432866, 54.09108720984939)
 ]
 EXAMPLE_GEOS = [
-    (-3275807.350733, -260554.63043505),
-    (-3275807.350733, -260552.09073205),
-    (-3270727.944733, -256745.07593505)
+    (-3275807.350733357, -260554.63043505285),
+    (-3275807.3507333556, -258014.92743505232),
+    (1803598.6492666428, 3548999.8695649463)
 ]
 
 
@@ -61,7 +64,7 @@ def test_from_proj_grid_spec(grid_proj: GridProj):
     assert (grid_proj._x_offset, grid_proj._y_offset) == approx_tuple(EXAMPLE_GEOS[0])
     assert grid_proj._h == 1597
     assert grid_proj._w == 2345
-    assert grid_proj._dx == approx(2.539703)
+    assert grid_proj._dx == approx(2539.703)
     assert grid_proj._dy == grid_proj._dx
 
     t = grid_proj._trans
@@ -70,19 +73,21 @@ def test_from_proj_grid_spec(grid_proj: GridProj):
 
 
 def test_from_proj_grid_spec_with_offset():
-    proj_with_offset = GridProj.from_proj_grid_spec(PROJ_SPEC_WITH_OFFSET, EXAMPLE_GRID_SPEC)
-    assert proj_with_offset._x_offset == approx(-3272536.1979)
-    assert proj_with_offset._y_offset == approx(-260290.8369)
+    proj_with_offset = GridProj.from_proj_grid_spec(PROJ_SPEC_WITH_OFFSET,
+                                                    GRID_SPEC_WITHOUT_LOWER_LEFT)
+
+    proj_xy = proj_with_offset.map_pixel_to_proj(*EXAMPLE_PIXELS[0])
+    assert proj_xy == approx_tuple(EXAMPLE_PROJECTIONS[0])
 
 
 # transformation methods testing
 def test_map_proj_to_pixel_round_half_away(grid_proj: GridProj):
     for index, proj in enumerate(EXAMPLE_PROJECTIONS):
-        pixel_x, pixel_y = grid_proj.map_proj_to_pixel(
+        pixel_xy = grid_proj.map_proj_to_pixel(
             *proj,
             rounding=RoundingMethod.ROUND
         )
-        assert (round_half_away(pixel_x), round_half_away(pixel_y)) == EXAMPLE_PIXELS[index]
+        assert pixel_xy == EXAMPLE_PIXELS[index]
 
 
 def test_map_proj_to_pixel_round_floor(grid_proj: GridProj):
@@ -98,8 +103,8 @@ def test_map_proj_to_pixel_round_floor(grid_proj: GridProj):
 
 def test_map_proj_to_geo(grid_proj: GridProj):
     for index, proj in enumerate(EXAMPLE_PROJECTIONS):
-        geo_x, geo_y = grid_proj.map_proj_to_geo(*proj)
-        assert (geo_x, geo_y) == approx_tuple(EXAMPLE_GEOS[index])
+        geo_xy = grid_proj.map_proj_to_geo(*proj)
+        assert geo_xy == approx_tuple(EXAMPLE_GEOS[index])
 
 
 def test_map_pixel_to_geo(grid_proj: GridProj):
@@ -129,8 +134,10 @@ def test_geo_to_pixel_no_rounding(grid_proj: GridProj):
 
 def test_geo_to_pixel_floor(grid_proj: GridProj):
     for index, geo in enumerate(EXAMPLE_GEOS):
-        i, j = grid_proj.map_geo_to_pixel(*geo, RoundingMethod.FLOOR)
-        assert (math.floor(i), math.floor(j)) == EXAMPLE_PIXELS[index]
+        floor_ij = grid_proj.map_geo_to_pixel(*geo, RoundingMethod.FLOOR)
+        i, j = grid_proj.map_geo_to_pixel(*geo)
+        assert (math.floor(i), math.floor(j)) == floor_ij
+        assert (round_half_away(i), round_half_away(j)) == EXAMPLE_PIXELS[index]
 
 
 def test_geo_to_pixel_round(grid_proj: GridProj):
