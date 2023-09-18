@@ -38,7 +38,7 @@ class PublishConfirm(Thread):
     def __init__(self, conn: Conn, exchange='data', queue='_data'):
         """Setup the example publisher object, passing in the URL we will use
         to connect to RabbitMQ.
-        :param str url: The URL connecting to RabbitMQ
+        :param str url: The RabbitMQ connection detail object
         :param str exchange: The RabbitMQ exchange on which to publish
         :param str queue: The RabbitMQ default queue
         """
