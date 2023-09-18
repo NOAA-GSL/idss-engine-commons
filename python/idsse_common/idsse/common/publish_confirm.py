@@ -21,7 +21,7 @@ from threading import Thread
 import pika
 from pika.exchange_type import ExchangeType
 from idsse.common.rabbitmq_utils import Conn, Exch, Queue
-from idsse.common.log_util import get_default_log_config
+from idsse.common.log_util import get_default_log_config, set_corr_id_context_var
 
 logger = logging.getLogger(__name__)
 
@@ -261,33 +261,36 @@ class PublishConfirm(Thread):
             '%i were acked and %i were nacked', self._message_number,
             len(self._deliveries), self._acked, self._nacked)
 
-    def publish_message(self, message, key=None):
+    def publish_message(self, message, key=None) -> bool:
         """If the class is not stopping, publish a message to RabbitMQ,
         appending a list of deliveries with the message number that was sent.
         This list will be used to check for delivery confirmations in the
         on_delivery_confirmations method.
         """
-        if self._channel is None or not self._channel.is_open:
-            return
+        success = False
+        if self._channel and self._channel.is_open:
 
-        # We expect a JSON message format, do a check here...
-        try:
-            properties = pika.BasicProperties(content_type='application/json',
-                                              content_encoding='utf-8')
+            # We expect a JSON message format, do a check here...
+            try:
+                properties = pika.BasicProperties(content_type='application/json',
+                                                  content_encoding='utf-8')
 
-            self._channel.basic_publish(self._exchange.name, key,
-                                        json.dumps(message, ensure_ascii=True),
-                                        properties)
-        except Exception as e:
-            logger.error('Publish message problem : %s', str(e))
-        self._message_number += 1
-        self._deliveries[self._message_number] = message
-        logger.debug('Published message # %i', self._message_number)
+                self._channel.basic_publish(self._exchange.name, key,
+                                            json.dumps(message, ensure_ascii=True),
+                                            properties)
+                self._message_number += 1
+                self._deliveries[self._message_number] = message
+                logger.debug('Published message # %i', self._message_number)
+                success = True
+
+            except Exception as e:
+                logger.error('Publish message problem : %s', str(e))
+        return success
 
     def run(self):
         """Run the thread, i.e. get connection etc...
         """
-        logging.config.dictConfig(get_default_log_config('INFO'))
+        set_corr_id_context_var('PublishConfirm')
 
         self._connection = self.connect()
         self._connection.ioloop.start()
@@ -328,6 +331,7 @@ class PublishConfirm(Thread):
 
 
 def main():
+    logging.config.dictConfig(get_default_log_config('INFO'))
 
     # Setup a test instance...
     conn = Conn('localhost', '/', '5672', 'guest', 'guest')
@@ -343,7 +347,7 @@ def main():
             # print('Type JSON message, use Ctl-d to exit')
             msg = input()
             key = 'publish.confirm.test'
-            expub.publish_message(msg, key)
+            print(expub.publish_message(msg, key))
         except Exception as e:
             # print('Exception in main : ', str(e))
             logger.info('Exiting from test loop : ' + str(e))
