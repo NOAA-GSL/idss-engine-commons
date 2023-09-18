@@ -17,11 +17,14 @@ import logging.config
 import json
 import time
 from threading import Thread
+from typing import Optional
 
 import pika
 from pika.exchange_type import ExchangeType
+from pika.channel import Channel
 
 from idsse.common.log_util import get_default_log_config
+from idsse.common.rabbitmq_utils import Queue
 
 logger = logging.getLogger(__name__)
 
@@ -33,19 +36,19 @@ class PublishConfirm(Thread):
     look at the output, as there are limited reasons why the connection may
     be closed, which usually are tied to permission related issues or
     socket timeouts.
-
     """
-    def __init__(self, url, exchange='data', queue='_data'):
+    def __init__(self, url, exchange='data', queue='_data', queue_params: Optional[Queue] = None):
         """Setup the example publisher object, passing in the URL we will use
         to connect to RabbitMQ.
         :param str url: The URL connecting to RabbitMQ
         :param str exchange: The RabbitMQ exchange on which to publish
         :param str queue: The RabbitMQ default queue
+        :param Queue queue_params: Optional parameters to control how RabbitMQ queue is declared
         """
         Thread.__init__(self, daemon=True)
 
         self._connection = None
-        self._channel = None
+        self._channel: Optional[Channel] = None
 
         self._deliveries = {}
         self._acked = 0
@@ -55,7 +58,8 @@ class PublishConfirm(Thread):
         self._stopping = False
         self._url = url
         self._exchange = exchange
-        self._queue = queue
+        self._queue_params = queue_params
+        self._queue_name = self._queue_params.name if self._queue_params else queue
 
     def connect(self):
         """This method connects to RabbitMQ, returning the connection handle.
@@ -113,7 +117,7 @@ class PublishConfirm(Thread):
         logger.info('Creating a new channel')
         self._connection.channel(on_open_callback=self.on_channel_open)
 
-    def on_channel_open(self, channel):
+    def on_channel_open(self, channel: Channel):
         """This method is invoked by pika when the channel has been opened.
         The channel object is passed in so we can make use of it.
         Since the channel is now open, we'll declare the exchange to use.
@@ -167,7 +171,7 @@ class PublishConfirm(Thread):
         :param str|unicode userdata: Extra user data (exchange name)
         """
         logger.info('Exchange declared: %s', userdata)
-        self.setup_queue(self._queue)
+        self.setup_queue(self._queue_name)
 
     def setup_queue(self, queue_name):
         """Setup the queue on RabbitMQ by invoking the Queue.Declare RPC
@@ -176,7 +180,14 @@ class PublishConfirm(Thread):
         :param str|unicode queue_name: The name of the queue to declare.
         """
         logger.info('Declaring queue %s', queue_name)
+        durable = self._queue_params.durable if self._queue_params else False
+        exclusive = self._queue_params.exclusive if self._queue_params else False
+        auto_delete = self._queue_params.auto_delete if self._queue_params else False
+
         self._channel.queue_declare(queue=queue_name,
+                                    durable=durable,
+                                    exclusive=exclusive,
+                                    auto_delete=auto_delete,
                                     callback=self.on_queue_declareok)
 
     def on_queue_declareok(self, _unused_frame):
@@ -187,8 +198,8 @@ class PublishConfirm(Thread):
         be invoked by pika.
         :param pika.frame.Method _unused_frame: The Queue.DeclareOk frame
         """
-        logger.info('Binding %s to %s with %s', self._exchange, self._queue, '#')
-        self._channel.queue_bind(self._queue,
+        logger.info('Binding %s to %s with %s', self._exchange, self._queue_name, '#')
+        self._channel.queue_bind(self._queue_name,
                                  self._exchange,
                                  routing_key='#',  # Default wildcard key to consume everything
                                  callback=self.on_bindok)
@@ -260,7 +271,7 @@ class PublishConfirm(Thread):
             '%i were acked and %i were nacked', self._message_number,
             len(self._deliveries), self._acked, self._nacked)
 
-    def publish_message(self, message, key=None):
+    def publish_message(self, message, key='#'):
         """If the class is not stopping, publish a message to RabbitMQ,
         appending a list of deliveries with the message number that was sent.
         This list will be used to check for delivery confirmations in the
@@ -286,7 +297,7 @@ class PublishConfirm(Thread):
     def run(self):
         """Run the thread, i.e. get connection etc...
         """
-        logging.config.dictConfig(get_default_log_config('INFO'))
+        logging.config.dictConfig(get_default_log_config('INFO', False))
 
         self._connection = self.connect()
         self._connection.ioloop.start()
