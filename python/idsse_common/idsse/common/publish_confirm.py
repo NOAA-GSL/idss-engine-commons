@@ -42,7 +42,7 @@ class PublishConfirm(Thread):
         to connect to RabbitMQ.
         :param str url: The URL connecting to RabbitMQ
         :param str exchange: The RabbitMQ exchange on which to publish
-        :param str queue: The RabbitMQ default queue
+        :param str queue: The RabbitMQ default queue name
         :param Queue queue_params: Optional parameters to control how RabbitMQ queue is declared
         """
         Thread.__init__(self, daemon=True)
