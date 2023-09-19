@@ -77,12 +77,12 @@ Name                                                                            
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/json_message.py         22     22     0%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/log_util.py             40     40     0%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/path_builder.py        157    152     3%
-/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/publish_confirm.py     141    141     0%
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/publish_confirm.py     148    148     0%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/rabbitmq_utils.py       16     16     0%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/utils.py               108    100     7%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/validate_schema.py      42     35    17%
 -----------------------------------------------------------------------------------------------------------------------------------
-TOTAL                                                                                                             726    675     7%
+TOTAL                                                                                                             733    682     7%
 
 =========================== short test summary info ============================
 ERROR test_aws_utils.py
@@ -90,4 +90,4 @@ ERROR test_grid_proj.py
 ERROR test_path_builder.py
 ERROR test_utils.py
 !!!!!!!!!!!!!!!!!!! Interrupted: 4 errors during collection !!!!!!!!!!!!!!!!!!!!
-======================== 4 warnings, 4 errors in 0.70s =========================
+======================== 4 warnings, 4 errors in 0.64s =========================
