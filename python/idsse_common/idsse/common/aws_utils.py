@@ -133,7 +133,10 @@ class AwsUtils():
             datetimes = datetime_gen(issue_end, timedelta(hours=-1), issue_start, num_issues)
         else:
             datetimes = datetime_gen(issue_end, timedelta(hours=-1))
+        print('issue_start:', issue_start)
+        print('issue_end:', issue_end)
         for issue_dt in datetimes:
+            print('\t', issue_dt)
             if issue_start and issue_dt < issue_start:
                 break
             try:
