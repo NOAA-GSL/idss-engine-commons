@@ -18,6 +18,8 @@ from pytest import fixture, approx
 from idsse.common.grid_proj import GridProj, RoundingMethod
 from idsse.common.utils import round_half_away
 
+# cspell:ignore pyproj
+
 
 # example data
 EXAMPLE_PROJ_SPEC = '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +r=6371200'
@@ -154,7 +156,7 @@ def test_geo_to_pixel_round_str(grid_proj: GridProj):
     assert (i, j) == EXAMPLE_PIXELS[1]
 
 
-def test_compound_tranformations_stay_consistent(grid_proj: GridProj):
+def test_compound_transformations_stay_consistent(grid_proj: GridProj):
     # start with pixel, convert to projection
     initial_pixel = (EXAMPLE_PIXELS[2][0], EXAMPLE_PIXELS[2][1])
     proj_x, proj_y = grid_proj.map_pixel_to_proj(*initial_pixel)
