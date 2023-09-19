@@ -178,6 +178,9 @@ class PublishConfirm(Thread):
         """
         logger.info('Declaring queue %s', queue.name)
         self._channel.queue_declare(queue=queue.name,
+                                    durable=queue.durable,
+                                    exclusive=queue.exclusive,
+                                    auto_delete=queue.auto_delete,
                                     callback=self.on_queue_declareok)
 
     def on_queue_declareok(self, _unused_frame):
