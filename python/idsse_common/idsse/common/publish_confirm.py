@@ -17,9 +17,12 @@ import logging.config
 import json
 import time
 from threading import Thread
+from typing import Optional
 
 import pika
+from pika import SelectConnection
 from pika.exchange_type import ExchangeType
+from pika.channel import Channel
 from idsse.common.rabbitmq_utils import Conn, Exch, Queue
 from idsse.common.log_util import get_default_log_config, set_corr_id_context_var
 
@@ -42,10 +45,10 @@ class PublishConfirm(Thread):
         :param Exch exchange: The RabbitMQ exchange details
         :param Queue queue: The RabbitMQ queue details
         """
-        Thread.__init__(self, daemon=True)
+        super().__init__(daemon=True)
 
-        self._connection = None
-        self._channel = None
+        self._connection: Optional[SelectConnection] = None
+        self._channel: Optional[Channel] = None
 
         self._deliveries = {}
         self._acked = 0
@@ -77,7 +80,7 @@ class PublishConfirm(Thread):
         case we need it, but in this case, we'll just mark it unused.
         :param pika.SelectConnection _unused_connection: The connection
         """
-        logger.info('Connection opened')
+        logger.debug('Connection opened')
         self.open_channel()
 
     def on_connection_open_error(self, _unused_connection, err):
@@ -111,16 +114,16 @@ class PublishConfirm(Thread):
         by sending the Channel.OpenOK RPC reply, the on_channel_open method
         will be invoked.
         """
-        logger.info('Creating a new channel')
+        logger.debug('Creating a new channel')
         self._connection.channel(on_open_callback=self.on_channel_open)
 
-    def on_channel_open(self, channel):
+    def on_channel_open(self, channel: Channel):
         """This method is invoked by pika when the channel has been opened.
         The channel object is passed in so we can make use of it.
         Since the channel is now open, we'll declare the exchange to use.
         :param pika.channel.Channel channel: The channel object
         """
-        logger.info('Channel opened')
+        logger.debug('Channel opened')
         self._channel = channel
         self.add_on_channel_close_callback()
         self.setup_exchange(self._exchange)
@@ -129,7 +132,7 @@ class PublishConfirm(Thread):
         """This method tells pika to call the on_channel_closed method if
         RabbitMQ unexpectedly closes the channel.
         """
-        logger.info('Adding channel close callback')
+        logger.debug('Adding channel close callback')
         self._channel.add_on_close_callback(self.on_channel_closed)
 
     def on_channel_closed(self, channel, reason):
@@ -152,7 +155,7 @@ class PublishConfirm(Thread):
         be invoked by pika.
         :param str|unicode exchange_name: The name of the exchange to declare
         """
-        logger.info('Declaring exchange %s', exchange.name)
+        logger.debug('Declaring exchange %s', exchange.name)
         # Note: using functools.partial is not required, it is demonstrating
         # how arbitrary data can be passed to the callback when it is called
         cb = functools.partial(self.on_exchange_declareok,
@@ -167,7 +170,7 @@ class PublishConfirm(Thread):
         :param pika.Frame.Method _unused_frame: Exchange.DeclareOk response frame
         :param str|unicode userdata: Extra user data (exchange name)
         """
-        logger.info('Exchange declared: %s', userdata)
+        logger.debug('Exchange declared: %s', userdata)
         self.setup_queue(self._queue)
 
     def setup_queue(self, queue: Queue):
@@ -176,7 +179,7 @@ class PublishConfirm(Thread):
         be invoked by pika.
         :param str|unicode queue_name: The name of the queue to declare.
         """
-        logger.info('Declaring queue %s', queue.name)
+        logger.debug('Declaring queue %s', queue.name)
         self._channel.queue_declare(queue=queue.name,
                                     durable=queue.durable,
                                     exclusive=queue.exclusive,
@@ -191,7 +194,7 @@ class PublishConfirm(Thread):
         be invoked by pika.
         :param pika.frame.Method _unused_frame: The Queue.DeclareOk frame
         """
-        logger.info('Binding %s to %s with %s', self._exchange.name, self._queue.name, '#')
+        logger.debug('Binding %s to %s with %s', self._exchange.name, self._queue.name, '#')
         self._channel.queue_bind(self._queue.name,
                                  self._exchange.name,
                                  routing_key='#',  # Default wildcard key to consume everything
@@ -201,14 +204,14 @@ class PublishConfirm(Thread):
         """This method is invoked by pika when it receives the Queue.BindOk
         response from RabbitMQ. Since we know we're now setup and bound, it's
         time to start publishing."""
-        logger.info('Queue bound')
+        logger.debug('Queue bound')
         self.start_publishing()
 
     def start_publishing(self):
         """This method will enable delivery confirmations and schedule the
         first message to be sent to RabbitMQ
         """
-        logger.info('Issuing consumer related RPC commands')
+        logger.debug('Issuing consumer related RPC commands')
         self.enable_delivery_confirmations()
         # self.schedule_next_message()
 
@@ -221,8 +224,9 @@ class PublishConfirm(Thread):
         or Basic.Nack method from RabbitMQ that will indicate which messages it
         is confirming or rejecting.
         """
-        logger.info('Issuing Confirm.Select RPC command')
-        self._channel.confirm_delivery(self.on_delivery_confirmation)
+        logger.debug('Issuing Confirm.Select RPC command')
+        if self._channel is not None:
+            self._channel.confirm_delivery(self.on_delivery_confirmation)
 
     def on_delivery_confirmation(self, method_frame):
         """Invoked by pika when RabbitMQ responds to a Basic.Publish RPC
@@ -323,13 +327,13 @@ class PublishConfirm(Thread):
         the Channel.Close RPC command.
         """
         if self._channel is not None:
-            logger.info('Closing the channel')
+            logger.debug('Closing the channel')
             self._channel.close()
 
     def close_connection(self):
         """This method closes the connection to RabbitMQ."""
         if self._connection is not None:
-            logger.info('Closing connection')
+            logger.debug('Closing connection')
             self._connection.close()
 
 
@@ -339,7 +343,7 @@ def main():
     # Setup a test instance...
     conn = Conn('localhost', '/', '5672', 'guest', 'guest')
     exch = Exch('pub.conf.test', ExchangeType.topic)
-    queue = Queue('pub.conf', '#', False, False, True)
+    queue = Queue('pub.conf', '#', durable=False, exclusive=False, auto_delete=True)
     expub = PublishConfirm(conn, exch, queue)
     # Start the object thread, give it a moment...
     expub.start()
