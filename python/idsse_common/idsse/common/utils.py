@@ -166,12 +166,12 @@ def datetime_gen(dt_: datetime,
         datetime: Next date/time in sequence
     """
     if end_dt:
-        dt_cnt = int((end_dt-dt_)/time_delta)+1
+        dt_cnt = int((dt_-end_dt)/time_delta)+1
         max_num = min(max_num, dt_cnt) if max_num else dt_cnt
 
     for i in range(0, max_num):
         logger.debug('dt generator %d/%d', i, max_num)
-        yield dt_ + time_delta * i
+        yield dt_ - time_delta * i
 
 
 def _round_away_from_zero(number: float) -> int:

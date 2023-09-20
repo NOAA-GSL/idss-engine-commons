@@ -108,7 +108,11 @@ class AwsUtils():
         dir_path = os.path.dirname(file_path)
         filenames = self.aws_ls(file_path, prepend_path=False)
         filename = self.path_builder.build_filename(issue=issue, valid=valid, lead=lead)
+        print('dir_path:', dir_path)
+        print('filenames:', filenames)
+        print('filename:', filename)
         for fname in filenames:
+            print('fname:', fname)
             # Support wildcard matches - used for '?' as a single wildcard character in
             # issue/valid time specs.
             if fnmatch.fnmatch(os.path.basename(fname), filename):
@@ -118,7 +122,8 @@ class AwsUtils():
     def get_issues(self,
                    num_issues: int = 1,
                    issue_start: Optional[datetime] = None,
-                   issue_end: datetime = datetime.utcnow()
+                   issue_end: datetime = datetime.utcnow(),
+                   time_delta: timedelta = timedelta(hours=1)
                    ) -> Sequence[datetime]:
         """Determine the available issue date/times
 
@@ -130,16 +135,20 @@ class AwsUtils():
         Returns:
             Sequence[datetime]: A sequence of issue date/times
         """
+        print(f'get_issues({issue_start}, {issue_end})')
         issues_set: Set[datetime] = set()
         if issue_start:
-            datetimes = datetime_gen(issue_end, timedelta(hours=-1), issue_start, num_issues)
+            datetimes = datetime_gen(issue_end, time_delta, issue_start, num_issues)
         else:
-            datetimes = datetime_gen(issue_end, timedelta(hours=-1))
+            datetimes = datetime_gen(issue_end, time_delta)
         for issue_dt in datetimes:
+            print('\t', issue_dt)
             if issue_start and issue_dt < issue_start:
                 break
             try:
                 dir_path = self.path_builder.build_dir(issue=issue_dt)
+                print('dir_path:', dir_path)
+                # print('ls:', self.aws_ls(dir_path))
                 issues = {self.path_builder.get_issue(file_path)
                           for file_path in self.aws_ls(dir_path)
                           if file_path.endswith(self.path_builder.file_ext)}
@@ -168,6 +177,9 @@ class AwsUtils():
                                             object's location) and the object's location (path).
                                             Empty Sequence if no valids found for given time range.
         """
+        print('issue:', issue)
+        print('valid_start:', valid_start)
+        print('valid_end:', valid_end)
         if valid_start and valid_start == valid_end:
             valids_and_filenames = self.check_for(issue, valid_start)
             return [valids_and_filenames] if valids_and_filenames is not None else []

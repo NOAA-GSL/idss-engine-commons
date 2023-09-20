@@ -353,7 +353,7 @@ class PathBuilder:
                 key = key[var_size:]
                 # Check for additional characters following the end of the format element to reach next
                 # offset position for value...
-                value = value[var_size  + len(arg.partition('}')[2]):]
+                value = value[var_size + len(arg.partition('}')[2]):]
 
         # Update to more generically handle time formats...
         dirs = os.path.normpath(format_str).split(os.sep)
