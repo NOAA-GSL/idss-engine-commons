@@ -16,8 +16,8 @@ from pytest import fixture, MonkeyPatch
 
 from idsse.common.aws_utils import AwsUtils
 
-# pylint: disable=missing-function-docstring,redefined-outer-name
-# pylint: disable=invalid-name
+# pylint: disable=missing-function-docstring,redefined-outer-name,pointless-statement
+# pylint: disable=invalid-name,unused-argument
 
 EXAMPLE_ISSUE = datetime(1970, 10, 3, 12)
 EXAMPLE_VALID = datetime(1970, 10, 3, 14)
@@ -31,7 +31,8 @@ EXAMPLE_FILES = ['blend.t12z.core.f002.co.grib2',
 @fixture
 def aws_utils() -> AwsUtils:
     EXAMPLE_BASE_DIR = 's3://noaa-nbm-grib2-pds/'
-    EXAMPLE_SUB_DIR = 'blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/{issue.hour:02d}/core/'
+    EXAMPLE_SUB_DIR = ('blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/'
+                       '{issue.hour:02d}/core/')
     EXAMPLE_FILE_BASE = 'blend.t{issue.hour:02d}z.core.f{lead.hour:03d}'
     EXAMPLE_FILE_EXT = '.co.grib2'
 
@@ -131,7 +132,7 @@ def test_check_for_does_not_find_valid(aws_utils: AwsUtils):
     assert result is None
 
 
-def test_get_issues(aws_utils: AwsUtils):
+def test_get_issues__(aws_utils: AwsUtils, mock_exec_cmd):
     result = aws_utils.get_issues(
         issue_start=EXAMPLE_ISSUE, issue_end=EXAMPLE_VALID, num_issues=2)
 
@@ -140,7 +141,7 @@ def test_get_issues(aws_utils: AwsUtils):
     assert result[1] == EXAMPLE_VALID - timedelta(hours=2)
 
 
-def test_get_issues_with_same_start_stop(aws_utils: AwsUtils):
+def test_get_issues_with_same_start_stop(aws_utils: AwsUtils, mock_exec_cmd):
     result = aws_utils.get_issues(issue_start=EXAMPLE_ISSUE, issue_end=EXAMPLE_ISSUE)
 
     assert len(result) == 1

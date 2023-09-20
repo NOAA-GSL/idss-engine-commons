@@ -135,12 +135,16 @@ class AwsUtils():
             datetimes = datetime_gen(issue_end, timedelta(hours=-1))
         print('issue_start:', issue_start)
         print('issue_end:', issue_end)
+        print('num_issues:', num_issues)
         for issue_dt in datetimes:
             print('\t', issue_dt)
             if issue_start and issue_dt < issue_start:
+                print('\tbreak')
                 break
             try:
                 dir_path = self.path_builder.build_dir(issue=issue_dt)
+                print('\tdir_path:', dir_path)
+                print(self.aws_ls(dir_path))
                 issue_set = {self.path_builder.get_issue(file_path)
                              for file_path in self.aws_ls(dir_path)
                              if file_path.endswith(self.path_builder.file_ext)}
