@@ -144,7 +144,7 @@ def test_check_for_succeeds(aws_utils: AwsUtils, mock_exec_cmd):
     assert result == (EXAMPLE_VALID, f'{EXAMPLE_DIR}{EXAMPLE_FILES[0]}')
 
 
-def test_check_for_does_not_find_valid(aws_utils: AwsUtils):
+def test_check_for_does_not_find_valid(aws_utils: AwsUtils, mock_exec_cmd):
     unexpected_valid = datetime(1970, 10, 3, 23)
     result = aws_utils.check_for(EXAMPLE_ISSUE, unexpected_valid)
     assert result is None
@@ -164,10 +164,15 @@ def test_get_issues_with_same_start_stop(aws_utils: AwsUtils, mock_exec_cmd):
     assert result[0] == EXAMPLE_ISSUE
 
 
-def test_get_issues_latest_issue_from_today_if_no_args_passed(aws_utils: AwsUtils):
+def test_get_issues_latest_issue_from_today_if_no_args_passed(aws_utils: AwsUtils,
+                                                              mock_exec_cmd):
+
     result = aws_utils.get_issues()
+    # with current mocks returned issue (latest issue) will always be "now" with
+    # truncated minute, second, and microsecond
     assert len(result) == 1
-    assert result[0] <= datetime.utcnow()
+    assert result[0] == datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+    assert False
 
 
 def test_get_valids_all(aws_utils: AwsUtils, mock_exec_cmd):

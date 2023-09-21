@@ -9,12 +9,13 @@
 #
 # --------------------------------------------------------------------------------
 
+import shutil
 from copy import deepcopy
 from datetime import datetime, timedelta
-from os import path, remove, stat
 from math import pi
+from os import path, remove, stat
+
 import pytest
-import shutil
 
 from idsse.common.utils import TimeDelta, Map
 from idsse.common.utils import (datetime_gen, hash_code, exec_cmd, to_compact,
@@ -175,6 +176,7 @@ def test_shrink_grib():
     remove(gribfile)  # Cleanup...
 
     return
+
 
 @pytest.mark.parametrize('number, expected', [(2.50000, 3), (-14.5000, -15), (3.49999, 3)])
 def test_round_half_away_int(number: float, expected: int):
