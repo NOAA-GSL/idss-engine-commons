@@ -172,7 +172,7 @@ def datetime_gen(dt_start: datetime,
 
         if (dt_start > dt_end and time_delta_pos) or \
            (dt_start < dt_end and not time_delta_pos):
-            time_delta = timedelta(seconds=(-1 * time_delta.total_seconds()))
+            time_delta = timedelta(seconds=(-1.0 * time_delta.total_seconds()))
 
         dt_cnt = int((dt_end-dt_start)/time_delta)+1
         max_num = min(max_num, dt_cnt) if max_num else dt_cnt

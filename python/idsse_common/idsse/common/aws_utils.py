@@ -131,15 +131,23 @@ class AwsUtils():
             num_issues (int): Maximum number of issue to return. Defaults to 1.
             issue_start (datetime, optional): The oldest date/time to look for. Defaults to None.
             issue_end (datetime): The newest date/time to look for. Defaults to now (UTC).
+            time_delta (timedelta): The time step size. Defaults to 1 hour.
 
         Returns:
             Sequence[datetime]: A sequence of issue date/times
         """
+        zero_time_delta = timedelta(seconds=0)
+        if time_delta == zero_time_delta:
+            raise ValueError('Time delta must be non zero')
+
         print(f'get_issues({issue_start}, {issue_end})')
         issues_set: Set[datetime] = set()
         if issue_start:
             datetimes = datetime_gen(issue_end, time_delta, issue_start, num_issues)
         else:
+            # check if time delta is positive, if so make negative
+            if time_delta > zero_time_delta:
+                time_delta = timedelta(seconds=(-1.0 * time_delta.total_seconds()))
             datetimes = datetime_gen(issue_end, time_delta)
         for issue_dt in datetimes:
             print('\t', issue_dt)

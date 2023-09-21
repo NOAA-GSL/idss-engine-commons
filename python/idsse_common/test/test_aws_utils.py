@@ -167,7 +167,7 @@ def test_get_issues_with_same_start_stop(aws_utils: AwsUtils, mock_exec_cmd):
 def test_get_issues_latest_issue_from_today_if_no_args_passed(aws_utils: AwsUtils):
     result = aws_utils.get_issues()
     assert len(result) == 1
-    assert result[0].date() == datetime.utcnow().date()
+    assert result[0] <= datetime.utcnow()
 
 
 def test_get_valids_all(aws_utils: AwsUtils, mock_exec_cmd):
