@@ -92,7 +92,7 @@ class PublishConfirm(Thread):
         :param pika.SelectConnection _unused_connection: The connection
         """
         logger.debug('Connection opened')
-        self.open_channel()
+        self._open_channel()
 
     def _on_connection_open_error(self, _unused_connection, err):
         """This method is called by pika if the connection to RabbitMQ
@@ -119,7 +119,7 @@ class PublishConfirm(Thread):
                            reason)
             self._connection.ioloop.call_later(5, self._connection.ioloop.stop)
 
-    def open_channel(self):
+    def _open_channel(self):
         """This method will open a new channel with RabbitMQ by issuing the
         Channel.Open RPC command. When RabbitMQ confirms the channel is open
         by sending the Channel.OpenOK RPC reply, the on_channel_open method
