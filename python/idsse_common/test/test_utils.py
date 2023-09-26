@@ -9,12 +9,13 @@
 #
 # --------------------------------------------------------------------------------
 
+import shutil
 from copy import deepcopy
 from datetime import datetime, timedelta
-from os import path, remove, stat
 from math import pi
+from os import path, remove, stat
+
 import pytest
-import shutil
 
 from idsse.common.utils import TimeDelta, Map
 from idsse.common.utils import (datetime_gen, hash_code, exec_cmd, to_compact,
@@ -109,11 +110,11 @@ def test_dict_copy_with():
 
 
 def test_datetime_gen_forward():
-    dt_ = datetime(2021, 1, 2, 3)
+    dt_start = datetime(2021, 1, 2, 3)
     time_delta = timedelta(hours=1)
     max_num = 5
 
-    dts_found = [dt_ for dt_ in datetime_gen(dt_, time_delta, max_num=max_num)]
+    dts_found = [dt_ for dt_ in datetime_gen(dt_start, time_delta, max_num=max_num)]
     assert dts_found == [datetime(2021, 1, 2, 3, 0),
                          datetime(2021, 1, 2, 4, 0),
                          datetime(2021, 1, 2, 5, 0),
@@ -122,11 +123,11 @@ def test_datetime_gen_forward():
 
 
 def test_datetime_gen_backwards():
-    dt_ = datetime(2021, 1, 2, 3)
+    dt_start = datetime(2021, 1, 2, 3)
     time_delta = timedelta(days=-1)
     max_num = 4
 
-    dts_found = [dt_ for dt_ in datetime_gen(dt_, time_delta, max_num=max_num)]
+    dts_found = [dt_ for dt_ in datetime_gen(dt_start, time_delta, max_num=max_num)]
     assert dts_found == [datetime(2021, 1, 2, 3, 0),
                          datetime(2021, 1, 1, 3, 0),
                          datetime(2020, 12, 31, 3, 0),
@@ -134,14 +135,26 @@ def test_datetime_gen_backwards():
 
 
 def test_datetime_gen_bound():
-    dt_ = datetime(2021, 1, 2, 3)
+    dt_start = datetime(2021, 1, 2, 3)
     time_delta = timedelta(weeks=2)
-    end_dt = datetime(2021, 1, 30, 3)
+    dt_end = datetime(2021, 1, 30, 3)
 
-    dts_found = [dt_ for dt_ in datetime_gen(dt_, time_delta, end_dt)]
+    dts_found = [dt_ for dt_ in datetime_gen(dt_start, time_delta, dt_end)]
     assert dts_found == [datetime(2021, 1, 2, 3, 0),
                          datetime(2021, 1, 16, 3, 0),
                          datetime(2021, 1, 30, 3, 0)]
+
+
+def test_datetime_gen_switch_time_delta_sign():
+    dt_start = datetime(2021, 1, 2, 3)
+    time_delta = timedelta(weeks=-2)
+    dt_end = datetime(2021, 1, 30, 3)
+
+    dts_found = [dt_ for dt_ in datetime_gen(dt_start, time_delta, dt_end)]
+    assert dts_found == [datetime(2021, 1, 2, 3, 0),
+                         datetime(2021, 1, 16, 3, 0),
+                         datetime(2021, 1, 30, 3, 0)]
+
 
 def test_shrink_grib():
     variables = ["Total Precipitation",
@@ -163,6 +176,7 @@ def test_shrink_grib():
     remove(gribfile)  # Cleanup...
 
     return
+
 
 @pytest.mark.parametrize('number, expected', [(2.50000, 3), (-14.5000, -15), (3.49999, 3)])
 def test_round_half_away_int(number: float, expected: int):

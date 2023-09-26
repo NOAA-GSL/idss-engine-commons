@@ -347,12 +347,10 @@ def main():
 
     while True:
         try:
-            # print('Type JSON message, use Ctl-d to exit')
             msg = input()
             key = 'publish.confirm.test'
             expub.publish_message(msg, key)
         except Exception as e:
-            # print('Exception in main : ', str(e))
             logger.info('Exiting from test loop : ' + str(e))
             break
     expub.stop()

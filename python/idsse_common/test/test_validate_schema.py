@@ -75,7 +75,6 @@ def test_validate_das_unit_request():
     try:
         validator.validate(message)
     except ValidationError as exc:
-        print(exc)
         assert False, f'Validate message raised an exception {exc}'
 
 
@@ -106,7 +105,6 @@ def test_validate_das_criteria_request():
     try:
         validator.validate(message)
     except ValidationError as exc:
-        print(exc)
         assert False, f'Validate message raised an exception {exc}'
 
 
@@ -168,7 +166,6 @@ def test_validate_das_criteria_join_request():
     try:
         validator.validate(message)
     except ValidationError as exc:
-        print(exc)
         assert False, f'Validate message raised an exception {exc}'
 
 
