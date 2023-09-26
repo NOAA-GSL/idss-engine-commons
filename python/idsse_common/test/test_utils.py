@@ -150,7 +150,7 @@ def test_datetime_gen_switch_time_delta_sign():
     time_delta = timedelta(weeks=-2)
     dt_end = datetime(2021, 1, 30, 3)
 
-    dts_found = [dt_ for dt_ in datetime_gen(dt_start, time_delta, dt_end)]
+    dts_found = list(dt_ for dt_ in datetime_gen(dt_start, time_delta, dt_end))
     assert dts_found == [datetime(2021, 1, 2, 3, 0),
                          datetime(2021, 1, 16, 3, 0),
                          datetime(2021, 1, 30, 3, 0)]

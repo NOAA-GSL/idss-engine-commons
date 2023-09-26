@@ -142,7 +142,7 @@ class AwsUtils():
         else:
             # check if time delta is positive, if so make negative
             if time_delta > zero_time_delta:
-                time_delta = timedelta(seconds=(-1.0 * time_delta.total_seconds()))
+                time_delta = timedelta(seconds=-1.0 * time_delta.total_seconds())
             datetimes = datetime_gen(issue_end, time_delta)
         for issue_dt in datetimes:
             if issue_start and issue_dt < issue_start:
