@@ -93,9 +93,9 @@ class PathBuilder:
         return self._basedir
 
     @base_dir.setter
-    def base_dir(self, bd):
+    def base_dir(self, basedir):
         """Set the file extension format str"""
-        self._basedir = bd
+        self._basedir = basedir
 
     @property
     def file_ext(self):
@@ -244,8 +244,8 @@ class PathBuilder:
         """Static method for creating an issue date/time from parsed arguments and optional inputs
 
         Args:
-            parsed_args (dict): A dictionary of issue, valid and/or lead info resulting from parsing
-                                a path, dir, or filename
+            parsed_args (dict): A dictionary of issue, valid and/or lead info resulting
+                                from parsing a path, dir, or filename
             valid (datetime, optional): Depending on info found during parsing, valid date/time
                                         can be useful. Defaults to None.
             lead (timedelta, optional): Depending on info found during parsing, lead time
@@ -281,8 +281,8 @@ class PathBuilder:
         """Static method for creating a valid date/time from parsed arguments and optional inputs
 
         Args:
-            parsed_args (dict): A dictionary of issue, valid and/or lead info resulting from parsing
-                                a path, dir, or filename
+            parsed_args (dict): A dictionary of issue, valid and/or lead info resulting
+                                from parsing a path, dir, or filename
             issue (datetime, optional): Depending on info found during parsing, issue date/time
                                         can be useful. Defaults to None.
             lead (timedelta, optional): Depending on info found during parsing, lead time
@@ -351,16 +351,16 @@ class PathBuilder:
                     case _:
                         raise ValueError(f'Unknown format type: {var_type}')
                 key = key[var_size:]
-                # Check for additional characters following the end of the format element to reach next
-                # offset position for value...
+                # Check for additional characters following the end of the format element to
+                # reach next offset position for value...
                 value = value[var_size  + len(arg.partition('}')[2]):]
 
         # Update to more generically handle time formats...
         dirs = os.path.normpath(format_str).split(os.sep)
         vals = os.path.normpath(string).split(os.sep)
         time_args = {}
-        for i, d in enumerate(dirs):
-            res = re.search(r'{.*}', d)
+        for i, _dir in enumerate(dirs):
+            res = re.search(r'{.*}', _dir)
             if res:
                 parse_args(res.group(), vals[i][res.span()[0]:], time_args)
 
@@ -396,7 +396,7 @@ class PathBuilder:
             arg_lookup[format_between] = string_between
 
         time_args = {}
-        for k, v in arg_lookup.items():
-            parse_args(k, v, time_args)
+        for key, value in arg_lookup.items():
+            parse_args(key, value, time_args)
 
         return time_args

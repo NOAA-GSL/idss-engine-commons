@@ -8,17 +8,15 @@
 #     Mackenzie Grimes
 #
 # --------------------------------------------------------------------------------
-
-import pytest  # pylint: disable=import-error
-from pytest import MonkeyPatch
+# pylint: disable=missing-function-docstring,redefined-outer-name,protected-access,unused-argument
+# pylint: disable=invalid-name
+from datetime import datetime, timedelta
 from unittest.mock import Mock
 
-from datetime import datetime, timedelta
+import pytest
+from pytest import MonkeyPatch
 
 from idsse.common.aws_utils import AwsUtils
-
-# pylint: disable=missing-function-docstring
-# pylint: disable=invalid-name
 
 EXAMPLE_ISSUE = datetime(1970, 10, 3, 12)
 EXAMPLE_VALID = datetime(1970, 10, 3, 14)
@@ -27,13 +25,14 @@ EXAMPLE_DIR = 's3://noaa-nbm-grib2-pds/blend.19701003/12/core'
 EXAMPLE_FILES = ['blend.t12z.core.f002.co.grib2',
                  'blend.t13z.core.f002.co.grib2']
 
+
 # fixtures
-
-
 @pytest.fixture
 def aws_utils() -> AwsUtils:
     EXAMPLE_BASE_DIR = 's3://noaa-nbm-grib2-pds/'
-    EXAMPLE_SUB_DIR = 'blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/{issue.hour:02d}/core/'
+    EXAMPLE_SUB_DIR = (
+        'blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/{issue.hour:02d}/core/'
+    )
     EXAMPLE_FILE_BASE = 'blend.t{issue.hour:02d}z.core.f{lead.hour:03d}'
     EXAMPLE_FILE_EXT = '.co.grib2'
 
@@ -89,7 +88,7 @@ def test_aws_ls_returns_empty_array_on_error(aws_utils: AwsUtils, monkeypatch: M
 
     result = aws_utils.aws_ls(EXAMPLE_DIR)
     assert result == []
-    mock_exec_cmd_failure.assert_called_once
+    mock_exec_cmd_failure.assert_called_once()
 
 
 def test_aws_cp_succeeds(aws_utils: AwsUtils, mock_exec_cmd):
@@ -119,7 +118,7 @@ def test_aws_cp_fails(aws_utils: AwsUtils, monkeypatch: MonkeyPatch):
 
     copy_success = aws_utils.aws_cp('s3:/some/path', 's3:/new/path')
     assert not copy_success
-    mock_exec_cmd_failure.call_count == 2
+    assert mock_exec_cmd_failure.call_count == 2
 
 
 def test_check_for_succeeds(aws_utils: AwsUtils, mock_exec_cmd):
@@ -143,7 +142,7 @@ def test_get_issues(aws_utils: AwsUtils, mock_exec_cmd):
     assert result[1] == EXAMPLE_VALID - timedelta(hours=2)
 
 
-def test_get_issues_returns_latest_issue_from_today_if_no_args_passed(aws_utils: AwsUtils, mock_exec_cmd):
+def test_get_issues_returns_latest_issue_if_no_args(aws_utils: AwsUtils, mock_exec_cmd):
     result = aws_utils.get_issues()
     assert len(result) == 1
     assert result[0].date() == datetime.utcnow().date()

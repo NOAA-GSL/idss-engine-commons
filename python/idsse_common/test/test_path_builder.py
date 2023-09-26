@@ -18,7 +18,7 @@ from idsse.common.path_builder import PathBuilder
 
 
 
-def test_from_dir_filename_creates_valid_pathbuilder(): 
+def test_from_dir_filename_creates_valid_pathbuilder():
     directory = './test_directory'
     filename = 'some_file.txt'
     path_builder = PathBuilder.from_dir_filename(directory, filename)
@@ -64,7 +64,9 @@ def test_file_ext(local_path_builder: PathBuilder):
 
 
 def test_path_fmt(local_path_builder: PathBuilder):
-    assert local_path_builder.path_fmt == f'{EXAMPLE_BASE_DIR}/{EXAMPLE_SUB_DIR}/{EXAMPLE_FILE}{EXAMPLE_FILE_EXT}'
+    assert local_path_builder.path_fmt == (
+        f'{EXAMPLE_BASE_DIR}/{EXAMPLE_SUB_DIR}/{EXAMPLE_FILE}{EXAMPLE_FILE_EXT}'
+    )
 
 
 # methods
@@ -77,7 +79,9 @@ EXAMPLE_FULL_PATH = '~/blend.19701003/12/core/blend.t12z.core.f002.co.grib2.idx'
 
 @pytest.fixture
 def path_builder() -> PathBuilder:
-    subdirectory_pattern = 'blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/{issue.hour:02d}/core/'
+    subdirectory_pattern = (
+        'blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/{issue.hour:02d}/core/'
+    )
     file_base_pattern = 'blend.t{issue.hour:02d}z.core.f{lead.hour:03d}.co'
     return PathBuilder('~', subdirectory_pattern, file_base_pattern, 'grib2.idx')
 
@@ -122,7 +126,7 @@ def test_get_issue(path_builder: PathBuilder):
 
 
 def test_get_valid_from_issue_and_lead(path_builder: PathBuilder):
-    # verify valid timestamp gets successfully constructed based on issue and lead embedded into path
+    # verify valid timestamp gets successfully constructed based on issue & lead embedded into path
     result_valid: datetime = path_builder.get_valid(EXAMPLE_FULL_PATH)
     assert result_valid is not None
     assert result_valid == EXAMPLE_VALID

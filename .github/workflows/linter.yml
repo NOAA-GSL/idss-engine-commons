@@ -25,4 +25,4 @@ jobs:
           echo "PYTHONPATH=python/idsse_common/idsse/common" >> $GITHUB_ENV
 
       - name: Run code linter
-        run: pylint ./python --recursive y
+        run: pylint ./python/idsse_common --max-line-length=120 --recursive true
