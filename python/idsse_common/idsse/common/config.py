@@ -51,7 +51,10 @@ class Config:
             self._from_filepaths(filepaths, keys)
         # since it is not a string, assuming it is a dictionary or list of dictionaries
         else:
-            self._from_config_dict(config, keys)
+            if isinstance(config, list):
+                self._from_config_dicts(config, keys)
+            else:
+                self._from_config_dict(config, keys)
 
         # check for all expected config attributes
         if not ignore_missing:
@@ -93,12 +96,13 @@ class Config:
         self._from_config_dicts(config_dicts, keys)
 
     def _from_config_dict(self, config_dict: dict, keys: str) -> Self:
-        if keys is not None and keys != []:
+        if keys is not None:
             if isinstance(keys, str):
                 config_dict = config_dict[keys]
             else:
                 for key in keys:
                     config_dict = config_dict[key]
+
         # update the instance dictionary to hold all configuration attributes
         return self.__dict__.update(config_dict)
 
@@ -109,5 +113,5 @@ class Config:
             if len(signature(type(self)).parameters) == 1:
                 self._next = type(self)(config_dict)
             else:
-                self._next = type(self)(config_dict, keys=keys)
+                self._next = type(self)(config_dict, keys)
             self._next._previous = self  # pylint: disable=protected-access
