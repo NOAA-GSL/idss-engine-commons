@@ -1,13 +1,15 @@
 """Test suite for aws_utils.py"""
-# --------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
 # Created on Wed Jun 21 2023
 #
 # Copyright (c) 2023 Colorado State University. All rights reserved. (1)
+# Copyright (c) 2023 Regents of the University of Colorado. All rights reserved. (2)
 #
 # Contributors:
 #     Mackenzie Grimes (1)
+#     Geary Layne (2)
 #
-# --------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
 
 from datetime import datetime, timedelta
 from typing import List
