@@ -185,7 +185,7 @@ class PathBuilder:
         Returns:
             dict: Lookup of all information identified and extracted
         """
-        #return self._parse(dir_, self.dir_fmt)
+        # return self._parse(dir_, self.dir_fmt)
         return self._parse_times(dir_, self.dir_fmt)
 
     def parse_filename(self, filename: str) -> dict:
@@ -351,9 +351,9 @@ class PathBuilder:
                     case _:
                         raise ValueError(f'Unknown format type: {var_type}')
                 key = key[var_size:]
-                # Check for additional characters following the end of the format element to
-                # reach next offset position for value...
-                value = value[var_size  + len(arg.partition('}')[2]):]
+                # Check for additional characters following the end of the format element to reach
+                # next offset position for value...
+                value = value[var_size + len(arg.partition('}')[2]):]
 
         # Update to more generically handle time formats...
         dirs = os.path.normpath(format_str).split(os.sep)

@@ -11,7 +11,7 @@ Hint: make sure your test modules/packages have valid Python names.
 Traceback:
 /opt/hostedtoolcache/Python/3.11.5/x64/lib/python3.11/importlib/__init__.py:126: in import_module
     return _bootstrap._gcd_import(name[level:], package, level)
-test_aws_utils.py:18: in <module>
+test_aws_utils.py:20: in <module>
     from idsse.common.aws_utils import AwsUtils
 ../idsse/common/aws_utils.py:18: in <module>
     from .path_builder import PathBuilder
@@ -48,7 +48,7 @@ Hint: make sure your test modules/packages have valid Python names.
 Traceback:
 /opt/hostedtoolcache/Python/3.11.5/x64/lib/python3.11/importlib/__init__.py:126: in import_module
     return _bootstrap._gcd_import(name[level:], package, level)
-test_utils.py:19: in <module>
+test_utils.py:20: in <module>
     from idsse.common.utils import TimeDelta, Map
 ../idsse/common/utils.py:20: in <module>
     import pygrib
@@ -71,18 +71,18 @@ E   ModuleNotFoundError: No module named 'pygrib'
 Name                                                                                                            Stmts   Miss  Cover
 -----------------------------------------------------------------------------------------------------------------------------------
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/__init__.py              0      0   100%
-/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/aws_utils.py            79     73     8%
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/aws_utils.py            86     80     7%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/config.py               74     53    28%
-/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/grid_proj.py            47     43     9%
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/grid_proj.py            53     49     8%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/json_message.py         22     22     0%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/log_util.py             40     40     0%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/path_builder.py        157    152     3%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/publish_confirm.py     148    148     0%
 /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/rabbitmq_utils.py       16     16     0%
-/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/utils.py               108    100     7%
-/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/validate_schema.py      42     35    17%
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/utils.py               111    103     7%
+/home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/validate_schema.py      39     32    18%
 -----------------------------------------------------------------------------------------------------------------------------------
-TOTAL                                                                                                             733    682     7%
+TOTAL                                                                                                             746    695     7%
 
 =========================== short test summary info ============================
 ERROR test_aws_utils.py
@@ -90,4 +90,4 @@ ERROR test_grid_proj.py
 ERROR test_path_builder.py
 ERROR test_utils.py
 !!!!!!!!!!!!!!!!!!! Interrupted: 4 errors during collection !!!!!!!!!!!!!!!!!!!!
-======================== 4 warnings, 4 errors in 0.64s =========================
+======================== 4 warnings, 4 errors in 0.72s =========================

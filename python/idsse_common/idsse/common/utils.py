@@ -149,29 +149,37 @@ def dict_copy_with(old_dict: dict, **kwargs) -> dict:
     return new_dict
 
 
-def datetime_gen(dt_: datetime,
+def datetime_gen(dt_start: datetime,
                  time_delta: timedelta,
-                 end_dt: Optional[datetime] = None,
+                 dt_end: Optional[datetime] = None,
                  max_num: int = 100) -> Generator[datetime, Any, None]:
     """Create a date/time sequence generator, given a starting date/time and a time stride
 
     Args:
-        dt_ (datetime): Starting date/time, will be the first date/time made available
-        time_delta (timedelta): Time delta, can be either positive or negative
-        end_dt (datetime, optional): Ending date/time, will be the last. Defaults to None.
+        dt_start (datetime): Starting date/time, will be the first date/time made available
+        time_delta (timedelta): Time delta, can be either positive or negative. The sign of this
+                                will be switch based on the order of start_dt and end_dt.
+        dt_end (datetime, optional): Ending date/time, will be the last, unless generation is
+                                     halted by max_num. Defaults to None.
         max_num (int, optional): Max number of date/times that generator will return.
                                  Defaults to 100.
 
     Yields:
         datetime: Next date/time in sequence
     """
-    if end_dt:
-        dt_cnt = int((end_dt-dt_)/time_delta)+1
+    if dt_end:
+        time_delta_pos = time_delta > timedelta(seconds=0)
+
+        if (dt_start > dt_end and time_delta_pos) or \
+           (dt_start < dt_end and not time_delta_pos):
+            time_delta = timedelta(seconds=(-1.0 * time_delta.total_seconds()))
+
+        dt_cnt = int((dt_end-dt_start)/time_delta)+1
         max_num = min(max_num, dt_cnt) if max_num else dt_cnt
 
     for i in range(0, max_num):
         logger.debug('dt generator %d/%d', i, max_num)
-        yield dt_ + time_delta * i
+        yield dt_start + time_delta * i
 
 
 def _round_away_from_zero(number: float) -> int:

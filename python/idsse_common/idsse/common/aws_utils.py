@@ -13,7 +13,7 @@ import logging
 import fnmatch
 import os
 from datetime import datetime, timedelta
-from typing import Sequence, Tuple, Optional
+from typing import Sequence, Set, Tuple, Optional
 
 from .path_builder import PathBuilder
 from .utils import TimeDelta, datetime_gen, exec_cmd
@@ -104,19 +104,22 @@ class AwsUtils():
                                             if object does not exist
         """
         lead = TimeDelta(valid-issue)
-        filenames = self.aws_ls(self.get_path(issue, valid), prepend_path=False)
+        file_path = self.get_path(issue, valid)
+        dir_path = os.path.dirname(file_path)
+        filenames = self.aws_ls(file_path, prepend_path=False)
         filename = self.path_builder.build_filename(issue=issue, valid=valid, lead=lead)
         for fname in filenames:
             # Support wildcard matches - used for '?' as a single wildcard character in
             # issue/valid time specs.
             if fnmatch.fnmatch(os.path.basename(fname), filename):
-                return (valid, filename)
+                return (valid, os.path.join(dir_path, fname))
         return None
 
     def get_issues(self,
                    num_issues: int = 1,
                    issue_start: Optional[datetime] = None,
-                   issue_end: datetime = datetime.utcnow()
+                   issue_end: datetime = datetime.utcnow(),
+                   time_delta: timedelta = timedelta(hours=1)
                    ) -> Sequence[datetime]:
         """Determine the available issue date/times
 
@@ -124,29 +127,37 @@ class AwsUtils():
             num_issues (int): Maximum number of issue to return. Defaults to 1.
             issue_start (datetime, optional): The oldest date/time to look for. Defaults to None.
             issue_end (datetime): The newest date/time to look for. Defaults to now (UTC).
+            time_delta (timedelta): The time step size. Defaults to 1 hour.
 
         Returns:
             Sequence[datetime]: A sequence of issue date/times
         """
-        issues_found: Sequence[datetime] = []
+        zero_time_delta = timedelta(seconds=0)
+        if time_delta == zero_time_delta:
+            raise ValueError('Time delta must be non zero')
+
+        issues_set: Set[datetime] = set()
         if issue_start:
-            datetimes = datetime_gen(issue_end, timedelta(hours=-1), issue_start, num_issues)
+            datetimes = datetime_gen(issue_end, time_delta, issue_start, num_issues)
         else:
-            datetimes = datetime_gen(issue_end, timedelta(hours=-1))
+            # check if time delta is positive, if so make negative
+            if time_delta > zero_time_delta:
+                time_delta = timedelta(seconds=(-1.0 * time_delta.total_seconds()))
+            datetimes = datetime_gen(issue_end, time_delta)
         for issue_dt in datetimes:
             if issue_start and issue_dt < issue_start:
                 break
             try:
                 dir_path = self.path_builder.build_dir(issue=issue_dt)
-                issue_set = {self.path_builder.get_issue(file_path)
-                             for file_path in self.aws_ls(dir_path)
-                             if file_path.endswith(self.path_builder.file_ext)}
-                issues_found.extend(sorted(issue_set, reverse=True))
-                if num_issues and len(issues_found) >= num_issues:
+                issues = {self.path_builder.get_issue(file_path)
+                          for file_path in self.aws_ls(dir_path)
+                          if file_path.endswith(self.path_builder.file_ext)}
+                issues_set.update(issues)
+                if num_issues and len(issues_set) >= num_issues:
                     break
             except PermissionError:
                 pass
-        return issues_found[:num_issues]
+        return sorted(issues_set, reverse=True)[:num_issues]
 
     def get_valids(self,
                    issue: datetime,
@@ -171,7 +182,6 @@ class AwsUtils():
             return [valids_and_filenames] if valids_and_filenames is not None else []
 
         dir_path = self.path_builder.build_dir(issue=issue)
-
         valid_file = [(self.path_builder.get_valid(file_path), file_path)
                       for file_path in self.aws_ls(dir_path)
                       if file_path.endswith(self.path_builder.file_ext)]
