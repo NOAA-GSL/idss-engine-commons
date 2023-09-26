@@ -172,7 +172,6 @@ def test_get_issues_latest_issue_from_today_if_no_args_passed(aws_utils: AwsUtil
     # truncated minute, second, and microsecond
     assert len(result) == 1
     assert result[0] == datetime.utcnow().replace(minute=0, second=0, microsecond=0)
-    assert False
 
 
 def test_get_valids_all(aws_utils: AwsUtils, mock_exec_cmd):
