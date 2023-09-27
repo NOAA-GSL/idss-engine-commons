@@ -85,6 +85,65 @@ class PublishConfirm(Thread):
             on_open_error_callback=self._on_connection_open_error,
             on_close_callback=self._on_connection_closed)
 
+    def publish_message(self, message, key=None) -> bool:
+        """If the class is not stopping, publish a message to RabbitMQ,
+        appending a list of deliveries with the message number that was sent.
+        This list will be used to check for delivery confirmations in the
+        on_delivery_confirmations method.
+
+        Returns:
+            bool: True if message successfully published to queue (channel was open and
+                publish did not throw
+                exception)
+        """
+        success = False
+        if self._channel and self._channel.is_open:
+
+            # We expect a JSON message format, do a check here...
+            try:
+                properties = pika.BasicProperties(content_type='application/json',
+                                                  content_encoding='utf-8')
+
+                self._channel.basic_publish(self._exchange.name, key,
+                                            json.dumps(message, ensure_ascii=True),
+                                            properties)
+                self._records.message_number += 1
+                self._records.deliveries[self._records.message_number] = message
+                logger.debug('Published message # %i', self._records.message_number)
+                success = True
+
+            except Exception as e:  # pylint: disable=broad-exception-caught
+                logger.error('Publish message problem : %s', str(e))
+        return success
+
+    def run(self):
+        """Run the thread, i.e. get connection etc...
+        """
+        set_corr_id_context_var('PublishConfirm')
+
+        self._connection = self.connect()
+        self._connection.ioloop.start()
+
+        while not self._stopping:
+            time.sleep(5)
+
+        if self._connection is not None and not self._connection.is_closed:
+            # Finish closing
+            self._connection.ioloop.start()
+
+    def stop(self):
+        """Stop the example by closing the channel and connection. We
+        set a flag here so that we stop scheduling new messages to be
+        published. The IOLoop is started because this method is
+        invoked by the Try/Catch below when KeyboardInterrupt is caught.
+        Starting the IOLoop again will allow the publisher to cleanly
+        disconnect from RabbitMQ.
+        """
+        logger.info('Stopping')
+        self._stopping = True
+        self._close_channel()
+        self._close_connection()
+
     def _on_connection_open(self, _unused_connection):
         """This method is called by pika once the connection to RabbitMQ has
         been established. It passes the handle to the connection object in
@@ -276,60 +335,6 @@ class PublishConfirm(Thread):
             'Published %i messages, %i have yet to be confirmed, '
             '%i were acked and %i were nacked', self._records.message_number,
             len(self._records.deliveries), self._records.acked, self._records.nacked)
-
-    def publish_message(self, message, key=None) -> bool:
-        """If the class is not stopping, publish a message to RabbitMQ,
-        appending a list of deliveries with the message number that was sent.
-        This list will be used to check for delivery confirmations in the
-        on_delivery_confirmations method.
-        """
-        success = False
-        if self._channel and self._channel.is_open:
-
-            # We expect a JSON message format, do a check here...
-            try:
-                properties = pika.BasicProperties(content_type='application/json',
-                                                  content_encoding='utf-8')
-
-                self._channel.basic_publish(self._exchange.name, key,
-                                            json.dumps(message, ensure_ascii=True),
-                                            properties)
-                self._records.message_number += 1
-                self._records.deliveries[self._records.message_number] = message
-                logger.debug('Published message # %i', self._records.message_number)
-                success = True
-
-            except Exception as e:  # pylint: disable=broad-exception-caught
-                logger.error('Publish message problem : %s', str(e))
-        return success
-
-    def run(self):
-        """Run the thread, i.e. get connection etc...
-        """
-        set_corr_id_context_var('PublishConfirm')
-
-        self._connection = self.connect()
-        self._connection.ioloop.start()
-
-        while not self._stopping:
-            time.sleep(5)
-
-        if self._connection is not None and not self._connection.is_closed:
-            # Finish closing
-            self._connection.ioloop.start()
-
-    def stop(self):
-        """Stop the example by closing the channel and connection. We
-        set a flag here so that we stop scheduling new messages to be
-        published. The IOLoop is started because this method is
-        invoked by the Try/Catch below when KeyboardInterrupt is caught.
-        Starting the IOLoop again will allow the publisher to cleanly
-        disconnect from RabbitMQ.
-        """
-        logger.info('Stopping')
-        self._stopping = True
-        self._close_channel()
-        self._close_connection()
 
     def _close_channel(self):
         """Invoke this command to close the channel with RabbitMQ by sending
