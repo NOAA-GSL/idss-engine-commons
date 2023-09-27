@@ -25,19 +25,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install pytest pytest-cov pylint==2.17.5 python-dateutil==2.8.2 pint==0.21 importlib-metadata==6.7.0 jsonschema==4.19.0 pika==1.3.1 pyproj eccodes==1.6.0
 
+      - name: Prepare for pygrib install
+        run: |
+          pip show eccodes
+          echo
+          echo "ECCODES_DIR=$( pip show eccodes | grep "Location" | cut -d ' ' -f 2 )/eccodes" >> $GITHUB_ENV
+
       - name: Install pygrib
         run: |
-          echo "ECCODES_DIR=$( pip show eccodes | grep "Location" | cut -d ' ' -f 2 )/eccodes" >> $GITHUB_ENV
           echo $ECCODES_DIR
           pip install pygrib==2.1.4
 
-      # - name: Set PYTHONPATH for pytest
-      #   run: |
+      - name: Set PYTHONPATH for pytest
+        run: echo "PYTHONPATH=python/idsse_common/idsse/common" >> $GITHUB_ENV
 
       - name: Test with pytest
         working-directory: python/idsse_common
         run: |
-          echo "PYTHONPATH=python/idsse_common/idsse/common" >> $GITHUB_ENV
           pytest ./test --cov=./idsse/common --cov-report=term --junitxml=./pytest.xml | tee ./coverage.txt
 
       - name: Pytest coverage comment
