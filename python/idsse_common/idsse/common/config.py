@@ -111,7 +111,9 @@ class Config:
         for config_dict in config_dicts[1:]:
             # if inherited class takes only one argument
             if len(signature(type(self)).parameters) == 1:
-                self._next = type(self)(config_dict)
+                self._next = self.__class__(config_dict)
             else:
-                self._next = type(self)(config_dict, keys)
+                self._next = self.__class__(config_dict, keys=keys)
             self._next._previous = self  # pylint: disable=protected-access
+
+        return self
