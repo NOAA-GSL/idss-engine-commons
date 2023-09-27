@@ -27,7 +27,7 @@ jobs:
 
       - name: Install pygrib
         run: |
-          echo "$( pip show eccodes | grep "Location" | cut -d ' ' -f 2 )/eccodes" >> $GITHUB_ENV
+          echo "ECCODES_DIR=$( pip show eccodes | grep "Location" | cut -d ' ' -f 2 )/eccodes" >> $GITHUB_ENV
           echo $ECCODES_DIR
           pip install pygrib==2.1.4
 
