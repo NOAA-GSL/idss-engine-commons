@@ -20,7 +20,6 @@ logger = logging.getLogger(__name__)
 
 class Config:
     """Configuration data class"""
-
     def __init__(self,
                  config: Union[dict, List[dict], str],
                  keys: Optional[Union[list, str]] = None,
@@ -41,7 +40,7 @@ class Config:
         if isinstance(config, str):
             try:
                 config = json.loads(config)
-            except Exception:  # pylint: disable=broad-exception-caught
+            except json.JSONDecodeError:
                 logger.debug('Unsuccessful loading config as string rep of dict')
 
         # if config is a string use it to find filepaths
@@ -49,10 +48,7 @@ class Config:
             filepaths = glob.glob(config, recursive=recursive)
             if len(filepaths) == 0:
                 raise FileNotFoundError
-            if len(filepaths) == 1:
-                self._from_filepath(filepaths[0], keys)
-            else:
-                self._from_filepaths(filepaths, keys)
+            self._from_filepaths(filepaths, keys)
         # since it is not a string, assuming it is a dictionary or list of dictionaries
         else:
             if isinstance(config, list):
@@ -62,9 +58,9 @@ class Config:
 
         # check for all expected config attributes
         if not ignore_missing:
-            for k, v in self.__dict__.items():
-                if v is None and k not in ['_next', '_previous']:
-                    raise NameError(f'name ({k}) not found in config')
+            for key, value in self.__dict__.items():
+                if value is None and key not in ['_next', '_previous']:
+                    raise NameError(f'name ({key}) not found in config')
 
     @property
     def first(self) -> Self:
@@ -90,18 +86,11 @@ class Config:
             return self
         return self._next.last
 
-    def _load_from_filepath(self, filepath) -> dict:
+    def _load_from_filepath(self, filepath: str) -> dict:
         with open(filepath, 'r', encoding='utf8') as file:
             return json.load(file)
 
-    def _from_filepath(self, filepath, keys) -> Self:
-        config_dicts = self._load_from_filepath(filepath)
-        if isinstance(config_dicts, list):
-            self._from_config_dicts(config_dicts, keys)
-        else:
-            self._from_config_dict(config_dicts, keys)
-
-    def _from_filepaths(self, filepaths, keys) -> Self:
+    def _from_filepaths(self, filepaths: List[str], keys: str) -> Self:
         config_dicts = [self._load_from_filepath(filepath)
                         for filepath in filepaths]
         self._from_config_dicts(config_dicts, keys)
@@ -113,15 +102,18 @@ class Config:
             else:
                 for key in keys:
                     config_dict = config_dict[key]
+
         # update the instance dictionary to hold all configuration attributes
-        self.__dict__.update(config_dict)
+        return self.__dict__.update(config_dict)
 
     def _from_config_dicts(self, config_dicts: List[dict], keys: str) -> Self:
         self._from_config_dict(config_dicts[0], keys)
         for config_dict in config_dicts[1:]:
             # if inherited class takes only one argument
             if len(signature(type(self)).parameters) == 1:
-                self._next = type(self)(config_dict)
+                self._next = self.__class__(config_dict)
             else:
-                self._next = type(self)(config_dict, keys)
+                self._next = self.__class__(config_dict, keys=keys)
             self._next._previous = self  # pylint: disable=protected-access
+
+        return self

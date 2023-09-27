@@ -10,6 +10,8 @@
 #     Geary Layne (2)
 #
 # ----------------------------------------------------------------------------------
+# pylint: disable=missing-function-docstring,redefined-outer-name,pointless-statement
+# pylint: disable=invalid-name,unused-argument
 
 from datetime import datetime, timedelta
 from typing import List
@@ -18,9 +20,6 @@ from unittest.mock import Mock
 from pytest import fixture, MonkeyPatch
 
 from idsse.common.aws_utils import AwsUtils
-
-# pylint: disable=missing-function-docstring,redefined-outer-name,pointless-statement
-# pylint: disable=invalid-name,unused-argument
 
 EXAMPLE_ISSUE = datetime(1970, 10, 3, 12)
 EXAMPLE_VALID = datetime(1970, 10, 3, 14)
@@ -107,7 +106,7 @@ def test_aws_ls_returns_empty_array_on_error(aws_utils: AwsUtils, monkeypatch: M
 
     result = aws_utils.aws_ls(EXAMPLE_DIR)
     assert result == []
-    mock_exec_cmd_failure.assert_called_once
+    mock_exec_cmd_failure.assert_called_once()
 
 
 def test_aws_cp_succeeds(aws_utils: AwsUtils, mock_exec_cmd):
@@ -137,7 +136,7 @@ def test_aws_cp_fails(aws_utils: AwsUtils, monkeypatch: MonkeyPatch):
 
     copy_success = aws_utils.aws_cp('s3:/some/path', 's3:/new/path')
     assert not copy_success
-    mock_exec_cmd_failure.call_count == 2
+    assert mock_exec_cmd_failure.call_count == 2
 
 
 def test_check_for_succeeds(aws_utils: AwsUtils, mock_exec_cmd):

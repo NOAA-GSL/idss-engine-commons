@@ -8,15 +8,16 @@
 #     Geary J Layne
 #
 # --------------------------------------------------------------------------------
+# pylint: disable=missing-function-docstring,no-member
+
 import json
-import pytest
-from pytest import MonkeyPatch
 from unittest.mock import Mock, mock_open
+
+from pytest import raises, MonkeyPatch
 
 from idsse.common.config import Config
 
 
-# pylint: disable=missing-function-docstring
 
 def test_load_from_dict_without_key():
     class WithoutKeyConfig(Config):
@@ -89,9 +90,9 @@ def test_load_with_missing_attribute_should_fail():
             self.a_key = None
             super().__init__(config, '')
 
-    with pytest.raises(NameError):
+    with raises(NameError) as exc:
         WithoutKeyConfig({'diff_key': 'value found'})
-
+    assert exc is not None
 
 def test_config_str_with_no_files_raises_error(monkeypatch: MonkeyPatch):
     class WithoutKeyConfig(Config):
@@ -103,8 +104,9 @@ def test_config_str_with_no_files_raises_error(monkeypatch: MonkeyPatch):
 
     monkeypatch.setattr('glob.glob', Mock(return_value=[]))
 
-    with pytest.raises(FileNotFoundError):
+    with raises(FileNotFoundError) as exc:
         WithoutKeyConfig('wont_be_found')
+    assert exc is not None
 
 
 def test_config_list_of_dicts_succeeds():
@@ -114,7 +116,7 @@ def test_config_list_of_dicts_succeeds():
         def __init__(self, config: dict) -> None:
             self.a_key = None
             self.b_key = None
-            super().__init__(config, '', ignore_missing=True)
+            super().__init__(config, keys='', ignore_missing=True)
 
     config = WithoutKeyConfig([{'a_key': 'value for a'}, {'b_key': 'value for b'}])
 

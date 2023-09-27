@@ -8,6 +8,7 @@
 #     Geary J Layne
 #
 # --------------------------------------------------------------------------------
+# pylint: disable=missing-function-docstring,disable=invalid-name
 
 import shutil
 from copy import deepcopy
@@ -21,9 +22,6 @@ from idsse.common.utils import TimeDelta, Map
 from idsse.common.utils import (datetime_gen, hash_code, exec_cmd, to_compact,
                                 to_iso, dict_copy_with, round_half_away, shrink_grib)
 
-
-# pylint: disable=missing-function-docstring
-# pylint: disable=invalid-name
 
 def test_timedelta_minute():
     td = TimeDelta(timedelta(minutes=13))
@@ -94,7 +92,9 @@ def test_dict_copy_with():
     copied_dict = deepcopy(starting_dict)
 
     # run copy
-    result = dict_copy_with(copied_dict, source='speedometer', metadata={'some': ('other', 'data')})
+    result = dict_copy_with(
+        copied_dict, source='speedometer', metadata={'some': ('other', 'data')}
+    )
 
     # original dict should be unchanged
     assert copied_dict == starting_dict
@@ -114,7 +114,7 @@ def test_datetime_gen_forward():
     time_delta = timedelta(hours=1)
     max_num = 5
 
-    dts_found = [dt_ for dt_ in datetime_gen(dt_start, time_delta, max_num=max_num)]
+    dts_found = list(datetime_gen(dt_start, time_delta, max_num=max_num))
     assert dts_found == [datetime(2021, 1, 2, 3, 0),
                          datetime(2021, 1, 2, 4, 0),
                          datetime(2021, 1, 2, 5, 0),
@@ -127,7 +127,7 @@ def test_datetime_gen_backwards():
     time_delta = timedelta(days=-1)
     max_num = 4
 
-    dts_found = [dt_ for dt_ in datetime_gen(dt_start, time_delta, max_num=max_num)]
+    dts_found = list(datetime_gen(dt_start, time_delta, max_num=max_num))
     assert dts_found == [datetime(2021, 1, 2, 3, 0),
                          datetime(2021, 1, 1, 3, 0),
                          datetime(2020, 12, 31, 3, 0),
@@ -139,7 +139,7 @@ def test_datetime_gen_bound():
     time_delta = timedelta(weeks=2)
     dt_end = datetime(2021, 1, 30, 3)
 
-    dts_found = [dt_ for dt_ in datetime_gen(dt_start, time_delta, dt_end)]
+    dts_found = list(datetime_gen(dt_start, time_delta, dt_end))
     assert dts_found == [datetime(2021, 1, 2, 3, 0),
                          datetime(2021, 1, 16, 3, 0),
                          datetime(2021, 1, 30, 3, 0)]
@@ -150,7 +150,7 @@ def test_datetime_gen_switch_time_delta_sign():
     time_delta = timedelta(weeks=-2)
     dt_end = datetime(2021, 1, 30, 3)
 
-    dts_found = [dt_ for dt_ in datetime_gen(dt_start, time_delta, dt_end)]
+    dts_found = list(dt_ for dt_ in datetime_gen(dt_start, time_delta, dt_end))
     assert dts_found == [datetime(2021, 1, 2, 3, 0),
                          datetime(2021, 1, 16, 3, 0),
                          datetime(2021, 1, 30, 3, 0)]
@@ -166,16 +166,16 @@ def test_shrink_grib():
                  "10 metre wind speed",
                  "Instantaneous 10 metre wind gust"]
 
-    original = 'resources/blend.t00z.core.f001.co.grib2.original'
-    gribfile = original.rstrip('.original')
+    original = path.join(path.dirname(__file__),
+                         'resources/blend.t00z.core.f001.co.grib2.original')
+    gribfile = original.split('.original', maxsplit=1)[0]
     shutil.copy(original, gribfile)
 
     shrink_grib(gribfile, variables)
-    assert (stat(gribfile).st_size > 0)
-    assert (stat(gribfile).st_size < stat(original).st_size)
+    assert stat(gribfile).st_size > 0
+    assert stat(gribfile).st_size < stat(original).st_size
     remove(gribfile)  # Cleanup...
 
-    return
 
 
 @pytest.mark.parametrize('number, expected', [(2.50000, 3), (-14.5000, -15), (3.49999, 3)])
@@ -192,7 +192,8 @@ def test_round_half_away_float(number: float, expected: float):
     assert result == expected
 
 
-@pytest.mark.parametrize('number, expected', [(100.987654321, 100.988), (-43.21098, -43.211), (pi, 3.142)])
+@pytest.mark.parametrize('number, expected',
+                         [(100.987654321, 100.988), (-43.21098, -43.211), (pi, 3.142)])
 def test_round_half_away_with_precision(number: float, expected: float):
     result = round_half_away(number, precision=3)
     assert isinstance(result, float)
