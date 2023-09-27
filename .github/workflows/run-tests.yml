@@ -34,6 +34,7 @@ jobs:
       - name: Install pygrib
         run: |
           echo $ECCODES_DIR
+          ls -r $ECCODES_DIR
           pip install pygrib==2.1.4
 
       - name: Set PYTHONPATH for pytest
