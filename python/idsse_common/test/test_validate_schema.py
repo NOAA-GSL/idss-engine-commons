@@ -246,7 +246,9 @@ def test_validate_das_criteria_join_request():
                     "thresh": 3},
                 "label": "NBM:WINDSPEED:MilesPerHour:GT:3.000:0.000:5.000:true"}],
             "join": "AND"},
-        "label": "AND(NBM:TEMP:Fahrenheit:LT:60.000:35.000:75.000:true, NBM:WINDSPEED:MilesPerHour:GT:3.000:0.000:5.000:true)"}  # noqa: E501
+        "label": ("AND(NBM:TEMP:Fahrenheit:LT:60.000:35.000:75.000:true, "
+                  "NBM:WINDSPEED:MilesPerHour:GT:3.000:0.000:5.000:true)")
+    }
 
     schema_name = 'das_request_schema'
     validator = get_validator(schema_name)
