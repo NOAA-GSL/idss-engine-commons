@@ -8,17 +8,13 @@
 #     Geary Layne (1)
 #
 # ----------------------------------------------------------------------------------
-# pylint: disable=missing-function-docstring,redefined-outer-name,invalid-name
-
-from jsonschema.exceptions import ValidationError
-import pytest
-from pytest import fixture
+# pylint: disable=missing-function-docstring,redefined-outer-name,invalid-name,no-name-in-module
 
 from jsonschema import Validator
+from jsonschema.exceptions import ValidationError
+from pytest import fixture, raises
 
 from idsse.common.validate_schema import get_validator
-
-# pylint: disable=missing-function-docstring, line-too-long
 
 
 @fixture
@@ -46,7 +42,7 @@ def test_validate_das_bad_issue_request(available_data_validator: Validator):
                              'field': 'TEMP',
                              'valid': '2022-01-02T15:00:00.000Z'
                              }}
-    with pytest.raises(ValidationError):
+    with raises(ValidationError):
         available_data_validator.validate(message)
 
 
@@ -70,7 +66,7 @@ def test_validate_das_bad_valid_request(available_data_validator: Validator):
                              'region': 'PR',
                              'issue': '2022-01-02T12:00:00.000Z'
                              }}
-    with pytest.raises(ValidationError):
+    with raises(ValidationError):
         available_data_validator.validate(message)
 
 
@@ -94,7 +90,7 @@ def test_validate_das_bad_lead_request(available_data_validator: Validator):
                              'field': 'TEMP',
                              'issue': '2022-01-02T12:00:00.000Z'
                              }}
-    with pytest.raises(ValidationError):
+    with raises(ValidationError):
         available_data_validator.validate(message)
 
 
@@ -120,7 +116,7 @@ def test_validate_das_bad_field_request(available_data_validator: Validator):
                              'field': 'TEMP',
                              'valid': '2022-01-02T15:00:00.000Z'
                              }}
-    with pytest.raises(ValidationError):
+    with raises(ValidationError):
         available_data_validator.validate(message)
 
 
@@ -293,7 +289,7 @@ def test_validate_bad_criteria_message():
     schema_name = 'criteria_schema'
     validator = get_validator(schema_name)
 
-    with pytest.raises(ValidationError):
+    with raises(ValidationError):
         validator.validate(message)
 
 
