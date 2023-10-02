@@ -8,29 +8,120 @@
 #     Geary Layne (1)
 #
 # ----------------------------------------------------------------------------------
+# pylint: disable=missing-function-docstring,redefined-outer-name,invalid-name
 
 from jsonschema.exceptions import ValidationError
 import pytest
+from pytest import fixture
+
+from jsonschema import Validator
 
 from idsse.common.validate_schema import get_validator
 
 # pylint: disable=missing-function-docstring, line-too-long
 
 
-def test_validate_das_valid_request():
+@fixture
+def available_data_validator() -> Validator:
+    schema_name = 'das_available_data_schema'
+    return get_validator(schema_name)
+
+
+def test_validate_das_issue_request(available_data_validator: Validator):
+    message = {'sourceType': 'issue',
+               'sourceObj': {'product': 'NBM.AWS.GRIB',
+                             'region': 'PR',
+                             'field': 'TEMP',
+                             }}
+    try:
+        available_data_validator.validate(message)
+    except ValidationError as exc:
+        assert False, f'Validate message raised an exception {exc}'
+
+
+def test_validate_das_bad_issue_request(available_data_validator: Validator):
+    # message is missing 'region'
+    message = {'sourceType': 'field',
+               'sourceObj': {'product': 'NBM.AWS.GRIB',
+                             'field': 'TEMP',
+                             'valid': '2022-01-02T15:00:00.000Z'
+                             }}
+    with pytest.raises(ValidationError):
+        available_data_validator.validate(message)
+
+
+def test_validate_das_valid_request(available_data_validator: Validator):
     message = {'sourceType': 'valid',
                'sourceObj': {'product': 'NBM.AWS.GRIB',
                              'region': 'PR',
                              'field': 'TEMP',
                              'issue': '2022-01-02T12:00:00.000Z'
                              }}
-
-    schema_name = 'das_available_data_schema'
-    validator = get_validator(schema_name)
     try:
-        validator.validate(message)
+        available_data_validator.validate(message)
     except ValidationError as exc:
         assert False, f'Validate message raised an exception {exc}'
+
+
+def test_validate_das_bad_valid_request(available_data_validator: Validator):
+    # message is missing 'field'
+    message = {'sourceType': 'valid',
+               'sourceObj': {'product': 'NBM.AWS.GRIB',
+                             'region': 'PR',
+                             'issue': '2022-01-02T12:00:00.000Z'
+                             }}
+    with pytest.raises(ValidationError):
+        available_data_validator.validate(message)
+
+
+def test_validate_das_lead_request(available_data_validator: Validator):
+    message = {'sourceType': 'lead',
+               'sourceObj': {'product': 'NBM.AWS.GRIB',
+                             'region': 'PR',
+                             'field': 'TEMP',
+                             'issue': '2022-01-02T12:00:00.000Z'
+                             }}
+    try:
+        available_data_validator.validate(message)
+    except ValidationError as exc:
+        assert False, f'Validate message raised an exception {exc}'
+
+
+def test_validate_das_bad_lead_request(available_data_validator: Validator):
+    # message is missing 'product'
+    message = {'sourceType': 'valid',
+               'sourceObj': {'region': 'PR',
+                             'field': 'TEMP',
+                             'issue': '2022-01-02T12:00:00.000Z'
+                             }}
+    with pytest.raises(ValidationError):
+        available_data_validator.validate(message)
+
+
+def test_validate_das_field_request(available_data_validator: Validator):
+    message = {'sourceType': 'field',
+               'sourceObj': {'product': 'NBM.AWS.GRIB',
+                             'region': 'PR',
+                             'field': 'TEMP',
+                             'issue': '2022-01-02T12:00:00.000Z',
+                             'valid': '2022-01-02T15:00:00.000Z'
+                             }}
+    try:
+        available_data_validator.validate(message)
+    except ValidationError as exc:
+        assert False, f'Validate message raised an exception {exc}'
+
+
+def test_validate_das_bad_field_request(available_data_validator: Validator):
+    # message is missing 'issue'
+    message = {'sourceType': 'field',
+               'sourceObj': {'product': 'NBM.AWS.GRIB',
+                             'region': 'PR',
+                             'field': 'TEMP',
+                             'valid': '2022-01-02T15:00:00.000Z'
+                             }}
+    with pytest.raises(ValidationError):
+        available_data_validator.validate(message)
 
 
 def test_validate_das_data_request():
