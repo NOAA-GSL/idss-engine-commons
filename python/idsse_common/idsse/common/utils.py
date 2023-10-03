@@ -221,6 +221,26 @@ def round_half_away(number: float, precision: int = 0) -> Union[int, float]:
     return int(rounded_number) if precision == 0 else float(rounded_number)
 
 
+def strtobool(val: Union[bool, str]) -> bool:
+    """
+    Convert a string representation of truth to True (1) or False (0), case-insensitive.
+
+    A built-in strtobool() exists in Python 3.11 (distutils.utils.strbool),
+    but it is deprecated and will be removed in Python 3.12.
+
+    Args:
+        val (Union(bool, str)): string representation of truth (e.g. 'TRUE') or bool
+
+    Raises:
+        ValueError: if val is anything other than a bool or truthy string
+    """
+    if str(val).lower() == 'true':
+        return True
+    if str(val).lower() == 'false':
+        return False
+    raise ValueError(f'Unable to convert value to bool: {val}')
+
+
 def shrink_grib(filename: str, variables: List[str]) -> None:
     """
     Shrink a grib file extracting only those variables from the list provided.
