@@ -3,10 +3,7 @@
         "description": "Mechanism for specifying an input source, typically for operator",
         "anyOf": [
             {"$ref": "data.json#/Data"},
-            {"$ref": "unit_opr.json#/UnitOpr"},
-            {"$ref": "slice_opr.json#/SliceOpr"},
-            {"$ref": "criteria_opr.json#/CriteriaOpr"},
-            {"$ref": "join_opr.json#/JoinOpr"}
+            {"$ref": "operator.json#/Operator"}
         ]
     }
 }

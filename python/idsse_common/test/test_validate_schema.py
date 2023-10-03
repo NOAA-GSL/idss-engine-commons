@@ -23,6 +23,12 @@ def available_data_validator() -> Validator:
     return get_validator(schema_name)
 
 
+@fixture
+def data_validator() -> Validator:
+    schema_name = 'das_data_schema'
+    return get_validator(schema_name)
+
+
 def test_validate_das_issue_request(available_data_validator: Validator):
     message = {'sourceType': 'issue',
                'sourceObj': {'product': 'NBM.AWS.GRIB',
@@ -120,7 +126,7 @@ def test_validate_das_bad_field_request(available_data_validator: Validator):
         available_data_validator.validate(message)
 
 
-def test_validate_das_data_request():
+def test_validate_das_data_request(data_validator: Validator):
     message = {
         'sourceType': 'data',
         'sourceObj': {
@@ -131,13 +137,25 @@ def test_validate_das_data_request():
             'issue': '2022-11-11T14:00:00.000Z'
         }
     }
-
-    schema_name = 'das_data_schema'
-    validator = get_validator(schema_name)
     try:
-        validator.validate(message)
+        data_validator.validate(message)
     except ValidationError as exc:
         assert False, f'Validate message raised an exception {exc}'
+
+
+def test_validate_das_bad_data_request(data_validator: Validator):
+    # missing product
+    message = {
+        'sourceType': 'data',
+        'sourceObj': {
+            'region': 'CO',
+            'field': 'WINDSPEED',
+            'valid': '2022-11-12T00:00:00.000Z',
+            'issue': '2022-11-11T14:00:00.000Z'
+        }
+    }
+    with raises(ValidationError):
+        data_validator.validate(message)
 
 
 def test_validate_das_unit_request():
