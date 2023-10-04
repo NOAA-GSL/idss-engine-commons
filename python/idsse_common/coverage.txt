@@ -44,11 +44,11 @@ idsse/common/grid_proj.py            53      0   100%
 idsse/common/json_message.py         22     22     0%
 idsse/common/log_util.py             40     40     0%
 idsse/common/path_builder.py        157     41    74%
-idsse/common/publish_confirm.py     153    153     0%
+idsse/common/publish_confirm.py     155    155     0%
 idsse/common/rabbitmq_utils.py       16     16     0%
 idsse/common/utils.py               111     12    89%
 idsse/common/validate_schema.py      39      0   100%
 -----------------------------------------------------
-TOTAL                               745    297    60%
+TOTAL                               747    299    60%
 
-======================= 104 passed, 7 warnings in 1.29s ========================
+======================= 104 passed, 7 warnings in 1.56s ========================
