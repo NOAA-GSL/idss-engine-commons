@@ -16,8 +16,9 @@ import logging
 import logging.config
 import json
 import time
+from dataclasses import dataclass, field
 from threading import Thread
-from typing import NamedTuple, Optional, Dict
+from typing import Optional, Dict
 
 import pika
 from pika import SelectConnection
@@ -29,7 +30,8 @@ from idsse.common.log_util import get_default_log_config, set_corr_id_context_va
 logger = logging.getLogger(__name__)
 
 
-class PublishedMessages(NamedTuple):
+@dataclass
+class PublishConfirmRecords:
     """Data class to track RabbitMQ activity metadata
 
     Args:
@@ -38,10 +40,10 @@ class PublishedMessages(NamedTuple):
         nacked (int): Count of unacknowledged RabbitMQ messages
         message_number (int): The ID which will be assigned to the next published message
     """
-    deliveries: Dict[int, str] = {}
-    acked = 0
-    nacked = 0
-    message_number = 0
+    deliveries: Dict[int, str] = field(default_factory=dict)
+    acked: int = 0
+    nacked: int = 0
+    message_number: int = 0
 
 
 class PublishConfirm(Thread):
@@ -64,7 +66,7 @@ class PublishConfirm(Thread):
         self._connection: Optional[SelectConnection] = None
         self._channel: Optional[Channel] = None
 
-        self._records = PublishedMessages()
+        self._records = PublishConfirmRecords()
 
         self._stopping = False
         self._url = (f'amqp://{conn.username}:{conn.password}@{conn.host}'
