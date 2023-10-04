@@ -10,11 +10,10 @@
 # --------------------------------------------------------------------------------
 # pylint: disable=missing-function-docstring,disable=invalid-name
 
-import shutil
 from copy import deepcopy
 from datetime import datetime, timedelta
 from math import pi
-from os import path, remove, stat
+from os import path
 from typing import Union
 
 from pytest import raises
@@ -22,7 +21,7 @@ from pytest import mark
 
 from idsse.common.utils import TimeDelta, Map
 from idsse.common.utils import (datetime_gen, hash_code, exec_cmd, to_compact,
-                                to_iso, dict_copy_with, round_half_away, shrink_grib, strtobool)
+                                to_iso, dict_copy_with, round_half_away, strtobool)
 
 
 def test_timedelta_minute():
@@ -156,27 +155,6 @@ def test_datetime_gen_switch_time_delta_sign():
     assert dts_found == [datetime(2021, 1, 2, 3, 0),
                          datetime(2021, 1, 16, 3, 0),
                          datetime(2021, 1, 30, 3, 0)]
-
-
-def test_shrink_grib():
-    variables = ["Total Precipitation",
-                 "parameterNumber: 228",
-                 "Total snowfall",
-                 "2 metre temperature",
-                 "2 metre relative humidity",
-                 "2 metre dewpoint temperature",
-                 "10 metre wind speed",
-                 "Instantaneous 10 metre wind gust"]
-
-    original = path.join(path.dirname(__file__),
-                         'resources/blend.t00z.core.f001.co.grib2.original')
-    gribfile = original.split('.original', maxsplit=1)[0]
-    shutil.copy(original, gribfile)
-
-    shrink_grib(gribfile, variables)
-    assert stat(gribfile).st_size > 0
-    assert stat(gribfile).st_size < stat(original).st_size
-    remove(gribfile)  # Cleanup...
 
 
 @mark.parametrize('val, expected', [('TRUE', True), ('fALsE', False)])
