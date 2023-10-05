@@ -1,9 +1,9 @@
 {
     "Source": {
         "description": "Mechanism for specifying an input source, typically for operator",
-        "anyOf": [
-            {"$ref": "data.json#/Data"},
-            {"$ref": "operator.json#/Operator"}
+        "oneOf": [ 
+            {"allOf": [{"$ref": "data.json#/Data"}]},
+            {"allOf": [{"$ref": "operator.json#/Operator"}]}
         ]
     }
 }

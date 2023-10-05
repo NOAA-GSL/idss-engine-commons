@@ -145,14 +145,10 @@
                 "type": "array",
                 "items": {"$ref": "#/Feature"},
                 "minItems": 1
-            },
-            "buffer": {"type": "number"},
-            "bufferUnits": {"type": "string", "enum": "miles"}
+            }
         },
         "required": [
-            "features",
-            "buffer",
-            "bufferUnits"
+            "features"
         ]
     }
 }

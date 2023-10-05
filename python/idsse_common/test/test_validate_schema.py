@@ -24,8 +24,8 @@ def available_data_validator() -> Validator:
 
 
 @fixture
-def data_validator() -> Validator:
-    schema_name = 'das_data_schema'
+def data_request_validator() -> Validator:
+    schema_name = 'das_data_request_schema'
     return get_validator(schema_name)
 
 
@@ -126,7 +126,7 @@ def test_validate_das_bad_field_request(available_data_validator: Validator):
         available_data_validator.validate(message)
 
 
-def test_validate_das_data_request(data_validator: Validator):
+def test_validate_das_data_request(data_request_validator: Validator):
     message = {
         'sourceType': 'data',
         'sourceObj': {
@@ -138,12 +138,12 @@ def test_validate_das_data_request(data_validator: Validator):
         }
     }
     try:
-        data_validator.validate(message)
+        data_request_validator.validate(message)
     except ValidationError as exc:
         assert False, f'Validate message raised an exception {exc}'
 
 
-def test_validate_das_bad_data_request(data_validator: Validator):
+def test_validate_das_bad_data_request(data_request_validator: Validator):
     # missing product
     message = {
         'sourceType': 'data',
@@ -155,10 +155,11 @@ def test_validate_das_bad_data_request(data_validator: Validator):
         }
     }
     with raises(ValidationError):
-        data_validator.validate(message)
+        data_request_validator.validate(message)
 
 
-def test_validate_das_unit_request():
+def test_validate_das_opr_with_single_source_request(data_request_validator: Validator):
+    # this is an example of a unit conversion operator, the operator itself is not be validated
     message = {
         'sourceType': 'units',
         'sourceObj': {
@@ -175,47 +176,38 @@ def test_validate_das_unit_request():
             }
         }
     }
-    schema_name = 'das_request_schema'
-    validator = get_validator(schema_name)
     try:
-        validator.validate(message)
+        data_request_validator.validate(message)
     except ValidationError as exc:
         assert False, f'Validate message raised an exception {exc}'
 
 
-def test_validate_das_criteria_request():
+def test_validate_das_bad_opr_with_single_source_request(data_request_validator: Validator):
+    # this is an example of a unit conversion operator, the operator itself is not be validated
     message = {
-        "sourceType": "condition",
-        "sourceObj": {
-            "mapping": {"endWeight": [0, 1, 0],
-                        "startWeight": [0, 1, 0],
-                        "controlPoints": ["-Inf", 35, 75, 100]},
-            "relational": "LESSTHAN",
-            "source": {
-                "sourceType": "units",
-                "sourceObj": {
-                    "units": "F",
-                    "source": {
-                        "sourceType": "data",
-                        "sourceObj": {
-                            "product": "NBM",
-                            "region": "CO",
-                            "field": "TEMP",
-                            "valid": "2022-11-12T00:00:00.000Z",
-                            "issue": "2022-11-11T14:00:00.000Z"}}}},
-            "thresh": 60}}
-
-    schema_name = 'das_request_schema'
-    validator = get_validator(schema_name)
-    try:
-        validator.validate(message)
-    except ValidationError as exc:
-        assert False, f'Validate message raised an exception {exc}'
+        'sourceType': 'units',
+        'sourceObj': {
+            'units': 'F',
+            'source': {
+                'sourceType': 'field',
+                'sourceObj': {
+                    'product': 'NBM.AWS.GRIB',
+                    'region': 'CO',
+                    'issue': '2022-01-02T12:00:00.000Z',
+                    'valid': '2022-01-02T15:00:00.000Z',
+                    'field': 'TEMP'
+                }
+            }
+        }
+    }
+    with raises(ValidationError):
+        data_request_validator.validate(message)
 
 
-def test_validate_das_criteria_join_request():
+def test_validate_das_opr_with_multi_sources_request(data_request_validator: Validator):
+    # this is an example of a logical join operator, the operator itself is not be validated
     message = {
-        "sourceType": "conditionJoin",
+        "sourceType": "join",
         "sourceObj": {
             "sources": [{
                 "sourceType": "condition",
@@ -267,8 +259,155 @@ def test_validate_das_criteria_join_request():
         "label": ("AND(NBM:TEMP:Fahrenheit:LT:60.000:35.000:75.000:true, "
                   "NBM:WINDSPEED:MilesPerHour:GT:3.000:0.000:5.000:true)")
     }
+    try:
+        data_request_validator.validate(message)
+    except ValidationError as exc:
+        assert False, f'Validate message raised an exception {exc}'
 
-    schema_name = 'das_request_schema'
+
+def test_validate_das_bad_opr_with_multi_sources_request(data_request_validator: Validator):
+    # one of the operator object does not contains 'source', has 'not_source' instead
+    message = {
+        "sourceType": "join",
+        "sourceObj": {
+            "sources": [{
+                "sourceType": "condition",
+                "sourceObj": {
+                    "mapping": {
+                        "endWeight": [0, 1, 0],
+                        "startWeight": [0, 1, 0],
+                        "controlPoints": ["-Infinity", 35, 75, "Infinity"]},
+                    "relational": "LESSTHAN",
+                    "source": {
+                        "sourceType": "units",
+                        "sourceObj": {
+                            "units": "F",
+                            "source": {
+                                "sourceType": "data",
+                                "sourceObj": {
+                                    "product": "NBM",
+                                    "field": "TEMP",
+                                    "region": "CO",
+                                    "valid": "2022-11-12T00:00:00.000Z",
+                                    "issue": "2022-11-11T14:00:00.000Z"}}},
+                        "label": "NBM:TEMP:Fahrenheit"},
+                    "thresh": 60},
+                "label": "NBM:TEMP:Fahrenheit:LT:60.000:35.000:75.000:true"},
+                {
+                "sourceType": "condition",
+                "sourceObj": {
+                    "mapping": {
+                        "endWeight": [0, 1, 0],
+                        "startWeight":[0, 1, 0],
+                        "controlPoints": ["-Infinity", 0, 5, "Infinity"]},
+                    "relational": "GREATERTHAN",
+                    "not_source": {
+                        "sourceType": "units",
+                        "sourceObj": {
+                            "units": "MPH",
+                            "source": {
+                                "sourceType": "data",
+                                "sourceObj": {
+                                    "product": "NBM",
+                                    "field": "WINDSPEED",
+                                    "region": "CO",
+                                    "valid": "2022-11-12T00:00:00.000Z",
+                                    "issue": "2022-11-11T14:00:00.000Z"}}},
+                        "label": "NBM:WINDSPEED:MilesPerHour"},
+                    "thresh": 3},
+                "label": "NBM:WINDSPEED:MilesPerHour:GT:3.000:0.000:5.000:true"}],
+            "join": "AND"},
+        "label": ("AND(NBM:TEMP:Fahrenheit:LT:60.000:35.000:75.000:true, "
+                  "NBM:WINDSPEED:MilesPerHour:GT:3.000:0.000:5.000:true)")
+    }
+    with raises(ValidationError):
+        data_request_validator.validate(message)
+
+
+def test_validate_criteria():
+    message = {
+        "corrId": {
+            "originator": "IDSSe",
+            "uuid": "4899d220-beec-467b-a0e6-9d215b715b97",
+            "issueDt": "2022/10/07 14:00:00"
+        },
+        "issueDt": "2022/10/07 14:00:00",
+        "location": {
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "name": "The spot",
+                        "radius": 3.00
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [
+                            -106.62312540068922,
+                            34.964261450738306
+                        ]
+                    }
+                }
+            ]
+        },
+        "validDt": {
+            "start": "2022/10/08 0:00:00",
+            "end": "2022/10/08 12:00:00"
+        },
+        "conditions": [
+            {
+                "severity": "MODERATE",
+                "combined": "A AND B",
+            },
+        ],
+        "data": {
+            "A": {
+                "arealPercentage": 0,
+                "duration": 0,
+                "product": {
+                    "fcst": [
+                        "NBM"
+                    ]
+                },
+                "field": "DEW POINT",
+                "units": "Fahrenheit",
+                "relational": "LESS THAN",
+                "thresh": 60,
+                "mapping": {
+                    "min": 35.0,
+                    "max": 75.0,
+                    "clip": "true"
+                }
+            },
+            "B": {
+                "arealPercentage": 0,
+                "duration": 0,
+                "product": {
+                    "fcst": [
+                        "NBM"
+                    ]
+                },
+                "field": "RELATIVE HUMIDITY",
+                "units": "PERCENT",
+                "relational": "GREATER THAN",
+                "thresh": 30,
+                "mapping": {
+                    "min": 0.0,
+                    "max": 75.0,
+                    "clip": "true"
+                }
+            }
+        },
+        "tags": {
+            "values": [
+            ],
+            "keyValues": {
+                "name": "Abq Rain",
+                "nwsOffice": "BOU"
+            }
+        }
+    }
+    schema_name = 'criteria_schema'
     validator = get_validator(schema_name)
     try:
         validator.validate(message)

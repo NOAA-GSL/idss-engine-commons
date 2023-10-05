@@ -1,18 +1,31 @@
 {
+    "KeyValues": {
+        "description": "List of key,value pairs that are meaningful to user",
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"},
+            "nwsOffice": {"type": "string"}
+        },
+        "patternProperties": {
+            "": {"type": "string"}
+        },
+        "required": [
+            "name",
+            "nwsOffice"
+        ]
+    },
+
     "Tags": {
         "description": "List of values and/or key,value pairs that are meaningful to user",
         "type": "object",
         "properties": {
             "values": {
                 "description": "List of values that are meaningful to user",
-                "type":  [ "array", "null" ],
+                "type": [ "array", "null" ],
                 "items": {"type": "string"}, 
-                "required":false
+                "required": false
             },
-            "keyValues": {
-                "description": "List of key,value pairs that are meaningful to user",
-                "type": "object"
-            }
+            "keyValues":  {"$ref": "#/KeyValues"}
         },
         "required": [
             "keyValues"

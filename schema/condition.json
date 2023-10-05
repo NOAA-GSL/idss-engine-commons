@@ -1,0 +1,19 @@
+{
+    "Condition": {
+        "description": "Mechanism for defining the data and thresholds of interest",
+        "type": "object",
+        "properties": {
+            "severity": {
+                "type": "string",
+                "enum": ["MINOR", "MODERATE", "SEVERE", "EXTREME"]
+            },
+            "combined": {
+                "type": "string"
+            }
+        },
+        "required": [
+            "severity",
+            "combined"
+        ]
+    }
+}
