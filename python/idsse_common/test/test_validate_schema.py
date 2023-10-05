@@ -36,6 +36,63 @@ def criteria_validator() -> Validator:
 
 
 @fixture
+def data_message() -> dict:
+    return {
+        "sourceType": "join",
+        "sourceObj": {
+            "sources": [{
+                "sourceType": "condition",
+                "sourceObj": {
+                    "mapping": {
+                        "endWeight": [0, 1, 0],
+                        "startWeight": [0, 1, 0],
+                        "controlPoints": ["-Infinity", 35, 75, "Infinity"]},
+                    "relational": "LESSTHAN",
+                    "source": {
+                        "sourceType": "units",
+                        "sourceObj": {
+                            "units": "F",
+                            "source": {
+                                "sourceType": "data",
+                                "sourceObj": {
+                                    "product": "NBM",
+                                    "field": "TEMP",
+                                    "region": "CO",
+                                    "valid": "2022-11-12T00:00:00.000Z",
+                                    "issue": "2022-11-11T14:00:00.000Z"}}},
+                        "label": "NBM:TEMP:Fahrenheit"},
+                    "thresh": 60},
+                "label": "NBM:TEMP:Fahrenheit:LT:60.000:35.000:75.000:true"},
+                {
+                "sourceType": "condition",
+                "sourceObj": {
+                    "mapping": {
+                        "endWeight": [0, 1, 0],
+                        "startWeight":[0, 1, 0],
+                        "controlPoints": ["-Infinity", 0, 5, "Infinity"]},
+                    "relational": "GREATERTHAN",
+                    "source": {
+                        "sourceType": "units",
+                        "sourceObj": {
+                            "units": "MPH",
+                            "source": {
+                                "sourceType": "data",
+                                "sourceObj": {
+                                    "product": "NBM",
+                                    "field": "WINDSPEED",
+                                    "region": "CO",
+                                    "valid": "2022-11-12T00:00:00.000Z",
+                                    "issue": "2022-11-11T14:00:00.000Z"}}},
+                        "label": "NBM:WINDSPEED:MilesPerHour"},
+                    "thresh": 3},
+                "label": "NBM:WINDSPEED:MilesPerHour:GT:3.000:0.000:5.000:true"}],
+            "join": "AND"},
+        "label": ("AND(NBM:TEMP:Fahrenheit:LT:60.000:35.000:75.000:true, "
+                  "NBM:WINDSPEED:MilesPerHour:GT:3.000:0.000:5.000:true)")
+    }
+
+
+@fixture
 def criteria_message() -> dict:
     return {
         "corrId": {
@@ -119,7 +176,6 @@ def criteria_message() -> dict:
             }
         }
     }
-
 
 
 def test_validate_das_issue_request(available_data_validator: Validator):
@@ -297,153 +353,55 @@ def test_validate_das_bad_opr_with_single_source_request(data_request_validator:
         data_request_validator.validate(message)
 
 
-def test_validate_das_opr_with_multi_sources_request(data_request_validator: Validator):
+def test_validate_das_opr_with_multi_sources_request(data_request_validator: Validator,
+                                                     data_message: dict):
     # this is an example of a logical join operator, the operator itself is not validated
-    message = {
-        "sourceType": "join",
-        "sourceObj": {
-            "sources": [{
-                "sourceType": "condition",
-                "sourceObj": {
-                    "mapping": {
-                        "endWeight": [0, 1, 0],
-                        "startWeight": [0, 1, 0],
-                        "controlPoints": ["-Infinity", 35, 75, "Infinity"]},
-                    "relational": "LESSTHAN",
-                    "source": {
-                        "sourceType": "units",
-                        "sourceObj": {
-                            "units": "F",
-                            "source": {
-                                "sourceType": "data",
-                                "sourceObj": {
-                                    "product": "NBM",
-                                    "field": "TEMP",
-                                    "region": "CO",
-                                    "valid": "2022-11-12T00:00:00.000Z",
-                                    "issue": "2022-11-11T14:00:00.000Z"}}},
-                        "label": "NBM:TEMP:Fahrenheit"},
-                    "thresh": 60},
-                "label": "NBM:TEMP:Fahrenheit:LT:60.000:35.000:75.000:true"},
-                {
-                "sourceType": "condition",
-                "sourceObj": {
-                    "mapping": {
-                        "endWeight": [0, 1, 0],
-                        "startWeight":[0, 1, 0],
-                        "controlPoints": ["-Infinity", 0, 5, "Infinity"]},
-                    "relational": "GREATERTHAN",
-                    "source": {
-                        "sourceType": "units",
-                        "sourceObj": {
-                            "units": "MPH",
-                            "source": {
-                                "sourceType": "data",
-                                "sourceObj": {
-                                    "product": "NBM",
-                                    "field": "WINDSPEED",
-                                    "region": "CO",
-                                    "valid": "2022-11-12T00:00:00.000Z",
-                                    "issue": "2022-11-11T14:00:00.000Z"}}},
-                        "label": "NBM:WINDSPEED:MilesPerHour"},
-                    "thresh": 3},
-                "label": "NBM:WINDSPEED:MilesPerHour:GT:3.000:0.000:5.000:true"}],
-            "join": "AND"},
-        "label": ("AND(NBM:TEMP:Fahrenheit:LT:60.000:35.000:75.000:true, "
-                  "NBM:WINDSPEED:MilesPerHour:GT:3.000:0.000:5.000:true)")
-    }
     try:
-        data_request_validator.validate(message)
+        data_request_validator.validate(data_message)
     except ValidationError as exc:
         assert False, f'Validate message raised an exception {exc}'
 
 
-def test_validate_das_bad_opr_with_multi_sources_request(data_request_validator: Validator):
+def test_validate_das_bad_opr_with_multi_sources_request(data_request_validator: Validator,
+                                                         data_message: dict):
     # one of the operator object does not contains 'source', has 'not_source' instead
-    message = {
-        "sourceType": "join",
-        "sourceObj": {
-            "sources": [{
-                "sourceType": "condition",
-                "sourceObj": {
-                    "mapping": {
-                        "endWeight": [0, 1, 0],
-                        "startWeight": [0, 1, 0],
-                        "controlPoints": ["-Infinity", 35, 75, "Infinity"]},
-                    "relational": "LESSTHAN",
-                    "source": {
-                        "sourceType": "units",
-                        "sourceObj": {
-                            "units": "F",
-                            "source": {
-                                "sourceType": "data",
-                                "sourceObj": {
-                                    "product": "NBM",
-                                    "field": "TEMP",
-                                    "region": "CO",
-                                    "valid": "2022-11-12T00:00:00.000Z",
-                                    "issue": "2022-11-11T14:00:00.000Z"}}},
-                        "label": "NBM:TEMP:Fahrenheit"},
-                    "thresh": 60},
-                "label": "NBM:TEMP:Fahrenheit:LT:60.000:35.000:75.000:true"},
-                {
-                "sourceType": "condition",
-                "sourceObj": {
-                    "mapping": {
-                        "endWeight": [0, 1, 0],
-                        "startWeight":[0, 1, 0],
-                        "controlPoints": ["-Infinity", 0, 5, "Infinity"]},
-                    "relational": "GREATERTHAN",
-                    "not_source": {
-                        "sourceType": "units",
-                        "sourceObj": {
-                            "units": "MPH",
-                            "source": {
-                                "sourceType": "data",
-                                "sourceObj": {
-                                    "product": "NBM",
-                                    "field": "WINDSPEED",
-                                    "region": "CO",
-                                    "valid": "2022-11-12T00:00:00.000Z",
-                                    "issue": "2022-11-11T14:00:00.000Z"}}},
-                        "label": "NBM:WINDSPEED:MilesPerHour"},
-                    "thresh": 3},
-                "label": "NBM:WINDSPEED:MilesPerHour:GT:3.000:0.000:5.000:true"}],
-            "join": "AND"},
-        "label": ("AND(NBM:TEMP:Fahrenheit:LT:60.000:35.000:75.000:true, "
-                  "NBM:WINDSPEED:MilesPerHour:GT:3.000:0.000:5.000:true)")
-    }
+    mapping_opr = data_message['sourceObj']['sources'][1]['sourceObj']
+    mapping_opr['not_source'] = mapping_opr.pop('source')
     with raises(ValidationError):
-        data_request_validator.validate(message)
+        data_request_validator.validate(data_message)
 
 
-def test_validate_criteria_message(criteria_validator, criteria_message):
+def test_validate_criteria_message(criteria_validator: Validator, criteria_message: dict):
     try:
         criteria_validator.validate(criteria_message)
     except ValidationError as exc:
         assert False, f'Validate message raised an exception {exc}'
 
 
-def test_validate_criteria_message_conditions(criteria_validator, criteria_message):
+def test_validate_criteria_message_conditions(criteria_validator: Validator,
+                                              criteria_message: dict):
     criteria_message.pop('conditions')
     with raises(ValidationError):
         criteria_validator.validate(criteria_message)
 
 
-def test_validate_criteria_message_with_missing_name(criteria_validator, criteria_message):
+def test_validate_criteria_message_with_missing_name(criteria_validator: Validator,
+                                                     criteria_message: dict):
     criteria_message['tags']['keyValues'].pop('name')
     with raises(ValidationError):
         criteria_validator.validate(criteria_message)
 
 
-def test_validate_criteria_message_with_bad_product_type(criteria_validator, criteria_message):
+def test_validate_criteria_message_with_bad_product_type(criteria_validator: Validator,
+                                                         criteria_message: dict):
     product = criteria_message['data']['A']['product']
     product['not_fcst_or_obs'] = product.pop('fcst')
     with raises(ValidationError):
         criteria_validator.validate(criteria_message)
 
 
-def test_validate_criteria_message_with_bad_mapping(criteria_validator, criteria_message):
+def test_validate_criteria_message_with_bad_mapping(criteria_validator: Validator,
+                                                    criteria_message: dict):
     mapping = criteria_message['data']['B']['mapping']
     mapping['smallest'] = mapping.pop('min')
     with raises(ValidationError):
