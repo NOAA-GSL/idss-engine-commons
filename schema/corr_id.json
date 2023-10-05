@@ -1,6 +1,6 @@
 {
     "CorrId": {
-        "description": "Either a TimeString, TimeList, or TimeRange",
+        "description": "Correlation identification used to track flow through the microservices",
         "type": "object",
         "properties": {
             "originator": {

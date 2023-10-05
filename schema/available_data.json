@@ -3,7 +3,7 @@
         "description": "Mechanism for making a request regarding what issue is available",
         "type": "object",
         "properties": {
-            "sourceType": {"const": "issue"},
+            "sourceType": {"type": "string", "const": "issue"},
             "sourceObj": {
                 "type": "object",
                 "properties": {
@@ -34,7 +34,7 @@
         "description": "Mechanism for making a request regarding what valid (or lead) is available",
         "type": "object",
         "properties": {
-            "sourceType": {"enum": ["valid", "lead"]},
+            "sourceType": {"type": "string", "enum": ["valid", "lead"]},
             "sourceObj": {
                 "type": "object",
                 "properties": {
@@ -62,24 +62,8 @@
         "description": "Mechanism for making a request if a field is available",
         "type": "object",
         "properties": {
-            "sourceType": {"const": "field"},
-            "sourceObj": {
-                "type": "object",
-                "properties": {
-                    "product": {"$ref": "product.json#/Product"},
-                    "region": {"$ref": "region.json#/Region"},
-                    "field": {"$ref": "field.json#/Field"},
-                    "issue": {"$ref": "timing.json#/TimeString"},
-                    "valid": {"$ref": "timing.json#/TimeString"}
-                },
-                "required": [
-                    "product",
-                    "region",
-                    "field",
-                    "issue",
-                    "valid"
-                ]
-            }
+            "sourceType": {"type": "string", "const": "field"},
+            "sourceObj": {"$ref": "variable.json#/Variable"}
         },
         "required": [
             "sourceType",

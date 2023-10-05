@@ -1,28 +1,32 @@
 {
-    "JoinOpr": {
-        "description": "Mechanism for making a request for data to be returned with specific units",
+    "Operator": {
+        "description": "Mechanism for validating various operator, but ultimately must reference data",
         "type": "object",
         "properties": {
             "sourceType": {
-                "type": "string",
-                "enum": ["conditionJoin", "criteriaJoin", "join"]
+                "type": "string"
             },
             "sourceObj": {
                 "type": "object",
                 "properties": {
-                    "join": {
-                        "type": "string",
-                        "enum": ["AND", "OR", "XOR"]
-                    },
+                    "source": {"$ref": "source.json#/Source"},
                     "sources":{
                         "type": "array",
                         "minItems": 2,
                         "items": {"$ref": "source.json#/Source"}
                     }
                 },
-                "required": [
-                    "join",
-                    "sources"
+                "oneOf": [
+                    {
+                        "required": [
+                            "source"
+                        ]
+                    },
+                    {
+                        "required": [
+                            "sources"
+                        ]
+                    }
                 ]
             }
         },

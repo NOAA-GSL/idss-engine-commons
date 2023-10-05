@@ -5,13 +5,26 @@
         "issueDt": {"$ref": "timing.json#/Timing"},
         "tags": {"$ref": "tags.json#/Tags"},
         "validDt": {"$ref": "timing.json#/Timing"},
-        "location": {"$ref": "location.json#/Location"}
+        "location": {"$ref": "location.json#/Location"},
+        "conditions": {
+            "type": "array",
+            "items": {"$ref": "condition.json#/Condition"},
+            "minItems": 1
+        },
+        "data": {
+            "type": "object",
+            "patternProperties": {
+                "": {"$ref": "impact_thresholds.json#/ImpactThresholds"}
+            }
+        }
     },
     "required": [
         "corrId",
         "issueDt",
         "tags",
         "validDt",
-        "location"
+        "location",
+        "conditions",
+        "data"
     ]
 }
