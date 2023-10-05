@@ -14,14 +14,12 @@ from copy import deepcopy
 from datetime import datetime, timedelta
 from math import pi
 from os import path
-from typing import Union
 
-from pytest import raises
-from pytest import mark
+import pytest
 
 from idsse.common.utils import TimeDelta, Map
 from idsse.common.utils import (datetime_gen, hash_code, exec_cmd, to_compact,
-                                to_iso, dict_copy_with, round_half_away, strtobool)
+                                to_iso, dict_copy_with, round_half_away)
 
 
 def test_timedelta_minute():
@@ -82,7 +80,7 @@ def test_to_compact():
     assert to_compact(dt) == '20131211100908'
 
 
-@mark.parametrize('string, hash_code_', [('Everyone is equal', 1346529203),
+@pytest.mark.parametrize('string, hash_code_', [('Everyone is equal', 1346529203),
                                                 ('You are awesome', -1357061130)])
 def test_hash_code(string, hash_code_):
     assert hash_code(string) == hash_code_
@@ -157,33 +155,21 @@ def test_datetime_gen_switch_time_delta_sign():
                          datetime(2021, 1, 30, 3, 0)]
 
 
-@mark.parametrize('val, expected', [('TRUE', True), ('fALsE', False)])
-def test_str_to_bool(val: str, expected: bool):
-    assert strtobool(val) == expected
-
-
-@mark.parametrize('val', [1.234, 'yes'])
-def test_strtobool_invalid_value(val: Union[str, float]):
-    with raises(ValueError) as exc:
-        _ = strtobool(val)
-    assert exc is not None
-
-
-@mark.parametrize('number, expected', [(2.50000, 3), (-14.5000, -15), (3.49999, 3)])
+@pytest.mark.parametrize('number, expected', [(2.50000, 3), (-14.5000, -15), (3.49999, 3)])
 def test_round_half_away_int(number: float, expected: int):
     result = round_half_away(number)
     assert isinstance(result, int)
     assert result == expected
 
 
-@mark.parametrize('number, expected', [(9.5432, 9.5), (-0.8765, -0.9)])
+@pytest.mark.parametrize('number, expected', [(9.5432, 9.5), (-0.8765, -0.9)])
 def test_round_half_away_float(number: float, expected: float):
     result = round_half_away(number, precision=1)
     assert isinstance(result, float)
     assert result == expected
 
 
-@mark.parametrize('number, expected',
+@pytest.mark.parametrize('number, expected',
                   [(100.987654321, 100.988), (-43.21098, -43.211), (pi, 3.142)])
 def test_round_half_away_with_precision(number: float, expected: float):
     result = round_half_away(number, precision=3)
