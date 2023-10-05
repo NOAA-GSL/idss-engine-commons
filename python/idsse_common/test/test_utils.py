@@ -165,7 +165,7 @@ def test_str_to_bool(val: str, expected: bool):
 @mark.parametrize('val', [1.234, 'yes'])
 def test_strtobool_invalid_value(val: Union[str, float]):
     with raises(ValueError) as exc:
-        strtobool(val)
+        _ = strtobool(val)
     assert exc is not None
 
 

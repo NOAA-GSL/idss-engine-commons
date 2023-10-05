@@ -12,12 +12,9 @@
 import copy
 import logging
 import math
-import shutil
 from datetime import datetime, timedelta, timezone
 from subprocess import PIPE, Popen, TimeoutExpired
-from typing import Any, Generator, List, Optional, Sequence, Union
-
-import pygrib
+from typing import Any, Generator, Optional, Sequence, Union
 
 logger = logging.getLogger(__name__)
 
