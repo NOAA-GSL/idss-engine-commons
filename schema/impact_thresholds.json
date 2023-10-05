@@ -9,8 +9,8 @@
                 "type": "object",
                 "additionalProperties": false,
                 "patternProperties": {   
-                  "fcst": {},
-                  "obs": {}
+                  "^fcst$": {},
+                  "^obs$": {}
                 }
             },
             "field": {"type": "string"},
