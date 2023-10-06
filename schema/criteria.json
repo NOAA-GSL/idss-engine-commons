@@ -1,0 +1,32 @@
+{
+    "Criteria": {
+        "description": "Mechanism for defining criteria",
+        "type": "object",
+        "properties": {   
+            "corrId": {"$ref": "corr_id.json#/CorrId"},
+            "issueDt": {"$ref": "timing.json#/Timing"},
+            "tags": {"$ref": "tags.json#/Tags"},
+            "validDt": {"$ref": "timing.json#/Timing"},
+            "location": {"$ref": "location.json#/Location"},
+            "conditions": {
+                "type": "array",
+                "items": {"$ref": "condition.json#/Condition"},
+                "minItems": 1
+            },
+            "parts": {
+                "type": "array",
+                "items": {"$ref": "translated_data.json#/TranslatedData"},
+                "minItems": 1
+            }
+        },
+        "required": [
+            "corrId",
+            "issueDt",
+            "tags",
+            "validDt",
+            "location",
+            "conditions",
+            "parts"
+        ]
+    }
+}
