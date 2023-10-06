@@ -335,7 +335,7 @@ def simple_event_port_message() -> dict:
                 "validDt": ["2022-11-12T00:00:00.000Z"],
                 "singleValue": {
                     "criteria": [0.18964463472366333],
-                    "raw": [38.53400802612305],
+                    "raw": [38.53400802612305]
                 },
                 "geoDist": {
                     "criteria": [{"0.18964463472366333": 1}],
