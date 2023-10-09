@@ -12,12 +12,9 @@
 import copy
 import logging
 import math
-import shutil
 from datetime import datetime, timedelta, timezone
 from subprocess import PIPE, Popen, TimeoutExpired
-from typing import Any, Generator, List, Optional, Sequence, Union
-
-import pygrib
+from typing import Any, Generator, Optional, Sequence, Union
 
 logger = logging.getLogger(__name__)
 
@@ -219,44 +216,3 @@ def round_half_away(number: float, precision: int = 0) -> Union[int, float]:
         else _round_away_from_zero(factored_number)
     ) / factor
     return int(rounded_number) if precision == 0 else float(rounded_number)
-
-
-def shrink_grib(filename: str, variables: List[str]) -> None:
-    """
-    Shrink a grib file extracting only those variables from the list provided.
-    Notes:
-        1. Variable names may not be unique so several variables with the same
-        name may appear in the result file, e.g. deterministic and probabilistic
-        versions of the same name
-        2. Variables not found in the file are ignored
-        3. The pygrib package when updated may change parameter (variable) names
-        for a given product users should be aware and maintain product mapping names
-        appropriately.
-
-    Args:
-        filename (str): the grib file to be reduced
-        variables: the list af pygrib variable names to be retained
-    Returns:
-        None
-    """
-    if not variables:
-        return  # Nothing to do!!!
-    # Use a set for faster lookups...
-    req_vars = set(variables)
-    try:
-        # Open a work file for the result..
-        tmp_filename = f'{filename}.tmp'
-        with open(tmp_filename, 'wb') as grb_out:
-            # Open the GRIB file
-            with pygrib.open(filename) as grb:  # pylint: disable=no-member
-                for grb_record in grb:
-                    if grb_record.name in req_vars or \
-                       f'parameterNumber: {str(grb_record.parameterNumber)}' in req_vars:
-                        grb_out.write(grb_record.tostring())
-            # Close the out file and clobber the original
-            grb_out.close()
-            shutil.move(tmp_filename, filename)
-
-    # Create a set from the variable list...
-    except Exception as exc:  # pylint: disable=broad-exception-caught
-        raise RuntimeError(f'Unable to shrink provided GRIB file : {str(exc)}') from exc

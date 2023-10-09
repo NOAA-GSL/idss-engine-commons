@@ -10,17 +10,16 @@
 # --------------------------------------------------------------------------------
 # pylint: disable=missing-function-docstring,disable=invalid-name
 
-import shutil
 from copy import deepcopy
 from datetime import datetime, timedelta
 from math import pi
-from os import path, remove, stat
+from os import path
 
 import pytest
 
 from idsse.common.utils import TimeDelta, Map
 from idsse.common.utils import (datetime_gen, hash_code, exec_cmd, to_compact,
-                                to_iso, dict_copy_with, round_half_away, shrink_grib)
+                                to_iso, dict_copy_with, round_half_away)
 
 
 def test_timedelta_minute():
@@ -156,28 +155,6 @@ def test_datetime_gen_switch_time_delta_sign():
                          datetime(2021, 1, 30, 3, 0)]
 
 
-def test_shrink_grib():
-    variables = ["Total Precipitation",
-                 "parameterNumber: 228",
-                 "Total snowfall",
-                 "2 metre temperature",
-                 "2 metre relative humidity",
-                 "2 metre dewpoint temperature",
-                 "10 metre wind speed",
-                 "Instantaneous 10 metre wind gust"]
-
-    original = path.join(path.dirname(__file__),
-                         'resources/blend.t00z.core.f001.co.grib2.original')
-    gribfile = original.split('.original', maxsplit=1)[0]
-    shutil.copy(original, gribfile)
-
-    shrink_grib(gribfile, variables)
-    assert stat(gribfile).st_size > 0
-    assert stat(gribfile).st_size < stat(original).st_size
-    remove(gribfile)  # Cleanup...
-
-
-
 @pytest.mark.parametrize('number, expected', [(2.50000, 3), (-14.5000, -15), (3.49999, 3)])
 def test_round_half_away_int(number: float, expected: int):
     result = round_half_away(number)
@@ -193,7 +170,7 @@ def test_round_half_away_float(number: float, expected: float):
 
 
 @pytest.mark.parametrize('number, expected',
-                         [(100.987654321, 100.988), (-43.21098, -43.211), (pi, 3.142)])
+                  [(100.987654321, 100.988), (-43.21098, -43.211), (pi, 3.142)])
 def test_round_half_away_with_precision(number: float, expected: float):
     result = round_half_away(number, precision=3)
     assert isinstance(result, float)
