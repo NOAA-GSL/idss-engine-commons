@@ -1,0 +1,86 @@
+{
+    "SingleValue": {
+        "description": "Mechanism for storing the 'Single Value' result for a specific Condition/Location/Product(s)",
+        "type": "object",
+        "properties": {
+            "criteria": {"type": "array", "items": {"type": "number"}, "minItems": 1},
+            "raw": {"type": "array", "items": {"type": "number"}, "minItems": 1}
+        },
+        "required": [
+            "criteria",
+            "raw"
+        ]
+    },
+
+    "ValueCount": {
+        "description": "Value found in data and the number of time found",
+        "type": "object",
+        "patternProperties": {
+            "^[-+]?[0-9]*[.]?[0-9]+$": {"type": "integer"},
+            "[^0-9.+-]": {"not": {}}
+        },
+        "minProperties": 1
+    },
+
+    "GeoDist": {
+        "description": "Mechanism for storing the geographic distribution result for a specific Condition/Location/Product(s)",
+        "type": "object",
+        "properties": {
+            "criteria": {"type": "array", "items": {"$ref": "#/ValueCount"}, "minItems": 1},
+            "raw": {"type": "array", "items": {"$ref": "#/ValueCount"}, "minItems": 1}
+        },
+        "required": [
+            "criteria",
+            "raw"
+        ]
+    },
+
+    "StateObj": {
+        "description": "Mechanism for storing the a contiguous state (when the criteria is met or not met",
+        "type": "object",
+        "properties": {
+
+        },
+        "required": [
+            
+        ]
+    }, 
+
+    "MetaData": {
+        "description": "Mechanism for storing the list of State Objects, these describe the met/notMet states for the full time frame",
+        "type": "object",
+        "properties": {
+            "criteria": {
+                "type": "array",
+                "items": {"$ref": "#/StateObj"},
+                "minItems": 1        
+            }
+        },
+        "required": [
+            "criteria"
+        ]
+    },
+
+    "RiskResults": {
+        "description": "Mechanism for storing the result from the Risk Processor",
+        "type": "object",
+        "properties": {
+            "conditionKey": {"type": "string"},
+            "locationKey": {"type": "string"},
+            "productKey": {"type": "string"},
+            "validDt": {"type": "array", "items": {"$ref": "timing.json#/TimeString"}, "minItems": 1},
+            "singleValue": {"$ref": "#/SingleValue"},
+            "geoDist": {"$ref": "#/GeoDist"},
+            "metaData": {"$ref": "#/MetaData"}
+        },
+        "required": [
+            "conditionKey",
+            "locationKey",
+            "productKey",                    
+            "validDt",
+            "singleValue",
+            "geoDist",
+            "metaData"
+        ]
+    }
+}

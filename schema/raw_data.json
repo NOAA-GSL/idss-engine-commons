@@ -1,6 +1,6 @@
 {
-    "Data": {
-        "description": "Mechanism for making a request for data",
+    "RawData": {
+        "description": "Mechanism for making a request for raw data",
         "type": "object",
         "properties": {
             "sourceType": {

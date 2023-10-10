@@ -9,6 +9,7 @@
 #
 # ----------------------------------------------------------------------------------
 # pylint: disable=missing-function-docstring,redefined-outer-name,invalid-name,no-name-in-module
+# cspell:ignore geodist
 
 from jsonschema import Validator
 from jsonschema.exceptions import ValidationError
@@ -32,6 +33,12 @@ def data_request_validator() -> Validator:
 @fixture
 def criteria_validator() -> Validator:
     schema_name = 'criteria_schema'
+    return get_validator(schema_name)
+
+
+@fixture
+def event_port_validator() -> Validator:
+    schema_name = 'event_portfolio_schema'
     return get_validator(schema_name)
 
 
@@ -93,6 +100,76 @@ def data_message() -> dict:
 
 
 @fixture
+def simple_criteria_message() -> dict:
+    return {
+        "corrId": {
+            "originator": "IDSSe",
+            "uuid": "4899d220-beec-467b-a0e6-9d215b715b97",
+            "issueDt": "2022-11-11T14:00:00.000Z"
+        },
+        "issueDt": "2022-11-11T14:00:00.000Z",
+        "location": {
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "name": "Abq"
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [
+                            -106.62312540068922,
+                            34.964261450738306
+                        ]
+                    }
+                }
+            ]
+        },
+        "validDt": {
+            "start": "2022-11-12T00:00:00.000Z",
+            "end": "2022-11-12T00:00:00.000Z"
+        },
+        "conditions": [
+            {
+                "name": "Above Freeze Temp",
+                "severity": "MODERATE",
+                "combined": "A"
+            }
+        ],
+        "parts": [
+            {
+                "name": "A",
+                "duration": 0,
+                "arealPercentage": 0,
+                "product": {
+                    "fcst": [
+                        "NBM"
+                    ]
+                },
+                "field": "TEMPERATURE",
+                "units": "DEG F",
+                "region": "CO",
+                "relational": "GREATER THAN",
+                "thresh": 30,
+                "mapping": {
+                    "min": 0.0,
+                    "max": 75.0,
+                    "clip": "true"
+                }
+            }
+        ],
+        "tags": {
+            "values": [
+            ],
+            "keyValues": {
+                "name": "Abq Temp",
+                "nwsOffice": "BOU"
+            }
+        }
+    }
+
+
+@fixture
 def criteria_message() -> dict:
     return {
         "corrId": {
@@ -129,8 +206,9 @@ def criteria_message() -> dict:
                 "combined": "A AND B",
             },
         ],
-        "data": {
-            "A": {
+        "parts": [
+            {
+                "name": "A",
                 "arealPercentage": 0,
                 "duration": 0,
                 "product": {
@@ -140,6 +218,7 @@ def criteria_message() -> dict:
                 },
                 "field": "DEW POINT",
                 "units": "Fahrenheit",
+                "region": "CO",
                 "relational": "LESS THAN",
                 "thresh": 60,
                 "mapping": {
@@ -148,7 +227,8 @@ def criteria_message() -> dict:
                     "clip": "true"
                 }
             },
-            "B": {
+            {
+                "name": "B",
                 "arealPercentage": 0,
                 "duration": 0,
                 "product": {
@@ -158,6 +238,7 @@ def criteria_message() -> dict:
                 },
                 "field": "RELATIVE HUMIDITY",
                 "units": "PERCENT",
+                "region": "CO",
                 "relational": "GREATER THAN",
                 "thresh": 30,
                 "mapping": {
@@ -166,7 +247,7 @@ def criteria_message() -> dict:
                     "clip": "true"
                 }
             }
-        },
+        ],
         "tags": {
             "values": [
             ],
@@ -175,6 +256,107 @@ def criteria_message() -> dict:
                 "nwsOffice": "BOU"
             }
         }
+    }
+
+
+@fixture
+def simple_event_port_message() -> dict:
+    return {
+        "timeStamp": "2023-09-27T17:25:36.000Z",
+        "corrId": {
+            "originator": "IDSSe",
+            "uuid": "4899d220-beec-467b-a0e6-9d215b715b97",
+            "issueDt": "2022-11-11T14:00:00.000Z"
+        },
+        "issueDt": "2022-11-11T14:00:00.000Z",
+        "location": {
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "name": "Abq"
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [
+                            -106.62312540068922,
+                            34.964261450738306
+                        ]
+                    }
+                }
+            ]
+        },
+        "validDt": {
+            "start": "2022-11-12T0:00:00.000Z",
+            "end": "2022-11-12T0:00:00.000Z"
+        },
+        "conditions": [
+            {
+                "name": "Above Freeze Temp",
+                "severity": "MODERATE",
+                "combined": "A"
+            }
+        ],
+        "parts": [
+            {
+                "name": "A",
+                "duration": 0,
+                "arealPercentage": 0,
+                "product": {
+                    "fcst": [
+                        "NBM"
+                    ]
+                },
+                "field": "TEMPERATURE",
+                "units": "DEG F",
+                "region": "CO",
+                "relational": "GREATER THAN",
+                "thresh": 30,
+                "mapping": {
+                    "min": 0.0,
+                    "max": 75.0,
+                    "clip": "true"
+                }
+            }
+        ],
+        "tags": {
+            "values": [
+            ],
+            "keyValues": {
+                "name": "Abq Temp",
+                "nwsOffice": "BOU"
+            }
+        },
+        "riskResults": [
+            {
+                "conditionKey": "Above Freeze Temp",
+                "locationKey": "Abq",
+                "productKey": "NBM",
+                "validDt": ["2022-11-12T00:00:00.000Z"],
+                "singleValue": {
+                    "criteria": [0.18964463472366333],
+                    "raw": [38.53400802612305]
+                },
+                "geoDist": {
+                    "criteria": [{"0.18964463472366333": 1}],
+                    "raw": [{"38.53400802612305": 1}]
+                },
+                "metaData": {
+                    "criteria": [
+                        {
+                            "durationInMin": 0,
+                            "min": 0.18964463472366333,
+                            "minAt": "2022-11-12T00:00:00.000Z",
+                            "max": 0.18964463472366333,
+                            "startDt": "2022-11-12T00:00:00.000Z",
+                            "endDt": "2022-11-12T00:00:00.000Z",
+                            "maxAt": "2022-11-12T00:00:00.000Z",
+                            "criteriaMet": "true"
+                        }
+                    ]
+                }
+            }
+        ]
     }
 
 
@@ -371,6 +553,14 @@ def test_validate_das_bad_opr_with_multi_sources_request(data_request_validator:
         data_request_validator.validate(data_message)
 
 
+def test_validate_simple_criteria_message(criteria_validator: Validator,
+                                          simple_criteria_message: dict):
+    try:
+        criteria_validator.validate(simple_criteria_message)
+    except ValidationError as exc:
+        assert False, f'Validate message raised an exception {exc}'
+
+
 def test_validate_criteria_message(criteria_validator: Validator, criteria_message: dict):
     try:
         criteria_validator.validate(criteria_message)
@@ -378,8 +568,8 @@ def test_validate_criteria_message(criteria_validator: Validator, criteria_messa
         assert False, f'Validate message raised an exception {exc}'
 
 
-def test_validate_criteria_message_conditions(criteria_validator: Validator,
-                                              criteria_message: dict):
+def test_validate_criteria_message_without_conditions(criteria_validator: Validator,
+                                                      criteria_message: dict):
     criteria_message.pop('conditions')
     with raises(ValidationError):
         criteria_validator.validate(criteria_message)
@@ -394,7 +584,7 @@ def test_validate_criteria_message_with_missing_name(criteria_validator: Validat
 
 def test_validate_criteria_message_with_bad_product_type(criteria_validator: Validator,
                                                          criteria_message: dict):
-    product = criteria_message['data']['A']['product']
+    product = criteria_message['parts'][0]['product']
     product['not_fcst_or_obs'] = product.pop('fcst')
     with raises(ValidationError):
         criteria_validator.validate(criteria_message)
@@ -402,10 +592,33 @@ def test_validate_criteria_message_with_bad_product_type(criteria_validator: Val
 
 def test_validate_criteria_message_with_bad_mapping(criteria_validator: Validator,
                                                     criteria_message: dict):
-    mapping = criteria_message['data']['B']['mapping']
+    mapping = criteria_message['parts'][1]['mapping']
     mapping['smallest'] = mapping.pop('min')
     with raises(ValidationError):
         criteria_validator.validate(criteria_message)
+
+
+def test_validate_event_port(event_port_validator: Validator,
+                             simple_event_port_message: dict):
+    try:
+        event_port_validator.validate(simple_event_port_message)
+    except ValidationError as exc:
+        assert False, f'Validate message raised an exception {exc}'
+
+
+def test_validate_event_port_message_with_bad_geo_dist(event_port_validator: Validator,
+                                                       simple_event_port_message: dict):
+    criteria_geo_dist = simple_event_port_message['riskResults'][0]['geoDist']['criteria']
+    criteria_geo_dist.append({"not a number": 3})
+    with raises(ValidationError):
+        event_port_validator.validate(simple_event_port_message)
+
+
+def test_validate_event_port_message_with_missing_metadata(event_port_validator: Validator,
+                                                           simple_event_port_message: dict):
+    simple_event_port_message['riskResults'][0]['metaData']['criteria'].clear()
+    with raises(ValidationError):
+        event_port_validator.validate(simple_event_port_message)
 
 
 def test_validate_good_new_data_message():

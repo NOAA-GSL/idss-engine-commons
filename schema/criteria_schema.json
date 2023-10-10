@@ -1,30 +1,6 @@
 {   
-    "type": "object",
-    "properties": {   
-        "corrId": {"$ref": "corr_id.json#/CorrId"},
-        "issueDt": {"$ref": "timing.json#/Timing"},
-        "tags": {"$ref": "tags.json#/Tags"},
-        "validDt": {"$ref": "timing.json#/Timing"},
-        "location": {"$ref": "location.json#/Location"},
-        "conditions": {
-            "type": "array",
-            "items": {"$ref": "condition.json#/Condition"},
-            "minItems": 1
-        },
-        "data": {
-            "type": "object",
-            "patternProperties": {
-                "": {"$ref": "impact_thresholds.json#/ImpactThresholds"}
-            }
-        }
-    },
-    "required": [
-        "corrId",
-        "issueDt",
-        "tags",
-        "validDt",
-        "location",
-        "conditions",
-        "data"
+    "description": "Mechanism for making communicating a Criteria",
+    "allOf": [
+        {"$ref": "criteria.json#/Criteria"}
     ]
 }

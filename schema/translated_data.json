@@ -1,8 +1,9 @@
 {
-    "ImpactThresholds": {
+    "TranslatedData": {
         "description": "Specification of the data and thresholds that would result in an impact",
         "type": "object",
         "properties": {
+            "name": {"type": "string"},
             "arealPercentage": {"type": "number"},
             "duration": {"type": "number"},
             "product": {
@@ -14,6 +15,7 @@
                 }
             },
             "field": {"type": "string"},
+            "region": {"$ref": "region.json#/Region"},
             "units": {"type": "string"},
             "relational": {"type": "string"},
             "thresh": {"type": "number"},
@@ -37,10 +39,12 @@
             }
         },
         "required": [
+            "name",
             "arealPercentage",
             "duration",
             "product",
             "field",
+            "region",
             "units",
             "relational",
             "thresh",

@@ -1,5 +1,5 @@
 {
-    "CriteriaMapping": {
+    "CriteriaTranslation": {
         "description": "Mechanism for specifying a mapping to criteria space",
         "type": "object",
         "properties": {
