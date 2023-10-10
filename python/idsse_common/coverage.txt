@@ -2,19 +2,19 @@
 platform linux -- Python 3.11.5, pytest-7.4.2, pluggy-1.3.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
 plugins: cov-4.1.0
-collected 108 items
+collected 112 items
 
 test/test_aws_utils.py ..................                                [ 16%]
-test/test_config.py ............                                         [ 27%]
-test/test_grid_proj.py .............                                     [ 39%]
-test/test_path_builder.py .....................                          [ 59%]
-test/test_utils.py ........................                              [ 81%]
-test/test_validate_schema.py ....................                        [100%]
+test/test_config.py ............                                         [ 26%]
+test/test_grid_proj.py .............                                     [ 38%]
+test/test_path_builder.py .....................                          [ 57%]
+test/test_utils.py ........................                              [ 78%]
+test/test_validate_schema.py ........................                    [100%]
 
 =============================== warnings summary ===============================
-test/test_validate_schema.py:13
-test/test_validate_schema.py:13
-  /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/test_validate_schema.py:13: DeprecationWarning: Importing Validator directly from the jsonschema package is deprecated and will become an ImportError. Import it from jsonschema.protocols instead.
+test/test_validate_schema.py:14
+test/test_validate_schema.py:14
+  /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/test_validate_schema.py:14: DeprecationWarning: Importing Validator directly from the jsonschema package is deprecated and will become an ImportError. Import it from jsonschema.protocols instead.
     from jsonschema import Validator
 
 idsse/common/validate_schema.py:16
@@ -47,4 +47,4 @@ idsse/common/validate_schema.py      39      0   100%
 -----------------------------------------------------
 TOTAL                               730    296    59%
 
-======================= 108 passed, 6 warnings in 0.85s ========================
+======================= 112 passed, 6 warnings in 0.82s ========================
