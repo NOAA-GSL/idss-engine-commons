@@ -118,8 +118,6 @@ class GridProj:
         elif flip is Flip.VERTICAL:
             _, self._y_offset = self.map_pixel_to_crs(0, self.height)
             self._dy *= -1
-        else:
-            raise ValueError(f'Axis must be 0 or 1, but {axis} was given')
 
     def fliplr(self):
         """Reverse the order of the pixels left to right"""
