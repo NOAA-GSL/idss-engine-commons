@@ -117,11 +117,11 @@ class GridProj:
             raise ValueError(f'Axis must be 0 or 1, but {axis} was given')
 
     def fliplr(self):
-        """Reverse the order of hte pixels left to right"""
+        """Reverse the order of the pixels left to right"""
         self.flip(0)
 
     def flipud(self):
-        """Reverse the order of hte pixels up to down"""
+        """Reverse the order of the pixels up to down"""
         self.flip(1)
 
     def map_geo_to_pixel(
