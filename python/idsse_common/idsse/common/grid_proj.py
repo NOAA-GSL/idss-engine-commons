@@ -1,14 +1,17 @@
 """Module that wraps pyproj (cartographic) library and transforms objects into other data forms"""
-# -------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
 # Created on Mon Jul 31 2023
 #
 # Copyright (c) 2023 Colorado State University. All rights reserved. (1)
+# Copyright (c) 2023 Regents of the University of Colorado. All rights reserved. (2)
 #
 # Contributors:
 #     Mackenzie Grimes (1)
+#     Geary Layne (2)
 #
-# -------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
 # pylint: disable=invalid-name
+# cspell:word fliplr, flipud
 
 from typing import Self, Tuple, Union, Optional
 from enum import Enum
@@ -24,7 +27,7 @@ Pixel = Tuple[Union[int, float], Union[int, float]]
 
 
 class RoundingMethod(Enum):
-    """Transformations to apply to calculated pixel values when casting to ints"""
+    """Transformations indicators to be applied to pixel values when casting to ints"""
     ROUND = 'ROUND'
     FLOOR = 'FLOOR'
 
@@ -36,8 +39,8 @@ class GridProj:
     """
     def __init__(self,
                  crs: CRS,
-                 latitude: float,
-                 longitude: float,
+                 lower_left_lat: float,
+                 lower_left_lon: float,
                  width: float,
                  height: float,
                  dx: float,
@@ -46,8 +49,8 @@ class GridProj:
         self._trans = Transformer.from_crs(crs.geodetic_crs, crs)
         self._x_offset = 0
         self._y_offset = 0
-        if latitude is not None:
-            self._x_offset, self._y_offset = self._trans.transform(longitude, latitude)
+        if lower_left_lat is not None:
+            self._x_offset, self._y_offset = self._trans.transform(lower_left_lon, lower_left_lat)
         self._w = width
         self._h = height
         self._dx = dx
@@ -79,18 +82,60 @@ class GridProj:
                         int(grid_args['w']), int(grid_args['h']),
                         grid_args['dx'], grid_args['dy'])
 
-    def map_proj_to_pixel(
+    @property
+    def width(self):
+        """Provides access grid space width"""
+        return self._w
+
+    @property
+    def height(self):
+        """Provides access grid space height"""
+        return self._h
+
+    @property
+    def shape(self):
+        """Provides access grid space shape: (width, height)"""
+        return self._w, self._h
+
+    def flip(self, axis: Optional[int] = None):
+        """Reverse the order of pixels along the given axis
+
+        Args:
+            axis (Optional[int]): The default, axis=None, will flip over both axes.
+        """
+        if axis is None:
+            self._x_offset, self._y_offset = self.map_pixel_to_crs(self.width, self.height)
+            self._dx *= -1
+            self._dy *= -1
+        elif axis == 0:
+            self._x_offset, _ = self.map_pixel_to_crs(self.width, 0)
+            self._dx *= -1
+        elif axis == 1:
+            _, self._y_offset = self.map_pixel_to_crs(0, self.height)
+            self._dy *= -1
+        else:
+            raise ValueError(f'Axis must be 0 or 1, but {axis} was given')
+
+    def fliplr(self):
+        """Reverse the order of hte pixels left to right"""
+        self.flip(0)
+
+    def flipud(self):
+        """Reverse the order of hte pixels up to down"""
+        self.flip(1)
+
+    def map_geo_to_pixel(
         self,
-        x: float,
-        y: float,
+        lon: float,
+        lat: float,
         rounding: Optional[Union[str, RoundingMethod]] = None,
         precision: int = 0
     ) -> Pixel:
         """Map projection to a pixel.
 
         Args:
-            x (float): x geographic coordinate
-            y (float): y geographic coordinate
+            lon (float): x geographic coordinate
+            lat (float): y geographic coordinate
             rounding (Optional[Union[str, RoundingMethod]]):
                 ROUND to apply round_half_away() to pixel values,
                 FLOOR to apply math.floor().
@@ -103,43 +148,75 @@ class GridProj:
             Pixel: x, y values of pixel, rounded to ints if rounding is passed, otherwise floats
         """
         # pylint: disable=not-an-iterable
-        return self.map_geo_to_pixel(
-            *self._trans.transform(x, y),
+        return self.map_crs_to_pixel(
+            *self._trans.transform(lon, lat),
             rounding=rounding,
             precision=precision
         )
 
-    def map_pixel_to_proj(self, x: float, y: float) -> Tuple[float, float]:
-        """Map pixel to a projection"""
+    def map_pixel_to_geo(self, x: float, y: float) -> Tuple[float, float]:
+        """Map pixel x,y to a projection
+
+        Args:
+            x (float): x coordinate in pixel space
+            y (float): y coordinate in pixel space
+
+        Returns:
+            Tuple[float, float]: Geographic coordinate as lon,lat
+        """
         return self._trans.transform(
-            *self.map_pixel_to_geo(x, y),
+            *self.map_pixel_to_crs(x, y),
             direction=TransformDirection.INVERSE
         )
 
-    def map_proj_to_geo(self, x, y) -> Tuple[float, float]:
-        """Map projection to geographic coordinates"""
-        return self._trans.transform(x, y)
+    def map_geo_to_crs(self, lon: float, lat: float) -> Tuple[float, float]:
+        """Map geographic coordinate (lon, lat) to CRS
 
-    def map_pixel_to_geo(self, x: float, y: float) -> Tuple[float, float]:
-        """Map pixel to geographic coordinates"""
+        Args:
+            lon (float): x geographic coordinate
+            lat (float): y geographic coordinate
+
+        Returns:
+            Tuple[float, float]: Coordinate Reference System
+        """
+        return self._trans.transform(lon, lat)
+
+    def map_pixel_to_crs(self, x: float, y: float) -> Tuple[float, float]:
+        """Map pixel space (x,y) to Coordinate Reference System
+
+        Args:
+            x (float): x coordinate in pixel space
+            y (float): y coordinate in pixel space
+
+        Returns:
+            Tuple[float, float]: Coordinate Reference System coordinate
+        """
         return x * self._dx + self._x_offset, y * self._dy + self._y_offset
 
-    def map_geo_to_proj(self, x: float, y: float) -> Tuple[float, float]:
-        """Map geographic coordinates to a projection"""
+    def map_crs_to_geo(self, x: float, y: float) -> Tuple[float, float]:
+        """Map Coordinate Reference System (x,y) to Geographical space (lon,lat)
+
+        Args:
+            x (float): x coordinate in CRS space
+            y (float): y coordinate in CRS space
+
+        Returns:
+            Tuple[float, float]: Geographic coordinate as lon,lat
+        """
         return self._trans.transform(x, y, direction=TransformDirection.INVERSE)
 
-    def map_geo_to_pixel(
+    def map_crs_to_pixel(
         self,
         x: float,
         y: float,
         rounding: Optional[Union[str, RoundingMethod]] = None,
         precision: int = 0
     ) -> Pixel:
-        """Map geographic coordinates to pixel x and y
+        """Map Coordinate Reference System (x,y) coordinates to pixel x and y
 
         Args:
-            x (float): x geographic coordinate
-            y (float): y geographic coordinate
+            x (float): x CRS coordinate
+            y (float): y CRS coordinate
             rounding (Optional[Union[str, RoundingMethod]]):
                 ROUND to apply round_half_away() to pixel values,
                 FLOOR to apply math.floor().
