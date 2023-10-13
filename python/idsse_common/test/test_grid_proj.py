@@ -1,4 +1,4 @@
-"""Test suite for grid_geo.py"""
+"""Test suite for grid_proj.py"""
 # ----------------------------------------------------------------------------------
 # Created on Wed Aug 2 2023
 #
