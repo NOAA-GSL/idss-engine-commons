@@ -31,6 +31,11 @@ class RoundingMethod(Enum):
     ROUND = 'ROUND'
     FLOOR = 'FLOOR'
 
+class Flip(Enum):
+    """Flip axis indicators to be applied flipping pixel orientation"""
+    BOTH = 'BOTH'
+    HORIZONTAL = 'HORIZONTAL'
+    VERTICAL = 'VERTICAL'
 
 class GridProj:
     """
@@ -97,20 +102,20 @@ class GridProj:
         """Provides access grid space shape: (width, height)"""
         return self._w, self._h
 
-    def flip(self, axis: Optional[int] = None):
-        """Reverse the order of pixels along the given axis
+    def flip(self, flip: Flip = Flip.BOTH):
+        """Reverse the order of pixels for a given orientation
 
         Args:
-            axis (Optional[int]): The default, axis=None, will flip over both axes.
+            flip (Flip): The default, flip=BOTH, will flip over both axes.
         """
-        if axis is None:
+        if flip is Flip.BOTH:
             self._x_offset, self._y_offset = self.map_pixel_to_crs(self.width, self.height)
             self._dx *= -1
             self._dy *= -1
-        elif axis == 0:
+        elif flip is Flip.HORIZONTAL:
             self._x_offset, _ = self.map_pixel_to_crs(self.width, 0)
             self._dx *= -1
-        elif axis == 1:
+        elif flip is Flip.VERTICAL:
             _, self._y_offset = self.map_pixel_to_crs(0, self.height)
             self._dy *= -1
         else:
@@ -118,11 +123,11 @@ class GridProj:
 
     def fliplr(self):
         """Reverse the order of the pixels left to right"""
-        self.flip(0)
+        self.flip(Flip.HORIZONTAL)
 
     def flipud(self):
         """Reverse the order of the pixels up to down"""
-        self.flip(1)
+        self.flip(Flip.VERTICAL)
 
     def map_geo_to_pixel(
         self,
