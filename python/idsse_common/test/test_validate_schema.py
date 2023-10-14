@@ -43,6 +43,12 @@ def event_port_validator() -> Validator:
 
 
 @fixture
+def new_data_validator() -> Validator:
+    schema_name = 'new_data_schema'
+    return get_validator(schema_name)
+
+
+@fixture
 def data_message() -> dict:
     return {
         "sourceType": "join",
@@ -621,19 +627,43 @@ def test_validate_event_port_message_with_missing_metadata(event_port_validator:
         event_port_validator.validate(simple_event_port_message)
 
 
-    # {"product": "NBM", "region": "CO", "issueDt": "2023-09-15T16:00:00.000Z", "field": "ICE1HR", "validDt": "2023-09-15T20:00:00.000Z"}
-    # {"product": "NBM", "region": "CO", "issueDt": "2023-09-15T16:00:00.000Z", "field": ["SNOW1HR", "TEMP", "RAIN1HR", "RH", "TD", "ICE1HR", "WINDGUST", "WINDSPEED"], "validDt": "2023-09-17T06:00:00.000Z"}
-    # {"product": "MRMS", "region": "CO", "issueDt": "2023-09-15T17:20:00.000Z", "fields": {"2023-09-15T17:20:00.000Z": ["LIGHTNING"]}}
-def test_validate_good_new_data_message():
-    message = {'product': 'NBM',
-               'region': 'AK',
-               'issueDt': '2023-2-11T14:00:00.000Z',
-               'validDt': '2023-2-11T20:00:00.000Z',
-               'field': ['TEMP', 'WINDSPEED']}
-
-    schema_name = 'new_data_schema'
-    validator = get_validator(schema_name)
+def test_validate_new_field_data_message(new_data_validator: Validator):
+    message = {"product": "NBM",
+               "region": "CO",
+               "issueDt": "2023-09-15T16:00:00.000Z",
+               "validDt": "2023-09-17T06:00:00.000Z",
+               "field": "TEMP"
+               }
     try:
-        validator.validate(message)
+        new_data_validator.validate(message)
+    except ValidationError as exc:
+        assert False, f'Validate message raised an exception {exc}'
+
+
+def test_validate_new_valid_data_message(new_data_validator: Validator):
+    message = {"product": "NBM",
+               "region": "CO",
+               "issueDt": "2023-09-15T16:00:00.000Z",
+               "validDt": "2023-09-17T06:00:00.000Z",
+               "field": ["TEMP", "WINDSPEED"]
+               }
+    try:
+        new_data_validator.validate(message)
+    except ValidationError as exc:
+        assert False, f'Validate message raised an exception {exc}'
+
+
+def test_validate_new_issue_data_message(new_data_validator: Validator):
+    message = {"product": "NBM",
+               "region": "CO",
+               "issueDt": "2023-09-15T16:00:00.000Z",
+               "fields": {
+                   "2023-09-15T17:00:00.000Z": ["TEMP", "WINDSPEED"],
+                   "2023-09-15T18:00:00.000Z": ["TEMP", "WINDSPEED"],
+                   "2023-09-15T19:00:00.000Z": ["TEMP", "WINDSPEED"],
+                   "2023-09-15T20:00:00.000Z": ["TEMP", "WINDSPEED"]}
+               }
+    try:
+        new_data_validator.validate(message)
     except ValidationError as exc:
         assert False, f'Validate message raised an exception {exc}'
