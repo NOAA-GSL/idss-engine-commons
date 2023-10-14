@@ -1,0 +1,70 @@
+{
+    "NewField": {
+        "description": "New Field available message, broadcasted each time a new data field is found",
+        "type": "Object",
+        "properties": {
+            "product": {"$ref": "product.json#/Product"},
+            "region": {"$ref": "region.json#/Region"},
+            "issueDt": {"$ref": "timing.json#/TimeString"},
+            "validDt": {"$ref": "timing.json#/TimeString"},
+            "field": {"$ref": "field.json#/FieldName"}
+        },
+        "required": [
+            "product",
+            "region",
+            "issueDt",
+            "validDt",
+            "field"
+        ]
+    },
+    
+    "NewValid": {
+        "description": "New Valid available message, broadcasted each time all fields for an issue/valid are found",
+        "type": "Object",
+        "properties": {
+            "product": {"$ref": "product.json#/Product"},
+            "region": {"$ref": "region.json#/Region"},
+            "issueDt": {"$ref": "timing.json#/TimeString"},
+            "validDt": {"$ref": "timing.json#/TimeString"},
+            "field": {"$ref": "field.json#/FieldList"}
+        },
+        "required": [
+            "product",
+            "region",
+            "issueDt",
+            "validDt",
+            "field"
+        ]
+    },
+    
+    "NewIssue": {
+        "description": "New Issue available message, broadcasted each time all valids for an issue are found",
+        "type": "Object",
+        "properties": {
+            "product": {"$ref": "product.json#/Product"},
+            "region": {"$ref": "region.json#/Region"},
+            "issueDt": {"$ref": "timing.json#/TimeString"},
+            "validDt": {"$ref": "timing.json#/TimeString"},
+            "fields": {
+                "type": "object",
+                "patternProperties": {
+                    "^(\\d{4})-0?(\\d+)-0?(\\d+)[T ]0?(\\d+):0?(\\d+):0?(\\d+)$": {"$ref": "field.json#/FieldList"}
+                }
+            }
+        },
+        "required": [
+            "product",
+            "region",
+            "issueDt",
+            "fields"
+        ]
+    },    
+    "NewData": {
+        "description": "Either a NewField, NewValid, or NewIssue",
+        "oneOf": [
+            {"$ref": "#/NewField"},
+            {"$ref": "#/NewValid"},
+            {"$ref": "#/NewIssue"}
+        ]
+    }
+}

@@ -1,6 +1,6 @@
 {
-    "description": "Mechanism for making a broadcasting an available variable",
+    "description": "Mechanism for broadcasting a new data available message",
     "allOf": [
-        {"$ref": "variable.json#/Variable"}
+        {"$ref": "new_data.json#/NewData"}
     ]
 }

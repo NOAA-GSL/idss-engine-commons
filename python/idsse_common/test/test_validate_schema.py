@@ -621,11 +621,14 @@ def test_validate_event_port_message_with_missing_metadata(event_port_validator:
         event_port_validator.validate(simple_event_port_message)
 
 
+    # {"product": "NBM", "region": "CO", "issueDt": "2023-09-15T16:00:00.000Z", "field": "ICE1HR", "validDt": "2023-09-15T20:00:00.000Z"}
+    # {"product": "NBM", "region": "CO", "issueDt": "2023-09-15T16:00:00.000Z", "field": ["SNOW1HR", "TEMP", "RAIN1HR", "RH", "TD", "ICE1HR", "WINDGUST", "WINDSPEED"], "validDt": "2023-09-17T06:00:00.000Z"}
+    # {"product": "MRMS", "region": "CO", "issueDt": "2023-09-15T17:20:00.000Z", "fields": {"2023-09-15T17:20:00.000Z": ["LIGHTNING"]}}
 def test_validate_good_new_data_message():
     message = {'product': 'NBM',
                'region': 'AK',
-               'issue': '2023-2-11T14:00:00.000Z',
-               'valid': '2023-2-11T20:00:00.000Z',
+               'issueDt': '2023-2-11T14:00:00.000Z',
+               'validDt': '2023-2-11T20:00:00.000Z',
                'field': ['TEMP', 'WINDSPEED']}
 
     schema_name = 'new_data_schema'
