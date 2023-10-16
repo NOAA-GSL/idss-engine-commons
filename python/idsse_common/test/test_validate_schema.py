@@ -366,6 +366,43 @@ def simple_event_port_message() -> dict:
     }
 
 
+@fixture
+def new_field_message() -> dict:
+    return {
+        "product": "NBM",
+        "region": "CO",
+        "issueDt": "2023-09-15T16:00:00.000Z",
+        "validDt": "2023-09-17T06:00:00.000Z",
+        "field": "TEMP"
+    }
+
+
+@fixture
+def new_valid_message() -> dict:
+    return {
+        "product": "NBM",
+        "region": "CO",
+        "issueDt": "2023-09-15T16:00:00.000Z",
+        "validDt": "2023-09-17T06:00:00.000Z",
+        "field": ["TEMP", "WINDSPEED"]
+    }
+
+
+@fixture
+def new_issue_message() -> dict:
+    return {
+        "product": "NBM",
+        "region": "CO",
+        "issueDt": "2023-09-15T16:00:00.000Z",
+        "fields": {
+            "2023-09-15T17:00:00.000Z": ["TEMP", "WINDSPEED"],
+            "2023-09-15T18:00:00.000Z": ["TEMP", "WINDSPEED"],
+            "2023-09-15T19:00:00.000Z": ["TEMP", "WINDSPEED"],
+            "2023-09-15T20:00:00.000Z": ["TEMP", "WINDSPEED"]}
+    }
+
+
+# tests
 def test_validate_das_issue_request(available_data_validator: Validator):
     message = {'sourceType': 'issue',
                'sourceObj': {'product': 'NBM.AWS.GRIB',
@@ -627,43 +664,49 @@ def test_validate_event_port_message_with_missing_metadata(event_port_validator:
         event_port_validator.validate(simple_event_port_message)
 
 
-def test_validate_new_field_data_message(new_data_validator: Validator):
-    message = {"product": "NBM",
-               "region": "CO",
-               "issueDt": "2023-09-15T16:00:00.000Z",
-               "validDt": "2023-09-17T06:00:00.000Z",
-               "field": "TEMP"
-               }
+def test_validate_new_field_data_message(new_data_validator: Validator,
+                                         new_field_message: dict):
     try:
-        new_data_validator.validate(message)
+        new_data_validator.validate(new_field_message)
     except ValidationError as exc:
         assert False, f'Validate message raised an exception {exc}'
 
 
-def test_validate_new_valid_data_message(new_data_validator: Validator):
-    message = {"product": "NBM",
-               "region": "CO",
-               "issueDt": "2023-09-15T16:00:00.000Z",
-               "validDt": "2023-09-17T06:00:00.000Z",
-               "field": ["TEMP", "WINDSPEED"]
-               }
+def test_validate_new_field_data_message_missing_region(new_data_validator: Validator,
+                                                        new_field_message: dict):
+    new_field_message.pop('region')
+    with raises(ValidationError):
+        new_data_validator.validate(new_field_message)
+
+
+def test_validate_new_valid_data_message(new_data_validator: Validator,
+                                         new_valid_message: dict):
     try:
-        new_data_validator.validate(message)
+        new_data_validator.validate(new_valid_message)
     except ValidationError as exc:
         assert False, f'Validate message raised an exception {exc}'
 
 
-def test_validate_new_issue_data_message(new_data_validator: Validator):
-    message = {"product": "NBM",
-               "region": "CO",
-               "issueDt": "2023-09-15T16:00:00.000Z",
-               "fields": {
-                   "2023-09-15T17:00:00.000Z": ["TEMP", "WINDSPEED"],
-                   "2023-09-15T18:00:00.000Z": ["TEMP", "WINDSPEED"],
-                   "2023-09-15T19:00:00.000Z": ["TEMP", "WINDSPEED"],
-                   "2023-09-15T20:00:00.000Z": ["TEMP", "WINDSPEED"]}
-               }
+def test_validate_new_valid_data_message_bad_field(new_data_validator: Validator,
+                                                   new_valid_message: dict):
+    new_valid_message['field'].append('BAD_FIELD_NAME')
+    with raises(ValidationError):
+        new_data_validator.validate(new_valid_message)
+
+
+def test_validate_new_issue_data_message(new_data_validator: Validator,
+                                         new_issue_message: dict):
     try:
-        new_data_validator.validate(message)
+        new_data_validator.validate(new_issue_message)
     except ValidationError as exc:
         assert False, f'Validate message raised an exception {exc}'
+
+
+def test_validate_new_issue_data_message_bad_valid_string(new_data_validator: Validator,
+                                                          new_issue_message: dict):
+    # grab a good list of fields from the message
+    sample_fields = next(iter(new_issue_message['fields'].values()))
+    # use the good list but with a bad valid string
+    new_issue_message['fields']['Not a string rep of a valid date'] = sample_fields
+    with raises(ValidationError):
+        new_data_validator.validate(new_issue_message)

@@ -48,7 +48,8 @@
             "fields": {
                 "type": "object",
                 "patternProperties": {
-                    "^(\\d{4})-0?(\\d+)-0?(\\d+)[T ]0?(\\d+):0?(\\d+):0?(\\d+)$": {"$ref": "field.json#/FieldList"}
+                    "^(\\d{4})-0?(\\d+)-0?(\\d+)[T ]0?(\\d+):0?(\\d+):0?(\\d+)$": {"$ref": "field.json#/FieldList"},
+                    "[^0-9.+-:TZ]": {"not": {}}
                 }
             }
         },
