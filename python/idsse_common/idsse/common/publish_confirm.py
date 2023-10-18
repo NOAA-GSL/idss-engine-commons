@@ -22,9 +22,9 @@ from typing import Optional, Dict, Callable, NamedTuple, Union, cast
 
 from pika import SelectConnection, URLParameters, BasicProperties
 from pika.channel import Channel
-from pika.exchange_type import ExchangeType
 from pika.frame import Method
 from pika.spec import Basic
+
 
 from idsse.common.rabbitmq_utils import Conn, Exch, Queue
 from idsse.common.log_util import get_default_log_config, set_corr_id_context_var

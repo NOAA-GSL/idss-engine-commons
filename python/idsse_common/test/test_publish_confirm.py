@@ -10,10 +10,10 @@
 #
 # ----------------------------------------------------------------------------------
 # pylint: disable=missing-function-docstring,redefined-outer-name,invalid-name,protected-access
-# pylint: disable=missing-class-docstring,too-few-public-methods,unnecessary-lambda,unused-argument
+# pylint: disable=too-few-public-methods,unused-argument
 
 from time import sleep
-from typing import Callable, Union, Self, Any
+from typing import Callable, Union, Any, NamedTuple
 from unittest.mock import Mock
 
 from pytest import fixture, MonkeyPatch
@@ -27,27 +27,25 @@ EXAMPLE_EXCH = Exch('pub.conf.test', 'topic')
 EXAMPLE_QUEUE = Queue('pub.conf', '#', False, False, True)
 
 
+class Method(NamedTuple):
+    """mock of pika.frame.Method data class"""
+    method: Union[Basic.Ack, Basic.Nack]
+
+
 class MockPika:
     """
     Mock classes to imitate pika functionality, callbacks, etc.
-    Note that classes here are not full functionality; only properties/methods that
-    PublishConfirm will try to invoke
+
+    Note that classes here are by far reduced functionality; only properties/methods/interfaces
+    that PublishConfirm uses (when this unit test was written)
     """
-    delivery_tag = 0  # track how many messages we have "sent"
-
-    class MethodFrame:
-        def __init__(self, method):
-            self.method = method
-
-        @classmethod
-        def create_method_frame(cls, method: Union[Basic.Ack, Basic.Nack]) -> Self:
-            frame = cls(method(MockPika.delivery_tag))
-            MockPika.delivery_tag += 1
-            return frame
-
+    def __init__(self):
+        self.delivery_tag = 0  # pseudo-global to track messages we have "sent" to our mock server
 
     class Channel:
+        """mock of pika.channel.Channel"""
         def __init__(self):
+            self._context = MockPika()
             self.is_open = True
             self.is_closed = False
 
@@ -67,12 +65,18 @@ class MockPika:
             callback(None)  # connection expected, but PublishConfirm doesn't actually use it
 
         def confirm_delivery(self, callback: Callable[[Any], None]):
-            """callback (Callable[[MockPika.MethodFrame], None])"""
-            callback(EXAMPLE_ACK)
+            """
+            Args:
+                callback (Callable[[MockPika.MethodFrame], None])
+            """
+            # may need to make this mockable in the future to pass Nack or customize delivery_tag
+            method = Method(Basic.Ack(delivery_tag=self._context.delivery_tag))
+            self._context.delivery_tag += 1  # MockPika needs to track this message ID as "sent"
+
+            callback(method)  # send new Ack message back to PublishConfirm
 
         def basic_publish(self, exchange: str, key: str, body: str, properties):
-            MockPika.delivery_tag += 1
-
+            self._context.delivery_tag += 1
 
         def close(self):
             self.is_open = False
@@ -80,6 +84,7 @@ class MockPika:
 
 
     class IOLoop:
+        """mock of pika.SelectConnection.ioloop"""
         def __init__(self, on_open: Callable[[Any], None], on_close: Callable[[Any, str], None]):
             self.on_open = on_open
             self.on_close = on_close
@@ -95,35 +100,46 @@ class MockPika:
 
 
     class SelectConnection:
+        """mock of pika.SelectConnection"""
         def __init__(self, parameters, on_open_callback, on_open_error_callback, on_close_callback):
             self.is_open = True
             self.is_closed = False
+            self._context = MockPika()
 
-            self.ioloop = MockPika.IOLoop(on_open=on_open_callback, on_close=on_close_callback)
+            self.ioloop = self._context.IOLoop(
+                on_open=on_open_callback, on_close=on_close_callback
+            )
 
             self._on_open_callback = on_open_callback
             self._on_open_error_callback = on_open_error_callback
             self._on_close_callback = on_close_callback
 
         def channel(self, on_open_callback: Callable[[Any], None]):
-            """on_open_callback (Callable[[MockPika.Channel], None])"""
-            on_open_callback(MockPika.Channel())
+            """
+            Args:
+                on_open_callback (Callable[[MockPika.Channel], None])
+            """
+            on_open_callback(self._context.Channel())
 
         def close(self):
             self.is_open = False
             self.is_closed = True
 
 
-# may need to make mockable in the future to pass Nack or customize delivery_tag
-EXAMPLE_ACK = MockPika.MethodFrame.create_method_frame(Basic.Ack)
+# fixtures
+@fixture
+def context() -> MockPika:
+    """Create instance of our mocked pika library"""
+    return MockPika()
 
 
 @fixture
-def publish_confirm(monkeypatch: MonkeyPatch) -> PublishConfirm:
-    monkeypatch.setattr('idsse.common.publish_confirm.SelectConnection', MockPika.SelectConnection)
+def publish_confirm(monkeypatch: MonkeyPatch, context: MockPika) -> PublishConfirm:
+    monkeypatch.setattr('idsse.common.publish_confirm.SelectConnection', context.SelectConnection)
     return PublishConfirm(conn=EXAMPLE_CONN, exchange=EXAMPLE_EXCH, queue=EXAMPLE_QUEUE)
 
 
+# tests
 def test_publish_confirm_start_and_stop(publish_confirm: PublishConfirm):
     publish_confirm.start()
     sleep(.2)
@@ -143,8 +159,8 @@ def test_publish_message(publish_confirm: PublishConfirm):
 
     previous_message_number = publish_confirm._records.message_number
     publish_confirm.start()
-    # sleep is here to keep our unit test (running on Main thread) from outrunning the external
-    # PublishConfirm Thread. Not ideal, but using a callback makes test debugging very hard
+    # sleep here to keep our unit test (Main thread) from outrunning the PublishConfirm Thread.
+    # Not ideal, but using a callback made debugging very hard (breakpoints don't stop all threads)
     sleep(.2)
 
     result = publish_confirm.publish_message(message_data)
@@ -160,7 +176,8 @@ def test_publish_confirm_start_with_callback(publish_confirm: PublishConfirm):
     publish_confirm._records.deliveries[0] = 'Confirm.Select'
 
     publish_confirm.start(callback=mock_started_callback)
-    # sleep so our callback doesn't get outrun by this unit test
+    # sleep so our callback doesn't get outrun by this unit test.
+    # Less confusing to read than creating a real callback function and putting asserts there
     sleep(.2)
 
     # delivery of imaginary message 0 should be gone now that message was "acked" by our test
