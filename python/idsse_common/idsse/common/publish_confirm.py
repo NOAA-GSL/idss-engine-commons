@@ -2,7 +2,7 @@
 # ----------------------------------------------------------------------------------
 # Created on Fri Jun 23 2023.
 #
-# Copyright (c) 2023 Regents of the University of Colorado. All rights reserved.  (1)
+# Copyright (c) 2023 Regents of the University of Colorado. All rights reserved. (1)
 # Copyright (c) 2023 Colorado State University. All rights reserved. (2)
 #
 # Contributors:
@@ -18,12 +18,14 @@ import json
 import time
 from dataclasses import dataclass, field
 from threading import Thread
-from typing import Optional, Dict
+from typing import Optional, Dict, Callable, NamedTuple, Union, cast
 
-import pika
-from pika import SelectConnection
-from pika.exchange_type import ExchangeType
+from pika import SelectConnection, URLParameters, BasicProperties
 from pika.channel import Channel
+from pika.exchange_type import ExchangeType
+from pika.frame import Method
+from pika.spec import Basic
+
 from idsse.common.rabbitmq_utils import Conn, Exch, Queue
 from idsse.common.log_util import get_default_log_config, set_corr_id_context_var
 
@@ -44,6 +46,12 @@ class PublishConfirmRecords:
     acked: int = 0
     nacked: int = 0
     message_number: int = 0
+
+
+class RabbitMqParams(NamedTuple):
+    """Data class to hold rabbitmq configurations"""
+    exchange: Exch
+    queue: Queue
 
 
 class PublishConfirm(Thread):
@@ -71,8 +79,9 @@ class PublishConfirm(Thread):
         self._stopping = False
         self._url = (f'amqp://{conn.username}:{conn.password}@{conn.host}'
                      f':{str(conn.port)}/%2F?connection_attempts=3&heartbeat=3600')
-        self._exchange = exchange
-        self._queue = queue
+        self._rmq_params = RabbitMqParams(exchange=exchange, queue=queue)
+
+        self._on_ready_to_publish: Optional[Callable[[],None]] = None
 
     def connect(self):
         """This method connects to RabbitMQ, returning the connection handle.
@@ -81,8 +90,8 @@ class PublishConfirm(Thread):
         :rtype: pika.SelectConnection
         """
         logger.info('Connecting to %s', self._url)
-        return pika.SelectConnection(
-            pika.URLParameters(self._url),
+        return SelectConnection(
+            URLParameters(self._url),
             on_open_callback=self._on_connection_open,
             on_open_error_callback=self._on_connection_open_error,
             on_close_callback=self._on_connection_closed)
@@ -95,18 +104,17 @@ class PublishConfirm(Thread):
 
         Returns:
             bool: True if message successfully published to queue (channel was open and
-                publish did not throw
-                exception)
+                publish did not throw exception)
         """
         success = False
         if self._channel and self._channel.is_open:
 
             # We expect a JSON message format, do a check here...
             try:
-                properties = pika.BasicProperties(content_type='application/json',
+                properties = BasicProperties(content_type='application/json',
                                                   content_encoding='utf-8')
 
-                self._channel.basic_publish(self._exchange.name, key,
+                self._channel.basic_publish(self._rmq_params.exchange.name, key,
                                             json.dumps(message, ensure_ascii=True),
                                             properties)
                 self._records.message_number += 1
@@ -132,6 +140,18 @@ class PublishConfirm(Thread):
         if self._connection is not None and not self._connection.is_closed:
             # Finish closing
             self._connection.ioloop.start()
+
+    def start(self, callback: Optional[Callable[[], None]] = None):
+        """Start thread to connect RabbitMQ queue and prepare to publish messages. Must be called
+        before publish_message().
+
+        Args:
+            callback (Optional[Callable[[], None]]): Optional callback to be invoked when
+                PublishConfirm is connected and RabbitMQ client is ready to publish.
+                Defaults to None.
+        """
+        self._on_ready_to_publish = callback
+        super().start()
 
     def stop(self):
         """Stop the example by closing the channel and connection. We
@@ -198,7 +218,7 @@ class PublishConfirm(Thread):
         logger.debug('Channel opened')
         self._channel = channel
         self._add_on_channel_close_callback()
-        self._setup_exchange(self._exchange)
+        self._setup_exchange(self._rmq_params.exchange)
 
     def _add_on_channel_close_callback(self):
         """This method tells pika to call the on_channel_closed method if
@@ -233,8 +253,8 @@ class PublishConfirm(Thread):
         cb = functools.partial(self._on_exchange_declareok,
                                userdata=exchange.name)
         self._channel.exchange_declare(exchange=exchange.name,
-                                       exchange_type=exchange.type,
-                                       callback=cb)
+                                    exchange_type=exchange.type,
+                                    callback=cb)
 
     def _on_exchange_declareok(self, _unused_frame, userdata):
         """Invoked by pika when RabbitMQ has finished the Exchange.Declare RPC
@@ -243,7 +263,7 @@ class PublishConfirm(Thread):
         :param str|unicode userdata: Extra user data (exchange name)
         """
         logger.debug('Exchange declared: %s', userdata)
-        self._setup_queue(self._queue)
+        self._setup_queue(self._rmq_params.queue)
 
     def _setup_queue(self, queue: Queue):
         """Setup the queue on RabbitMQ by invoking the Queue.Declare RPC
@@ -266,9 +286,11 @@ class PublishConfirm(Thread):
         be invoked by pika.
         :param pika.frame.Method _unused_frame: The Queue.DeclareOk frame
         """
-        logger.debug('Binding %s to %s with %s', self._exchange.name, self._queue.name, '#')
-        self._channel.queue_bind(self._queue.name,
-                                 self._exchange.name,
+        logger.debug('Binding %s to %s with #',
+                     self._rmq_params.exchange.name,
+                     self._rmq_params.queue.name)
+        self._channel.queue_bind(self._rmq_params.queue.name,
+                                 self._rmq_params.exchange.name,
                                  routing_key='#',  # Default wildcard key to consume everything
                                  callback=self._on_bindok)
 
@@ -300,7 +322,7 @@ class PublishConfirm(Thread):
         if self._channel is not None:
             self._channel.confirm_delivery(self._on_delivery_confirmation)
 
-    def _on_delivery_confirmation(self, method_frame):
+    def _on_delivery_confirmation(self, method_frame: Method):
         """Invoked by pika when RabbitMQ responds to a Basic.Publish RPC
         command, passing in either a Basic.Ack or Basic.Nack frame with
         the delivery tag of the message that was published. The delivery tag
@@ -311,9 +333,12 @@ class PublishConfirm(Thread):
         that are pending confirmation.
         :param pika.frame.Method method_frame: Basic.Ack or Basic.Nack frame
         """
-        confirmation_type = method_frame.method.NAME.split('.')[1].lower()
-        ack_multiple = method_frame.method.multiple
-        delivery_tag = method_frame.method.delivery_tag
+        # tell python type checker that method will be an Ack or Nack (per pika docs)
+        method = cast(Union[Basic.Ack, Basic.Nack], method_frame.method)
+
+        confirmation_type = method.NAME.split('.')[1].lower()
+        ack_multiple = method.multiple
+        delivery_tag = method.delivery_tag
 
         logger.debug('Received %s for delivery tag: %i (multiple: %s)',
                      confirmation_type, delivery_tag, ack_multiple)
@@ -323,7 +348,8 @@ class PublishConfirm(Thread):
         elif confirmation_type == 'nack':
             self._records.nacked += 1
 
-        del self._records.deliveries[delivery_tag]
+        if delivery_tag in self._records.deliveries:
+            del self._records.deliveries[delivery_tag]
 
         if ack_multiple:
             for tmp_tag in list(self._records.deliveries.keys()):
@@ -338,6 +364,10 @@ class PublishConfirm(Thread):
             '%i were acked and %i were nacked', self._records.message_number,
             len(self._records.deliveries), self._records.acked, self._records.nacked)
 
+        # if caller provided callback to notify when PublishConfirm is ready, invoke it now
+        if self._on_ready_to_publish is not None:
+            self._on_ready_to_publish()
+
     def _close_channel(self):
         """Invoke this command to close the channel with RabbitMQ by sending
         the Channel.Close RPC command.
@@ -351,31 +381,3 @@ class PublishConfirm(Thread):
         if self._connection is not None:
             logger.debug('Closing connection')
             self._connection.close()
-
-
-def main():
-    logging.config.dictConfig(get_default_log_config('INFO'))
-
-    # Setup a test instance...
-    conn = Conn('localhost', '/', '5672', 'guest', 'guest')
-    exch = Exch('pub.conf.test', ExchangeType.topic)
-    queue = Queue('pub.conf', '#', durable=False, exclusive=False, auto_delete=True)
-    expub = PublishConfirm(conn, exch, queue)
-    # Start the object thread, give it a moment...
-    expub.start()
-    time.sleep(1)
-
-    while True:
-        try:
-            msg = input()
-            key = 'publish.confirm.test'
-            expub.publish_message(msg, key)
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            logger.info('Exiting from test loop : %s', str(e))
-            break
-    expub.stop()
-    logger.info('Stopping...')
-
-
-if __name__ == '__main__':
-    main()

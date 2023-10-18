@@ -1,13 +1,14 @@
 """Test suite for grid_proj.py"""
-# --------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
 # Created on Wed Aug 2 2023
 #
-# Copyright (c) 2023 Colorado State University. All rights reserved. (1)
+# Copyright (c) 2023 Regents of the University of Colorado. All rights reserved. (1)
+# Copyright (c) 2023 Colorado State University. All rights reserved. (2)
 #
 # Contributors:
-#     Mackenzie Grimes (1)
+#    Mackenzie Grimes (2)
 #
-# --------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
 # pylint: disable=missing-function-docstring,redefined-outer-name,invalid-name,protected-access
 
 import math

@@ -1,13 +1,14 @@
 """Module that wraps pyproj (cartographic) library and transforms objects into other data forms"""
-# -------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
 # Created on Mon Jul 31 2023
 #
-# Copyright (c) 2023 Colorado State University. All rights reserved. (1)
+# Copyright (c) 2023 Regents of the University of Colorado. All rights reserved. (1)
+# Copyright (c) 2023 Colorado State University. All rights reserved. (2)
 #
 # Contributors:
-#     Mackenzie Grimes (1)
+#    Mackenzie Grimes (2)
 #
-# -------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
 # pylint: disable=invalid-name
 
 from typing import Self, Tuple, Union, Optional
