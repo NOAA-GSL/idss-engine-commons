@@ -192,11 +192,11 @@ def test_publish_message_exception_when_channel_not_open(publish_confirm: Publis
     assert len(publish_confirm._records.deliveries) == 0
 
 
-def test_publish_message_failure_rmq_error(publish_confirm: PublishConfirm, context: MockPika):
+def test_publish_message_failure_rmq_error(publish_confirm: PublishConfirm):
     message_data = {'data': 123}
-    context.Channel.basic_publish = Mock(side_effect=RuntimeError('ACCESS_REFUSED'))
 
     publish_confirm.start()
+    publish_confirm._channel.basic_publish = Mock(side_effect=RuntimeError('ACCESS_REFUSED'))
     success = publish_confirm.publish_message(message_data)
 
     # publish should have returned failure and not recorded a message delivery
@@ -215,9 +215,10 @@ def test_on_channel_closed(publish_confirm: PublishConfirm, context: MockPika):
 def test_start_with_callback(publish_confirm: PublishConfirm):
     example_message = {'callback_executed': True}
 
-    def test_callback(pub_conf: PublishConfirm):
-        assert pub_conf._channel.is_open
-        pub_conf.publish_message(message=example_message)
+    def test_callback():
+        assert publish_confirm._channel.is_open
+        success = publish_confirm.publish_message(message=example_message)
+        assert success
 
     assert publish_confirm._channel is None
     publish_confirm.start(callback=test_callback)
