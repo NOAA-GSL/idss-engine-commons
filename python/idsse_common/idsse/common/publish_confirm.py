@@ -18,7 +18,7 @@ import json
 import time
 from dataclasses import dataclass, field
 from threading import Thread
-from typing import Optional, Dict, NamedTuple, Union, cast
+from typing import Optional, Dict, NamedTuple, Union, Callable, Self, cast
 
 from pika import SelectConnection, URLParameters, BasicProperties
 from pika.channel import Channel
@@ -81,6 +81,8 @@ class PublishConfirm(Thread):
                      f':{str(conn.port)}/%2F?connection_attempts=3&heartbeat=3600')
         self._rmq_params = RabbitMqParams(exchange=exchange, queue=queue)
 
+        self._on_ready_callback: Optional[Callable[[Self], None]] = None
+
     def connect(self):
         """This method connects to RabbitMQ, returning the connection handle.
         When the connection is established, the on_connection_open method
@@ -142,12 +144,22 @@ class PublishConfirm(Thread):
             # Finish closing
             self._connection.ioloop.start()
 
-    def start(self):
+    def start(self, callback: Optional[Callable[[Self], None]] = None):
         """Start thread to connect RabbitMQ queue and prepare to publish messages. Must be called
         before publish_message().
+
+        Args:
+            callback (Optional[Callable[[PublishConfirm], None]]): callback function to be invoked
+                once instance is ready to publish messages (all RabbitMQ connection and channel
+                are setup, delivery confirmation is enabled, etc.). Defaults to None
         """
         logger.debug('Starting thread')
+        self._on_ready_callback = callback  # to be invoked after all pika setup is done
         super().start()
+
+        # callback not passed, so sleep momentarily to ensure all RabbitMQ callbacks can complete
+        if callback is None:
+            time.sleep(.2)
 
     def stop(self):
         """Stop the example by closing the channel and connection. We
@@ -360,6 +372,9 @@ class PublishConfirm(Thread):
             'Published %i messages, %i have yet to be confirmed, '
             '%i were acked and %i were nacked', self._records.message_number,
             len(self._records.deliveries), self._records.acked, self._records.nacked)
+
+        if self._on_ready_callback is not None:
+            self._on_ready_callback(self)  # notify up that channel can now be published to
 
     def _close_channel(self):
         """Invoke this command to close the channel with RabbitMQ by sending
