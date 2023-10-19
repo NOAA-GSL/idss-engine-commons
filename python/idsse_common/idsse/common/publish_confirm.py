@@ -18,7 +18,7 @@ import json
 import time
 from dataclasses import dataclass, field
 from threading import Thread
-from typing import Optional, Dict, Callable, NamedTuple, Union, cast
+from typing import Optional, Dict, NamedTuple, Union, cast
 
 from pika import SelectConnection, URLParameters, BasicProperties
 from pika.channel import Channel
@@ -27,7 +27,7 @@ from pika.spec import Basic
 
 
 from idsse.common.rabbitmq_utils import Conn, Exch, Queue
-from idsse.common.log_util import get_default_log_config, set_corr_id_context_var
+from idsse.common.log_util import set_corr_id_context_var
 
 logger = logging.getLogger(__name__)
 
@@ -81,8 +81,6 @@ class PublishConfirm(Thread):
                      f':{str(conn.port)}/%2F?connection_attempts=3&heartbeat=3600')
         self._rmq_params = RabbitMqParams(exchange=exchange, queue=queue)
 
-        self._on_ready_to_publish: Optional[Callable[[],None]] = None
-
     def connect(self):
         """This method connects to RabbitMQ, returning the connection handle.
         When the connection is established, the on_connection_open method
@@ -105,26 +103,29 @@ class PublishConfirm(Thread):
         Returns:
             bool: True if message successfully published to queue (channel was open and
                 publish did not throw exception)
+        Raises:
+            RuntimeError: if channel is uninitialized (start() not completed yet) or is closed
         """
-        success = False
-        if self._channel and self._channel.is_open:
+        if not (self._channel and self._channel.is_open):
+            # tried to publish message before start() was called (or while it was in progress)
+            channel_state = 'closed' if self._channel and self._channel.is_closed else 'None'
+            raise RuntimeError(f'Cannot publish messages yet; RabbitMQ channel is {channel_state}')
 
-            # We expect a JSON message format, do a check here...
-            try:
-                properties = BasicProperties(content_type='application/json',
-                                                  content_encoding='utf-8')
+        # We expect a JSON message format, do a check here...
+        try:
+            properties = BasicProperties(content_type='application/json',
+                                                content_encoding='utf-8')
+            self._channel.basic_publish(self._rmq_params.exchange.name, key,
+                                        json.dumps(message, ensure_ascii=True),
+                                        properties)
+            self._records.message_number += 1
+            self._records.deliveries[self._records.message_number] = message
+            logger.debug('Published message # %i', self._records.message_number)
+            return True
 
-                self._channel.basic_publish(self._rmq_params.exchange.name, key,
-                                            json.dumps(message, ensure_ascii=True),
-                                            properties)
-                self._records.message_number += 1
-                self._records.deliveries[self._records.message_number] = message
-                logger.debug('Published message # %i', self._records.message_number)
-                success = True
-
-            except Exception as e:  # pylint: disable=broad-exception-caught
-                logger.error('Publish message problem : %s', str(e))
-        return success
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            logger.error('Publish message problem : %s', str(e))
+            return False
 
     def run(self):
         """Run the thread, i.e. get connection etc...
@@ -141,16 +142,11 @@ class PublishConfirm(Thread):
             # Finish closing
             self._connection.ioloop.start()
 
-    def start(self, callback: Optional[Callable[[], None]] = None):
+    def start(self):
         """Start thread to connect RabbitMQ queue and prepare to publish messages. Must be called
         before publish_message().
-
-        Args:
-            callback (Optional[Callable[[], None]]): Optional callback to be invoked when
-                PublishConfirm is connected and RabbitMQ client is ready to publish.
-                Defaults to None.
         """
-        self._on_ready_to_publish = callback
+        logger.debug('Starting thread')
         super().start()
 
     def stop(self):
@@ -165,6 +161,7 @@ class PublishConfirm(Thread):
         self._stopping = True
         self._close_channel()
         self._close_connection()
+        self._stopping = False  # done stopping
 
     def _on_connection_open(self, _unused_connection):
         """This method is called by pika once the connection to RabbitMQ has
@@ -239,7 +236,7 @@ class PublishConfirm(Thread):
         logger.warning('Channel %i was closed: %s', channel, reason)
         self._channel = None
         if not self._stopping:
-            self._connection.close()
+            self._close_connection()
 
     def _setup_exchange(self, exchange: Exch):
         """Setup the exchange on RabbitMQ by invoking the Exchange.Declare RPC
@@ -320,6 +317,7 @@ class PublishConfirm(Thread):
         """
         logger.debug('Issuing Confirm.Select RPC command')
         if self._channel is not None:
+            self._records.deliveries[0] = 'Confirm.SelectOk'  # track the confirmation message
             self._channel.confirm_delivery(self._on_delivery_confirmation)
 
     def _on_delivery_confirmation(self, method_frame: Method):
@@ -348,8 +346,7 @@ class PublishConfirm(Thread):
         elif confirmation_type == 'nack':
             self._records.nacked += 1
 
-        if delivery_tag in self._records.deliveries:
-            del self._records.deliveries[delivery_tag]
+        del self._records.deliveries[delivery_tag]
 
         if ack_multiple:
             for tmp_tag in list(self._records.deliveries.keys()):
@@ -363,10 +360,6 @@ class PublishConfirm(Thread):
             'Published %i messages, %i have yet to be confirmed, '
             '%i were acked and %i were nacked', self._records.message_number,
             len(self._records.deliveries), self._records.acked, self._records.nacked)
-
-        # if caller provided callback to notify when PublishConfirm is ready, invoke it now
-        if self._on_ready_to_publish is not None:
-            self._on_ready_to_publish()
 
     def _close_channel(self):
         """Invoke this command to close the channel with RabbitMQ by sending
