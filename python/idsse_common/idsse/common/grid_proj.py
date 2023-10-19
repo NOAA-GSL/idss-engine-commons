@@ -6,8 +6,8 @@
 # Copyright (c) 2023 Colorado State University. All rights reserved. (2)
 #
 # Contributors:
-#    Mackenzie Grimes (2)
-#    Geary Layne (1)
+#     Mackenzie Grimes (2)
+#     Geary Layne (1)
 #
 # ----------------------------------------------------------------------------------
 # pylint: disable=invalid-name
