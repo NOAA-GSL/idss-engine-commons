@@ -315,6 +315,10 @@ class PublishConfirm(Thread):
         """
         logger.debug('Issuing consumer related RPC commands')
         self._enable_delivery_confirmations()
+
+        # notify up that channel can now be published to
+        if self._on_ready_callback:
+            self._on_ready_callback()
         # self.schedule_next_message()
 
     def _enable_delivery_confirmations(self):
@@ -371,9 +375,6 @@ class PublishConfirm(Thread):
             'Published %i messages, %i have yet to be confirmed, '
             '%i were acked and %i were nacked', self._records.message_number,
             len(self._records.deliveries), self._records.acked, self._records.nacked)
-
-        if self._on_ready_callback is not None:
-            self._on_ready_callback()  # notify up that channel can now be published to
 
     def _close_channel(self):
         """Invoke this command to close the channel with RabbitMQ by sending
