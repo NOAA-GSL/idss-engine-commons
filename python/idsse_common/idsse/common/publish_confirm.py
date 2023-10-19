@@ -18,7 +18,7 @@ import json
 import time
 from dataclasses import dataclass, field
 from threading import Thread
-from typing import Optional, Dict, NamedTuple, Union, Callable, Self, cast
+from typing import Optional, Dict, NamedTuple, Union, Callable, cast
 
 from pika import SelectConnection, URLParameters, BasicProperties
 from pika.channel import Channel
