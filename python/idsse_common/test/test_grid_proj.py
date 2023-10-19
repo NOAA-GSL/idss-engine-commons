@@ -2,12 +2,12 @@
 # ----------------------------------------------------------------------------------
 # Created on Wed Aug 2 2023
 #
-# Copyright (c) 2023 Colorado State University. All rights reserved. (1)
-# Copyright (c) 2023 Regents of the University of Colorado. All rights reserved. (2)
+# Copyright (c) 2023 Regents of the University of Colorado. All rights reserved. (1)
+# Copyright (c) 2023 Colorado State University. All rights reserved. (2)
 #
 # Contributors:
-#     Mackenzie Grimes (1)
-#     Geary Layne (2)
+#     Mackenzie Grimes (2)
+#     Geary Layne (1)
 #
 # ----------------------------------------------------------------------------------
 # pylint: disable=missing-function-docstring,redefined-outer-name,invalid-name,protected-access
