@@ -25,7 +25,6 @@ from pika.channel import Channel
 from pika.frame import Method
 from pika.spec import Basic
 
-
 from idsse.common.rabbitmq_utils import Conn, Exch, Queue
 from idsse.common.log_util import set_corr_id_context_var
 

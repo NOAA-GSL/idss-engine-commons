@@ -106,14 +106,16 @@ class MockPika:
 
     class SelectConnection:
         """mock of pika.SelectConnection"""
-        def __init__(self, parameters, on_open_callback, on_open_error_callback, on_close_callback):
+        def __init__(self,
+                     parameters,
+                     on_open_callback: Callable[[Any], None],
+                     on_open_error_callback,
+                     on_close_callback: Callable[[Any, str], None]):
             self.is_open = True
             self.is_closed = False
             self._context = MockPika()
 
-            self.ioloop = self._context.IOLoop(
-                on_open=on_open_callback, on_close=on_close_callback
-            )
+            self.ioloop = self._context.IOLoop(on_open_callback, on_close_callback)
 
         def channel(self, on_open_callback: Callable[[Any], None]):
             """
