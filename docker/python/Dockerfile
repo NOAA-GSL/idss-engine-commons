@@ -20,6 +20,7 @@ RUN pip3 install --no-cache \
     requests==2.28.2 \
     cherrypy==18.8.0 \
     python-dateutil==2.8.2 \
+    jsonschema==4.19.0 \
     pycouchdb==1.14.2
 
 # Get the latest package updates to keep security vulnerabilities down

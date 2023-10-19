@@ -1,14 +1,14 @@
 ============================= test session starts ==============================
-platform linux -- Python 3.11.5, pytest-7.4.2, pluggy-1.3.0
+platform linux -- Python 3.11.6, pytest-7.4.2, pluggy-1.3.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
 plugins: cov-4.1.0
-collected 112 items
+collected 118 items
 
-test/test_aws_utils.py ..................                                [ 16%]
-test/test_config.py ............                                         [ 26%]
-test/test_grid_proj.py .............                                     [ 38%]
-test/test_path_builder.py .....................                          [ 57%]
-test/test_utils.py ........................                              [ 78%]
+test/test_aws_utils.py ..................                                [ 15%]
+test/test_config.py ............                                         [ 25%]
+test/test_grid_proj.py ...................                               [ 41%]
+test/test_path_builder.py .....................                          [ 59%]
+test/test_utils.py ........................                              [ 79%]
 test/test_validate_schema.py ........................                    [100%]
 
 =============================== warnings summary ===============================
@@ -30,13 +30,13 @@ idsse/common/validate_schema.py:16
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 - generated xml file: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/pytest.xml -
 
----------- coverage: platform linux, python 3.11.5-final-0 -----------
+---------- coverage: platform linux, python 3.11.6-final-0 -----------
 Name                              Stmts   Miss  Cover
 -----------------------------------------------------
 idsse/common/__init__.py              0      0   100%
 idsse/common/aws_utils.py            86      5    94%
 idsse/common/config.py               68      8    88%
-idsse/common/grid_proj.py            53      0   100%
+idsse/common/grid_proj.py            81      1    99%
 idsse/common/json_message.py         22     22     0%
 idsse/common/log_util.py             40     40     0%
 idsse/common/path_builder.py        157     41    74%
@@ -45,6 +45,6 @@ idsse/common/rabbitmq_utils.py       16     16     0%
 idsse/common/utils.py                94      9    90%
 idsse/common/validate_schema.py      39      0   100%
 -----------------------------------------------------
-TOTAL                               730    296    59%
+TOTAL                               758    297    61%
 
-======================= 112 passed, 6 warnings in 0.97s ========================
+======================= 118 passed, 6 warnings in 1.04s ========================
