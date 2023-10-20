@@ -231,15 +231,23 @@ def test_start_with_callback(publish_confirm: PublishConfirm):
 
 
 def test_start_without_callback_sleeps(publish_confirm: PublishConfirm, monkeypatch: MonkeyPatch):
-    def mock_sleep_function(secs: int):
+    sleep_call_count = 0
+
+    def increment_call_count():
+        """Track number of sleep calls that we are interested in"""
+        nonlocal sleep_call_count  # get variable from the unit test function's scope
+        sleep_call_count += 1
+
+    def mock_sleep(secs: int):
         # If this is not the call originating from PublishConfirm.start(), let it really sleep.
-        # Mocking sleep() entirely appeared to break Thread operations (unit test ran forever)
-        if secs != 0.2:
+        # Fully mocking sleep() seemed to break Thread operations (unit test ran forever)
+        if secs == 0.2:
+            increment_call_count()
+        else:
             sleep(secs)
 
-    mock_sleep = Mock(wraps=mock_sleep_function)
     monkeypatch.setattr('idsse.common.publish_confirm.time.sleep', mock_sleep)
 
     # if no callback passed, start() should sleep internally to ensure RabbitMQ callbacks are done
     publish_confirm.start()
-    mock_sleep.assert_called()
+    assert sleep_call_count == 1
