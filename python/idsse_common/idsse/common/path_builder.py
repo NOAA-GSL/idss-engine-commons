@@ -185,7 +185,6 @@ class PathBuilder:
         Returns:
             dict: Lookup of all information identified and extracted
         """
-        # return self._parse(dir_, self.dir_fmt)
         return self._parse_times(dir_, self.dir_fmt)
 
     def parse_filename(self, filename: str) -> dict:
@@ -197,7 +196,6 @@ class PathBuilder:
         Returns:
             dict: Lookup of all information identified and extracted
         """
-        # return self._parse(filename, self.filename_fmt)
         filename = os.path.basename(filename)
         return self._parse_times(filename, self.filename_fmt)
 
@@ -210,7 +208,6 @@ class PathBuilder:
         Returns:
             dict: Lookup of all information identified and extracted
         """
-        # return self._parse(path, self.path_fmt)
         return self._parse_times(path, self.path_fmt)
 
     def get_issue(self, path: str) -> datetime:
@@ -363,40 +360,5 @@ class PathBuilder:
             res = re.search(r'{.*}', _dir)
             if res:
                 parse_args(res.group(), vals[i][res.span()[0]:], time_args)
-
-        return time_args
-
-    def _parse(self, string: str, format_str: str) -> Dict:
-        def get_between(query_str: str, pre_off: str, post_off: str) -> Tuple[str, str]:
-            idx1 = query_str.index(pre_off) + len(pre_off)
-            idx2 = query_str.index(post_off, idx1)
-            return query_str[idx1:idx2], query_str[idx2:]
-
-        def parse_args(key: str, value: str, result: Dict):
-            for arg in key.split('{')[1:]:
-                var_name, var_size = arg.split(':')
-                var_type = var_size[-2:-1]
-                var_size = int(var_size[:-2])
-                match var_type:
-                    case 'd':
-                        result[var_name] = int(value[:var_size])
-                    case _:
-                        raise ValueError(f'Unknown format type: {var_type}')
-                key = key[var_size:]
-                value = value[var_size:]
-
-        constants = [part for part in re.split(r'{.*?}', format_str) if part]
-
-        arg_lookup = {}
-        for i in range(1, len(constants)):
-            pre = constants[i-1]
-            post = constants[i]
-            format_between, format_str = get_between(format_str, pre, post)
-            string_between, string = get_between(string, pre, post)
-            arg_lookup[format_between] = string_between
-
-        time_args = {}
-        for key, value in arg_lookup.items():
-            parse_args(key, value, time_args)
 
         return time_args
