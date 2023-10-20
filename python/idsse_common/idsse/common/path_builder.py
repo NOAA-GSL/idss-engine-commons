@@ -19,7 +19,7 @@ In this weather forecasting data context,
 import os
 import re
 from datetime import datetime, timedelta
-from typing import Dict, Self, Tuple, Union
+from typing import Dict, Self, Union
 
 from .utils import TimeDelta
 
