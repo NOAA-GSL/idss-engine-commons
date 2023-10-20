@@ -9,8 +9,7 @@
 #    Mackenzie Grimes (2)
 #
 # ----------------------------------------------------------------------------------
-# pylint: disable=missing-function-docstring,redefined-outer-name,invalid-name,protected-access
-# pylint: disable=too-few-public-methods,unused-argument
+# pylint: disable=missing-function-docstring
 
 import json
 from datetime import datetime, UTC
