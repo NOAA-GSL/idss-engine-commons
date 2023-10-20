@@ -63,11 +63,11 @@ def get_corr_id_context_var_parts() -> List[str]:
 
 class AddCorrelationIdFilter(logging.Filter):
     """"Provides correlation id parameter for the logger"""
-    def filter(self, record: logging.LogRecord):
+    def filter(self, record: logging.LogRecord) -> bool:
         try:
             record.corr_id = corr_id_context_var.get()
             return True
-        except (AttributeError, LookupError):
+        except LookupError:  # couldn't add corr_id since it is not set
             return False
 
 
