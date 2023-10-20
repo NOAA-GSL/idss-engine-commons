@@ -106,14 +106,16 @@ class MockPika:
 
     class SelectConnection:
         """mock of pika.SelectConnection"""
-        def __init__(self, parameters, on_open_callback, on_open_error_callback, on_close_callback):
+        def __init__(self,
+                     parameters,
+                     on_open_callback: Callable[[Any], None],
+                     on_open_error_callback,
+                     on_close_callback: Callable[[Any, str], None]):
             self.is_open = True
             self.is_closed = False
             self._context = MockPika()
 
-            self.ioloop = self._context.IOLoop(
-                on_open=on_open_callback, on_close=on_close_callback
-            )
+            self.ioloop = self._context.IOLoop(on_open_callback, on_close_callback)
 
         def channel(self, on_open_callback: Callable[[Any], None]):
             """
@@ -143,17 +145,12 @@ def publish_confirm(monkeypatch: MonkeyPatch, context: MockPika) -> PublishConfi
 # tests
 def test_publish_confirm_start_and_stop(publish_confirm: PublishConfirm):
     publish_confirm.start()
-    sleep(.1)
 
     assert publish_confirm._connection and publish_confirm._connection.is_open
     assert publish_confirm._channel and publish_confirm._channel.is_open
     assert publish_confirm._records.acked == 1  # channel.confirm_delivery() sent our first message
 
     publish_confirm.stop()
-    while publish_confirm._stopping:
-        # Ensure stop() has completed executing before validating everything is closed
-        # This race condition is possible (though unlikely) since PublishConfirm has its own Thread
-        sleep(.1)
 
     assert publish_confirm._connection.is_closed
     assert publish_confirm._channel.is_closed
@@ -169,7 +166,6 @@ def test_delivery_confirmation_handles_nack(publish_confirm: PublishConfirm, con
     context.Channel.confirm_delivery = mock_confirm_delivery
 
     publish_confirm.start()
-    sleep(.1)
     assert publish_confirm._records.nacked == 1
     assert publish_confirm._records.acked == 0
 
@@ -178,8 +174,6 @@ def test_publish_message_success(publish_confirm: PublishConfirm):
     message_data = {'data': 123}
 
     publish_confirm.start()
-    # sleep to keep our unit test (Main thread) from outrunning PublishConfirm Thread. Not ideal
-    sleep(.1)
     result = publish_confirm.publish_message(message_data)
 
     assert result
@@ -200,12 +194,11 @@ def test_publish_message_exception_when_channel_not_open(publish_confirm: Publis
     assert len(publish_confirm._records.deliveries) == 0
 
 
-def test_publish_message_failure_rmq_error(publish_confirm: PublishConfirm, context: MockPika):
+def test_publish_message_failure_rmq_error(publish_confirm: PublishConfirm):
     message_data = {'data': 123}
-    context.Channel.basic_publish = Mock(side_effect=RuntimeError('ACCESS_REFUSED'))
 
     publish_confirm.start()
-    sleep(.1)
+    publish_confirm._channel.basic_publish = Mock(side_effect=RuntimeError('ACCESS_REFUSED'))
     success = publish_confirm.publish_message(message_data)
 
     # publish should have returned failure and not recorded a message delivery
@@ -216,8 +209,41 @@ def test_publish_message_failure_rmq_error(publish_confirm: PublishConfirm, cont
 
 def test_on_channel_closed(publish_confirm: PublishConfirm, context: MockPika):
     publish_confirm.start()
-    sleep(.1)
-
     publish_confirm._on_channel_closed(context.Channel(), 'ChannelClosedByClient')
     assert publish_confirm._channel is None
     assert publish_confirm._connection.is_closed
+
+
+def test_start_with_callback(publish_confirm: PublishConfirm):
+    example_message = {'callback_executed': True}
+
+    def test_callback():
+        assert publish_confirm._channel.is_open
+        success = publish_confirm.publish_message(message=example_message)
+        assert success
+
+    assert publish_confirm._channel is None
+    publish_confirm.start(callback=test_callback)
+
+    sleep(.1)  # ensure that callback has time to run and send its message
+    assert publish_confirm._records.message_number == 1
+    assert publish_confirm._records.deliveries[1] == example_message
+
+
+def test_start_without_callback_sleeps(publish_confirm: PublishConfirm, monkeypatch: MonkeyPatch):
+    def mock_sleep_function(secs: float):
+        # If this is not the call originating from PublishConfirm.start(), let it really sleep.
+        # Mocking all sleep() calls seemed to break Thread operations (unit test ran forever)
+        if secs != 0.2:
+            sleep(secs)
+
+    mock_sleep = Mock(wraps=mock_sleep_function)
+    monkeypatch.setattr('idsse.common.publish_confirm.time.sleep', mock_sleep)
+
+    # if no callback passed, start() should sleep internally to ensure RabbitMQ callbacks complete
+    publish_confirm.start()
+
+    # mock sleep someimtes captures a call from PublishConfirm.run(), due to a race condition
+    # between this test's thread and the PublishConfirm thread. Both results are acceptable
+    sleep_call_args = [call.args for call in mock_sleep.call_args_list]
+    assert set(sleep_call_args) in [set([(0.2,)]), set([(0.2,), (5,)])]

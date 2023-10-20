@@ -18,13 +18,12 @@ import json
 import time
 from dataclasses import dataclass, field
 from threading import Thread
-from typing import Optional, Dict, NamedTuple, Union, cast
+from typing import Optional, Dict, NamedTuple, Union, Callable, cast
 
 from pika import SelectConnection, URLParameters, BasicProperties
 from pika.channel import Channel
 from pika.frame import Method
 from pika.spec import Basic
-
 
 from idsse.common.rabbitmq_utils import Conn, Exch, Queue
 from idsse.common.log_util import set_corr_id_context_var
@@ -80,6 +79,8 @@ class PublishConfirm(Thread):
         self._url = (f'amqp://{conn.username}:{conn.password}@{conn.host}'
                      f':{str(conn.port)}/%2F?connection_attempts=3&heartbeat=3600')
         self._rmq_params = RabbitMqParams(exchange=exchange, queue=queue)
+
+        self._on_ready_callback: Optional[Callable[[], None]] = None
 
     def connect(self):
         """This method connects to RabbitMQ, returning the connection handle.
@@ -142,12 +143,22 @@ class PublishConfirm(Thread):
             # Finish closing
             self._connection.ioloop.start()
 
-    def start(self):
+    def start(self, callback: Optional[Callable[[], None]] = None):
         """Start thread to connect RabbitMQ queue and prepare to publish messages. Must be called
         before publish_message().
+
+        Args:
+            callback (Optional[Callable[[], None]]): callback function to be invoked
+                once instance is ready to publish messages (all RabbitMQ connection and channel
+                are setup, delivery confirmation is enabled, etc.). Defaults to None
         """
         logger.debug('Starting thread')
+        self._on_ready_callback = callback  # to be invoked after all pika setup is done
         super().start()
+
+        # callback not passed, so sleep momentarily to ensure all RabbitMQ callbacks can complete
+        if callback is None:
+            time.sleep(.2)
 
     def stop(self):
         """Stop the example by closing the channel and connection. We
@@ -304,6 +315,10 @@ class PublishConfirm(Thread):
         """
         logger.debug('Issuing consumer related RPC commands')
         self._enable_delivery_confirmations()
+
+        # notify up that channel can now be published to
+        if self._on_ready_callback:
+            self._on_ready_callback()
         # self.schedule_next_message()
 
     def _enable_delivery_confirmations(self):
