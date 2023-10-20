@@ -242,4 +242,8 @@ def test_start_without_callback_sleeps(publish_confirm: PublishConfirm, monkeypa
 
     # if no callback passed, start() should sleep internally to ensure RabbitMQ callbacks complete
     publish_confirm.start()
-    assert (0.2,) in [call.args for call in mock_sleep.call_args_list]
+
+    # mock sleep someimtes captures a call from PublishConfirm.run(), due to a race condition
+    # between this test's thread and the PublishConfirm thread. Both results are acceptable
+    sleep_call_args = [call.args for call in mock_sleep.call_args_list]
+    assert set(sleep_call_args) in [set([(0.2,)]), set([(0.2,), (5,)])]
