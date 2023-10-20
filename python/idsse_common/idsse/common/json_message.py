@@ -10,25 +10,29 @@
 # ------------------------------------------------------------------------------
 
 import json
-from typing import Tuple, Union
+from typing import Tuple, Union, Optional
 from uuid import uuid4, UUID
 
 
-def get_corr_id(message: Union[str, dict]) -> Tuple[str, UUID, str]:
+def get_corr_id(
+    message: Union[str, dict]
+) -> Optional[Tuple[Optional[str], Optional[Union[UUID, str]], Optional[str]]]:
     """Extract the correlation id from a json message.
-       The correlation id is made of three part, originator, uuid, issue date/time
+       The correlation id is made of three parts: originator, uuid, issue date/time
 
     Args:
-        message (Union[str, json]): The message to be search as either a string or json obj
+        message (Union[str, json]): The message to be searched as either a string or json obj
 
     Returns:
-        Tuple[str, uuid, str]: A tuple containing originator, uuid, and issue date/time
+        Optional[Tuple[Optional[str], Optional[Union[UUID, str]], Optional[str]]]:
+            A tuple containing originator, uuid, and issue date/time, or None if a given part
+            was not found. Returns simply None if no parts found
     """
     if isinstance(message, str):
         message = json.loads(message)
 
     corr_id = message.get('corrId', None)
-    if not corr_id:
+    if corr_id is None:
         return corr_id
 
     corr_id = (corr_id.get('originator', None),
@@ -42,8 +46,8 @@ def get_corr_id(message: Union[str, dict]) -> Tuple[str, UUID, str]:
 
 def add_corr_id(message: Union[dict, str],
                 originator: str,
-                uuid_: Union[UUID, str] = None,
-                issue_dt: str = None) -> dict:
+                uuid_: Optional[Union[UUID, str]] = None,
+                issue_dt: Optional[str] = None) -> dict:
     """Add (or overwrites) the three part correlation id to a json message
 
     Args:
