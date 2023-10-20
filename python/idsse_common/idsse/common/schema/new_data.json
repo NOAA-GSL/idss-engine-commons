@@ -7,14 +7,27 @@
             "region": {"$ref": "region.json#/Region"},
             "issueDt": {"$ref": "timing.json#/TimeString"},
             "validDt": {"$ref": "timing.json#/TimeString"},
-            "field": {"$ref": "field.json#/FieldName"}
+            "field": {"$ref": "field.json#/FieldName"},
+            "missing": {"$ref": "field.json#/FieldName"}
         },
+        "additionalProperties": false,
         "required": [
             "product",
             "region",
             "issueDt",
-            "validDt",
-            "field"
+            "validDt"
+        ],
+        "oneOf": [
+            {
+                "required": [
+                    "field"
+                ]
+            },
+            {
+                "required": [
+                    "missing"
+                ]
+            }
         ]
     },
     
@@ -26,8 +39,10 @@
             "region": {"$ref": "region.json#/Region"},
             "issueDt": {"$ref": "timing.json#/TimeString"},
             "validDt": {"$ref": "timing.json#/TimeString"},
-            "field": {"$ref": "field.json#/FieldList"}
+            "field": {"$ref": "field.json#/FieldList"},
+            "missing": {"$ref": "field.json#/FieldList"}
         },
+        "additionalProperties": false,
         "required": [
             "product",
             "region",
@@ -45,7 +60,14 @@
             "region": {"$ref": "region.json#/Region"},
             "issueDt": {"$ref": "timing.json#/TimeString"},
             "validDt": {"$ref": "timing.json#/TimeString"},
-            "fields": {
+            "field": {
+                "type": "object",
+                "patternProperties": {
+                    "^(\\d{4})-0?(\\d+)-0?(\\d+)[T ]0?(\\d+):0?(\\d+):0?(\\d+)$": {"$ref": "field.json#/FieldList"},
+                    "[^0-9.+-:TZ]": {"not": {}}
+                }
+            },
+            "missing": {
                 "type": "object",
                 "patternProperties": {
                     "^(\\d{4})-0?(\\d+)-0?(\\d+)[T ]0?(\\d+):0?(\\d+):0?(\\d+)$": {"$ref": "field.json#/FieldList"},
@@ -53,11 +75,12 @@
                 }
             }
         },
+        "additionalProperties": false,
         "required": [
             "product",
             "region",
             "issueDt",
-            "fields"
+            "field"
         ]
     },    
     "NewData": {
