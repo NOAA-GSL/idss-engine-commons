@@ -32,7 +32,7 @@ def get_corr_id(
         message = json.loads(message)
 
     corr_id = message.get('corrId', None)
-    if corr_id is None:
+    if not corr_id:
         return corr_id
 
     corr_id = (corr_id.get('originator', None),

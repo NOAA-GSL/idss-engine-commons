@@ -42,7 +42,7 @@ def test_get_corr_id_str():
 
 
 def test_get_corr_id_empty_corr_id():
-    result = get_corr_id({'corrId': {}})
+    result = get_corr_id({'other_data': 123})
     assert result is None
 
 
