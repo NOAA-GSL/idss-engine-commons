@@ -1,13 +1,15 @@
 """Test suite for grid_proj.py"""
-# --------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
 # Created on Wed Aug 2 2023
 #
-# Copyright (c) 2023 Colorado State University. All rights reserved. (1)
+# Copyright (c) 2023 Regents of the University of Colorado. All rights reserved. (1)
+# Copyright (c) 2023 Colorado State University. All rights reserved. (2)
 #
 # Contributors:
-#     Mackenzie Grimes (1)
+#     Mackenzie Grimes (2)
+#     Geary Layne (1)
 #
-# --------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
 # pylint: disable=missing-function-docstring,redefined-outer-name,invalid-name,protected-access
 
 import math
@@ -31,17 +33,20 @@ PROJ_SPEC_WITH_OFFSET = (
 )
 GRID_SPEC_WITHOUT_LOWER_LEFT = '+dx=2539.703 +dy=2539.703 +w=2345 +h=1597'
 
+WIDTH = 2345
+HEIGHT = 1597
+
 EXAMPLE_PIXELS = [
     (0, 0),
     (0, 1),
     (2000, 1500)
 ]
-EXAMPLE_PROJECTIONS = [
+EXAMPLE_LON_LAT = [
     (-126.2766, 19.229),
     (-126.28209649530142, 19.251224896946418),
     (-71.12860760432866, 54.09108720984939)
 ]
-EXAMPLE_GEOS = [
+EXAMPLE_CRS = [
     (-3275807.350733357, -260554.63043505285),
     (-3275807.3507333556, -258014.92743505232),
     (1803598.6492666428, 3548999.8695649463)
@@ -63,7 +68,7 @@ def grid_proj() -> GridProj:
 def test_from_proj_grid_spec(grid_proj: GridProj):
     assert isinstance(grid_proj, GridProj)
 
-    assert (grid_proj._x_offset, grid_proj._y_offset) == approx_tuple(EXAMPLE_GEOS[0])
+    assert (grid_proj._x_offset, grid_proj._y_offset) == approx_tuple(EXAMPLE_CRS[0])
     assert grid_proj._h == 1597
     assert grid_proj._w == 2345
     assert grid_proj._dx == approx(2539.703)
@@ -78,24 +83,56 @@ def test_from_proj_grid_spec_with_offset():
     proj_with_offset = GridProj.from_proj_grid_spec(PROJ_SPEC_WITH_OFFSET,
                                                     GRID_SPEC_WITHOUT_LOWER_LEFT)
 
-    proj_xy = proj_with_offset.map_pixel_to_proj(*EXAMPLE_PIXELS[0])
-    assert proj_xy == approx_tuple(EXAMPLE_PROJECTIONS[0])
+    proj_xy = proj_with_offset.map_pixel_to_geo(*EXAMPLE_PIXELS[0])
+    assert proj_xy == approx_tuple(EXAMPLE_LON_LAT[0])
+
+
+# test properties
+def test_get_width(grid_proj: GridProj):
+    assert grid_proj.width == WIDTH
+
+
+def test_get_height(grid_proj: GridProj):
+    assert grid_proj.height == HEIGHT
+
+
+def test_get_shape(grid_proj: GridProj):
+    assert grid_proj.shape == (WIDTH, HEIGHT)
+
+
+# test flips
+def test_fliplr(grid_proj: GridProj):
+    lower_left_lon_lat = grid_proj.map_pixel_to_geo(0, 0)
+    grid_proj.fliplr()
+    assert grid_proj.map_pixel_to_geo(grid_proj.width, 0) == lower_left_lon_lat
+
+
+def test_flipud(grid_proj: GridProj):
+    lower_left_lon_lat = grid_proj.map_pixel_to_geo(0, 0)
+    grid_proj.flipud()
+    assert grid_proj.map_pixel_to_geo(0, grid_proj.height) == lower_left_lon_lat
+
+
+def test_flip_both_lr_ud(grid_proj: GridProj):
+    lower_left_lon_lat = grid_proj.map_pixel_to_geo(0, 0)
+    grid_proj.flip()
+    assert grid_proj.map_pixel_to_geo(grid_proj.width, grid_proj.height) == lower_left_lon_lat
 
 
 # transformation methods testing
-def test_map_proj_to_pixel_round_half_away(grid_proj: GridProj):
-    for index, proj in enumerate(EXAMPLE_PROJECTIONS):
-        pixel_xy = grid_proj.map_proj_to_pixel(
-            *proj,
+def test_map_crs_to_pixel_round_half_away(grid_proj: GridProj):
+    for index, crs_xy in enumerate(EXAMPLE_CRS):
+        pixel_xy = grid_proj.map_crs_to_pixel(
+            *crs_xy,
             rounding=RoundingMethod.ROUND
         )
         assert pixel_xy == EXAMPLE_PIXELS[index]
 
 
-def test_map_proj_to_pixel_round_floor(grid_proj: GridProj):
-    for index, proj in enumerate(EXAMPLE_PROJECTIONS):
-        i, j = grid_proj.map_proj_to_pixel(
-            *proj,
+def test_map_crs_to_pixel_round_floor(grid_proj: GridProj):
+    for index, crs_xy in enumerate(EXAMPLE_CRS):
+        i, j = grid_proj.map_crs_to_pixel(
+            *crs_xy,
             rounding=RoundingMethod.FLOOR
         )
         # due to math imprecision internal to pyproj.transform(), some test results are a bit
@@ -103,77 +140,77 @@ def test_map_proj_to_pixel_round_floor(grid_proj: GridProj):
         assert (approx(i, abs=1), approx(j, abs=1)) == EXAMPLE_PIXELS[index]
 
 
-def test_map_proj_to_geo(grid_proj: GridProj):
-    for index, proj in enumerate(EXAMPLE_PROJECTIONS):
-        geo_xy = grid_proj.map_proj_to_geo(*proj)
-        assert geo_xy == approx_tuple(EXAMPLE_GEOS[index])
+def test_map_geo_to_crs(grid_proj: GridProj):
+    for index, lon_lat in enumerate(EXAMPLE_LON_LAT):
+        geo_xy = grid_proj.map_geo_to_crs(*lon_lat)
+        assert geo_xy == approx_tuple(EXAMPLE_CRS[index])
+
+
+def test_map_pixel_to_crs(grid_proj: GridProj):
+    for index, pixel in enumerate(EXAMPLE_PIXELS):
+        geo_x, geo_y = grid_proj.map_pixel_to_crs(*pixel)
+        assert (geo_x, geo_y) == approx_tuple(EXAMPLE_CRS[index])
 
 
 def test_map_pixel_to_geo(grid_proj: GridProj):
     for index, pixel in enumerate(EXAMPLE_PIXELS):
-        geo_x, geo_y = grid_proj.map_pixel_to_geo(*pixel)
-        assert (geo_x, geo_y) == approx_tuple(EXAMPLE_GEOS[index])
+        proj_x, proj_y = grid_proj.map_pixel_to_geo(*pixel)
+        assert (proj_x, proj_y) == approx_tuple(EXAMPLE_LON_LAT[index])
 
 
-def test_map_pixel_to_proj(grid_proj: GridProj):
-    for index, pixel in enumerate(EXAMPLE_PIXELS):
-        proj_x, proj_y = grid_proj.map_pixel_to_proj(*pixel)
-        assert (proj_x, proj_y) == approx_tuple(EXAMPLE_PROJECTIONS[index])
+def test_map_crs_to_geo(grid_proj: GridProj):
+    for index, geo in enumerate(EXAMPLE_CRS):
+        proj_x, proj_y = grid_proj.map_crs_to_geo(*geo)
+        assert (proj_x, proj_y) == approx_tuple(EXAMPLE_LON_LAT[index])
 
 
-def test_map_geo_to_proj(grid_proj: GridProj):
-    for index, geo in enumerate(EXAMPLE_GEOS):
-        proj_x, proj_y = grid_proj.map_geo_to_proj(*geo)
-        assert (proj_x, proj_y) == approx_tuple(EXAMPLE_PROJECTIONS[index])
-
-
-def test_geo_to_pixel_no_rounding(grid_proj: GridProj):
-    for index, geo in enumerate(EXAMPLE_GEOS):
-        i, j = grid_proj.map_geo_to_pixel(*geo)
+def test_crs_to_pixel_no_rounding(grid_proj: GridProj):
+    for index, geo in enumerate(EXAMPLE_CRS):
+        i, j = grid_proj.map_crs_to_pixel(*geo)
         # round result, which will not be precisely the integer that was passed
         assert (round_half_away(i, 6), round_half_away(j, 6)) == EXAMPLE_PIXELS[index]
 
 
-def test_geo_to_pixel_floor(grid_proj: GridProj):
-    for index, geo in enumerate(EXAMPLE_GEOS):
-        floor_ij = grid_proj.map_geo_to_pixel(*geo, RoundingMethod.FLOOR)
-        i, j = grid_proj.map_geo_to_pixel(*geo)
+def test_crs_to_pixel_floor(grid_proj: GridProj):
+    for index, geo in enumerate(EXAMPLE_CRS):
+        floor_ij = grid_proj.map_crs_to_pixel(*geo, RoundingMethod.FLOOR)
+        i, j = grid_proj.map_crs_to_pixel(*geo)
         assert (math.floor(i), math.floor(j)) == floor_ij
         assert (round_half_away(i), round_half_away(j)) == EXAMPLE_PIXELS[index]
 
 
-def test_geo_to_pixel_round(grid_proj: GridProj):
-    for index, geo in enumerate(EXAMPLE_GEOS):
-        i, j = grid_proj.map_geo_to_pixel(*geo, RoundingMethod.ROUND)
+def test_crs_to_pixel_round(grid_proj: GridProj):
+    for index, geo in enumerate(EXAMPLE_CRS):
+        i, j = grid_proj.map_crs_to_pixel(*geo, RoundingMethod.ROUND)
         assert (i, j) == EXAMPLE_PIXELS[index]
 
 
-def test_geo_to_pixel_round_str(grid_proj: GridProj):
-    i, j = grid_proj.map_geo_to_pixel(*EXAMPLE_GEOS[0], 'round')
+def test_crs_to_pixel_round_str(grid_proj: GridProj):
+    i, j = grid_proj.map_crs_to_pixel(*EXAMPLE_CRS[0], 'round')
     assert (i, j) == EXAMPLE_PIXELS[0]
 
-    i, j = grid_proj.map_geo_to_pixel(*EXAMPLE_GEOS[1], 'ROUND')
+    i, j = grid_proj.map_crs_to_pixel(*EXAMPLE_CRS[1], 'ROUND')
     assert (i, j) == EXAMPLE_PIXELS[1]
 
 
 def test_compound_transformations_stay_consistent(grid_proj: GridProj):
     # start with pixel, convert to projection
     initial_pixel = (EXAMPLE_PIXELS[2][0], EXAMPLE_PIXELS[2][1])
-    proj_x, proj_y = grid_proj.map_pixel_to_proj(*initial_pixel)
-    initial_proj = (proj_x, proj_y)
+    proj_x, proj_y = grid_proj.map_pixel_to_geo(*initial_pixel)
+    initial_geo = (proj_x, proj_y)
 
     # convert projection to geographic coordinates
-    geo_x, geo_y = grid_proj.map_proj_to_geo(proj_x, proj_y)
-    initial_geo = geo_x, geo_y
+    geo_x, geo_y = grid_proj.map_geo_to_crs(proj_x, proj_y)
+    initial_crs = geo_x, geo_y
 
     # convert geographic coordinates back to pixel, full circle, and data should be unchanged
-    pixel_x, pixel_y = grid_proj.map_geo_to_pixel(geo_x, geo_y)
+    pixel_x, pixel_y = grid_proj.map_crs_to_pixel(geo_x, geo_y)
     assert (round_half_away(pixel_x, 6), round_half_away(pixel_y, 6)) == initial_pixel
 
     # convert pixel back to geographic coordinates
-    geo_x, geo_y = grid_proj.map_pixel_to_geo(pixel_x, pixel_y)
-    assert (geo_x, geo_y) == approx_tuple(initial_geo)
+    geo_x, geo_y = grid_proj.map_pixel_to_crs(pixel_x, pixel_y)
+    assert (geo_x, geo_y) == approx_tuple(initial_crs)
 
     # convert geographic coordinates back to projection
-    proj_x, proj_y = grid_proj.map_geo_to_proj(geo_x, geo_y)
-    assert (proj_x, proj_y) == approx_tuple(initial_proj)
+    proj_x, proj_y = grid_proj.map_crs_to_geo(geo_x, geo_y)
+    assert (proj_x, proj_y) == approx_tuple(initial_geo)
