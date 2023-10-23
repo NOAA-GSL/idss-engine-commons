@@ -181,12 +181,13 @@ def test_get_lead_from_time_args(path_builder: PathBuilder):
 
 
 def test_calculate_issue_from_valid_and_lead():
-    parsed_dict = {}
-    parsed_dict['valid.year'] = 1970
-    parsed_dict['valid.month'] = 10
-    parsed_dict['valid.day'] = 3
-    parsed_dict['valid.hour'] = 14
-    parsed_dict['lead.hour'] = 2
+    parsed_dict = {
+        'valid.year': 1970,
+        'valid.month': 10,
+        'valid.day': 3,
+        'valid.hour': 14,
+        'lead.hour': 2
+    }
 
     result_issue = PathBuilder.get_issue_from_time_args(parsed_args=parsed_dict)
     assert result_issue == EXAMPLE_ISSUE
