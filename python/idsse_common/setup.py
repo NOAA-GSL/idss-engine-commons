@@ -1,4 +1,5 @@
 """Setup to support installation as Python library"""
+import glob
 from setuptools import setup
 
 setup(name='idsse',
@@ -10,7 +11,7 @@ setup(name='idsse',
       license='MIT',
       python_requires=">=3.11",
       packages=['idsse.common'],
-      # packages=find_packages(exclude=['contrib', 'docs', 'tests*']),
+      data_files=[('idsse/common/schema', glob.glob('idsse/common/schema/*.json'))],
       install_requires=[
         'pint',
         'importlib_metadata',

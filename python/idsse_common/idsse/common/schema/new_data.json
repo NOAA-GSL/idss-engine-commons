@@ -1,0 +1,94 @@
+{
+    "NewField": {
+        "description": "New Field available message, broadcasted each time a new data field is found",
+        "type": "object",
+        "properties": {
+            "product": {"$ref": "product.json#/Product"},
+            "region": {"$ref": "region.json#/Region"},
+            "issueDt": {"$ref": "timing.json#/TimeString"},
+            "validDt": {"$ref": "timing.json#/TimeString"},
+            "field": {"$ref": "field.json#/FieldName"},
+            "missing": {"$ref": "field.json#/FieldName"}
+        },
+        "additionalProperties": false,
+        "required": [
+            "product",
+            "region",
+            "issueDt",
+            "validDt"
+        ],
+        "oneOf": [
+            {
+                "required": [
+                    "field"
+                ]
+            },
+            {
+                "required": [
+                    "missing"
+                ]
+            }
+        ]
+    },
+    
+    "NewValid": {
+        "description": "New Valid available message, broadcasted each time all fields for an issue/valid are found",
+        "type": "object",
+        "properties": {
+            "product": {"$ref": "product.json#/Product"},
+            "region": {"$ref": "region.json#/Region"},
+            "issueDt": {"$ref": "timing.json#/TimeString"},
+            "validDt": {"$ref": "timing.json#/TimeString"},
+            "field": {"$ref": "field.json#/FieldList"},
+            "missing": {"$ref": "field.json#/FieldList"}
+        },
+        "additionalProperties": false,
+        "required": [
+            "product",
+            "region",
+            "issueDt",
+            "validDt",
+            "field"
+        ]
+    },
+    
+    "NewIssue": {
+        "description": "New Issue available message, broadcasted each time all valids for an issue are found",
+        "type": "object",
+        "properties": {
+            "product": {"$ref": "product.json#/Product"},
+            "region": {"$ref": "region.json#/Region"},
+            "issueDt": {"$ref": "timing.json#/TimeString"},
+            "validDt": {"$ref": "timing.json#/TimeString"},
+            "field": {
+                "type": "object",
+                "patternProperties": {
+                    "^(\\d{4})-0?(\\d+)-0?(\\d+)[T ]0?(\\d+):0?(\\d+):0?(\\d+)$": {"$ref": "field.json#/FieldList"},
+                    "[^0-9.+-:TZ]": {"not": {}}
+                }
+            },
+            "missing": {
+                "type": "object",
+                "patternProperties": {
+                    "^(\\d{4})-0?(\\d+)-0?(\\d+)[T ]0?(\\d+):0?(\\d+):0?(\\d+)$": {"$ref": "field.json#/FieldList"},
+                    "[^0-9.+-:TZ]": {"not": {}}
+                }
+            }
+        },
+        "additionalProperties": false,
+        "required": [
+            "product",
+            "region",
+            "issueDt",
+            "field"
+        ]
+    },    
+    "NewData": {
+        "description": "Either a NewField, NewValid, or NewIssue",
+        "oneOf": [
+            {"$ref": "#/NewField"},
+            {"$ref": "#/NewValid"},
+            {"$ref": "#/NewIssue"}
+        ]
+    }
+}

@@ -1,6 +1,0 @@
-{
-    "description": "Mechanism for making a broadcasting an available variable",
-    "allOf": [
-        {"$ref": "variable.json#/Variable"}
-    ]
-}

@@ -1,0 +1,6 @@
+{
+    "description": "Mechanism for broadcasting a new data available message",
+    "allOf": [
+        {"$ref": "new_data.json#/NewData"}
+    ]
+}
