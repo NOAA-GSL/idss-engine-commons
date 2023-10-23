@@ -2,20 +2,20 @@
 platform linux -- Python 3.11.6, pytest-7.4.2, pluggy-1.3.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
 plugins: cov-4.1.0
-collected 126 items
+collected 134 items
 
-test/test_aws_utils.py ..................                                [ 14%]
-test/test_config.py ............                                         [ 23%]
-test/test_grid_proj.py ...................                               [ 38%]
-test/test_path_builder.py .....................                          [ 55%]
-test/test_publish_confirm.py ........                                    [ 61%]
-test/test_utils.py ........................                              [ 80%]
-test/test_validate_schema.py ........................                    [100%]
+test/test_aws_utils.py ..................                                [ 13%]
+test/test_config.py ............                                         [ 22%]
+test/test_grid_proj.py ...................                               [ 36%]
+test/test_path_builder.py .....................                          [ 52%]
+test/test_publish_confirm.py ........                                    [ 58%]
+test/test_utils.py ........................                              [ 76%]
+test/test_validate_schema.py ................................            [100%]
 
 =============================== warnings summary ===============================
-test/test_validate_schema.py:14
-test/test_validate_schema.py:14
-  /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/test_validate_schema.py:14: DeprecationWarning: Importing Validator directly from the jsonschema package is deprecated and will become an ImportError. Import it from jsonschema.protocols instead.
+test/test_validate_schema.py:15
+test/test_validate_schema.py:15
+  /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/test_validate_schema.py:15: DeprecationWarning: Importing Validator directly from the jsonschema package is deprecated and will become an ImportError. Import it from jsonschema.protocols instead.
     from jsonschema import Validator
 
 idsse/common/validate_schema.py:16
@@ -44,8 +44,8 @@ idsse/common/path_builder.py        157     41    74%
 idsse/common/publish_confirm.py     150     13    91%
 idsse/common/rabbitmq_utils.py       16      0   100%
 idsse/common/utils.py                94      9    90%
-idsse/common/validate_schema.py      39      0   100%
+idsse/common/validate_schema.py      41      0   100%
 -----------------------------------------------------
-TOTAL                               753    116    85%
+TOTAL                               755    116    85%
 
-======================= 126 passed, 6 warnings in 2.19s ========================
+======================= 134 passed, 6 warnings in 2.39s ========================
