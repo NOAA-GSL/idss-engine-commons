@@ -17,7 +17,7 @@ import time
 import uuid
 from contextvars import ContextVar
 from datetime import datetime
-from typing import Union, Optional
+from typing import Union, Optional, List
 
 from .utils import to_iso
 
@@ -51,21 +51,24 @@ def set_corr_id_context_var(
         corr_id_context_var.set(f'{originator};{key};_')
 
 
-def get_corr_id_context_var_str():
+def get_corr_id_context_var_str() -> str:
     """Getter for correlation ID ContextVar name"""
     return corr_id_context_var.get()
 
 
-def get_corr_id_context_var_parts():
+def get_corr_id_context_var_parts() -> List[str]:
     """Split correlation ID ContextVar into its parts, such as [originator, key, issue_datetime]"""
     return corr_id_context_var.get().split(';')
 
 
 class AddCorrelationIdFilter(logging.Filter):
     """"Provides correlation id parameter for the logger"""
-    def filter(self, record):
-        record.corr_id = corr_id_context_var.get()
-        return True
+    def filter(self, record: logging.LogRecord) -> bool:
+        try:
+            record.corr_id = corr_id_context_var.get()
+            return True
+        except LookupError:  # couldn't add corr_id since it is not set
+            return False
 
 
 class CorrIdFilter(logging.Filter):

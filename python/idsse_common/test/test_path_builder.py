@@ -171,7 +171,6 @@ def test_get_valid_returns_none_if_args_empty():
 def test_get_valid_from_time_args_calculates_based_on_lead(path_builder: PathBuilder):
     parsed_dict = path_builder.parse_path(EXAMPLE_FULL_PATH)
     result_valid: datetime = PathBuilder.get_valid_from_time_args(parsed_args=parsed_dict)
-
     assert result_valid == EXAMPLE_VALID
 
 
@@ -179,3 +178,16 @@ def test_get_lead_from_time_args(path_builder: PathBuilder):
     parsed_dict = path_builder.parse_path(EXAMPLE_FULL_PATH)
     lead_result: timedelta = PathBuilder.get_lead_from_time_args(parsed_dict)
     assert lead_result.seconds == EXAMPLE_LEAD.minute * 60
+
+
+def test_calculate_issue_from_valid_and_lead():
+    parsed_dict = {
+        'valid.year': 1970,
+        'valid.month': 10,
+        'valid.day': 3,
+        'valid.hour': 14,
+        'lead.hour': 2
+    }
+
+    result_issue = PathBuilder.get_issue_from_time_args(parsed_args=parsed_dict)
+    assert result_issue == EXAMPLE_ISSUE
