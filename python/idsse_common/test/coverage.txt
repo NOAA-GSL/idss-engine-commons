@@ -1,15 +1,17 @@
 ============================= test session starts ==============================
-platform linux -- Python 3.11.6, pytest-7.4.2, pluggy-1.3.0
+platform linux -- Python 3.11.6, pytest-7.4.3, pluggy-1.3.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
 plugins: cov-4.1.0
-collected 134 items
+collected 151 items
 
-test/test_aws_utils.py ..................                                [ 13%]
-test/test_config.py ............                                         [ 22%]
-test/test_grid_proj.py ...................                               [ 36%]
-test/test_path_builder.py .....................                          [ 52%]
-test/test_publish_confirm.py ........                                    [ 58%]
-test/test_utils.py ........................                              [ 76%]
+test/test_aws_utils.py ..................                                [ 11%]
+test/test_config.py ............                                         [ 19%]
+test/test_grid_proj.py ...................                               [ 32%]
+test/test_json_message.py ...........                                    [ 39%]
+test/test_log_util.py .....                                              [ 43%]
+test/test_path_builder.py ......................                         [ 57%]
+test/test_publish_confirm.py ........                                    [ 62%]
+test/test_utils.py ........................                              [ 78%]
 test/test_validate_schema.py ................................            [100%]
 
 =============================== warnings summary ===============================
@@ -38,14 +40,14 @@ idsse/common/__init__.py              0      0   100%
 idsse/common/aws_utils.py            86      5    94%
 idsse/common/config.py               68      8    88%
 idsse/common/grid_proj.py            81      1    99%
-idsse/common/json_message.py         22     22     0%
-idsse/common/log_util.py             40     17    58%
-idsse/common/path_builder.py        157     41    74%
+idsse/common/json_message.py         22      1    95%
+idsse/common/log_util.py             43      3    93%
+idsse/common/path_builder.py        128     10    92%
 idsse/common/publish_confirm.py     150     13    91%
 idsse/common/rabbitmq_utils.py       16      0   100%
 idsse/common/utils.py                94      9    90%
 idsse/common/validate_schema.py      41      0   100%
 -----------------------------------------------------
-TOTAL                               755    116    85%
+TOTAL                               729     50    93%
 
-======================= 134 passed, 6 warnings in 2.39s ========================
+======================= 151 passed, 6 warnings in 2.17s ========================
