@@ -22,27 +22,56 @@
         "minProperties": 1
     },
 
-    "GeoDist": {
-        "description": "Mechanism for storing the geographic distribution result for a specific Condition/Location/Product(s)",
-        "type": "object",
-        "properties": {
-            "criteria": {"type": "array", "items": {"$ref": "#/ValueCount"}, "minItems": 1},
-            "raw": {"type": "array", "items": {"$ref": "#/ValueCount"}, "minItems": 1}
-        },
-        "required": [
-            "criteria",
-            "raw"
-        ]
-    },
-
-    "StateObj": {
+    "Data": {
         "description": "Mechanism for storing the a contiguous state (when the criteria is met or not met",
         "type": "object",
         "properties": {
-
+            "name": {"type": "string"},
+            "type": {"type": "string", "enum": ["criteria", "raw"]},
+            "singleValue": {
+                "type": "array",
+                "items": {"type": "number"}
+            },
+            "geoDist": {
+                "type": "array",
+                "items": {"$ref": "#/ValueCount"}
+            }
         },
         "required": [
-            
+            "name",
+            "type",
+            "singleValue",
+            "geoDist"
+        ]
+    },
+
+    "State": {
+        "description": "Mechanism for storing the a contiguous state (when the criteria is met or not met",
+        "type": "object",
+        "properties": {
+            "criteriaMet": {         
+                "oneOf" : [
+                    {"type": "boolean"},
+                    {"type": "string", "enum": ["true", "false"]}
+                ]
+            },
+            "startDt": {"$ref": "timing.json#/TimeString"},
+            "endDt": {"$ref": "timing.json#/TimeString"},
+            "durationInMin": {"type": "integer"},
+            "min": {"type": "number"},
+            "max": {"type": "number"},
+            "minAt": {"$ref": "timing.json#/TimeString"},
+            "maxAt": {"$ref": "timing.json#/TimeString"}
+        },
+        "required": [
+            "criteriaMet",
+            "startDt",
+            "endDt",
+            "durationInMin",
+            "min",
+            "max",
+            "minAt",
+            "maxAt"
         ]
     }, 
 
@@ -50,14 +79,16 @@
         "description": "Mechanism for storing the list of State Objects, these describe the met/notMet states for the full time frame",
         "type": "object",
         "properties": {
-            "criteria": {
+            "name": {"type": "string"},
+            "states": {
                 "type": "array",
-                "items": {"$ref": "#/StateObj"},
+                "items": {"$ref": "#/State"},
                 "minItems": 1        
             }
         },
         "required": [
-            "criteria"
+            "name",
+            "states"
         ]
     },
 
@@ -69,17 +100,15 @@
             "locationKey": {"type": "string"},
             "productKey": {"type": "string"},
             "validDt": {"type": "array", "items": {"$ref": "timing.json#/TimeString"}, "minItems": 1},
-            "singleValue": {"$ref": "#/SingleValue"},
-            "geoDist": {"$ref": "#/GeoDist"},
-            "metaData": {"$ref": "#/MetaData"}
+            "data": {"type": "array", "items": {"$ref": "#/Data"}, "minItems": 2},
+            "metaData": {"type": "array", "items": {"$ref": "#/MetaData"}, "minItems": 1}
         },
         "required": [
             "conditionKey",
             "locationKey",
             "productKey",                    
             "validDt",
-            "singleValue",
-            "geoDist",
+            "data",
             "metaData"
         ]
     }

@@ -45,10 +45,8 @@ def get_validator(schema_name) -> Validator:
         Validator: A validator loaded with schema and all dependencies
     """
     current_path = os.path.dirname(os.path.realpath(__file__))
-    print('current_path:', current_path)
     schema_dir = os.path.join(current_path, 'schema')
     schema_filename = os.path.join(schema_dir, schema_name+'.json')
-    print('schema_filename:', schema_filename)
     with open(schema_filename, 'r', encoding='utf8') as file:
         schema = json.load(file)
 

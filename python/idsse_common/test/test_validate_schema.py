@@ -340,28 +340,37 @@ def simple_event_port_message() -> dict:
                 "locationKey": "Abq",
                 "productKey": "NBM",
                 "validDt": ["2022-11-12T00:00:00.000Z"],
-                "singleValue": {
-                    "criteria": [0.18964463472366333],
-                    "raw": [38.53400802612305]
-                },
-                "geoDist": {
-                    "criteria": [{"0.18964463472366333": 1}],
-                    "raw": [{"38.53400802612305": 1}]
-                },
-                "metaData": {
-                    "criteria": [
-                        {
-                            "durationInMin": 0,
-                            "min": 0.18964463472366333,
-                            "minAt": "2022-11-12T00:00:00.000Z",
-                            "max": 0.18964463472366333,
-                            "startDt": "2022-11-12T00:00:00.000Z",
-                            "endDt": "2022-11-12T00:00:00.000Z",
-                            "maxAt": "2022-11-12T00:00:00.000Z",
-                            "criteriaMet": "true"
-                        }
-                    ]
-                }
+                "data": [
+                    {
+                        "name": "condition: Above Freeze Temp",
+                        "type": "criteria",
+                        "singleValue": [0.18964463472366333],
+                        "geoDist": [{"0.18964463472366333": 1}]
+                    },
+                    {
+                        "name": "part: A",
+                        "type": "raw",
+                        "singleValue": [38.53400802612305],
+                        "geoDist": [{"38.53400802612305": 1}]
+                    }
+                ],
+                "metaData": [
+                    {
+                        "name": "condition: Above Freeze Temp",
+                        "states": [
+                            {
+                                "durationInMin": 0,
+                                "min": 0.18964463472366333,
+                                "minAt": "2022-11-12T00:00:00.000Z",
+                                "max": 0.18964463472366333,
+                                "startDt": "2022-11-12T00:00:00.000Z",
+                                "endDt": "2022-11-12T00:00:00.000Z",
+                                "maxAt": "2022-11-12T00:00:00.000Z",
+                                "criteriaMet": "true"
+                            }
+                        ]
+                    }
+                ]
             }
         ]
     }
@@ -643,8 +652,8 @@ def test_validate_criteria_message_with_bad_mapping(criteria_validator: Validato
         criteria_validator.validate(criteria_message)
 
 
-def test_validate_event_port(event_port_validator: Validator,
-                             simple_event_port_message: dict):
+def test_validate_event_port_message(event_port_validator: Validator,
+                                     simple_event_port_message: dict):
     try:
         event_port_validator.validate(simple_event_port_message)
     except ValidationError as exc:
@@ -653,7 +662,7 @@ def test_validate_event_port(event_port_validator: Validator,
 
 def test_validate_event_port_message_with_bad_geo_dist(event_port_validator: Validator,
                                                        simple_event_port_message: dict):
-    criteria_geo_dist = simple_event_port_message['riskResults'][0]['geoDist']['criteria']
+    criteria_geo_dist = simple_event_port_message['riskResults'][0]['data'][0]['geoDist']
     criteria_geo_dist.append({"not a number": 3})
     with raises(ValidationError):
         event_port_validator.validate(simple_event_port_message)
@@ -661,7 +670,7 @@ def test_validate_event_port_message_with_bad_geo_dist(event_port_validator: Val
 
 def test_validate_event_port_message_with_missing_metadata(event_port_validator: Validator,
                                                            simple_event_port_message: dict):
-    simple_event_port_message['riskResults'][0]['metaData']['criteria'].clear()
+    simple_event_port_message['riskResults'][0]['metaData'][0]['states'].clear()
     with raises(ValidationError):
         event_port_validator.validate(simple_event_port_message)
 
