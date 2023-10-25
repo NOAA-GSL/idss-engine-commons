@@ -46,8 +46,8 @@ idsse/common/path_builder.py        128     10    92%
 idsse/common/publish_confirm.py     150     13    91%
 idsse/common/rabbitmq_utils.py       16      0   100%
 idsse/common/utils.py                94      9    90%
-idsse/common/validate_schema.py      41      0   100%
+idsse/common/validate_schema.py      39      0   100%
 -----------------------------------------------------
-TOTAL                               729     50    93%
+TOTAL                               727     50    93%
 
-======================= 151 passed, 6 warnings in 2.17s ========================
+======================= 151 passed, 6 warnings in 2.25s ========================
