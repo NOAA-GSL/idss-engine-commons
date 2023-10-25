@@ -953,4 +953,3 @@ def test_validate_das_web_response_message_bad_data(das_web_response_validator: 
     das_web_response_message['data'][validDt] = [['strings'], ['not', 'numbers']]
     with raises(ValidationError):
         das_web_response_validator.validate(das_web_response_message)
-
