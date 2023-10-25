@@ -1,5 +1,5 @@
 {   
-    "description": "Mechanism for making communicating a Criteria",
+    "description": "Mechanism for communicating a Criteria",
     "allOf": [
         {"$ref": "criteria.json#/Criteria"}
     ]
