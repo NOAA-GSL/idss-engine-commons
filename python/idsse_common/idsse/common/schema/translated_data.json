@@ -1,4 +1,50 @@
 {
+    "SingleTranslatedData": {
+        "description": "Specification of the data and thresholds that would result in an impact",
+        "type": "object",
+        "properties": {
+            "name": {"type": "string"},
+            "arealPercentage": {"type": "number"},
+            "duration": {"type": "number"},
+            "product": {"$ref": "product.json#/Product"},
+            "field": {"type": "string"},
+            "region": {"$ref": "region.json#/Region"},
+            "units": {"type": "string"},
+            "relational": {"type": "string"},
+            "thresh": {"type": "number"},
+            "mapping": {
+                "type": "object",
+                "properties": {
+                    "min": {"type": "number"},
+                    "max": {"type": "number"},
+                    "clip": {
+                        "oneOf" : [
+                            {"type": "boolean"},
+                            {"type": "string", "enum": ["true", "false"]}
+                        ]
+                    }
+                },
+                "required": [
+                    "min",
+                    "max",
+                    "clip"
+                ]
+            }
+        },
+        "required": [
+            "name",
+            "arealPercentage",
+            "duration",
+            "product",
+            "field",
+            "region",
+            "units",
+            "relational",
+            "thresh",
+            "mapping"
+        ]
+    },
+
     "TranslatedData": {
         "description": "Specification of the data and thresholds that would result in an impact",
         "type": "object",

@@ -8,8 +8,7 @@
     "FieldList": {
         "description": "A list of specific field(s)",
         "type": "array",
-        "items": {"$ref": "#/FieldName"},
-        "minItems": 1
+        "items": {"$ref": "#/FieldName"}
     },
 
     "Field": {

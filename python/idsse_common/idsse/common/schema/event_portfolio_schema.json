@@ -9,5 +9,8 @@
             "items": {"$ref": "risk_results.json#/RiskResults"},
             "minItems": 1
         }
-    }
+    },
+    "required": [
+        "riskResults"
+    ]
 }

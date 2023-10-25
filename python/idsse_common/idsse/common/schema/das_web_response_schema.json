@@ -1,0 +1,29 @@
+{   
+    "description": "Mechanism for making DAS web request",
+    "allOf": [
+        {"$ref": "das_web_request.json#/DasWebRequest"}
+    ],
+    "properties": {
+        "data": {
+            "description": "The keys in data are either a string datetime, 'scale', or 'offset' (nothing else allowed)",
+            "type": "object",
+            "patternProperties": {
+                "^(\\d{4})-(\\d{2})-(\\d{2})T(\\d{2}):(\\d{2}):(\\d{2}(?:\\.\\d*)?)((-(\\d{2}):(\\d{2})|Z)?)$": {
+                    "type": "array",
+                    "items": {
+                        "type": "array",
+                        "items": {
+                            "type": "number"
+                        }
+                    }
+                },
+                "scale": {"type": "number"},
+                "offset": {"type": "number"},
+                "(?=^((?!((^|, )(scale|offset))+$).)*$)(?=[^0-9.+-:TZ])": {"not": {}}
+            }
+        }
+    },
+    "required": [
+        "data"
+    ]
+}

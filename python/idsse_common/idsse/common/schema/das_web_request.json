@@ -1,0 +1,36 @@
+{
+    "DasWebRequest": {
+        "description": "Mechanism for defining DAS data request via the web api",
+        "type": "object",
+        "properties": {   
+            "issueDt": {"$ref": "timing.json#/TimeString"},
+            "valids": {"$ref": "timing.json#/TimeList"},
+            "dataRequest": {
+                "type": "string"
+            },
+            "parts": {
+                "type": "array",
+                "items": {"$ref": "translated_data.json#/SingleTranslatedData"},
+                "minItems": 1
+            },
+            "bbox": {
+                "type": "object",
+                "properties": {
+                    "botLeft": {"type": "array", "items": {"type": "integer"}, "minItems": 2, "maxItems": 2},
+                    "topRight": {"type": "array", "items": {"type": "integer"}, "minItems": 2, "maxItems": 2}
+                },
+                "required": [
+                    "botLeft",
+                    "topRight"
+                ]
+            }
+        },
+        "required": [
+            "issueDt",
+            "valids",
+            "dataRequest",
+            "parts",
+            "bbox"
+        ]
+    }
+}
