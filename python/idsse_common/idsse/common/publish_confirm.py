@@ -136,22 +136,6 @@ class PublishConfirm(Thread):
             logger.error('Publish message problem : %s', str(e))
             return False
 
-    def _wait_for_channel_to_be_ready(self) -> None:
-        """If connection or channel are not open, start the PublishConfirm to do needed
-        RabbitMQ setup. Method will not return until channel is confirmed ready"""
-
-        # validate that PublishConfirm thread has been setup and connected to RabbitMQ
-        if not (self._connection and self._connection.is_open
-                and self._channel and self._channel.is_open):
-            logger.debug('Channel is not ready to publish, calling start() now')
-
-            # pass callback to flip is_ready flag, and block until flag changes
-            is_ready = Event()
-            self._start_with_callback(callback=is_ready.set)
-            is_ready.wait()
-
-            logger.debug('Connection and channel setup complete, ready to publish message')
-
     def run(self):
         """Run the thread, i.e. get connection etc..."""
         set_corr_id_context_var('PublishConfirm')
@@ -180,12 +164,28 @@ class PublishConfirm(Thread):
         self._close_connection()
         self._stopping = False  # done stopping
 
+    def _wait_for_channel_to_be_ready(self) -> None:
+        """If connection or channel are not open, start the PublishConfirm to do needed
+        RabbitMQ setup. This method will not return until channel is confirmed ready for use"""
+
+        # validate that PublishConfirm thread has been setup and connected to RabbitMQ
+        if not (self._connection and self._connection.is_open
+                and self._channel and self._channel.is_open):
+            logger.debug('Channel is not ready to publish, calling start() now')
+
+            # pass callback to flip is_ready flag, and block until flag changes
+            is_ready = Event()
+            self._start_with_callback(callback=is_ready.set)
+            is_ready.wait()
+
+            logger.debug('Connection and channel setup complete, ready to publish message')
+
     def _start_with_callback(self, callback: Optional[Callable[[], None]]):
         """Start thread to connect to RabbitMQ queue and prepare to publish messages, invoking
         callback when setup complete.
 
         This method is only for injecting a callback into the startup process; if no callback
-        is needed, internal caller can just use the built-in Thread start().
+        is needed, caller can just use the built-in Thread start().
 
         Args:
             callback (Callable[[], None]): callback function to be invoked
