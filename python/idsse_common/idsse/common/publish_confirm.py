@@ -136,6 +136,11 @@ class PublishConfirm(Thread):
             logger.error('Publish message problem : %s', str(e))
             return False
 
+    def start(self):
+        """Start thread to connect RabbitMQ queue and prepare to publish messages."""
+        super().start()
+        time.sleep(.2)
+
     def run(self):
         """Run the thread, i.e. get connection etc..."""
         set_corr_id_context_var('PublishConfirm')
