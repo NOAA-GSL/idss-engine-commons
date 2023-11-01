@@ -185,7 +185,7 @@ class PublishConfirm(Thread):
 
             logger.debug('Connection and channel setup complete, ready to publish message')
 
-    def _start_with_callback(self, callback: Optional[Callable[[], None]]):
+    def _start_with_callback(self, callback: Callable[[], None]):
         """Start thread to connect to RabbitMQ queue and prepare to publish messages, invoking
         callback when setup complete.
 
