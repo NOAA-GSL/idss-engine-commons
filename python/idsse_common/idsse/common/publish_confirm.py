@@ -136,11 +136,6 @@ class PublishConfirm(Thread):
             logger.error('Publish message problem : %s', str(e))
             return False
 
-    def start(self):
-        """Start thread to connect RabbitMQ queue and prepare to publish messages."""
-        super().start()
-        time.sleep(.2)
-
     def run(self):
         """Run the thread, i.e. get connection etc..."""
         set_corr_id_context_var('PublishConfirm')
@@ -154,6 +149,11 @@ class PublishConfirm(Thread):
         if self._connection is not None and not self._connection.is_closed:
             # Finish closing
             self._connection.ioloop.start()
+
+    def start(self):
+        """Start thread to connect RabbitMQ queue and prepare to publish messages."""
+        super().start()
+        time.sleep(.2)
 
     def stop(self):
         """Stop the example by closing the channel and connection. We
