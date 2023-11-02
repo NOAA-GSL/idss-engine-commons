@@ -106,7 +106,7 @@ class PublishConfirm(Thread):
 
         Args:
             message (Dict): message to publish (should be valid json)
-            key (str): routing_key to route the message to correct consumer. Default is empty str
+            routing_key (str): routing_key to route the message to correct consumer. Default is empty str
             corr_id (Optional[str]): optional correlation_id to include in message
 
         Returns:
