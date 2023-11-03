@@ -16,7 +16,7 @@ from time import sleep
 from typing import Callable, Union, Any, NamedTuple
 from unittest.mock import Mock
 
-from pytest import fixture, raises, MonkeyPatch
+from pytest import fixture, MonkeyPatch
 
 from pika.spec import Basic
 from idsse.common.publish_confirm import PublishConfirm
@@ -170,34 +170,26 @@ def test_delivery_confirmation_handles_nack(publish_confirm: PublishConfirm, con
     assert publish_confirm._records.acked == 0
 
 
-def test_publish_message_success(publish_confirm: PublishConfirm):
+def test_publish_message_success_without_calling_start(monkeypatch: MonkeyPatch, context: MockPika):
+    monkeypatch.setattr('idsse.common.publish_confirm.SelectConnection', context.SelectConnection)
+    pub_conf = PublishConfirm(conn=EXAMPLE_CONN, exchange=EXAMPLE_EXCH, queue=EXAMPLE_QUEUE)
+    example_message = {'data': [123]}
+
+    assert pub_conf._connection is None and pub_conf._channel is None
+    success = pub_conf.publish_message(example_message)
+
+    # connection & channel should have been initialized internally, so publish should have worked
+    assert success
+    assert pub_conf._channel is not None and pub_conf._channel.is_open
+    assert pub_conf._records.message_number == 1
+    assert pub_conf._records.deliveries[1] == example_message
+
+
+def test_publish_message_failure_rmq_error(publish_confirm: PublishConfirm, context: MockPika):
     message_data = {'data': 123}
 
-    publish_confirm.start()
-    result = publish_confirm.publish_message(message_data)
-
-    assert result
-    assert publish_confirm._records.message_number == 1
-    assert publish_confirm._records.deliveries[1] == message_data
-
-
-def test_publish_message_exception_when_channel_not_open(publish_confirm: PublishConfirm):
-    message_data = {'data': 123}
-
-    # missing a publish_confirm.start(), should fail
-    with raises(RuntimeError) as pytest_error:
-        publish_confirm.publish_message(message_data)
-
-    assert pytest_error is not None
-    assert 'RabbitMQ channel is None' in str(pytest_error.value)
-    assert publish_confirm._records.message_number == 0  # should not have logged message sent
-    assert len(publish_confirm._records.deliveries) == 0
-
-
-def test_publish_message_failure_rmq_error(publish_confirm: PublishConfirm):
-    message_data = {'data': 123}
-
-    publish_confirm.start()
+    publish_confirm._connection = context.SelectConnection(None, Mock(), Mock(), Mock())
+    publish_confirm._channel = context.Channel()
     publish_confirm._channel.basic_publish = Mock(side_effect=RuntimeError('ACCESS_REFUSED'))
     success = publish_confirm.publish_message(message_data)
 
@@ -208,7 +200,10 @@ def test_publish_message_failure_rmq_error(publish_confirm: PublishConfirm):
 
 
 def test_on_channel_closed(publish_confirm: PublishConfirm, context: MockPika):
-    publish_confirm.start()
+    publish_confirm._connection = context.SelectConnection(None, Mock(), Mock(), Mock())
+    publish_confirm._channel = context.Channel()
+    publish_confirm._channel.close()
+
     publish_confirm._on_channel_closed(context.Channel(), 'ChannelClosedByClient')
     assert publish_confirm._channel is None
     assert publish_confirm._connection.is_closed
@@ -223,9 +218,9 @@ def test_start_with_callback(publish_confirm: PublishConfirm):
         assert success
 
     assert publish_confirm._channel is None
-    publish_confirm.start(callback=test_callback)
+    publish_confirm._start(test_callback)
 
-    sleep(.1)  # ensure that callback has time to run and send its message
+    sleep(.1)  # ensure that our test's callback has time to run and send its message
     assert publish_confirm._records.message_number == 1
     assert publish_confirm._records.deliveries[1] == example_message
 
@@ -247,3 +242,12 @@ def test_start_without_callback_sleeps(publish_confirm: PublishConfirm, monkeypa
     # between this test's thread and the PublishConfirm thread. Both results are acceptable
     sleep_call_args = [call.args for call in mock_sleep.call_args_list]
     assert set(sleep_call_args) in [set([(0.2,)]), set([(0.2,), (5,)])]
+
+
+def test_wait_for_channel_returns_when_ready(monkeypatch: MonkeyPatch, context: MockPika):
+    monkeypatch.setattr('idsse.common.publish_confirm.SelectConnection', context.SelectConnection)
+    pub_conf = PublishConfirm(conn=EXAMPLE_CONN, exchange=EXAMPLE_EXCH, queue=EXAMPLE_QUEUE)
+
+    assert pub_conf._channel is None
+    pub_conf._wait_for_channel_to_be_ready()
+    assert pub_conf._channel is not None and pub_conf._channel.is_open
