@@ -8,6 +8,7 @@
 # Contributors:
 #     Geary Layne (1)
 #     Paul Hamer (2)
+#     Mackenzie Grimes (2)
 # ----------------------------------------------------------------------------------
 # pylint: disable=C0111,C0103,R0205
 
