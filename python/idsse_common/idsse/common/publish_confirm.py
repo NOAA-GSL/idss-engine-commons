@@ -17,10 +17,11 @@ import logging.config
 import json
 import time
 from dataclasses import dataclass, field
+from random import randint
 from threading import Thread, Event
 from typing import Optional, Dict, NamedTuple, Union, Callable, cast
 
-from pika import SelectConnection, URLParameters, BasicProperties
+from pika import SelectConnection, ConnectionParameters, PlainCredentials, BasicProperties
 from pika.channel import Channel
 from pika.frame import Method
 from pika.spec import Basic
@@ -47,13 +48,14 @@ class PublishConfirmRecords:
     message_number: int = 0
 
 
-class RabbitMqParams(NamedTuple):
-    """Data class to hold rabbitmq configurations"""
+class PublishConfirmParams(NamedTuple):
+    """Data class to hold RabbitMQ configurations for PublishConfirm"""
+    conn: Conn
     exchange: Exch
     queue: Queue
 
 
-class PublishConfirm(Thread):
+class PublishConfirm():
     """This is a publisher that will handle unexpected interactions
     with RabbitMQ such as channel and connection closures for any process.
     If RabbitMQ closes the connection, it will reopen it. You should
@@ -68,32 +70,21 @@ class PublishConfirm(Thread):
         :param Exch exchange: The RabbitMQ exchange details
         :param Queue queue: The RabbitMQ queue details
         """
-        super().__init__(daemon=True)
+        # super().__init__(daemon=True)
+        self._thread = Thread(name=f'{__name__}-{randint(0,9)}',
+                              daemon=True,
+                              target=self._run)
 
         self._connection: Optional[SelectConnection] = None
         self._channel: Optional[Channel] = None
 
-        self._records = PublishConfirmRecords()
-
         self._stopping = False
-        self._url = (f'amqp://{conn.username}:{conn.password}@{conn.host}'
-                     f':{str(conn.port)}/%2F?connection_attempts=3&heartbeat=3600')
-        self._rmq_params = RabbitMqParams(exchange=exchange, queue=queue)
+        self._rmq_params = PublishConfirmParams(conn, exchange, queue)
 
+        self._records = PublishConfirmRecords()  # data class to track message activity
         self._on_ready_callback: Optional[Callable[[], None]] = None
 
-    def connect(self):
-        """This method connects to RabbitMQ, returning the connection handle.
-        When the connection is established, the on_connection_open method
-        will be invoked by pika.
-        :rtype: pika.SelectConnection
-        """
-        logger.info('Connecting to %s', self._url)
-        return SelectConnection(
-            URLParameters(self._url),
-            on_open_callback=self._on_connection_open,
-            on_open_error_callback=self._on_connection_open_error,
-            on_close_callback=self._on_connection_closed)
+        set_corr_id_context_var('PublishConfirm')
 
     def publish_message(self,
                         message: Dict,
@@ -136,24 +127,18 @@ class PublishConfirm(Thread):
             logger.error('Publish message problem : %s', str(e))
             return False
 
-    def run(self):
-        """Run the thread, i.e. get connection etc..."""
-        set_corr_id_context_var('PublishConfirm')
+    def start(self, callback: Optional[Callable[[], None]] = None):
+        """Start thread to connect to RabbitMQ queue and prepare to publish messages, invoking
+        callback when setup complete.
 
-        self._connection = self.connect()
-        self._connection.ioloop.start()
-
-        while not self._stopping:
-            time.sleep(5)
-
-        if self._connection is not None and not self._connection.is_closed:
-            # Finish closing
-            self._connection.ioloop.start()
-
-    def start(self):
-        """Start thread to connect RabbitMQ queue and prepare to publish messages."""
-        super().start()
-        time.sleep(.2)
+        Args:
+            callback (Optional[Callable[[], None]]): callback function to be invoked
+                once instance is ready to publish messages (all RabbitMQ connection and channel
+                are setup, delivery confirmation is enabled, etc.). Default to None.
+        """
+        logger.debug('Starting thread')
+        self._on_ready_callback = callback  # to be invoked after all pika setup is done
+        self._thread.start()
 
     def stop(self):
         """Stop the example by closing the channel and connection. We
@@ -169,6 +154,38 @@ class PublishConfirm(Thread):
         self._close_connection()
         self._stopping = False  # done stopping
 
+    def _run(self):
+        """Run the thread, i.e. get connection etc..."""
+        self._connection = self._connect()
+        self._connection.ioloop.start()
+        time.sleep(0.2)
+
+        while not self._stopping:
+            time.sleep(5)
+
+        if self._connection is not None and not self._connection.is_closed:
+            # Finish closing
+            self._connection.ioloop.start()
+
+    def _connect(self):
+        """This method connects to RabbitMQ, returning the connection handle.
+        When the connection is established, the on_connection_open method
+        will be invoked by pika.
+        :rtype: pika.SelectConnection
+        """
+        conn = self._rmq_params.conn
+        logger.info('Connecting to RabbitMQ: %s', conn)
+        return SelectConnection(
+            parameters=ConnectionParameters(
+                host=conn.host,
+                virtual_host=conn.v_host,
+                port=conn.port,
+                credentials=PlainCredentials(conn.username, conn.password)
+            ),
+            on_open_callback=self._on_connection_open,
+            on_open_error_callback=self._on_connection_open_error,
+            on_close_callback=self._on_connection_closed)
+
     def _wait_for_channel_to_be_ready(self) -> None:
         """If connection or channel are not open, start the PublishConfirm to do needed
         RabbitMQ setup. This method will not return until channel is confirmed ready for use"""
@@ -180,26 +197,10 @@ class PublishConfirm(Thread):
 
             # pass callback to flip is_ready flag, and block until flag changes
             is_ready = Event()
-            self._start_with_callback(callback=is_ready.set)
+            self.start(callback=is_ready.set)
             is_ready.wait()
 
             logger.debug('Connection and channel setup complete, ready to publish message')
-
-    def _start_with_callback(self, callback: Callable[[], None]):
-        """Start thread to connect to RabbitMQ queue and prepare to publish messages, invoking
-        callback when setup complete.
-
-        This method is only for injecting a callback into the startup process; if no callback
-        is needed, caller can just use the built-in Thread start().
-
-        Args:
-            callback (Callable[[], None]): callback function to be invoked
-                once instance is ready to publish messages (all RabbitMQ connection and channel
-                are setup, delivery confirmation is enabled, etc.).
-        """
-        logger.debug('Starting thread')
-        self._on_ready_callback = callback  # to be invoked after all pika setup is done
-        super().start()
 
     def _on_connection_open(self, _unused_connection):
         """This method is called by pika once the connection to RabbitMQ has
@@ -334,9 +335,9 @@ class PublishConfirm(Thread):
         response from RabbitMQ. Since we know we're now setup and bound, it's
         time to start publishing."""
         logger.debug('Queue bound')
-        self.start_publishing()
+        self._start_publishing()
 
-    def start_publishing(self):
+    def _start_publishing(self):
         """This method will enable delivery confirmations and schedule the
         first message to be sent to RabbitMQ
         """

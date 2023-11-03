@@ -34,3 +34,9 @@ class Queue(NamedTuple):
     durable: bool
     exclusive: bool
     auto_delete: bool
+
+
+class RabbitMqParams(NamedTuple):
+    """Data class to hold configurations for RabbitMQ exchange/queue pair"""
+    exchange: Exch
+    queue: Queue
