@@ -218,7 +218,7 @@ def test_start_with_callback(publish_confirm: PublishConfirm):
         assert success
 
     assert publish_confirm._channel is None
-    publish_confirm.start(test_callback)
+    publish_confirm._start(test_callback)
 
     sleep(.1)  # ensure that our test's callback has time to run and send its message
     assert publish_confirm._records.message_number == 1

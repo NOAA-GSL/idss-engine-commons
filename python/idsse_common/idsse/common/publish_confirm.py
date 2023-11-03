@@ -70,7 +70,6 @@ class PublishConfirm():
         :param Exch exchange: The RabbitMQ exchange details
         :param Queue queue: The RabbitMQ queue details
         """
-        # super().__init__(daemon=True)
         self._thread = Thread(name=f'{__name__}-{randint(0,9)}',
                               daemon=True,
                               target=self._run)
@@ -97,7 +96,8 @@ class PublishConfirm():
 
         Args:
             message (Dict): message to publish (should be valid json)
-            routing_key (str): routing_key to route the message to correct consumer. Default is empty str
+            routing_key (str): routing_key to route the message to correct consumer.
+                Default is empty str
             corr_id (Optional[str]): optional correlation_id to include in message
 
         Returns:
@@ -127,17 +127,25 @@ class PublishConfirm():
             logger.error('Publish message problem : %s', str(e))
             return False
 
-    def start(self, callback: Optional[Callable[[], None]] = None):
+    def start(self):
         """Start thread to connect to RabbitMQ queue and prepare to publish messages, invoking
         callback when setup complete.
+        """
+        logger.debug('Starting thread')
+        self._start()
+
+    def _start(self, callback: Optional[Callable[[], None]] = None):
+        """
+        Start a thread to handle PublishConfirm operations
 
         Args:
             callback (Optional[Callable[[], None]]): callback function to be invoked
                 once instance is ready to publish messages (all RabbitMQ connection and channel
                 are setup, delivery confirmation is enabled, etc.). Default to None.
         """
-        logger.debug('Starting thread')
-        self._on_ready_callback = callback  # to be invoked after all pika setup is done
+        logger.debug('Starting thread with callback')
+        if callback is not None:
+            self._on_ready_callback = callback  # to be invoked after all pika setup is done
         self._thread.start()
 
     def stop(self):
@@ -193,11 +201,11 @@ class PublishConfirm():
         # validate that PublishConfirm thread has been setup and connected to RabbitMQ
         if not (self._connection and self._connection.is_open
                 and self._channel and self._channel.is_open):
-            logger.debug('Channel is not ready to publish, calling start() now')
+            logger.debug('Channel is not ready to publish, calling _start() now')
 
             # pass callback to flip is_ready flag, and block until flag changes
             is_ready = Event()
-            self.start(callback=is_ready.set)
+            self._start(callback=is_ready.set)
             is_ready.wait()
 
             logger.debug('Connection and channel setup complete, ready to publish message')
