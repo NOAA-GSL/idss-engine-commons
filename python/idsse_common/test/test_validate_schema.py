@@ -354,6 +354,117 @@ def simple_event_port_message() -> dict:
                 "validDt": ["2022-11-12T00:00:00.000Z"],
                 "data": [
                     {
+                        "name": "Above Freeze Temp",
+                        "type": "criteria",
+                        "singleValue": [0.18964463472366333],
+                        "geoDist": [{"0.18964463472366333": 1}]
+                    },
+                    {
+                        "name": "A",
+                        "type": "raw",
+                        "singleValue": [38.53400802612305],
+                        "geoDist": [{"38.53400802612305": 1}]
+                    }
+                ],
+                "metaData": [
+                    {
+                        "name": "Above Freeze Temp",
+                        "type": "criteria",
+                        "states": [
+                            {
+                                "durationInMin": 0,
+                                "min": 0.18964463472366333,
+                                "minAt": "2022-11-12T00:00:00.000Z",
+                                "max": 0.18964463472366333,
+                                "startDt": "2022-11-12T00:00:00.000Z",
+                                "endDt": "2022-11-12T00:00:00.000Z",
+                                "maxAt": "2022-11-12T00:00:00.000Z",
+                                "criteriaMet": "true"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+
+
+@fixture
+def simple_event_port_message_old() -> dict:
+    return {
+        "timeStamp": "2023-09-27T17:25:36.000Z",
+        "corrId": {
+            "originator": "IDSSe",
+            "uuid": "4899d220-beec-467b-a0e6-9d215b715b97",
+            "issueDt": "2022-11-11T14:00:00.000Z"
+        },
+        "issueDt": "2022-11-11T14:00:00.000Z",
+        "location": {
+            "features": [
+                {
+                    "type": "Feature",
+                    "properties": {
+                        "name": "Abq"
+                    },
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [
+                            -106.62312540068922,
+                            34.964261450738306
+                        ]
+                    }
+                }
+            ]
+        },
+        "validDt": {
+            "start": "2022-11-12T0:00:00.000Z",
+            "end": "2022-11-12T0:00:00.000Z"
+        },
+        "conditions": [
+            {
+                "name": "Above Freeze Temp",
+                "severity": "MODERATE",
+                "combined": "A"
+            }
+        ],
+        "parts": [
+            {
+                "name": "A",
+                "duration": 0,
+                "arealPercentage": 0,
+                "product": {
+                    "fcst": [
+                        "NBM"
+                    ]
+                },
+                "field": "TEMPERATURE",
+                "units": "DEG F",
+                "region": "CO",
+                "relational": "GREATER THAN",
+                "thresh": 30,
+                "mapping": {
+                    "min": 0.0,
+                    "max": 75.0,
+                    "clip": "true"
+                }
+            }
+        ],
+        "tags": {
+            "values": [
+            ],
+            "keyValues": {
+                "name": "Abq Temp",
+                "nwsOffice": "BOU"
+            }
+        },
+        "riskResults": [
+            {
+                "conditionKey": "Above Freeze Temp",
+                "locationKey": "Abq",
+                "productKey": "NBM",
+                "validDt": ["2022-11-12T00:00:00.000Z"],
+                "data": [
+                    {
                         "name": "condition: Above Freeze Temp",
                         "type": "criteria",
                         "singleValue": [0.18964463472366333],
