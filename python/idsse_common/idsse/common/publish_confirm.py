@@ -155,8 +155,8 @@ class PublishConfirm():
         self._stopping = False  # done stopping
 
     def _run(self):
-        """Run the thread, i.e. get connection etc..."""
-        self._connection = self._connect()
+        """Run a new thread: get a new RMQ connection, and start looping until stop() is called"""
+        self._connection = self._create_connection()
         self._connection.ioloop.start()
         time.sleep(0.2)
 
@@ -167,7 +167,7 @@ class PublishConfirm():
             # Finish closing
             self._connection.ioloop.start()
 
-    def _connect(self):
+    def _create_connection(self):
         """This method connects to RabbitMQ, returning the connection handle.
         When the connection is established, the on_connection_open method
         will be invoked by pika.
