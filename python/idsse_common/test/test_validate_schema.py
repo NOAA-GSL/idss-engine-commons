@@ -354,16 +354,40 @@ def simple_event_port_message() -> dict:
                 "validDt": ["2022-11-12T00:00:00.000Z"],
                 "data": [
                     {
-                        "name": "Above Freeze Temp",
+                        "name": "Abq TEMP",
+                        "type": "condition",
+                        "singleValue": [
+                            0.18964463472366333
+                        ],
+                        "geoDist": [
+                            {
+                                "0.18964463472366333": 1
+                            }
+                        ]
+                    },
+                    {
+                        "name": "A",
                         "type": "criteria",
-                        "singleValue": [0.18964463472366333],
-                        "geoDist": [{"0.18964463472366333": 1}]
+                        "singleValue": [
+                            0.18964463472366333
+                        ],
+                        "geoDist": [
+                            {
+                                "0.18964463472366333": 1
+                            }
+                        ]
                     },
                     {
                         "name": "A",
                         "type": "raw",
-                        "singleValue": [38.53400802612305],
-                        "geoDist": [{"38.53400802612305": 1}]
+                        "singleValue": [
+                            38.53400802612305
+                        ],
+                        "geoDist": [
+                            {
+                                "38.53400802612305": 1
+                            }
+                        ]
                     }
                 ],
                 "metaData": [
@@ -909,6 +933,13 @@ def test_validate_event_port_message_with_bad_geo_dist(event_port_validator: Val
 def test_validate_event_port_message_with_missing_metadata(event_port_validator: Validator,
                                                            simple_event_port_message: dict):
     simple_event_port_message['riskResults'][0]['metaData'][0]['states'].clear()
+    with raises(ValidationError):
+        event_port_validator.validate(simple_event_port_message)
+
+
+def test_validate_event_port_message_with_missing_type_in_metadata(event_port_validator: Validator,
+                                                                   simple_event_port_message: dict):
+    simple_event_port_message['riskResults'][0]['metaData'][0].pop('type')
     with raises(ValidationError):
         event_port_validator.validate(simple_event_port_message)
 
