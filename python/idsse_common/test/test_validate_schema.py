@@ -136,10 +136,7 @@ def simple_criteria_message() -> dict:
                     },
                     "geometry": {
                         "type": "Point",
-                        "coordinates": [
-                            -106.62312540068922,
-                            34.964261450738306
-                        ]
+                        "coordinates": [-106.62312540068922, 34.964261450738306]
                     }
                 }
             ]
@@ -207,10 +204,7 @@ def criteria_message() -> dict:
                     },
                     "geometry": {
                         "type": "Point",
-                        "coordinates": [
-                            -106.62312540068922,
-                            34.964261450738306
-                        ]
+                        "coordinates": [-106.62312540068922, 34.964261450738306]
                     }
                 }
             ]
@@ -296,10 +290,7 @@ def simple_event_port_message() -> dict:
                     },
                     "geometry": {
                         "type": "Point",
-                        "coordinates": [
-                            -106.62312540068922,
-                            34.964261450738306
-                        ]
+                        "coordinates": [-106.62312540068922, 34.964261450738306]
                     }
                 }
             ]
