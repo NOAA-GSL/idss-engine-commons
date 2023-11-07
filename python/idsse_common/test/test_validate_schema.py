@@ -281,7 +281,6 @@ def criteria_message() -> dict:
 @fixture
 def simple_event_port_message() -> dict:
     return {
-        "timeStamp": "2023-09-27T17:25:36.000Z",
         "corrId": {
             "originator": "IDSSe",
             "uuid": "4899d220-beec-467b-a0e6-9d215b715b97",
@@ -293,7 +292,7 @@ def simple_event_port_message() -> dict:
                 {
                     "type": "Feature",
                     "properties": {
-                        "name": "Abq"
+                        "name": "Location 1"
                     },
                     "geometry": {
                         "type": "Point",
@@ -306,12 +305,12 @@ def simple_event_port_message() -> dict:
             ]
         },
         "validDt": {
-            "start": "2022-11-12T0:00:00.000Z",
-            "end": "2022-11-12T0:00:00.000Z"
+            "start": "2022/11/12 0:00:00",
+            "end": "2022/11/12 0:00:00"
         },
         "conditions": [
             {
-                "name": "Above Freeze Temp",
+                "name": "Abq TEMP",
                 "severity": "MODERATE",
                 "combined": "A"
             }
@@ -321,6 +320,7 @@ def simple_event_port_message() -> dict:
                 "name": "A",
                 "duration": 0,
                 "arealPercentage": 0,
+                "region": "CO",
                 "product": {
                     "fcst": [
                         "NBM"
@@ -328,7 +328,6 @@ def simple_event_port_message() -> dict:
                 },
                 "field": "TEMPERATURE",
                 "units": "DEG F",
-                "region": "CO",
                 "relational": "GREATER THAN",
                 "thresh": 30,
                 "mapping": {
@@ -340,18 +339,21 @@ def simple_event_port_message() -> dict:
         ],
         "tags": {
             "values": [
+                "Abq Temp"
             ],
             "keyValues": {
-                "name": "Abq Temp",
+                "name": "Abq TEMP",
                 "nwsOffice": "BOU"
             }
         },
         "riskResults": [
             {
-                "conditionKey": "Above Freeze Temp",
-                "locationKey": "Abq",
+                "conditionKey": "Abq TEMP",
                 "productKey": "NBM",
-                "validDt": ["2022-11-12T00:00:00.000Z"],
+                "locationKey": "Single Location",
+                "validDt": [
+                    "2022-11-12T00:00:00.000Z"
+                ],
                 "data": [
                     {
                         "name": "Abq TEMP",
@@ -392,7 +394,23 @@ def simple_event_port_message() -> dict:
                 ],
                 "metaData": [
                     {
-                        "name": "Above Freeze Temp",
+                        "name": "Abq TEMP",
+                        "type": "condition",
+                        "states": [
+                            {
+                                "durationInMin": 0,
+                                "min": 0.18964463472366333,
+                                "minAt": "2022-11-12T00:00:00.000Z",
+                                "max": 0.18964463472366333,
+                                "startDt": "2022-11-12T00:00:00.000Z",
+                                "endDt": "2022-11-12T00:00:00.000Z",
+                                "maxAt": "2022-11-12T00:00:00.000Z",
+                                "criteriaMet": "true"
+                            }
+                        ]
+                    },
+                    {
+                        "name": "A",
                         "type": "criteria",
                         "states": [
                             {
