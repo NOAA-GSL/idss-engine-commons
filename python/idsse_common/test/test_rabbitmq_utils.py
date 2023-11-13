@@ -2,11 +2,11 @@
 # ------------------------------------------------------------------------------
 # Created on Wed Nov 8 2023
 #
-# Copyright (c) 2023 Colorado State University. All rights reserved.             (1)
-# Copyright (c) 2023 Regents of the University of Colorado                       (2)
+# Copyright (c) 2023 Regents of the University of Colorado. All rights reserved.  (1)
+# Copyright (c) 2023 Colorado State University. All rights reserved. (2)
 #
 # Contributors:
-#     Mackenzie Grimes (1)
+#     Mackenzie Grimes (2)
 #
 # ------------------------------------------------------------------------------
 # pylint: disable=missing-function-docstring,missing-class-docstring,too-few-public-methods
