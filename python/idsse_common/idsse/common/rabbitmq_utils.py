@@ -11,6 +11,9 @@
 # ----------------------------------------------------------------------------------
 from typing import NamedTuple
 
+# default pseudo-queue on default exchange that RabbitMQ designates for direct reply-to RPC
+DIRECT_REPLY_QUEUE = 'amq.rabbitmq.reply-to'
+
 
 class Conn(NamedTuple):
     """An internal data class for holding the RabbitMQ connection info"""
