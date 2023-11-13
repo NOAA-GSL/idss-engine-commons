@@ -1,4 +1,4 @@
-"""Testing for subscribe_to_queue.py"""
+"""Testing for RabbitMqUtils functions"""
 # ------------------------------------------------------------------------------
 # Created on Wed Nov 8 2023
 #
