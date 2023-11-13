@@ -19,8 +19,7 @@ from pytest import fixture, raises, MonkeyPatch
 from pika import BlockingConnection
 from pika.adapters import blocking_connection
 
-from idsse.common.rabbitmq_utils import Conn, Exch, Queue, RabbitMqParams
-from idsse.common.subscribe_to_queue import subscribe_to_queue
+from idsse.common.rabbitmq_utils import Conn, Exch, Queue, RabbitMqParams, subscribe_to_queue
 
 # Example data objects
 CONN = Conn('localhost', '/', port=5672, username='user', password='password')
@@ -75,7 +74,7 @@ def mock_connection(monkeypatch: MonkeyPatch, mock_channel: Mock) -> Mock:
 def test_connection_params_works(monkeypatch: MonkeyPatch, mock_connection: Mock):
     mock_blocking_connection = Mock(return_value=mock_connection)
     monkeypatch.setattr(
-        'idsse.common.subscribe_to_queue.BlockingConnection', mock_blocking_connection
+        'idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection
     )
 
     # run method
@@ -162,7 +161,7 @@ def test_direct_reply_does_not_try_to_declare_queue(
 
     mock_blocking_connection = Mock(return_value=mock_connection)
     monkeypatch.setattr(
-        'idsse.common.subscribe_to_queue.BlockingConnection', mock_blocking_connection
+        'idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection
     )
 
     _, new_channel = subscribe_to_queue(CONN, params, Mock(name='mock_callback'))
@@ -182,7 +181,7 @@ def test_default_exchange_does_not_try_to_declare_exchange(
 
     mock_blocking_connection = Mock(return_value=mock_connection)
     monkeypatch.setattr(
-        'idsse.common.subscribe_to_queue.BlockingConnection', mock_blocking_connection
+        'idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection
     )
 
     _, new_channel = subscribe_to_queue(CONN, params, Mock())
