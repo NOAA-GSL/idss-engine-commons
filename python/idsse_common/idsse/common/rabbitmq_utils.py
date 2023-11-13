@@ -107,8 +107,8 @@ def subscribe_to_queue(
     channel: Optional[blocking_connection.BlockingChannel] = None
 ) -> Tuple[BlockingConnection, blocking_connection.BlockingChannel]:
     """
-    Function that handles setup of consumer of RabbitMQ queue messages, invoking the provided
-    callback when a message is received.
+    Function that handles setup of consumer of RabbitMQ queue messages, declaring the exchange and
+    queue if needed, and invoking the provided callback when a message is received.
 
     If an existing BlockingConnection or BlockingChannel are passed, they are used to
     setup the subscription, but by default a new connection and channel will be established and
