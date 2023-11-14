@@ -10,8 +10,10 @@
 # ------------------------------------------------------------------------------
 
 import json
-from typing import Tuple, Union, Optional
-from uuid import uuid4, UUID
+from typing import Any, Dict, List, Optional, Tuple, Union
+from uuid import UUID, uuid4
+
+Json = Union[Dict[str, Any], List[Any], int, str, float, bool, type[None]]
 
 
 def get_corr_id(
