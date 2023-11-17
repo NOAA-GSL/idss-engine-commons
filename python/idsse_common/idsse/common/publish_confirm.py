@@ -317,9 +317,10 @@ class PublishConfirm:
         :param str|unicode queue_name: The name of the queue to declare.
         """
         logger.debug('Declaring queue %s', queue.name)
-        args = {}
+        args = {} # If we have a 'private' queue, i.e. one that is not consumed but used to support message publishing
         if queue.name.startswith('_'):
-            args = {'x-message-ttl': 10000, 'x-max-length': 1000}   # 10 second TTL
+            # Set message time-to-live (TTL) to 10 seconds
+            args = {'x-message-ttl': 10000}
         self._channel.queue_declare(queue=queue.name,
                                     durable=queue.durable,
                                     arguments=args,
