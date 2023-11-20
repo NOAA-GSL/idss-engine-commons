@@ -8,7 +8,8 @@
 #     Geary Layne (1)
 #
 # ----------------------------------------------------------------------------------
-# pylint: disable=missing-function-docstring,redefined-outer-name,invalid-name,no-name-in-module
+# pylint: disable=missing-function-docstring,redefined-outer-name,invalid-name
+# pylint: disable=no-name-in-module,duplicate-code
 # cspell:ignore geodist
 
 import random
