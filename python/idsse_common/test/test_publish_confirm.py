@@ -62,7 +62,7 @@ class MockPika:
 
         # pylint: disable=too-many-arguments
         def queue_declare(
-            self, queue, durable, exclusive, auto_delete, callback: Callable[[Any], None]
+            self, queue, durable, arguments, exclusive, auto_delete, callback: Callable[[Any], None]
         ):
             callback(None)
 
