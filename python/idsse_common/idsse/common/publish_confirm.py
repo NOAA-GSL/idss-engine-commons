@@ -56,7 +56,7 @@ class PublishConfirmParams(NamedTuple):
     queue: Queue
 
 
-class PublishConfirm():
+class PublishConfirm:
     """This is a publisher that will handle unexpected interactions
     with RabbitMQ such as channel and connection closures for any process.
     If RabbitMQ closes the connection, it will reopen it. You should
@@ -142,7 +142,7 @@ class PublishConfirm():
         Args:
             callback (Optional[Callable[[], None]]): callback function to be invoked
                 once instance is ready to publish messages (all RabbitMQ connection and channel
-                are setup, delivery confirmation is enabled, etc.). Default to None.
+                are set up, delivery confirmation is enabled, etc.). Default to None.
         """
         logger.debug('Starting thread with callback')
         if callback is not None:
@@ -199,7 +199,7 @@ class PublishConfirm():
         """If connection or channel are not open, start the PublishConfirm to do needed
         RabbitMQ setup. This method will not return until channel is confirmed ready for use"""
 
-        # validate that PublishConfirm thread has been setup and connected to RabbitMQ
+        # validate that PublishConfirm thread has been set up and connected to RabbitMQ
         if not (self._connection and self._connection.is_open
                 and self._channel and self._channel.is_open):
             logger.debug('Channel is not ready to publish, calling _start() now')
@@ -317,8 +317,13 @@ class PublishConfirm():
         :param str|unicode queue_name: The name of the queue to declare.
         """
         logger.debug('Declaring queue %s', queue.name)
+        args = {} # If we have a 'private' queue, i.e. one that is not consumed but used to support message publishing
+        if queue.name.startswith('_'):
+            # Set message time-to-live (TTL) to 10 seconds
+            args = {'x-message-ttl': 10000}
         self._channel.queue_declare(queue=queue.name,
                                     durable=queue.durable,
+                                    arguments=args,
                                     exclusive=queue.exclusive,
                                     auto_delete=queue.auto_delete,
                                     callback=self._on_queue_declareok)
@@ -390,7 +395,7 @@ class PublishConfirm():
         ack_multiple = method.multiple
         delivery_tag = method.delivery_tag
 
-        logger.debug('Received %s for delivery tag: %i (multiple: %s)',
+        logger.info('Received %s for delivery tag: %i (multiple: %s)',
                      confirmation_type, delivery_tag, ack_multiple)
 
         if confirmation_type == 'ack':
