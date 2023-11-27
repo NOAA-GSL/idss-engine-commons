@@ -13,12 +13,16 @@ test/test_path_builder.py ......................                         [ 52%]
 test/test_publish_confirm.py ........                                    [ 57%]
 test/test_rabbitmq_utils.py ......                                       [ 60%]
 test/test_utils.py ........................                              [ 75%]
-test/test_validate_schema.py .........................................   [100%]
+test/test_validate_criteria_schema.py ......                             [ 78%]
+test/test_validate_das_schema.py ..............                          [ 87%]
+test/test_validate_das_web_schema.py .......                             [ 91%]
+test/test_validate_event_port_schema.py .....                            [ 94%]
+test/test_validate_new_data_schema.py .........                          [100%]
 
 =============================== warnings summary ===============================
-test/test_validate_schema.py:15
-test/test_validate_schema.py:15
-  /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/test_validate_schema.py:15: DeprecationWarning: Importing Validator directly from the jsonschema package is deprecated and will become an ImportError. Import it from jsonschema.protocols instead.
+test/test_validate_criteria_schema.py:15
+test/test_validate_criteria_schema.py:15
+  /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/test_validate_criteria_schema.py:15: DeprecationWarning: Importing Validator directly from the jsonschema package is deprecated and will become an ImportError. Import it from jsonschema.protocols instead.
     from jsonschema import Validator
 
 idsse/common/validate_schema.py:16
@@ -30,6 +34,26 @@ idsse/common/validate_schema.py:16
 idsse/common/validate_schema.py:16
   /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/validate_schema.py:16: DeprecationWarning: jsonschema.RefResolver is deprecated as of v4.18.0, in favor of the https://github.com/python-jsonschema/referencing library, which provides more compliant referencing behavior as well as more flexible APIs for customization. A future release will remove RefResolver. Please file a feature request (on referencing) if you are missing an API for the kind of customization you need.
     from jsonschema import Validator, FormatChecker, RefResolver
+
+test/test_validate_das_schema.py:15
+test/test_validate_das_schema.py:15
+  /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/test_validate_das_schema.py:15: DeprecationWarning: Importing Validator directly from the jsonschema package is deprecated and will become an ImportError. Import it from jsonschema.protocols instead.
+    from jsonschema import Validator
+
+test/test_validate_das_web_schema.py:15
+test/test_validate_das_web_schema.py:15
+  /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/test_validate_das_web_schema.py:15: DeprecationWarning: Importing Validator directly from the jsonschema package is deprecated and will become an ImportError. Import it from jsonschema.protocols instead.
+    from jsonschema import Validator
+
+test/test_validate_event_port_schema.py:15
+test/test_validate_event_port_schema.py:15
+  /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/test_validate_event_port_schema.py:15: DeprecationWarning: Importing Validator directly from the jsonschema package is deprecated and will become an ImportError. Import it from jsonschema.protocols instead.
+    from jsonschema import Validator
+
+test/test_validate_new_data_schema.py:16
+test/test_validate_new_data_schema.py:16
+  /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/test_validate_new_data_schema.py:16: DeprecationWarning: Importing Validator directly from the jsonschema package is deprecated and will become an ImportError. Import it from jsonschema.protocols instead.
+    from jsonschema import Validator
 
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 - generated xml file: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/pytest.xml -
@@ -51,4 +75,4 @@ idsse/common/validate_schema.py      39      0   100%
 -----------------------------------------------------
 TOTAL                               783     51    93%
 
-======================= 166 passed, 6 warnings in 1.08s ========================
+======================= 166 passed, 14 warnings in 1.06s =======================
