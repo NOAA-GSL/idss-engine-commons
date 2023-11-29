@@ -147,6 +147,16 @@ def test_validate_das_web_request_message(das_web_request_validator: Validator,
         assert False, f'Validate message raised an exception {exc}'
 
 
+def test_validate_das_web_request_message_with_bbox_as_list(das_web_request_validator: Validator,
+                                                            das_web_request_message: dict):
+    bbox = das_web_request_message.pop('bbox')
+    das_web_request_message['bbox'] = [bbox['botLeft'], bbox['topRight']]
+    try:
+        das_web_request_validator.validate(das_web_request_message)
+    except ValidationError as exc:
+        assert False, f'Validate message raised an exception {exc}'
+
+
 def test_validate_das_web_request_message_bad_bbox(das_web_request_validator: Validator,
                                                    das_web_request_message: dict):
     # replace the bottom left int coordinate with a float
