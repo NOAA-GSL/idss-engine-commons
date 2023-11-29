@@ -147,8 +147,8 @@ def test_validate_das_web_request_message(das_web_request_validator: Validator,
         assert False, f'Validate message raised an exception {exc}'
 
 
-def test_validate_das_web_request_message_with_bbox_as_list(das_web_request_validator: Validator,
-                                                            das_web_request_message: dict):
+def test_validate_das_web_request_message_with_bbox_list(das_web_request_validator: Validator,
+                                                         das_web_request_message: dict):
     bbox = das_web_request_message.pop('bbox')
     das_web_request_message['bbox'] = [bbox['botLeft'], bbox['topRight']]
     try:
@@ -157,8 +157,20 @@ def test_validate_das_web_request_message_with_bbox_as_list(das_web_request_vali
         assert False, f'Validate message raised an exception {exc}'
 
 
-def test_validate_das_web_request_message_bad_bbox(das_web_request_validator: Validator,
-                                                   das_web_request_message: dict):
+def test_validate_das_web_request_message_bad_bbox_list(das_web_request_validator: Validator,
+                                                        das_web_request_message: dict):
+    bbox = das_web_request_message.pop('bbox')
+    bot_left = bbox['botLeft']
+    top_right = bbox['topRight']
+    # move one value from bottom  and adding to top, making neither represent a coordinate
+    top_right.append(bot_left.pop(1))
+    das_web_request_message['bbox'] = [bot_left, top_right]
+    with raises(ValidationError):
+        das_web_request_validator.validate(das_web_request_message)
+
+
+def test_validate_das_web_request_message_bad_bbox_obj(das_web_request_validator: Validator,
+                                                       das_web_request_message: dict):
     # replace the bottom left int coordinate with a float
     das_web_request_message['bbox']['botLeft'][0] = 1.2
     with raises(ValidationError):
