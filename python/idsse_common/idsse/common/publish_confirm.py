@@ -142,7 +142,7 @@ class PublishConfirm:
         logger.debug('Starting thread')
 
         # not possible to start Thread when it's already running
-        if self._thread.is_alive() or self._connection is not None:
+        if self._thread.is_alive() or (self._connection is not None and self._connection.is_open):
             raise RuntimeError('PublishConfirm thread already running, cannot be started')
         self._start()
 
@@ -166,7 +166,7 @@ class PublishConfirm:
         time.sleep(0.2)
 
         while not self._stopping:
-            time.sleep(0.1)
+            time.sleep(.1)
 
         if self._connection is not None and not self._connection.is_closed:
             # Finish closing

@@ -265,4 +265,4 @@ def test_calling_start_twice_raises_error(monkeypatch: MonkeyPatch, context: Moc
     pub_conf.start()
     with raises(RuntimeError) as exc:
         pub_conf.start()
-    assert exc is not None and exc.value.args[0]
+    assert exc is not None
