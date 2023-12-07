@@ -135,8 +135,15 @@ class PublishConfirm:
     def start(self):
         """Start thread to connect to RabbitMQ queue and prepare to publish messages, invoking
         callback when setup complete.
+
+        Raises:
+            RuntimeError: if PublishConfirm thread is already running
         """
         logger.debug('Starting thread')
+
+        # not possible to start Thread when it's already running
+        if self._thread.is_alive() or self._connection is not None:
+            raise RuntimeError('PublishConfirm thread already running, cannot be started')
         self._start()
 
     def stop(self):

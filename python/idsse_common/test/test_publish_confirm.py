@@ -16,7 +16,7 @@ from time import sleep
 from typing import Callable, Union, Any, NamedTuple, Self
 from unittest.mock import Mock
 
-from pytest import fixture, MonkeyPatch
+from pytest import fixture, raises, MonkeyPatch
 
 from pika.spec import Basic
 from idsse.common.publish_confirm import PublishConfirm
@@ -257,3 +257,12 @@ def test_wait_for_channel_returns_when_ready(monkeypatch: MonkeyPatch, context: 
     assert pub_conf._channel is None
     pub_conf._wait_for_channel_to_be_ready()
     assert pub_conf._channel is not None and pub_conf._channel.is_open
+
+def test_calling_start_twice_raises_error(monkeypatch: MonkeyPatch, context: MockPika):
+    monkeypatch.setattr('idsse.common.publish_confirm.SelectConnection', context.SelectConnection)
+    pub_conf = PublishConfirm(conn=EXAMPLE_CONN, exchange=EXAMPLE_EXCH, queue=EXAMPLE_QUEUE)
+
+    pub_conf.start()
+    with raises(RuntimeError) as exc:
+        pub_conf.start()
+    assert exc is not None and exc.value.args[0]
