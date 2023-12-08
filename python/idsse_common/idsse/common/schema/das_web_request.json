@@ -1,4 +1,30 @@
 {
+    "BBoxObj": {
+        "type": "object",
+        "properties": {
+            "botLeft": {"type": "array", "items": {"type": "integer"}, "minItems": 2, "maxItems": 2},
+            "topRight": {"type": "array", "items": {"type": "integer"}, "minItems": 2, "maxItems": 2}
+        },
+        "required": [
+            "botLeft",
+            "topRight"
+        ]
+    },
+
+    "BBoxList": {
+        "type": "array",
+        "items": {
+            "type": "array",
+            "items": {
+                "type": "integer"
+            },
+            "minItems": 2,
+            "maxItems": 2
+        },
+        "minItems": 2,
+        "maxItems": 2
+    },
+
     "DasWebRequest": {
         "description": "Mechanism for defining DAS data request via the web api",
         "type": "object",
@@ -14,14 +40,9 @@
                 "minItems": 1
             },
             "bbox": {
-                "type": "object",
-                "properties": {
-                    "botLeft": {"type": "array", "items": {"type": "integer"}, "minItems": 2, "maxItems": 2},
-                    "topRight": {"type": "array", "items": {"type": "integer"}, "minItems": 2, "maxItems": 2}
-                },
-                "required": [
-                    "botLeft",
-                    "topRight"
+                "oneOf": [
+                    {"$ref": "#/BBoxObj"},
+                    {"$ref": "#/BBoxList"}
                 ]
             }
         },
