@@ -214,7 +214,6 @@ def test_validate_criteria_message_with_missing_name(criteria_validator: Validat
 def test_validate_criteria_message_with_bad_product_type(criteria_validator: Validator,
                                                          criteria_message: dict):
     product = criteria_message['parts'][0]['product']
-    print(product)
     product['not_fcst_or_obs'] = product.pop('fcst')
     with raises(ValidationError):
         criteria_validator.validate(criteria_message)
