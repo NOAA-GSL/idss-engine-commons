@@ -34,60 +34,60 @@ def das_web_response_validator() -> Validator:
 @fixture
 def das_web_request_message() -> dict:
     return {
-        "issueDt": "2023-01-10T08:00:00.000Z",
-        "dataRequest": "A AND B",
-        "parts": [
+        'issueDt': '2023-01-10T08:00:00.000Z',
+        'dataRequest': 'A AND B',
+        'parts': [
             {
-                "name": "A",
-                "duration": 0,
-                "arealPercentage": 0,
-                "product": "NBM",
-                "field": "WINDSPEED",
-                "units": "MilesPerHour",
-                "region": "CO",
-                "relational": "GREATER THAN",
-                "thresh": 5,
-                "mapping": {
-                    "min": 0.0,
-                    "max": 20.0,
-                    "clip": "true"
+                'name': 'A',
+                'duration': 0,
+                'arealPercentage': 0,
+                'product': 'NBM',
+                'field': 'WINDSPEED',
+                'units': 'MilesPerHour',
+                'region': 'CO',
+                'relational': 'GREATER THAN',
+                'thresh': 5,
+                'mapping': {
+                    'min': 0.0,
+                    'max': 20.0,
+                    'clip': 'true'
                 }
             },
             {
-                "name": "B",
-                "duration": 0,
-                "arealPercentage": 0,
-                "product": "NBM",
-                "field": "TEMPERATURE",
-                "units": "Fahrenheit",
-                "region": "CO",
-                "relational": "LESS THAN OR EQUAL",
-                "thresh": 30,
-                "mapping": {
-                    "min": 15.0,
-                    "max": 45.0,
-                    "clip": "true"
+                'name': 'B',
+                'duration': 0,
+                'arealPercentage': 0,
+                'product': 'NBM',
+                'field': 'TEMPERATURE',
+                'units': 'Fahrenheit',
+                'region': 'CO',
+                'relational': 'LESS THAN OR EQUAL',
+                'thresh': 30,
+                'mapping': {
+                    'min': 15.0,
+                    'max': 45.0,
+                    'clip': 'true'
                 }
             }
         ],
-        "valids": [
-            "2023-01-11T06:00:00.000Z",
-            "2023-01-11T07:00:00.000Z",
-            "2023-01-11T08:00:00.000Z",
-            "2023-01-11T09:00:00.000Z",
-            "2023-01-11T10:00:00.000Z",
-            "2023-01-11T11:00:00.000Z",
-            "2023-01-11T12:00:00.000Z",
-            "2023-01-11T13:00:00.000Z",
-            "2023-01-11T14:00:00.000Z",
-            "2023-01-11T15:00:00.000Z",
-            "2023-01-11T16:00:00.000Z",
-            "2023-01-11T17:00:00.000Z",
-            "2023-01-11T18:00:00.000Z"
+        'valids': [
+            '2023-01-11T06:00:00.000Z',
+            '2023-01-11T07:00:00.000Z',
+            '2023-01-11T08:00:00.000Z',
+            '2023-01-11T09:00:00.000Z',
+            '2023-01-11T10:00:00.000Z',
+            '2023-01-11T11:00:00.000Z',
+            '2023-01-11T12:00:00.000Z',
+            '2023-01-11T13:00:00.000Z',
+            '2023-01-11T14:00:00.000Z',
+            '2023-01-11T15:00:00.000Z',
+            '2023-01-11T16:00:00.000Z',
+            '2023-01-11T17:00:00.000Z',
+            '2023-01-11T18:00:00.000Z'
         ],
-        "bbox": {
-            "botLeft": [910, 829],
-            "topRight": [1010, 929]
+        'bbox': {
+            'botLeft': [910, 829],
+            'topRight': [1010, 929]
         }
     }
 
@@ -95,46 +95,46 @@ def das_web_request_message() -> dict:
 @fixture
 def das_web_response_message() -> dict:
     return {
-        "issueDt": "2023-01-10T08:00:00.000Z",
-        "dataRequest": "A",
-        "parts": [
+        'issueDt': '2023-01-10T08:00:00.000Z',
+        'dataRequest': 'A',
+        'parts': [
             {
-                "name": "A",
-                "duration": 0,
-                "arealPercentage": 0,
-                "product": "NBM",
-                "field": "WINDSPEED",
-                "units": "MilesPerHour",
-                "region": "CO",
-                "relational": "GREATER THAN",
-                "thresh": 5,
-                "mapping": {
-                    "min": 0.0,
-                    "max": 20.0,
-                    "clip": "true"
+                'name': 'A',
+                'duration': 0,
+                'arealPercentage': 0,
+                'product': 'NBM',
+                'field': 'WINDSPEED',
+                'units': 'MilesPerHour',
+                'region': 'CO',
+                'relational': 'GREATER THAN',
+                'thresh': 5,
+                'mapping': {
+                    'min': 0.0,
+                    'max': 20.0,
+                    'clip': 'true'
                 }
             }
         ],
-        "valids": [
-            "2023-01-11T06:00:00.000Z",
-            "2023-01-11T18:00:00.000Z"
+        'valids': [
+            '2023-01-11T06:00:00.000Z',
+            '2023-01-11T18:00:00.000Z'
         ],
-        "bbox": {
-            "botLeft": [100, 102],
-            "topRight": [200, 202]
+        'bbox': {
+            'botLeft': [100, 102],
+            'topRight': [200, 202]
         },
-        "data": {
-            "2023-01-11T06:00:00.000Z": [
+        'data': {
+            '2023-01-11T06:00:00.000Z': [
                 [1, 2, 3],
                 [4, 5, 6],
                 [7, 8, 9]
             ],
-            "2023-01-11T18:00:00.000Z": [
+            '2023-01-11T18:00:00.000Z': [
                 [9, 8, 7],
                 [6, 5, 4],
                 [3, 2, 1]
             ],
-            "scale": 10
+            'scale': 10
         }
     }
 
@@ -159,8 +159,8 @@ def test_validate_das_web_request_message_multi_product(das_web_request_validato
                                                         das_web_request_message: dict):
     # replace the single product with multiple product structure (like in criteria and eventPort)
     das_web_request_message['parts'][0]['product'] = {
-        "fcst": [
-            "NBM"
+        'fcst': [
+            'NBM'
         ]
     }
     with raises(ValidationError):

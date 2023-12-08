@@ -161,5 +161,5 @@ def subscribe_to_queue(
 
     _channel.basic_qos(prefetch_count=1)
     _channel.basic_consume(queue=queue_name, on_message_callback=on_message_callback,
-                          auto_ack=auto_ack)
+                           auto_ack=auto_ack)
     return (_connection, _channel)

@@ -34,57 +34,57 @@ def data_request_validator() -> Validator:
 @fixture
 def das_data_message() -> dict:
     return {
-        "sourceType": "join",
-        "sourceObj": {
-            "sources": [{
-                "sourceType": "condition",
-                "sourceObj": {
-                    "mapping": {
-                        "endWeight": [0, 1, 0],
-                        "startWeight": [0, 1, 0],
-                        "controlPoints": ["-Infinity", 35, 75, "Infinity"]},
-                    "relational": "LESSTHAN",
-                    "source": {
-                        "sourceType": "units",
-                        "sourceObj": {
-                            "units": "F",
-                            "source": {
-                                "sourceType": "data",
-                                "sourceObj": {
-                                    "product": "NBM",
-                                    "field": "TEMP",
-                                    "region": "CO",
-                                    "valid": "2022-11-12T00:00:00.000Z",
-                                    "issue": "2022-11-11T14:00:00.000Z"}}},
-                        "label": "NBM:TEMP:Fahrenheit"},
-                    "thresh": 60},
-                "label": "NBM:TEMP:Fahrenheit:LT:60.000:35.000:75.000:true"},
+        'sourceType': 'join',
+        'sourceObj': {
+            'sources': [{
+                'sourceType': 'condition',
+                'sourceObj': {
+                    'mapping': {
+                        'endWeight': [0, 1, 0],
+                        'startWeight': [0, 1, 0],
+                        'controlPoints': ['-Infinity', 35, 75, 'Infinity']},
+                    'relational': 'LESSTHAN',
+                    'source': {
+                        'sourceType': 'units',
+                        'sourceObj': {
+                            'units': 'F',
+                            'source': {
+                                'sourceType': 'data',
+                                'sourceObj': {
+                                    'product': 'NBM',
+                                    'field': 'TEMP',
+                                    'region': 'CO',
+                                    'valid': '2022-11-12T00:00:00.000Z',
+                                    'issue': '2022-11-11T14:00:00.000Z'}}},
+                        'label': 'NBM:TEMP:Fahrenheit'},
+                    'thresh': 60},
+                'label': 'NBM:TEMP:Fahrenheit:LT:60.000:35.000:75.000:true'},
                 {
-                "sourceType": "condition",
-                "sourceObj": {
-                    "mapping": {
-                        "endWeight": [0, 1, 0],
-                        "startWeight":[0, 1, 0],
-                        "controlPoints": ["-Infinity", 0, 5, "Infinity"]},
-                    "relational": "GREATERTHAN",
-                    "source": {
-                        "sourceType": "units",
-                        "sourceObj": {
-                            "units": "MPH",
-                            "source": {
-                                "sourceType": "data",
-                                "sourceObj": {
-                                    "product": "NBM",
-                                    "field": "WINDSPEED",
-                                    "region": "CO",
-                                    "valid": "2022-11-12T00:00:00.000Z",
-                                    "issue": "2022-11-11T14:00:00.000Z"}}},
-                        "label": "NBM:WINDSPEED:MilesPerHour"},
-                    "thresh": 3},
-                "label": "NBM:WINDSPEED:MilesPerHour:GT:3.000:0.000:5.000:true"}],
-            "join": "AND"},
-        "label": ("AND(NBM:TEMP:Fahrenheit:LT:60.000:35.000:75.000:true, "
-                  "NBM:WINDSPEED:MilesPerHour:GT:3.000:0.000:5.000:true)")
+                'sourceType': 'condition',
+                'sourceObj': {
+                    'mapping': {
+                        'endWeight': [0, 1, 0],
+                        'startWeight': [0, 1, 0],
+                        'controlPoints': ['-Infinity', 0, 5, 'Infinity']},
+                    'relational': 'GREATERTHAN',
+                    'source': {
+                        'sourceType': 'units',
+                        'sourceObj': {
+                            'units': 'MPH',
+                            'source': {
+                                'sourceType': 'data',
+                                'sourceObj': {
+                                    'product': 'NBM',
+                                    'field': 'WINDSPEED',
+                                    'region': 'CO',
+                                    'valid': '2022-11-12T00:00:00.000Z',
+                                    'issue': '2022-11-11T14:00:00.000Z'}}},
+                        'label': 'NBM:WINDSPEED:MilesPerHour'},
+                    'thresh': 3},
+                'label': 'NBM:WINDSPEED:MilesPerHour:GT:3.000:0.000:5.000:true'}],
+            'join': 'AND'},
+        'label': ('AND(NBM:TEMP:Fahrenheit:LT:60.000:35.000:75.000:true, '
+                  'NBM:WINDSPEED:MilesPerHour:GT:3.000:0.000:5.000:true)')
     }
 
 
