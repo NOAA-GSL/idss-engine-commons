@@ -3,17 +3,27 @@
         "description": "Mechanism for defining the data and thresholds of interest",
         "type": "object",
         "properties": {
+            "name": {
+                "type": "string"
+            },
             "severity": {
                 "type": "string",
                 "enum": ["MINOR", "MODERATE", "SEVERE", "EXTREME"]
             },
             "combined": {
                 "type": "string"
+            },
+            "partsUsed": {
+                "type": "array",
+                "items": {"type": "string"},
+                "minItems": 1
             }
         },
         "required": [
+            "name",
             "severity",
-            "combined"
+            "combined",
+            "partsUsed"
         ]
     }
 }

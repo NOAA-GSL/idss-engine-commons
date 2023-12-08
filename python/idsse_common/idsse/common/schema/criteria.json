@@ -12,11 +12,6 @@
                 "type": "array",
                 "items": {"$ref": "condition.json#/Condition"},
                 "minItems": 1
-            },
-            "partsUsed": {
-                "type": "array",
-                "items": {"$ref": "translated_data.json#/TranslatedData"},
-                "minItems": 1
             }
         },
         "required": [
@@ -25,8 +20,7 @@
             "tags",
             "validDt",
             "location",
-            "conditions",
-            "partsUsed"
+            "conditions"
         ]
     }
 }

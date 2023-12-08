@@ -56,7 +56,8 @@ def simple_event_port_message() -> dict:
             {
                 "name": "Abq TEMP",
                 "severity": "MODERATE",
-                "combined": "A"
+                "combined": "A",
+                "partsUsed": ["A"]
             }
         ],
         "parts": [
