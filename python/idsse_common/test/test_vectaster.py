@@ -11,10 +11,10 @@
 # pylint: disable=missing-function-docstring,redefined-outer-name,invalid-name
 # pylint: disable=no-name-in-module,duplicate-code
 
-from pytest import fixture, MonkeyPatch
 from unittest.mock import Mock
 
 import numpy
+from pytest import fixture, MonkeyPatch
 
 from idsse.common.grid_proj import GridProj
 from idsse.common.vectaster import (geographic_geometry_to_pixel,
