@@ -1,21 +1,21 @@
 ============================= test session starts ==============================
-platform linux -- Python 3.11.6, pytest-7.4.3, pluggy-1.3.0
+platform linux -- Python 3.11.7, pytest-7.4.3, pluggy-1.3.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
 plugins: cov-4.1.0
-collected 166 items
+collected 168 items
 
 test/test_aws_utils.py ..................                                [ 10%]
-test/test_config.py ............                                         [ 18%]
+test/test_config.py ............                                         [ 17%]
 test/test_grid_proj.py ...................                               [ 29%]
-test/test_json_message.py ...........                                    [ 36%]
-test/test_log_util.py .....                                              [ 39%]
-test/test_path_builder.py ......................                         [ 52%]
-test/test_publish_confirm.py ........                                    [ 57%]
+test/test_json_message.py ...........                                    [ 35%]
+test/test_log_util.py .....                                              [ 38%]
+test/test_path_builder.py ......................                         [ 51%]
+test/test_publish_confirm.py ........                                    [ 56%]
 test/test_rabbitmq_utils.py ......                                       [ 60%]
-test/test_utils.py ........................                              [ 75%]
-test/test_validate_criteria_schema.py ......                             [ 78%]
-test/test_validate_das_schema.py ..............                          [ 87%]
-test/test_validate_das_web_schema.py .......                             [ 91%]
+test/test_utils.py ........................                              [ 74%]
+test/test_validate_criteria_schema.py ......                             [ 77%]
+test/test_validate_das_schema.py ..............                          [ 86%]
+test/test_validate_das_web_schema.py .........                           [ 91%]
 test/test_validate_event_port_schema.py .....                            [ 94%]
 test/test_validate_new_data_schema.py .........                          [100%]
 
@@ -58,7 +58,7 @@ test/test_validate_new_data_schema.py:16
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 - generated xml file: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/pytest.xml -
 
----------- coverage: platform linux, python 3.11.6-final-0 -----------
+---------- coverage: platform linux, python 3.11.7-final-0 -----------
 Name                              Stmts   Miss  Cover
 -----------------------------------------------------
 idsse/common/__init__.py              0      0   100%
@@ -75,4 +75,4 @@ idsse/common/validate_schema.py      39      0   100%
 -----------------------------------------------------
 TOTAL                               783     51    93%
 
-======================= 166 passed, 14 warnings in 1.06s =======================
+======================= 168 passed, 14 warnings in 1.15s =======================
