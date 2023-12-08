@@ -10,12 +10,13 @@
 # ----------------------------------------------------------------------------------
 
 import logging
-import numpy
 from math import ceil, floor
 from typing import Optional, Tuple, Union
 
-from idsse.common.grid_proj import GridProj, RoundingMethod
+import numpy
 from shapely import contains_xy, Geometry, LineString, Point, Polygon, from_wkt
+
+from idsse.common.grid_proj import GridProj, RoundingMethod
 
 logger = logging.getLogger(__name__)
 
@@ -77,7 +78,8 @@ def rasterize_linestring(
 
     if grid_proj is not None:
         line_string = geographic_linestring_to_pixel(line_string, grid_proj, rounding)
-        return pixels_near_line_string(line_string)
+
+    return pixels_near_line_string(line_string)
 
 
 def rasterize_polygon(
@@ -109,7 +111,8 @@ def rasterize_polygon(
 
     if grid_proj is not None:
         polygon = geographic_polygon_to_pixel(polygon, grid_proj, rounding)
-        return pixels_in_polygon(polygon)
+
+    return pixels_in_polygon(polygon)
 
 
 def geographic_geometry_to_pixel(
@@ -211,7 +214,7 @@ def pixels_near_line_string(line_string: LineString,
     ymin = int(floor(ymin))
     ymax = int(ceil(ymax))
 
-    points = list()
+    points = []
     for y_coord in range(ymin, ymax):
         for x_coord in range(xmin, xmax):
             points.append(Point(x_coord, y_coord))
@@ -239,7 +242,7 @@ def pixels_in_polygon(poly: Polygon) -> Tuple[numpy.ndarray]:
     # prep_poly = prep(poly)
 
     # construct a rectangular mesh
-    points = list()
+    points = []
     for y_coord in range(ymin, ymax):
         for x_coord in range(xmin, xmax):
             points.append((x_coord, y_coord))
