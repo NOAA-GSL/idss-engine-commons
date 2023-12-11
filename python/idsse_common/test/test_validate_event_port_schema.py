@@ -176,7 +176,7 @@ def simple_event_port_message() -> dict:
     }
 
 
-def test_validate_event_port_message__(event_port_validator: Validator,
+def test_validate_event_port_message(event_port_validator: Validator,
                                      simple_event_port_message: dict):
     try:
         event_port_validator.validate(simple_event_port_message)
