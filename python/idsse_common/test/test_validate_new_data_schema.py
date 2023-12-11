@@ -13,8 +13,8 @@
 # cspell:ignore geodist
 
 import random
-from jsonschema import Validator
 from jsonschema.exceptions import ValidationError
+from jsonschema.protocols import Validator
 from pytest import fixture, raises
 
 from idsse.common.validate_schema import get_validator

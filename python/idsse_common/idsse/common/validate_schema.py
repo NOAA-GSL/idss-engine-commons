@@ -13,8 +13,9 @@ import os
 from typing import Optional, Union
 
 # pylint: disable=no-name-in-module
-from jsonschema import Validator, FormatChecker, RefResolver
+from jsonschema import FormatChecker, RefResolver
 from jsonschema.validators import validator_for
+from jsonschema.protocols import Validator
 
 
 def _get_refs(json_obj: Union[dict, list], result: Optional[set] = None) -> set:

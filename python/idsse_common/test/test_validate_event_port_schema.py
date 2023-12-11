@@ -12,8 +12,8 @@
 # pylint: disable=no-name-in-module,duplicate-code
 # cspell:ignore geodist
 
-from jsonschema import Validator
 from jsonschema.exceptions import ValidationError
+from jsonschema.protocols import Validator
 from pytest import fixture, raises
 
 from idsse.common.validate_schema import get_validator
