@@ -92,6 +92,7 @@ def simple_event_port_message() -> dict:
         },
         "riskResults": [
             {
+                "evaluatedAt": "2022-11-11T14:54:32.100Z",
                 "conditionKey": "Abq TEMP",
                 "productKey": "NBM",
                 "locationKey": "Single Location",
@@ -175,7 +176,7 @@ def simple_event_port_message() -> dict:
     }
 
 
-def test_validate_event_port_message(event_port_validator: Validator,
+def test_validate_event_port_message__(event_port_validator: Validator,
                                      simple_event_port_message: dict):
     try:
         event_port_validator.validate(simple_event_port_message)
