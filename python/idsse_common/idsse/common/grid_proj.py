@@ -21,16 +21,18 @@ import numpy as np
 from pyproj import CRS, Transformer
 from pyproj.enums import TransformDirection
 
-from .utils import round_half_away
+from .utils import round_half_away, Scalar
 
 # type hints
-Scalar = Union[int, float, np.integer, np.float_]
 ScalarPair = Tuple[Scalar, Scalar]
 ScalarArray = Sequence[Scalar]
 Coordinate = Union[Scalar, ScalarPair, ScalarArray, np.ndarray]
 CoordinatePair = Tuple[Coordinate, Coordinate]
 
+# variables passed to GridProj.map_* methods can be anything in this list, but
+# method will always preserve the argument's type in the return value
 T = TypeVar('T', Scalar, ScalarPair, ScalarArray, np.ndarray)
+
 
 class RoundingMethod(Enum):
     """Transformations indicators to be applied to pixel values when casting to ints"""
