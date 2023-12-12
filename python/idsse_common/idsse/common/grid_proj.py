@@ -198,14 +198,14 @@ class GridProj:
         return self.map_crs_to_geo(*crs_coordinates)
 
     def map_geo_to_crs(self, lon: T, lat: T) -> Tuple[T, T]:
-        """Map geographic coordinate (lon, lat) to CRS
+        """Map geographic coordinate (lon, lat), or array of longitudes and latitudes, to CRS
 
         Args:
-            lon (float): x geographic coordinate
-            lat (float): y geographic coordinate
+            lon (T): x geographic coordinate
+            lat (T): y geographic coordinate
 
         Returns:
-            Tuple[float, float]: Coordinate Reference System
+            Tuple[T, T]: Coordinate Reference System
         """
         return self._transform(lon, lat)
 
@@ -263,7 +263,7 @@ class GridProj:
         Args:
             x (T): x scalar, or array/list of x scalars, in CRS dimensions
             y (T): y scalar, or array/list of y scalars, in CRS dimensions
-            rounding (Optional[Union[str, RoundingMethod]]):
+            rounding (Optional[RoundingParam]):
                 ROUND to apply round_half_away() to pixel values,
                 FLOOR to apply math.floor().
                 Supports RoundingMethod enum value or str value (case insensitive).
