@@ -24,7 +24,7 @@ from pyproj.enums import TransformDirection
 from .utils import round_half_away
 
 # type hints
-Scalar = Union[int, float]
+Scalar = Union[int, float, np.integer, np.float_]
 ScalarPair = Tuple[Scalar, Scalar]
 ScalarArray = Sequence[Scalar]
 Coordinate = Union[Scalar, ScalarPair, ScalarArray, np.ndarray]
@@ -187,11 +187,11 @@ class GridProj:
         """Map one or more pixel(s) x,y to a projection
 
         Args:
-            x (ScalarOrArray): x coordinate (or array) in pixel space
-            y (ScalarOrArray): y coordinate (or array) in pixel space
+            x (T): x coordinate (or array) in pixel space
+            y (T): y coordinate (or array) in pixel space
 
         Returns:
-            Tuple[ScalarOrArray, ScalarOrArray]: Single geographic coordinate as lon,lat, or
+            Tuple[T, T]: Single geographic coordinate as lon,lat, or
                 entire array of lat,lon pairs if arrays were passed
         """
         crs_coordinates = self.map_pixel_to_crs(x, y)
@@ -213,20 +213,27 @@ class GridProj:
         """Map pixel space (x,y) to Coordinate Reference System
 
         Args:
-            x (Coordinate): x coordinate (or array) in pixel space
-            y (Coordinate): y coordinate (or array) in pixel space
+            x (T): x coordinate, or array of coordinates, in pixel space
+            y (T): y coordinate, or array of coordinates, in pixel space
 
         Returns:
-            Tuple[Coordinate, Coordinate]: Coordinate Reference System coordinate
+            Tuple[T, T]: Coordinate Reference System x and y pair (or pair of arrays)
         """
-        if isinstance(x, np.ndarray) and isinstance(y, np.ndarray):
-            return ([], [])  # TODO
+        if isinstance(x, Scalar) and isinstance(y, Scalar):
+            # single x, y Pixel (base case)
+            return x * self._dx + self._x_offset, y * self._dy + self._y_offset
 
         if isinstance(x, Iterable) and isinstance(y, Iterable):
-            return ([], [])  # TODO
+            # Merge x array/tuple/list and y array/tuple/list into list of x/y pairs, transform
+            # each pixel pair to a CRS pair, then split list again into array of x coordinates
+            # and y coordinates (now in CRS dimensions) and return
+            crs_pairs = [self.map_pixel_to_crs(*pixel_coordinates)
+                         for pixel_coordinates in zip(x, y)]
+            x_coordinates, y_coordinates = tuple(zip(*crs_pairs))
 
-        if isinstance(x, Scalar) and isinstance(y, Scalar):
-            return x * self._dx + self._x_offset, y * self._dy + self._y_offset
+            if isinstance(x, np.ndarray) and isinstance(y, np.ndarray):
+                return np.array(x_coordinates), np.array(y_coordinates)
+            return x_coordinates, y_coordinates
 
         raise TypeError(
             f'Cannot transpose pixel values of ({type(x).__name__})({type(y).__name__}) to CRS'
@@ -236,11 +243,11 @@ class GridProj:
         """Map Coordinate Reference System (x,y) to Geographical space (lon,lat)
 
         Args:
-            x (float): x coordinate in CRS space
-            y (float): y coordinate in CRS space
+            x (T): x coordinate, or array of coordinates in CRS space
+            y (T): y coordinate, or array of coordinates, in CRS space
 
         Returns:
-            Tuple[float, float]: Geographic coordinate as lon,lat
+            Tuple[T, T]: Geographic coordinate as lon,lat
         """
         return self._transform(x, y, direction=TransformDirection.INVERSE)
 
@@ -265,7 +272,8 @@ class GridProj:
                 is None, this will be ignored
 
         Returns:
-            Pixel: x, y values of pixel, rounded to ints if rounding passed, otherwise floats
+            Pixel: x, y values of pixel, rounded to ints if rounding passed, otherwise preserved
+                as original primitive type passed
 
         Raises:
             TypeError: if x or y CRS values are type not supported by Coordinate
@@ -286,7 +294,6 @@ class GridProj:
             # arrays of x coordinates and y coordinates (but now dimensions are pixel, not CRS)
             pixel_pairs = [self.map_crs_to_pixel(*crs_coord, rounding, precision)
                            for crs_coord in zip(x, y)]
-
             i_coordinates, j_coordinates = tuple(zip(*pixel_pairs))
 
             # if passed as numpy array, preserve type in return value. Otherwise return as tuples

@@ -234,14 +234,18 @@ def test_geo_to_pixel_array(grid_proj: GridProj):
 
 
 def test_pixel_to_geo_array(grid_proj: GridProj):
-    x_array, y_array = list(zip(*EXAMPLE_PIXELS))
+    i_array, j_array = list(zip(*EXAMPLE_PIXELS))
 
     # pass full numpy arrays to map_pixel_to_geo
-    geo_arrays = grid_proj.map_pixel_to_geo(x_array, y_array)
+    i_numpy_array = np.array(i_array)
+    j_numpy_array = np.array(j_array)
+    geo_arrays = grid_proj.map_pixel_to_geo(i_numpy_array, j_numpy_array)
 
-    expected_xs, expected_ys = list(zip(*EXAMPLE_LON_LAT))
-    assert geo_arrays[0] == expected_xs
-    assert geo_arrays[1] == expected_ys
+    expected_geos = np.array(list(zip(*EXAMPLE_LON_LAT)))
+
+    # both x and y coordinate arrays should be numpy arrays
+    assert all(isinstance(arr, np.ndarray) for arr in geo_arrays)
+    np.testing.assert_array_equal(geo_arrays, expected_geos)
 
 
 def test_geo_to_pixel_ndarray(grid_proj: GridProj):
@@ -250,7 +254,7 @@ def test_geo_to_pixel_ndarray(grid_proj: GridProj):
         np.array(x_values), np.array(y_values), rounding=RoundingMethod.ROUND
     )
 
-    expected_arrays = np.array(tuple(zip(*EXAMPLE_PIXELS)))
+    expected_arrays = np.array(list(zip(*EXAMPLE_PIXELS)))
 
     # both x and y coordinate arrays returned should be numpy arrays
     assert all(isinstance(arr, np.ndarray) for arr in pixel_arrays)
