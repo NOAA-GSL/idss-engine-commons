@@ -254,8 +254,8 @@ class GridProj:
         """Map Coordinate Reference System (x,y) coordinates to pixel x and y
 
         Args:
-            x (float): x CRS coordinate
-            y (float): y CRS coordinate
+            x (T): x scalar, or array/list of x scalars, in CRS dimensions
+            y (T): y scalar, or array/list of y scalars, in CRS dimensions
             rounding (Optional[Union[str, RoundingMethod]]):
                 ROUND to apply round_half_away() to pixel values,
                 FLOOR to apply math.floor().
@@ -271,48 +271,52 @@ class GridProj:
             TypeError: if x or y CRS values are type not supported by Coordinate
                 (a.k.a. int | float | Sequence[int | float] | np.ndarray)
         """
-        if isinstance(x, np.ndarray) and isinstance(y, np.ndarray):
-            # TODO: somehow pass arrays directly to numpy to convert
-            return np.transpose(np.array(x, y))
-
-        if isinstance(x, Iterable) and isinstance(y, Iterable):
-            pixel_array: Sequence[Tuple[Scalar]] = []
-
-            # Combine array of x coordinates with array of y coordinates to make list of
-            # CRS x, y pairs. Transform each CRS pair to a pixel, then split back into list
-            # of x, y pairs (but now dimensions are pixel rather than CRS)
-            for crs_coordinate in zip(x, y):
-                pixel: ScalarPair = self.map_crs_to_pixel(*crs_coordinate, rounding, precision)
-                pixel_array.append(pixel)
-
-            return tuple(zip(*pixel_array))
-
         if isinstance(x, Scalar) and isinstance(y, Scalar):
-            # single CRS coordinate passed (base case)
+            # single CRS coordinate was provided (base case)
             i: float = (x - self._x_offset) / self._dx
             j: float = (y - self._y_offset) / self._dy
-            return self._round_pixel_maybe((i, j), rounding, precision)
 
+            if rounding is not None:
+                return self._round_pixel((i, j), rounding, precision)
+            return i, j
+
+        if isinstance(x, Iterable) and isinstance(y, Iterable):
+            # Merge array of x coordinates with array of y coordinates to make list of CRS
+            # x, y pairs. Transform each CRS pair to a pixel (recursively), then split back into
+            # arrays of x coordinates and y coordinates (but now dimensions are pixel, not CRS)
+            pixel_pairs = [self.map_crs_to_pixel(*crs_coord, rounding, precision)
+                           for crs_coord in zip(x, y)]
+
+            i_coordinates, j_coordinates = tuple(zip(*pixel_pairs))
+
+            # if passed as numpy array, preserve type in return value. Otherwise return as tuples
+            if isinstance(x, np.ndarray) and isinstance(y, np.ndarray):
+                return np.array(i_coordinates), np.array(j_coordinates)
+
+            return i_coordinates, j_coordinates
+
+        # x value(s) and y value(s) were not the same shape
         raise TypeError(
             f'Cannot transpose CRS values of ({type(x).__name__})({type(y).__name__}) to pixel'
         )
 
-
     @staticmethod
-    def _round_pixel_maybe(
+    def _round_pixel(
         pixel: ScalarPair,
-        rounding: Optional[Union[str, RoundingMethod]] = None,
+        rounding: Union[str, RoundingMethod],
         precision: int = 0
     ) -> ScalarPair:
-        """Round pixel values if caller requested, or return unchanged if no rounding passed"""
-        x, y = pixel
+        """Round i and j coordinates of pixel using rounding method requested"""
+        i, j = pixel
 
         if isinstance(rounding, str):  # cast str to RoundingMethod enum
-            rounding = RoundingMethod[rounding.upper()]
+            try:
+                rounding = RoundingMethod[rounding.upper()]
+            except KeyError as exc:
+                raise ValueError(f'Unsupported rounding method {rounding}') from exc
 
         if rounding is RoundingMethod.ROUND:
-            return (round_half_away(x, precision), round_half_away(y, precision))
+            return round_half_away(i, precision), round_half_away(j, precision)
         if rounding is RoundingMethod.FLOOR:
-            return (math.floor(x), math.floor(y))
-
-        return pixel  # rounding is None, or some unsupported rounding method
+            return math.floor(i), math.floor(j)
+        raise ValueError('rounding method cannot be None')
