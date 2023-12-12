@@ -15,7 +15,7 @@
 import math
 from typing import Tuple
 
-from pytest import fixture, approx
+from pytest import approx, fixture, raises
 
 from idsse.common.grid_proj import GridProj, RoundingMethod
 from idsse.common.utils import round_half_away
@@ -63,6 +63,10 @@ def approx_tuple(values: Tuple[float, float]) -> Tuple:
 def grid_proj() -> GridProj:
     return GridProj.from_proj_grid_spec(EXAMPLE_PROJ_SPEC, EXAMPLE_GRID_SPEC)
 
+# my_proj = GridProj.from_proj_grid_spec(
+#     '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +r=6371200',
+#     '+dx=2539.703 +dy=2539.703 +w=2345 +h=1597 +lat_ll=19.229 +lon_ll=-126.2766'
+# )
 
 # test class methods
 def test_from_proj_grid_spec(grid_proj: GridProj):
@@ -136,7 +140,7 @@ def test_map_crs_to_pixel_round_floor(grid_proj: GridProj):
             rounding=RoundingMethod.FLOOR
         )
         # due to math imprecision internal to pyproj.transform(), some test results are a bit
-        # unpredictable. E.g. returns 0.999994 which is floored to 0, but expected pixel value is 1
+        # unpredictable. E.g. returns 0.999994, which floors to 0, when expected pixel value is 1
         assert (approx(i, abs=1), approx(j, abs=1)) == EXAMPLE_PIXELS[index]
 
 
@@ -214,3 +218,31 @@ def test_compound_transformations_stay_consistent(grid_proj: GridProj):
     # convert geographic coordinates back to projection
     proj_x, proj_y = grid_proj.map_crs_to_geo(geo_x, geo_y)
     assert (proj_x, proj_y) == approx_tuple(initial_geo)
+
+
+def test_geo_to_pixel_array(grid_proj: GridProj):
+    # split example list of tuples into: list of lats and list of lons
+    lon_array, lat_array = list(zip(*EXAMPLE_LON_LAT))
+
+    # pass full arrays to map_geo_to_pixel
+    pixel_arrays = grid_proj.map_geo_to_pixel(lon_array, lat_array, rounding=RoundingMethod.ROUND)
+
+    expected_xs, expected_ys = list(zip(*EXAMPLE_PIXELS))
+    assert pixel_arrays[0] == expected_xs
+    assert pixel_arrays[1] == expected_ys
+
+
+def test_pixel_to_geo_array(grid_proj: GridProj):
+    pass  # TODO
+
+
+def test_unbalanced_pixel_or_crs_arrays_fail_to_transform(grid_proj: GridProj):
+    with raises(TypeError) as exc:
+        bad_pixel = (1, [1, 2, 3])
+        grid_proj.map_pixel_to_crs(*bad_pixel)
+    assert 'Cannot transpose pixel values' in exc.value.args[0]
+
+    with raises(TypeError) as exc:
+        bad_crs = (EXAMPLE_CRS[0], EXAMPLE_CRS[1][1])
+        grid_proj.map_crs_to_pixel(*bad_crs, rounding=RoundingMethod.ROUND)
+    assert 'Cannot transpose CRS values' in exc.value.args[0]
