@@ -92,6 +92,7 @@ def simple_event_port_message() -> dict:
         },
         "riskResults": [
             {
+                "evaluatedAt": "2022-11-11T14:54:32.100Z",
                 "conditionKey": "Abq TEMP",
                 "productKey": "NBM",
                 "locationKey": "Single Location",
