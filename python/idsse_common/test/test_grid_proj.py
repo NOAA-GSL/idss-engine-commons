@@ -223,7 +223,7 @@ def test_compound_transformations_stay_consistent(grid_proj: GridProj):
 
 def test_geo_to_pixel_array(grid_proj: GridProj):
     # split example list of tuples into: list of lats and list of lons
-    lon_lat_arrays: Tuple[Sequence[float], Sequence[float]] = list(zip(*EXAMPLE_LON_LAT))
+    lon_lat_arrays: Tuple[List[float], List[float]] = list(zip(*EXAMPLE_LON_LAT))
 
     # pass full arrays to map_geo_to_pixel
     pixel_arrays = grid_proj.map_geo_to_pixel(*lon_lat_arrays, rounding=RoundingMethod.ROUND)
