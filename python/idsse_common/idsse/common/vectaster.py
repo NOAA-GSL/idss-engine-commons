@@ -17,7 +17,7 @@ import numpy
 from shapely import Geometry, LinearRing, LineString, Point, Polygon, from_wkt
 
 from idsse.common.grid_proj import GridProj, RoundingMethod
-from idsse.common.utils import round_half_away as round
+from idsse.common.utils import round_half_away as round_
 
 logger = logging.getLogger(__name__)
 
@@ -297,6 +297,7 @@ def _pixels_for_linestring(
     return pixels
 
 
+# pylint: disable=invalid-name
 def _pixels_for_line_seg(
         pnt1: Tuple[float, float],
         pnt2: Tuple[float, float],
@@ -325,22 +326,23 @@ def _pixels_for_line_seg(
     if dx != 0 and -1 <= slope <= 1:
         intercept = y1 - slope * x1
         dx = 1 if x2 > x1 else -1
-        while (x1 != x2):
+        while x1 != x2:
             x1 += dx
-            y1 = round(slope * x1 + intercept)
+            y1 = round_(slope * x1 + intercept)
             pixels.append((int(x1), y1))
     else:
         slope = float(dx) / float(dy) if dy else 0
         intercept = x1 - slope * y1
         dy = 1 if y2 > y1 else -1
-        while (y1 != y2):
+        while y1 != y2:
             y1 += dy
-            x1 = round(slope * y1 + intercept)
+            x1 = round_(slope * y1 + intercept)
             pixels.append((x1, int(y1)))
 
     return pixels
 
 
+# pylint: disable=too-many-locals
 def _pixels_for_polygon(
         polygon_boundary: LinearRing
 ) -> List[Pixel]:
@@ -389,7 +391,7 @@ def _round_x_y(x, y, rounding: Union[str, RoundingMethod]) -> Pixel:
         rounding = RoundingMethod[rounding.upper()]
 
     if rounding is RoundingMethod.ROUND:
-        return (round(x), round(y))
+        return (round_(x), round_(y))
     if rounding is RoundingMethod.FLOOR:
         return (floor(x), floor(y))
     return (int(x), int(y))
