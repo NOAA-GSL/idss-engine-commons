@@ -22,12 +22,16 @@
         "minProperties": 1
     },
 
+    "DataType": {
+        "type": "string", "enum": ["condition", "criteria", "raw"]
+    },
+
     "Data": {
         "description": "Mechanism for storing the a contiguous state (when the criteria is met or not met",
         "type": "object",
         "properties": {
             "name": {"type": "string"},
-            "type": {"type": "string", "enum": ["criteria", "raw"]},
+            "type": {"$ref": "#/DataType"},
             "singleValue": {
                 "type": "array",
                 "items": {"type": "number"}
@@ -80,6 +84,7 @@
         "type": "object",
         "properties": {
             "name": {"type": "string"},
+            "type": {"$ref": "#/DataType"},
             "states": {
                 "type": "array",
                 "items": {"$ref": "#/State"},
@@ -88,6 +93,7 @@
         },
         "required": [
             "name",
+            "type",
             "states"
         ]
     },
@@ -96,6 +102,7 @@
         "description": "Mechanism for storing the result from the Risk Processor",
         "type": "object",
         "properties": {
+            "evaluatedAt": {"$ref": "timing.json#/TimeString"},
             "conditionKey": {"type": "string"},
             "locationKey": {"type": "string"},
             "productKey": {"type": "string"},
@@ -104,6 +111,7 @@
             "metaData": {"type": "array", "items": {"$ref": "#/MetaData"}, "minItems": 1}
         },
         "required": [
+            "evaluatedAt",
             "conditionKey",
             "locationKey",
             "productKey",                    

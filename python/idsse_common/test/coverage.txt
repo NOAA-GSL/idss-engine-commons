@@ -1,23 +1,28 @@
 ============================= test session starts ==============================
-platform linux -- Python 3.11.6, pytest-7.4.3, pluggy-1.3.0
+platform linux -- Python 3.11.7, pytest-7.4.3, pluggy-1.3.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
 plugins: cov-4.1.0
-collected 159 items
+collected 169 items
 
-test/test_aws_utils.py ..................                                [ 11%]
-test/test_config.py ............                                         [ 18%]
-test/test_grid_proj.py ...................                               [ 30%]
-test/test_json_message.py ...........                                    [ 37%]
-test/test_log_util.py .....                                              [ 40%]
-test/test_path_builder.py ......................                         [ 54%]
-test/test_publish_confirm.py ........                                    [ 59%]
+test/test_aws_utils.py ..................                                [ 10%]
+test/test_config.py ............                                         [ 17%]
+test/test_grid_proj.py ...................                               [ 28%]
+test/test_json_message.py ...........                                    [ 35%]
+test/test_log_util.py .....                                              [ 38%]
+test/test_path_builder.py ......................                         [ 51%]
+test/test_publish_confirm.py .........                                   [ 56%]
+test/test_rabbitmq_utils.py ......                                       [ 60%]
 test/test_utils.py ........................                              [ 74%]
-test/test_validate_schema.py ........................................    [100%]
+test/test_validate_criteria_schema.py ......                             [ 78%]
+test/test_validate_das_schema.py ..............                          [ 86%]
+test/test_validate_das_web_schema.py .........                           [ 91%]
+test/test_validate_event_port_schema.py .....                            [ 94%]
+test/test_validate_new_data_schema.py .........                          [100%]
 
 =============================== warnings summary ===============================
-test/test_validate_schema.py:15
-test/test_validate_schema.py:15
-  /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/test_validate_schema.py:15: DeprecationWarning: Importing Validator directly from the jsonschema package is deprecated and will become an ImportError. Import it from jsonschema.protocols instead.
+test/test_validate_criteria_schema.py:15
+test/test_validate_criteria_schema.py:15
+  /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/test_validate_criteria_schema.py:15: DeprecationWarning: Importing Validator directly from the jsonschema package is deprecated and will become an ImportError. Import it from jsonschema.protocols instead.
     from jsonschema import Validator
 
 idsse/common/validate_schema.py:16
@@ -30,24 +35,44 @@ idsse/common/validate_schema.py:16
   /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/validate_schema.py:16: DeprecationWarning: jsonschema.RefResolver is deprecated as of v4.18.0, in favor of the https://github.com/python-jsonschema/referencing library, which provides more compliant referencing behavior as well as more flexible APIs for customization. A future release will remove RefResolver. Please file a feature request (on referencing) if you are missing an API for the kind of customization you need.
     from jsonschema import Validator, FormatChecker, RefResolver
 
+test/test_validate_das_schema.py:15
+test/test_validate_das_schema.py:15
+  /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/test_validate_das_schema.py:15: DeprecationWarning: Importing Validator directly from the jsonschema package is deprecated and will become an ImportError. Import it from jsonschema.protocols instead.
+    from jsonschema import Validator
+
+test/test_validate_das_web_schema.py:15
+test/test_validate_das_web_schema.py:15
+  /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/test_validate_das_web_schema.py:15: DeprecationWarning: Importing Validator directly from the jsonschema package is deprecated and will become an ImportError. Import it from jsonschema.protocols instead.
+    from jsonschema import Validator
+
+test/test_validate_event_port_schema.py:15
+test/test_validate_event_port_schema.py:15
+  /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/test_validate_event_port_schema.py:15: DeprecationWarning: Importing Validator directly from the jsonschema package is deprecated and will become an ImportError. Import it from jsonschema.protocols instead.
+    from jsonschema import Validator
+
+test/test_validate_new_data_schema.py:16
+test/test_validate_new_data_schema.py:16
+  /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/test_validate_new_data_schema.py:16: DeprecationWarning: Importing Validator directly from the jsonschema package is deprecated and will become an ImportError. Import it from jsonschema.protocols instead.
+    from jsonschema import Validator
+
 -- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 - generated xml file: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/pytest.xml -
 
----------- coverage: platform linux, python 3.11.6-final-0 -----------
+---------- coverage: platform linux, python 3.11.7-final-0 -----------
 Name                              Stmts   Miss  Cover
 -----------------------------------------------------
 idsse/common/__init__.py              0      0   100%
 idsse/common/aws_utils.py            86      5    94%
 idsse/common/config.py               68      8    88%
 idsse/common/grid_proj.py            81      1    99%
-idsse/common/json_message.py         22      1    95%
+idsse/common/json_message.py         23      1    96%
 idsse/common/log_util.py             43      3    93%
 idsse/common/path_builder.py        128     10    92%
-idsse/common/publish_confirm.py     150     13    91%
-idsse/common/rabbitmq_utils.py       16      0   100%
+idsse/common/publish_confirm.py     151     13    91%
+idsse/common/rabbitmq_utils.py       61      0   100%
 idsse/common/utils.py                94      9    90%
 idsse/common/validate_schema.py      39      0   100%
 -----------------------------------------------------
-TOTAL                               727     50    93%
+TOTAL                               774     50    94%
 
-======================= 159 passed, 6 warnings in 2.51s ========================
+======================= 169 passed, 14 warnings in 1.11s =======================
