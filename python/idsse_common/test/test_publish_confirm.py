@@ -13,10 +13,10 @@
 # pylint: disable=too-few-public-methods,unused-argument
 
 from time import sleep
-from typing import Callable, Union, Any, NamedTuple
+from typing import Callable, Union, Any, NamedTuple, Self
 from unittest.mock import Mock
 
-from pytest import fixture, MonkeyPatch
+from pytest import fixture, raises, MonkeyPatch
 
 from pika.spec import Basic
 from idsse.common.publish_confirm import PublishConfirm
@@ -90,15 +90,21 @@ class MockPika:
 
     class IOLoop:
         """mock of pika.SelectConnection.ioloop"""
-        def __init__(self, on_open: Callable[[Any], None], on_close: Callable[[Any, str], None]):
+        def __init__(
+            self,
+            connection,
+            on_open: Callable[[Any], Any],
+            on_close: Callable[[Any, str], Any]
+        ):
+            self._connection = connection
             self.on_open = on_open
             self.on_close = on_close
 
         def start(self):
-            self.on_open(None)
+            self.on_open(self._connection)
 
         def stop(self):
-            self.on_close(None, 'some_reason')
+            self.on_close(self._connection, 'some_reason')
 
         def call_later(self):
             pass
@@ -108,14 +114,14 @@ class MockPika:
         """mock of pika.SelectConnection"""
         def __init__(self,
                      parameters,
-                     on_open_callback: Callable[[Any], None],
+                     on_open_callback: Callable[[Any], Self],
                      on_open_error_callback,
-                     on_close_callback: Callable[[Any, str], None]):
+                     on_close_callback: Callable[[Any, str], Self]):
             self.is_open = True
             self.is_closed = False
             self._context = MockPika()
 
-            self.ioloop = self._context.IOLoop(on_open_callback, on_close_callback)
+            self.ioloop = self._context.IOLoop(self, on_open_callback, on_close_callback)
 
         def channel(self, on_open_callback: Callable[[Any], None]):
             """
@@ -241,7 +247,7 @@ def test_start_without_callback_sleeps(publish_confirm: PublishConfirm, monkeypa
     # mock sleep someimtes captures a call from PublishConfirm.run(), due to a race condition
     # between this test's thread and the PublishConfirm thread. Both results are acceptable
     sleep_call_args = [call.args for call in mock_sleep.call_args_list]
-    assert set(sleep_call_args) in [set([(0.2,)]), set([(0.2,), (5,)])]
+    assert set(sleep_call_args) in [set([(0.2,)]), set([(0.2,), (0.1,)])]
 
 
 def test_wait_for_channel_returns_when_ready(monkeypatch: MonkeyPatch, context: MockPika):
@@ -251,3 +257,12 @@ def test_wait_for_channel_returns_when_ready(monkeypatch: MonkeyPatch, context: 
     assert pub_conf._channel is None
     pub_conf._wait_for_channel_to_be_ready()
     assert pub_conf._channel is not None and pub_conf._channel.is_open
+
+def test_calling_start_twice_raises_error(monkeypatch: MonkeyPatch, context: MockPika):
+    monkeypatch.setattr('idsse.common.publish_confirm.SelectConnection', context.SelectConnection)
+    pub_conf = PublishConfirm(conn=EXAMPLE_CONN, exchange=EXAMPLE_EXCH, queue=EXAMPLE_QUEUE)
+
+    pub_conf.start()
+    with raises(RuntimeError) as exc:
+        pub_conf.start()
+    assert exc is not None
