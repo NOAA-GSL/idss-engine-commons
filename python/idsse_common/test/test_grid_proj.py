@@ -13,7 +13,7 @@
 # pylint: disable=missing-function-docstring,redefined-outer-name,invalid-name,protected-access
 
 import math
-from typing import Tuple
+from typing import Tuple, List
 
 import numpy as np
 from pytest import approx, fixture, raises
@@ -37,7 +37,7 @@ GRID_SPEC_WITHOUT_LOWER_LEFT = '+dx=2539.703 +dy=2539.703 +w=2345 +h=1597'
 WIDTH = 2345
 HEIGHT = 1597
 
-EXAMPLE_PIXELS = [
+EXAMPLE_PIXELS: List[Tuple[int, int]] = [
     (0, 0),
     (0, 1),
     (2000, 1500)
@@ -223,10 +223,10 @@ def test_compound_transformations_stay_consistent(grid_proj: GridProj):
 
 def test_geo_to_pixel_array(grid_proj: GridProj):
     # split example list of tuples into: list of lats and list of lons
-    lon_array, lat_array = list(zip(*EXAMPLE_LON_LAT))
+    lon_lat_arrays: Tuple[Sequence[float], Sequence[float]] = list(zip(*EXAMPLE_LON_LAT))
 
     # pass full arrays to map_geo_to_pixel
-    pixel_arrays = grid_proj.map_geo_to_pixel(lon_array, lat_array, rounding=RoundingMethod.ROUND)
+    pixel_arrays = grid_proj.map_geo_to_pixel(*lon_lat_arrays, rounding=RoundingMethod.ROUND)
 
     expected_xs, expected_ys = list(zip(*EXAMPLE_PIXELS))
     assert pixel_arrays[0] == expected_xs
