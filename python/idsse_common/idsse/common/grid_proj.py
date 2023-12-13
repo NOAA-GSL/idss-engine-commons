@@ -312,7 +312,7 @@ class GridProj:
     @staticmethod
     def _round_pixel(
         pixel: ScalarPair,
-        rounding: Union[str, RoundingMethod],
+        rounding: RoundingParam,
         precision: int = 0
     ) -> ScalarPair:
         """Round i and j coordinates of pixel using rounding method requested"""
