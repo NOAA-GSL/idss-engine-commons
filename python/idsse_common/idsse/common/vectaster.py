@@ -88,7 +88,7 @@ def rasterize_point(
     if grid_proj is not None:
         return _make_numpy([grid_proj.map_geo_to_pixel(*point.coords[0], rounding)])
 
-    return _make_numpy([_round_x_y(*point, rounding)])
+    return _make_numpy([_round_x_y(*point.coords[0], rounding)])
 
 
 def rasterize_linestring(

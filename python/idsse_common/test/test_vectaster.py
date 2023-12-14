@@ -79,14 +79,27 @@ def test_geographic_to_pixel(monkeypatch: MonkeyPatch, grid_proj: GridProj):
 
 
 def test_rasterize_point(grid_proj: GridProj):
-    linestring = from_wkt('POINT (-100.5 30.5)')
+    point = 'POINT (-100.5 30.5)'
     pixels = ((numpy.array([1081]), numpy.array([347])))
-    result = rasterize_point(linestring, grid_proj)
+    result = rasterize_point(point, grid_proj)
+    numpy.testing.assert_array_equal(result, pixels)
+
+
+def test_rasterize_point_without_grid_proj():
+    point = from_wkt('POINT (1001.5 1130.5)')
+    pixels = ((numpy.array([1001]), numpy.array([1130])))
+    # default round in floor
+    result = rasterize_point(point)
+    numpy.testing.assert_array_equal(result, pixels)
+
+    pixels = ((numpy.array([1002]), numpy.array([1131])))
+    # rounding='round' means round half away from zero (both even and odd)
+    result = rasterize_point(point, rounding='round')
     numpy.testing.assert_array_equal(result, pixels)
 
 
 def test_rasterize_linestring(grid_proj: GridProj):
-    linestring = from_wkt('LINESTRING (-100 30, -100.1 30.1, -100.2 30)')
+    linestring = 'LINESTRING (-100 30, -100.1 30.1, -100.2 30)'
     pixels = (numpy.array([1099, 1098, 1097, 1097, 1096, 1095, 1094, 1093, 1093, 1092, 1091]),
               numpy.array([324, 325, 326, 327, 328, 329, 328, 327, 326, 325, 324]))
     result = rasterize_linestring(linestring, grid_proj)
@@ -94,7 +107,7 @@ def test_rasterize_linestring(grid_proj: GridProj):
 
 
 def test_rasterize_polygon(grid_proj: GridProj):
-    poly = from_wkt('POLYGON ((-105 40, -105.1 40, -105.1 40.1, -105 40.1, -105 40))')
+    poly = 'POLYGON ((-105 40, -105.1 40, -105.1 40.1, -105 40.1, -105 40))'
     pixels = (numpy.array([938, 939, 940, 941, 938, 939, 940, 941, 938, 939, 940,
                            941, 938, 939, 940, 941, 938, 939, 940, 941, 941, 938]),
               numpy.array([778, 778, 778, 778, 779, 779, 779, 779, 780, 780, 780,
@@ -116,7 +129,7 @@ def test_rasterize_polygon_with_hole():
 def test_rasterize(monkeypatch: MonkeyPatch, grid_proj: GridProj):
     point = from_wkt('POINT (-105 40)')
     linestring = from_wkt('LINESTRING (-105 40, -110 40, -110 50)')
-    polygon = from_wkt('POLYGON ((-105 40, -110 40, -110 50, -105 50, -105 40))')
+    polygon = 'POLYGON ((-105 40, -110 40, -110 50, -105 50, -105 40))'
 
     point_mock = Mock()
     linestring_mock = Mock()
