@@ -35,13 +35,23 @@ class Conn(NamedTuple):
     password: str
 
     def to_connection(self) -> BlockingConnection:
-        """Establish a new RabbitMQ connection using attributes in Conn data class"""
-        return BlockingConnection(ConnectionParameters(
+        """Establish a new RabbitMQ connection using attributes in Conn data class
+
+        Returns:
+           BlockingConnection: newly established instance of pika.BlockingConnection
+        """
+        return BlockingConnection(parameters=self.connection_parameters)
+
+    @property
+    def connection_parameters(self) -> ConnectionParameters:
+        """Convert Conn data object into pika.ConnectionParameters, ready to be passed
+        to pika connection constructors such as BlockingConnection() or SelectConnection()"""
+        return ConnectionParameters(
             host=self.host,
             virtual_host=self.v_host,
             port=self.port,
             credentials=PlainCredentials(self.username, self.password)
-        ))
+        )
 
 
 class Exch(NamedTuple):
