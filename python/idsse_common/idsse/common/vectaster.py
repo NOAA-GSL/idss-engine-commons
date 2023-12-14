@@ -184,14 +184,14 @@ def geographic_geometry_to_pixel(
 
 
 def geographic_linestring_to_pixel(
-        line_string: LineString,
+        linestring: LineString,
         grid_proj: GridProj,
         rounding: RoundingMethod = None
 ) -> LineString:
     """Map a LineString specified in lat/lon space to geometry specified in pixel space
 
     Args:
-        line_string (LineString): Shapely geometry with vertices defined by lon,lat
+        linestring (LineString): Shapely geometry with vertices defined by lon,lat
         grid_proj (GridProj): Projection plus pixel resolution
         rounding (RoundingMethod, optional): One of None, 'floor', 'round'. Defaults to None.
 
@@ -200,10 +200,11 @@ def geographic_linestring_to_pixel(
     Returns:
         LineString: Shapely LineString with vertices defined by x,y pixels
     """
-    if not isinstance(line_string, LineString):
-        raise ValueError(f'Geometry must be a LineString but is a {type(line_string)}')
+    if not isinstance(linestring, LineString):
+        raise ValueError(f'Geometry must be a LineString but is a {type(linestring)}')
 
-    coords = [grid_proj.map_geo_to_pixel(*ll, rounding) for ll in line_string.coords]
+    # coords = [grid_proj.map_geo_to_pixel(*ll, rounding) for ll in line_string.coords]
+    coords = list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*linestring.coords)), rounding)))
 
     pixel_linestring = LineString(coords)
     return pixel_linestring
@@ -229,8 +230,11 @@ def geographic_polygon_to_pixel(
     if not isinstance(poly, Polygon):
         raise ValueError(f'Geometry must be a Polygon but is a {type(poly)}')
 
-    exterior = [grid_proj.map_geo_to_pixel(*ll, rounding) for ll in poly.exterior.coords]
-    interiors = [[grid_proj.map_geo_to_pixel(*ll, rounding) for ll in interior.coords]
+    # exterior = [grid_proj.map_geo_to_pixel(*ll, rounding) for ll in poly.exterior.coords]
+    # interiors = [[grid_proj.map_geo_to_pixel(*ll, rounding) for ll in interior.coords]
+    #              for interior in poly.interiors]
+    exterior = list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*poly.exterior.coords)), rounding)))
+    interiors = [list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*interior.coords)), rounding)))
                  for interior in poly.interiors]
 
     pixel_poly = Polygon(exterior, holes=interiors)
