@@ -16,6 +16,10 @@ from datetime import datetime, timedelta, timezone
 from subprocess import PIPE, Popen, TimeoutExpired
 from typing import Any, Generator, Optional, Sequence, Union
 
+import numpy as np
+
+Scalar = Union[int, float, np.integer, np.float_]  # type alias for rounding numbers
+
 logger = logging.getLogger(__name__)
 
 
@@ -189,7 +193,7 @@ def _round_toward_zero(number: float) -> int:
     return func(number)
 
 
-def round_half_away(number: float, precision: int = 0) -> Union[int, float]:
+def round_half_away(number: Scalar, precision: int = 0) -> Scalar:
     """
     Round a float to a set number of decimal places, using "ties away from zero" method,
     in contrast with Python 3's built-in round() or numpy.round() functions, both which
