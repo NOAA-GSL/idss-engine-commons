@@ -12,10 +12,9 @@ import json
 import os
 from typing import Optional, Union
 
-# pylint: disable=no-name-in-module
-from jsonschema import Validator, FormatChecker, RefResolver
+from jsonschema import FormatChecker, RefResolver  # pylint: disable=no-name-in-module
 from jsonschema.validators import validator_for
-
+from jsonschema.protocols import Validator
 
 def _get_refs(json_obj: Union[dict, list], result: Optional[set] = None) -> set:
     if result is None:
@@ -50,7 +49,7 @@ def get_validator(schema_name) -> Validator:
     with open(schema_filename, 'r', encoding='utf8') as file:
         schema = json.load(file)
 
-    base = json.loads('{"$schema": "http://json-schema.org/draft-07/schema#"}')
+    base: dict = json.loads('{"$schema": "http://json-schema.org/draft-07/schema#"}')
 
     dependencies = {base.get('$id'): base}
     refs = _get_refs(schema)
@@ -59,7 +58,7 @@ def get_validator(schema_name) -> Validator:
         for ref in refs:
             schema_filename = os.path.join(schema_dir, ref)
             with open(schema_filename, 'r', encoding='utf8') as file:
-                ref_schema = json.load(file)
+                ref_schema: dict = json.load(file)
             dependencies[ref_schema.get('$id', ref)] = ref_schema
             new_refs = _get_refs(ref_schema, new_refs)
         refs = {ref for ref in new_refs if ref not in dependencies}
