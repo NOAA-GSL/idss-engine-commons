@@ -17,7 +17,12 @@ setup(name='idsse',
       install_requires=[
         'pint',
         'importlib_metadata',
-        ],
+        'h5netcdf',
+        'netCDF4',
+        'numpy',
+        'pika',
+        'jsonschema'
+      ],
       extras_require={
         'develop': [
           'pytest',

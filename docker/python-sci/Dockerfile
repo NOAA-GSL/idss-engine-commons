@@ -21,7 +21,6 @@ RUN conda config --add channels conda-forge && \
     numpy==1.24.3 \
     netcdf4==1.6.3 \
     h5netcdf==1.1.0 \
-    pygrib==2.1.4 \
     awscli==1.27.161 \
     jsonschema==4.19.0 \
     s5cmd==2.2.2 \
