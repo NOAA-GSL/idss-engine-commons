@@ -25,6 +25,7 @@ RUN conda config --add channels conda-forge && \
     awscli==1.27.161 \
     jsonschema==4.19.0 \
     s5cmd==2.2.2 \
+    shapely==2.0.2 \
     && conda clean -y --all
 
 # Get the latest package updates to keep security vulnerabilities down
