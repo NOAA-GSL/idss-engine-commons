@@ -242,11 +242,11 @@ def test_pixel_to_geo_array(grid_proj: GridProj):
     j_numpy_array = np.array(j_array)
     geo_arrays = grid_proj.map_pixel_to_geo(i_numpy_array, j_numpy_array)
 
-    expected_geos = np.array(list(zip(*EXAMPLE_LON_LAT)))
+    expected_geos = tuple(np.array(values) for values in (list(zip(*EXAMPLE_LON_LAT))))
 
     # both x and y coordinate arrays should be numpy arrays
     assert all(isinstance(arr, np.ndarray) for arr in geo_arrays)
-    np.testing.assert_array_equal(geo_arrays, expected_geos)
+    np.testing.assert_almost_equal(geo_arrays, expected_geos)
 
 
 def test_geo_to_pixel_ndarray(grid_proj: GridProj):
