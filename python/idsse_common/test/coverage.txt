@@ -2,18 +2,19 @@
 platform linux -- Python 3.11.7, pytest-7.4.3, pluggy-1.3.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
 plugins: cov-4.1.0
-collected 183 items
+collected 187 items
 
 test/test_aws_utils.py ..................                                [  9%]
 test/test_config.py ............                                         [ 16%]
-test/test_grid_proj.py ........................                          [ 29%]
-test/test_json_message.py ...........                                    [ 35%]
-test/test_log_util.py .....                                              [ 38%]
-test/test_path_builder.py ......................                         [ 50%]
-test/test_publish_confirm.py .........                                   [ 55%]
-test/test_rabbitmq_utils.py ......                                       [ 58%]
-test/test_utils.py ........................                              [ 71%]
-test/test_validate_criteria_schema.py ......                             [ 74%]
+test/test_grid_proj.py ........................                          [ 28%]
+test/test_json_message.py ...........                                    [ 34%]
+test/test_log_util.py .....                                              [ 37%]
+test/test_netcdf_io.py ....                                              [ 39%]
+test/test_path_builder.py ......................                         [ 51%]
+test/test_publish_confirm.py .........                                   [ 56%]
+test/test_rabbitmq_utils.py ......                                       [ 59%]
+test/test_utils.py ........................                              [ 72%]
+test/test_validate_criteria_schema.py ......                             [ 75%]
 test/test_validate_das_schema.py ..............                          [ 82%]
 test/test_validate_das_web_schema.py .........                           [ 87%]
 test/test_validate_event_port_schema.py .....                            [ 90%]
@@ -38,6 +39,7 @@ idsse/common/config.py               68      8    88%
 idsse/common/grid_proj.py           112      2    98%
 idsse/common/json_message.py         23      1    96%
 idsse/common/log_util.py             43      3    93%
+idsse/common/netcdf_io.py            47      0   100%
 idsse/common/path_builder.py        128     10    92%
 idsse/common/publish_confirm.py     151     13    91%
 idsse/common/rabbitmq_utils.py       61      0   100%
@@ -45,6 +47,6 @@ idsse/common/utils.py                96      9    91%
 idsse/common/validate_schema.py      40      0   100%
 idsse/common/vectaster.py           135      8    94%
 -----------------------------------------------------
-TOTAL                               943     59    94%
+TOTAL                               990     59    94%
 
-======================= 183 passed, 2 warnings in 1.38s ========================
+======================= 187 passed, 2 warnings in 1.63s ========================
