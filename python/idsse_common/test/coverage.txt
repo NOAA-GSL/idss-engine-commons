@@ -2,22 +2,23 @@
 platform linux -- Python 3.11.7, pytest-7.4.3, pluggy-1.3.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
 plugins: cov-4.1.0
-collected 174 items
+collected 183 items
 
-test/test_aws_utils.py ..................                                [ 10%]
-test/test_config.py ............                                         [ 17%]
-test/test_grid_proj.py ........................                          [ 31%]
-test/test_json_message.py ...........                                    [ 37%]
-test/test_log_util.py .....                                              [ 40%]
-test/test_path_builder.py ......................                         [ 52%]
-test/test_publish_confirm.py .........                                   [ 58%]
-test/test_rabbitmq_utils.py ......                                       [ 61%]
-test/test_utils.py ........................                              [ 75%]
-test/test_validate_criteria_schema.py ......                             [ 78%]
-test/test_validate_das_schema.py ..............                          [ 86%]
-test/test_validate_das_web_schema.py .........                           [ 91%]
-test/test_validate_event_port_schema.py .....                            [ 94%]
-test/test_validate_new_data_schema.py .........                          [100%]
+test/test_aws_utils.py ..................                                [  9%]
+test/test_config.py ............                                         [ 16%]
+test/test_grid_proj.py ........................                          [ 29%]
+test/test_json_message.py ...........                                    [ 35%]
+test/test_log_util.py .....                                              [ 38%]
+test/test_path_builder.py ......................                         [ 50%]
+test/test_publish_confirm.py .........                                   [ 55%]
+test/test_rabbitmq_utils.py ......                                       [ 58%]
+test/test_utils.py ........................                              [ 71%]
+test/test_validate_criteria_schema.py ......                             [ 74%]
+test/test_validate_das_schema.py ..............                          [ 82%]
+test/test_validate_das_web_schema.py .........                           [ 87%]
+test/test_validate_event_port_schema.py .....                            [ 90%]
+test/test_validate_new_data_schema.py .........                          [ 95%]
+test/test_vectaster.py .........                                         [100%]
 
 =============================== warnings summary ===============================
 idsse/common/validate_schema.py:15
@@ -42,7 +43,8 @@ idsse/common/publish_confirm.py     151     13    91%
 idsse/common/rabbitmq_utils.py       61      0   100%
 idsse/common/utils.py                96      9    91%
 idsse/common/validate_schema.py      40      0   100%
+idsse/common/vectaster.py           135      8    94%
 -----------------------------------------------------
-TOTAL                               808     51    94%
+TOTAL                               943     59    94%
 
-======================= 174 passed, 2 warnings in 1.31s ========================
+======================= 183 passed, 2 warnings in 1.38s ========================
