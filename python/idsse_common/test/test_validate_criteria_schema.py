@@ -56,7 +56,8 @@ def simple_criteria_message() -> dict:
             {
                 "name": "Above Freeze Temp",
                 "severity": "MODERATE",
-                "combined": "A"
+                "combined": "A",
+                "partsUsed": ["A"]
             }
         ],
         "parts": [
@@ -122,8 +123,10 @@ def criteria_message() -> dict:
         },
         "conditions": [
             {
+                "name": "Two part Condition",
                 "severity": "MODERATE",
                 "combined": "A AND B",
+                "partsUsed": ["A", "B"]
             },
         ],
         "parts": [
