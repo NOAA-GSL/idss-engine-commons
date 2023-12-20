@@ -15,6 +15,7 @@ import math
 from datetime import datetime, timedelta, timezone
 from subprocess import PIPE, Popen, TimeoutExpired
 from typing import Any, Generator, Optional, Sequence, Union
+from uuid import UUID
 
 import numpy as np
 
@@ -25,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 class TimeDelta:
     """Wrapper class for datetime.timedelta to add helpful properties"""
+
     def __init__(self, time_delta: timedelta) -> None:
         self._td = time_delta
 
@@ -46,6 +48,7 @@ class TimeDelta:
 
 class Map(dict):
     """Wrapper class for python dictionary with dot access"""
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         for arg in args:
@@ -172,10 +175,10 @@ def datetime_gen(dt_start: datetime,
         time_delta_pos = time_delta > timedelta(seconds=0)
 
         if (dt_start > dt_end and time_delta_pos) or \
-           (dt_start < dt_end and not time_delta_pos):
+                (dt_start < dt_end and not time_delta_pos):
             time_delta = timedelta(seconds=-1.0 * time_delta.total_seconds())
 
-        dt_cnt = int((dt_end-dt_start)/time_delta)+1
+        dt_cnt = int((dt_end - dt_start) / time_delta) + 1
         max_num = min(max_num, dt_cnt) if max_num else dt_cnt
 
     for i in range(0, max_num):
@@ -216,7 +219,24 @@ def round_half_away(number: Scalar, precision: int = 0) -> Scalar:
     is_less_than_half = abs(factored_number - math.trunc(factored_number)) < 0.5
 
     rounded_number = (
-        _round_toward_zero(factored_number) if is_less_than_half
-        else _round_away_from_zero(factored_number)
-    ) / factor
+                         _round_toward_zero(factored_number) if is_less_than_half
+                         else _round_away_from_zero(factored_number)
+                     ) / factor
     return int(rounded_number) if precision == 0 else float(rounded_number)
+
+
+def is_valid_uuid(uuid: str, version=4) -> bool:
+    """Checks for a valid UUID
+
+    Args:
+        uuid (str): String to be checked
+        version (int) : Expect UUID version
+
+    Returns:
+        bool: result of check
+    """
+    try:
+        UUID(uuid, version=version)
+    except ValueError:
+        return False
+    return True
