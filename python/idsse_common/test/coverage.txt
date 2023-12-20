@@ -43,10 +43,10 @@ idsse/common/netcdf_io.py            47      0   100%
 idsse/common/path_builder.py        128     10    92%
 idsse/common/publish_confirm.py     151     13    91%
 idsse/common/rabbitmq_utils.py       61      0   100%
-idsse/common/utils.py                96      9    91%
+idsse/common/utils.py               103     14    86%
 idsse/common/validate_schema.py      40      0   100%
 idsse/common/vectaster.py           135      8    94%
 -----------------------------------------------------
-TOTAL                               990     59    94%
+TOTAL                               997     64    94%
 
-======================= 187 passed, 2 warnings in 1.45s ========================
+======================= 187 passed, 2 warnings in 1.52s ========================
