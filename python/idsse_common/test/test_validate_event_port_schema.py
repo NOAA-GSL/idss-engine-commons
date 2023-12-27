@@ -100,6 +100,14 @@ def simple_event_port_message() -> dict:
                 "validDt": [
                     "2022-11-12T00:00:00.000Z"
                 ],
+                "dataDescript": [
+                    {
+                        "partName": "B",
+                        "dataName": "Temperature: 2m",
+                        "dataLocation": "arn:aws:s3:::noaa-nbm-grib2-pds:",
+                        "issueDt": "2022-11-11T14:00:00.000Z"
+                    }
+                ],
                 "data": [
                     {
                         "name": "Abq TEMP",

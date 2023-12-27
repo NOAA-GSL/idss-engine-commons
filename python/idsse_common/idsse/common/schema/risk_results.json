@@ -1,4 +1,26 @@
 {
+    "DataDescription": {
+        "description": "Identification of the data used for evaluation",
+        "properties": {
+            "partName": {
+                "type": "string"
+            },
+            "dataName": {
+                "type": "string"
+            },
+            "dataLocation": {
+                "type": "string"
+            },
+            "issueDt": {"$ref": "timing.json#/TimeString"}
+        },
+        "required": [
+            "partName",
+            "dataName",
+            "dataLocation",
+            "issueDt"
+        ]
+    }, 
+
     "SingleValue": {
         "description": "Mechanism for storing the 'Single Value' result for a specific Condition/Location/Product(s)",
         "type": "object",
@@ -107,6 +129,7 @@
             "locationKey": {"type": "string"},
             "productKey": {"type": "string"},
             "validDt": {"type": "array", "items": {"$ref": "timing.json#/TimeString"}, "minItems": 1},
+            "dataDescript": {"type": "array", "items": {"$ref": "#/DataDescription"}, "minItems": 1},
             "data": {"type": "array", "items": {"$ref": "#/Data"}, "minItems": 2},
             "metaData": {"type": "array", "items": {"$ref": "#/MetaData"}, "minItems": 1}
         },
@@ -116,6 +139,7 @@
             "locationKey",
             "productKey",                    
             "validDt",
+            "dataDescript",
             "data",
             "metaData"
         ]
