@@ -141,7 +141,7 @@ def simple_event_port_message() -> dict:
                         ],
                         "geoDist": [
                             {
-                                "38.53400802612305": 1
+                                "1.7941197416604382E-9": 1
                             }
                         ]
                     }
