@@ -17,7 +17,12 @@ import numpy
 from shapely import Geometry, LinearRing, LineString, Point, Polygon, from_wkt
 
 from idsse.common.grid_proj import GridProj, RoundingMethod
-from idsse.common.utils import round_half_away as round_
+# from idsse.common.utils import round_half_away as round_
+
+
+def round_(x):
+    return int(x+.5)
+
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +54,7 @@ def rasterize(
     if isinstance(geometry, str):
         geometry = from_wkt(geometry)
 
+    print(geometry)
     if isinstance(geometry, Point):
         return rasterize_point(geometry, grid_proj, rounding)
     if isinstance(geometry, LineString):
@@ -319,27 +325,29 @@ def _pixels_for_line_seg(
     """
     x1, y1 = pnt1
     x2, y2 = pnt2
-    dx = x2 - x1
-    dy = y2 - y1
+    dx = float(x2 - x1)
+    dy = float(y2 - y1)
 
     pixels = []
     if not exclude_first:
         pixels.append((int(x1), int(y1)))
 
-    slope = float(dy) / float(dx) if dx else 0
-    if dx != 0 and -1 <= slope <= 1:
+    if abs(dy) <= abs(dx):
+        slope = dy / dx if dx != 0 else 0
         intercept = y1 - slope * x1
-        dx = 1 if x2 > x1 else -1
-        while x1 != x2:
-            x1 += dx
+        if x2 < x1:
+            x1, y1, x2, y2 = x2, y2, x1, y1
+        while x1 < x2:
+            x1 += 1
             y1 = round_(slope * x1 + intercept)
             pixels.append((int(x1), y1))
     else:
-        slope = float(dx) / float(dy) if dy else 0
+        slope = dx / dy
         intercept = x1 - slope * y1
-        dy = 1 if y2 > y1 else -1
-        while y1 != y2:
-            y1 += dy
+        if y2 < y1:
+            x1, y1, x2, y2 = x2, y2, x1, y1
+        while y1 < y2:
+            y1 += 1
             x1 = round_(slope * y1 + intercept)
             pixels.append((x1, int(y1)))
 
