@@ -101,6 +101,14 @@ class GeoImage():
         j *= self.scale
         self.rgb_array[i:i+self.scale, j:j+self.scale] = color
 
+    def set_pixel_for_shape(self, shape, color):
+        if isinstance(shape, str):
+            shape = from_wkt(shape)
+
+        coords = rasterize(shape)
+        for i_j in zip(*coords):
+            self.set_pixel(*i_j, color)
+
     def outline_pixel(self, i, j, color):
         i *= self.scale
         j *= self.scale
@@ -109,26 +117,16 @@ class GeoImage():
         self.rgb_array[i, j:j+self.scale] = color
         self.rgb_array[i+self.scale-1, j:j+self.scale] = color
 
+    def outline_pixel_for_shape(self, shape, color):
+        if isinstance(shape, str):
+            shape = from_wkt(shape)
+
+        coords = rasterize(shape)
+        for i_j in zip(*coords):
+            self.outline_pixel(*i_j, color)
+
 
 @functools.cache
 def _get_grey_scale():
     return [(x, x, x) for x in range(0, 256)]
-    # step = 1./255.
-    # colors = [((step*x, )*3) for x in range(0, 255)]
-    # colors.append((1., 1., 1.))
-    # return colors
 
-#         input = numpy_image
-
-# np.uint8 -> converts to integers
-
-# convert('RGB') -> converts to RGB
-
-# Image.fromarray -> returns an image object
-
-#   from PIL import Image
-#   import numpy as np
-
-#   PIL_image = Image.fromarray(np.uint8(numpy_image)).convert('RGB')
-
-#   PIL_image = Image.fromarray(numpy_image.astype('uint8'), 'RGB')

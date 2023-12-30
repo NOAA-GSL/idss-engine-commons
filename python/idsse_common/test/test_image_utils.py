@@ -45,7 +45,11 @@ def test_geo_image_from_data_grid(proj_spec, grid_spec):
     geo_image.draw_point(*ij2, (0, 0, 255))
     # print("before draw line")
     geo_image.draw_line_seg(*ij1, *ij2, (0, 0, 255))
-    geo_image.draw_shape('POLYGON((3.1 3.1, 3.5 3.9, 3.9 3.1, 3.1 3.1))', (0, 0, 255))
+    geo_image.draw_shape('POLYGON((1.1 1.1, 1.5 1.9, 1.9 1.1, 1.1 1.1))', (0, 0, 255))
+    line_string = 'LINESTRING(1.5 7.5, 3.25 8.75)'
+    geo_image.set_pixel_for_shape(line_string, (0, 255, 255))
+    geo_image.draw_shape(line_string, (255, 0, 255))
+    geo_image.outline_pixel_for_shape(line_string, (255, 0, 0))
     geo_image.show()
     assert False
 
