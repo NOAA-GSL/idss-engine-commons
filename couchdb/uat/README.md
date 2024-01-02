@@ -33,6 +33,8 @@ This will populate the running CouchDB container with the 3 event portfolio json
 
 3. Verify the output is: `["22222222-beec-467b-a0e6-9d215b715b97", "11111111-beec-467b-a0e6-9d215b715b97", "33333333-beec-467b-a0e6-9d215b715b97"]`
 
+4. Query the EPM using one of the UUIDs to retrieve the Event Portfolio JSON: http://127.0.0.1:8080/eventportfolio?uuid=11111111-beec-467b-a0e6-9d215b715b97 Should return the json object: `{"corrId": {"originator": "IDSSe", "uuid": "11111111-beec-467b-a0e6-9d215b715b97", "issueDt": "2022-12-23T12:00:00.000Z"}, "issueDt": "2022-12-23T12:00:00.000Z", "location": {"features": [{"type": "Feature", "properties": {"name": "Location 1"}, "geometry": {"coordinates": [[-73.75900245370...`
+
 **NOTE** The EPM Web Service should be able to fetch the persisted EP json except the format of the EP json has changed since the Web Service was developed. The EP Web Service query will throw exceptions because it hasn't been updated to the new format which is currently under development.
 
 ## Cleanup
