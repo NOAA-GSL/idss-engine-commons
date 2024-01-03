@@ -85,6 +85,13 @@ def test_rasterize_point(grid_proj: GridProj):
     numpy.testing.assert_array_equal(result, pixels)
 
 
+def test_rasterize_point_from_coord(grid_proj: GridProj):
+    point = (-100.5, 30.5)
+    pixels = ((numpy.array([1081]), numpy.array([347])))
+    result = rasterize_point(point, grid_proj)
+    numpy.testing.assert_array_equal(result, pixels)
+
+
 def test_rasterize_point_without_grid_proj():
     point = from_wkt('POINT (1001.5 1130.5)')
     pixels = ((numpy.array([1001]), numpy.array([1130])))
@@ -106,12 +113,27 @@ def test_rasterize_linestring(grid_proj: GridProj):
     numpy.testing.assert_array_equal(result, pixels)
 
 
-def test_rasterize_polygon(grid_proj: GridProj):
+def test_rasterize_linestring_from_coords(grid_proj: GridProj):
+    linestring = [(-100, 30), (-100.01, 30.02), (-100.02, 30)]
+    pixels = (numpy.array([1099, 1098, 1098]), numpy.array([324, 325, 324]))
+    result = rasterize_linestring(linestring, grid_proj)
+    numpy.testing.assert_array_equal(result, pixels)
+
+
+def test_rasterize_polygon__(grid_proj: GridProj):
     poly = 'POLYGON ((-105 40, -105.1 40, -105.1 40.1, -105 40.1, -105 40))'
     pixels = (numpy.array([938, 939, 940, 941, 938, 939, 940, 941, 938, 939, 940,
                            941, 938, 939, 940, 941, 938, 939, 940, 941, 941, 938]),
               numpy.array([778, 778, 778, 778, 779, 779, 779, 779, 780, 780, 780,
                            780, 781, 781, 781, 781, 782, 782, 782, 782, 782, 783]))
+    result = rasterize_polygon(poly, grid_proj)
+    numpy.testing.assert_array_equal(result, pixels)
+
+
+def test_rasterize_polygon_from_coords(grid_proj: GridProj):
+    poly = (((-105, 40), (-105.1, 40), (-105.1, 40.1), (-105, 40)),)
+    pixels = (numpy.array([938, 939, 940, 941, 938, 939, 940, 938, 939, 938, 939, 938, 938]),
+              numpy.array([778, 778, 778, 778, 779, 779, 779, 780, 780, 781, 781, 782, 783]))
     result = rasterize_polygon(poly, grid_proj)
     numpy.testing.assert_array_equal(result, pixels)
 

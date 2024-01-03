@@ -10,77 +10,76 @@
 # ----------------------------------------------------------------------------------
 
 import logging
+from collections.abc import Iterable, Sequence
 from math import floor
-from typing import List, Optional, Tuple, Union
+from numbers import Number
 
 import numpy
 from shapely import Geometry, LinearRing, LineString, Point, Polygon, from_wkt
+from typing import NewType
 
 from idsse.common.grid_proj import GridProj, RoundingMethod
-# from idsse.common.utils import round_half_away as round_
-
-
-def round_(x):
-    return int(x+.5)
+from idsse.common.utils import round_half_away
 
 
 logger = logging.getLogger(__name__)
 
 
-Pixel = Tuple[int, int]
+Pixel = NewType('Pixel', Sequence[int])
+Coord = NewType('Coord', Sequence[float])
+Coords = NewType('Coords', Sequence[Coord])
 
 
 def rasterize(
-        geometry: Union[str, Geometry],
+        geometry: str | Geometry,
         grid_proj: GridProj = None,
         rounding: RoundingMethod = RoundingMethod.FLOOR
-) -> Tuple[numpy.array]:
+) -> tuple[numpy.array]:
     """Takes a geographic geometry (specified with lon/lat) and determines all the
     associated pixels in the translated space (as specified by grid_proj).
 
     Args:
-        geometry (Union[str, Geometry]): Either a shapely Geometry (or sub-class)
-                                         or a well-known-text representation of a geometry.
-        grid_proj (GridProj, optional): A projection (CRS) with scale and offsets. Defaults to None.
-        rounding (RoundingMethod, optional): Rounding role for mapping float coordinate values
+        geometry (str | Geometry): Either a shapely Geometry (or sub-class)
+                                   or a well-known-text representation of a geometry.
+        grid_proj (GridProj | None): A projection (CRS) with scale and offsets. Defaults to None.
+        rounding (RoundingMethod | None): Rounding role for mapping float coordinate values
                                              to integers. Defaults to RoundingMethod.FLOOR.
 
     Raises:
-        ValueError: When the geometry type is not supported
+        TypeError: When the geometry type is not supported
 
     Returns:
-        Tuple[numpy.array]: First array represent the x-coordinate and the seconde the y.
+        tuple[numpy.array]: First array represent the x-coordinate and the seconde the y.
     """
     if isinstance(geometry, str):
         geometry = from_wkt(geometry)
 
-    print(geometry)
     if isinstance(geometry, Point):
         return rasterize_point(geometry, grid_proj, rounding)
     if isinstance(geometry, LineString):
         return rasterize_linestring(geometry, grid_proj, rounding)
     if isinstance(geometry, Polygon):
         return rasterize_polygon(geometry, grid_proj, rounding)
-    raise ValueError(f'Passed geometry (type:{type(geometry)}) is not supported')
+    raise TypeError(f'Passed geometry (type:{type(geometry)}) is not supported')
 
 
 def rasterize_point(
-        point: Union[str, Point],
+        point: str | Coord | Point,
         grid_proj: GridProj = None,
         rounding: RoundingMethod = RoundingMethod.FLOOR
-) -> Tuple[numpy.array]:
+) -> tuple[numpy.array]:
     """Takes a geographic Point (specified with lon/lat) and determines the
     associated pixel in the translated space (as specified by grid_proj).
 
     Args:
-        point (Union[str, Point]): Either a shapely Point
-                                   or a well-known-text representation of a Point.
-        grid_proj (GridProj, optional): A projection (CRS) with scale and offsets. Defaults to None.
-        rounding (RoundingMethod, optional): Rounding role for mapping float coordinate values
-                                             to integers. Defaults to RoundingMethod.FLOOR.
+        point (str | Coord | Point): Either a 2D coordinate, a shapely Point,
+                                          or a well-known-text representation of a Point.
+        grid_proj (GridProj | None): A projection (CRS) with scale and offsets. Defaults to None.
+        rounding (RoundingMethod |  None): Rounding role for mapping float coordinate values
+                                           to integers. Defaults to RoundingMethod.FLOOR.
 
     Raises:
-        ValueError: When the line_string arg does not represent a Point
+        TypeError: When the point arg does not represent a Point
 
     Returns:
         Tuple[numpy.array]: First array represent the x-coordinate and the seconde the y.
@@ -88,32 +87,37 @@ def rasterize_point(
     if isinstance(point, str):
         point = from_wkt(point)
 
-    if not isinstance(point, Point):
-        raise ValueError(f'Passed geometry is type:{type(point)} but must be Point')
+    if isinstance(point, Point):
+        coord = point.coords[0]
+    elif _is_coord(point):
+        coord = point
+    else:
+        raise TypeError(f'Passed geometry is type:{type(point)} but must be Point')
 
     if grid_proj is not None:
-        return _make_numpy([grid_proj.map_geo_to_pixel(*point.coords[0], rounding)])
+        return _make_numpy([grid_proj.map_geo_to_pixel(*coord, rounding)])
 
-    return _make_numpy([_round_x_y(*point.coords[0], rounding)])
+    return _make_numpy([_round(*coord, rounding=rounding)])
 
 
 def rasterize_linestring(
-        linestring: Union[str, LineString],
+        linestring: str | Sequence[Coord] | LineString,
         grid_proj: GridProj = None,
         rounding: RoundingMethod = RoundingMethod.FLOOR
-) -> Tuple[numpy.array]:
+) -> tuple[numpy.array]:
     """Takes a geographic LineString (specified with lon/lat) and determines all the
     associated pixels in the translated space (as specified by grid_proj).
 
     Args:
-        linestring (Union[str, LineString]): Either a shapely LineString
-                                             or a well-known-text representation of a LineString.
-        grid_proj (GridProj, optional): A projection (CRS) with scale and offsets. Defaults to None.
-        rounding (RoundingMethod, optional): Rounding role for mapping float coordinate values
-                                             to integers. Defaults to RoundingMethod.FLOOR.
+        linestring (str | Sequence[Coord] | LineString): Either a sequence of coords, a shapely
+                                                         LineString, or a well-known-text
+                                                         representation of a LineString.
+        grid_proj (GridProj | None): A projection (CRS) with scale and offsets. Defaults to None.
+        rounding (RoundingMethod | None): Rounding role for mapping float coordinate values
+                                          to integers. Defaults to RoundingMethod.FLOOR.
 
     Raises:
-        ValueError: When the line_string arg does not represent a LineString
+        TypeError: When the line_string arg does not represent a LineString
 
     Returns:
         Tuple[numpy.array]: First array represent the x-coordinate and the seconde the y.
@@ -121,32 +125,38 @@ def rasterize_linestring(
     if isinstance(linestring, str):
         linestring = from_wkt(linestring)
 
-    if not isinstance(linestring, LineString):
-        raise ValueError(f'Passed geometry is type:{type(linestring)} but must be LineString')
+    if isinstance(linestring, LineString):
+        coords = linestring.coords
+    elif _is_coords(linestring):
+        coords = linestring
+    else:
+        raise TypeError(f'Passed geometry is type:{type(linestring)} but must be LineString')
 
     if grid_proj is not None:
-        linestring = geographic_linestring_to_pixel(linestring, grid_proj, rounding)
+        linestring = geographic_linestring_to_pixel(coords, grid_proj, rounding)
+    else:
+        linestring = LineString([_round(*coord, rounding=rounding) for coord in linestring.coords])
 
     return pixels_for_linestring(linestring)
 
 
 def rasterize_polygon(
-        polygon: Union[str, Polygon],
+        polygon: str | Sequence[Coords] | Polygon,
         grid_proj: GridProj = None,
         rounding: RoundingMethod = RoundingMethod.FLOOR
-) -> Tuple[numpy.array]:
+) -> tuple[numpy.array]:
     """Takes a geographic Polygon (specified with lon/lat) and determines all the
     associated pixels in the translated space (as specified by grid_proj).
 
     Args:
-        geometry (Union[str, Polygon]): Either a shapely Polygon
-                                         or a well-known-text representation of a Polygon.
-        grid_proj (GridProj, optional): A projection (CRS) with scale and offsets. Defaults to None.
-        rounding (RoundingMethod, optional): Rounding role for mapping float coordinate values
+        geometry (str | Sequence[Coords] | Polygon): Either a sequence of coords, a shapely Polygon,
+                                                   or a well-known-text representation of a Polygon.
+        grid_proj (GridProj | None): A projection (CRS) with scale and offsets. Defaults to None.
+        rounding (RoundingMethod | None): Rounding role for mapping float coordinate values
                                              to integers. Defaults to RoundingMethod.FLOOR.
 
     Raises:
-        ValueError: When the polygon arg does not represent a Polygon
+        TypeError: When the polygon arg does not represent a Polygon
 
     Returns:
         Tuple[numpy.array]: First array represent the x-coordinate and the seconde the y.
@@ -154,11 +164,20 @@ def rasterize_polygon(
     if isinstance(polygon, str):
         polygon = from_wkt(polygon)
 
-    if not isinstance(polygon, Polygon):
-        raise ValueError(f'Passed geometry is type:{type(polygon)} but must be Polygon')
+    if isinstance(polygon, Polygon):
+        coords = [[coord for coord in interior.coords] for interior in polygon.interiors]
+        coords.insert(0, [coord for coord in polygon.exterior.coords])
+    elif all([_is_coords(coords) for coords in polygon]):
+        coords = polygon
+    else:
+        raise TypeError(f'Passed geometry is type:{type(polygon)} but must be Polygon')
 
     if grid_proj is not None:
-        polygon = geographic_polygon_to_pixel(polygon, grid_proj, rounding)
+        polygon = geographic_polygon_to_pixel(coords, grid_proj, rounding)
+    else:
+        coords = [[_round(*coord, rounding=rounding)
+                  for coord in ring] for ring in coords]
+        polygon = Polygon(coords[0], holes=coords[1:])
 
     return pixels_in_polygon(polygon)
 
@@ -166,14 +185,14 @@ def rasterize_polygon(
 def geographic_geometry_to_pixel(
         geo: Geometry,
         grid_proj: GridProj,
-        rounding: Optional[RoundingMethod] = None
+        rounding: RoundingMethod = None
 ) -> Geometry:
     """Map a geometry specified in lat/lon space to geometry specified in pixel space
 
     Args:
         geo (Geometry): Shapely geometry with vertices defined by lon,lat
         grid_proj (GridProj): Projection plus pixel resolution
-        rounding (RoundingMethod, optional): One of None, 'floor', 'round'. Defaults to None.
+        rounding (RoundingMethod | None): One of None, 'floor', 'round'. Defaults to None.
 
     Raises:
         ValueError: If geometry type is not currently supported
@@ -190,64 +209,75 @@ def geographic_geometry_to_pixel(
 
 
 def geographic_linestring_to_pixel(
-        linestring: LineString,
+        linestring: LineString | Sequence[Coord],
         grid_proj: GridProj,
         rounding: RoundingMethod = None
 ) -> LineString:
     """Map a LineString specified in lat/lon space to geometry specified in pixel space
 
     Args:
-        linestring (LineString): Shapely geometry with vertices defined by lon,lat
+        linestring (LineString | Sequence[Coord]): Shapely geometry with vertices defined by lon,lat
         grid_proj (GridProj): Projection plus pixel resolution
-        rounding (RoundingMethod, optional): One of None, 'floor', 'round'. Defaults to None.
+        rounding (RoundingMethod | None): One of None, 'floor', 'round'. Defaults to None.
 
     Raises:
-        ValueError: If geometry is not a LineString
+        TypeError: If geometry is not a LineString
     Returns:
         LineString: Shapely LineString with vertices defined by x,y pixels
     """
-    if not isinstance(linestring, LineString):
-        raise ValueError(f'Geometry must be a LineString but is a {type(linestring)}')
+    if _is_coords(linestring):
+        coords = linestring
+    elif isinstance(linestring, LineString):
+        coords = linestring.coords
+    else:
+        raise TypeError(f'Geometry must be a LineString but is a {type(linestring)}')
 
     # coords = [grid_proj.map_geo_to_pixel(*ll, rounding) for ll in line_string.coords]
-    coords = list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*linestring.coords)), rounding)))
+    coords = list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*coords)), rounding)))
 
     pixel_linestring = LineString(coords)
     return pixel_linestring
 
 
 def geographic_polygon_to_pixel(
-        poly: Polygon,
+        poly: Polygon | Sequence[Coords],
         grid_proj: GridProj,
         rounding: RoundingMethod = None
 ) -> Polygon:
     """Map a Polygon specified in lat/lon space to geometry specified in pixel space
 
     Args:
-        poly (Polygon): Shapely geometry with vertices defined by lon,lat
+        poly (Polygon | Sequence[Coords]): A sequence of coords used as the exterior of the polygon,
+                                        or Shapely geometry, either with vertices defined by lon,lat
         grid_proj (GridProj): Projection plus pixel resolution
-        rounding (RoundingMethod, optional): One of None, 'floor', 'round'. Defaults to None.
+        rounding (RoundingMethod | None): One of None, 'floor', 'round'. Defaults to None.
 
     Raises:
-        ValueError: If geometry is not a LineString
+        TypeError: If geometry is not a LineString
     Returns:
         Polygon: Shapely Polygon with vertices defined by x,y pixels
     """
-    if not isinstance(poly, Polygon):
-        raise ValueError(f'Geometry must be a Polygon but is a {type(poly)}')
+    if isinstance(poly, Polygon):
+        exterior = poly.exterior.coords
+        interiors = poly.interiors
+    elif all([_is_coords(coords) for coords in poly]):
+        exterior = poly[0]
+        interiors = poly[1:]
+    else:
+        raise TypeError(f'Geometry must be a Polygon but is a {type(poly)}')
 
     # exterior = [grid_proj.map_geo_to_pixel(*ll, rounding) for ll in poly.exterior.coords]
     # interiors = [[grid_proj.map_geo_to_pixel(*ll, rounding) for ll in interior.coords]
     #              for interior in poly.interiors]
-    exterior = list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*poly.exterior.coords)), rounding)))
+    exterior = list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*exterior)), rounding)))
     interiors = [list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*interior.coords)), rounding)))
-                 for interior in poly.interiors]
+                 for interior in interiors]
 
     pixel_poly = Polygon(exterior, holes=interiors)
     return pixel_poly
 
 
-def pixels_for_linestring(linestring: LineString) -> Tuple[numpy.array]:
+def pixels_for_linestring(linestring: LineString) -> tuple[numpy.array]:
     """Determine the pixels that represent the specified LineString
 
     Args:
@@ -259,7 +289,7 @@ def pixels_for_linestring(linestring: LineString) -> Tuple[numpy.array]:
     return _make_numpy(_pixels_for_linestring(linestring))
 
 
-def pixels_in_polygon(poly: Polygon) -> Tuple[numpy.ndarray]:
+def pixels_in_polygon(poly: Polygon) -> tuple[numpy.ndarray]:
     """Determine the pixels that represent the specified Polygon
 
     Args:
@@ -278,7 +308,7 @@ def pixels_in_polygon(poly: Polygon) -> Tuple[numpy.ndarray]:
     return _make_numpy(pixels)
 
 
-def _make_numpy(points: List[Pixel]) -> Tuple[numpy.ndarray]:
+def _make_numpy(points: list[Pixel]) -> tuple[numpy.ndarray]:
     """Map a list of (x,y) tuples to a tuple of x values (as numpy array) and y values (numpy array)
 
     Args:
@@ -292,7 +322,7 @@ def _make_numpy(points: List[Pixel]) -> Tuple[numpy.ndarray]:
 
 def _pixels_for_linestring(
         linestring: LineString
-) -> List[Pixel]:
+) -> list[Pixel]:
     """Get pixels crossed while traversing a linestring
 
     Args:
@@ -301,23 +331,24 @@ def _pixels_for_linestring(
     Returns:
         List[Pixel]: List of x,y tuples in pixel space
     """
-    pixels = _pixels_for_line_seg(linestring.coords[0], linestring.coords[1])
-    for pnt1, pnt2 in zip(linestring.coords[1:-1], linestring.coords[2:]):
+    coords = linestring.coords
+    pixels = _pixels_for_line_seg(coords[0], coords[1])
+    for pnt1, pnt2 in zip(coords[1:-1], coords[2:]):
         pixels.extend(_pixels_for_line_seg(pnt1, pnt2, exclude_first=True))
     return pixels
 
 
 # pylint: disable=invalid-name
 def _pixels_for_line_seg(
-        pnt1: Tuple[float, float],
-        pnt2: Tuple[float, float],
+        pnt1: tuple[int, int],
+        pnt2: tuple[int, int],
         exclude_first: bool = False
-) -> List[Pixel]:
+) -> list[Pixel]:
     """Get pixels crossed while traversing a line segment
 
     Args:
-        pnt1 (Tuple[float, float]): One of the line segment end points in x,y
-        pnt2 (Tuple[float, float]): The other line segment end point in x,y
+        pnt1 (Pixel): One of the line segment end points in x,y
+        pnt2 (Pixel): The other line segment end point in x,y
         exclude_first (bool): If true, pnt1 is not included in returned list
 
     Returns:
@@ -325,39 +356,37 @@ def _pixels_for_line_seg(
     """
     x1, y1 = pnt1
     x2, y2 = pnt2
-    dx = float(x2 - x1)
-    dy = float(y2 - y1)
 
-    pixels = []
-    if not exclude_first:
-        pixels.append((int(x1), int(y1)))
+    if int(x1) != x1 or int(x2) != x2 or int(y1) != y1 or int(y2) != y2:
+        raise TypeError('Line segment end points coordinates must be integers')
+    x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
+
+    dx = x2 - x1
+    dy = y2 - y1
 
     if abs(dy) <= abs(dx):
         slope = dy / dx if dx != 0 else 0
         intercept = y1 - slope * x1
-        if x2 < x1:
-            x1, y1, x2, y2 = x2, y2, x1, y1
-        while x1 < x2:
-            x1 += 1
-            y1 = round_(slope * x1 + intercept)
-            pixels.append((int(x1), y1))
+        step = 1 if x1 < x2 else -1
+        if exclude_first:
+            x1 += step
+        pixels = [(x, round_half_away(slope * x + intercept)) for x in range(x1, x2+step, step)]
     else:
         slope = dx / dy
         intercept = x1 - slope * y1
-        if y2 < y1:
-            x1, y1, x2, y2 = x2, y2, x1, y1
-        while y1 < y2:
-            y1 += 1
-            x1 = round_(slope * y1 + intercept)
-            pixels.append((x1, int(y1)))
+        step = 1 if y1 < y2 else -1
+        if exclude_first:
+            y1 += step
+        pixels = [(round_half_away(slope * y + intercept), y) for y in range(y1, y2+step, step)]
 
     return pixels
 
 
 # pylint: disable=too-many-locals
 def _pixels_for_polygon(
-        polygon_boundary: LinearRing
-) -> List[Pixel]:
+        polygon_boundary: LinearRing,
+        rounding: RoundingMethod = None
+) -> list[Pixel]:
     """Get all pixels in a polygon using a line scan algorithm
 
     Args:
@@ -398,12 +427,20 @@ def _pixels_for_polygon(
     return pixels
 
 
-def _round_x_y(x, y, rounding: Union[str, RoundingMethod]) -> Pixel:
+def _is_coord(arg) -> bool:
+    return isinstance(arg, Iterable) and all([isinstance(v, Number) for v in arg])
+
+
+def _is_coords(arg) -> bool:
+    return isinstance(arg, Iterable) and all([_is_coord(v) for v in arg])
+
+
+def _round(*args, rounding: str | RoundingMethod) -> list[int]:
     if isinstance(rounding, str):
         rounding = RoundingMethod[rounding.upper()]
 
     if rounding is RoundingMethod.ROUND:
-        return (round_(x), round_(y))
+        return [round_half_away(v) for v in args]
     if rounding is RoundingMethod.FLOOR:
-        return (floor(x), floor(y))
-    return (int(x), int(y))
+        return [floor(v) for v in args]
+    return [int(v) for v in args]

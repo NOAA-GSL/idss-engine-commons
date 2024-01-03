@@ -10,6 +10,7 @@
 # ----------------------------------------------------------------------------------
 import functools
 import logging
+import math
 import numpy as np
 
 from numpy import ndarray
@@ -53,16 +54,13 @@ class GeoImage():
         if colors is None:
             colors = _get_grey_scale()
 
-        step = 255./(max-min)
+        step = 255./(max-min) if min != max else 0
         new_shape = [dim * scale for dim in data_grid.shape]+[3]
         rgb_array = np.zeros(new_shape, dtype=np.uint8)
         for idx, x in np.ndenumerate(data_grid):
             color = colors[255] if x == max else colors[int((x-min)*step)]
             i, j = [i*scale for i in idx]
             rgb_array[i:i+scale, j:j+scale] = color
-        print(rgb_array)
-        print(rgb_array.shape)
-        rgb_array[10, 10] = 0
         return GeoImage(proj, rgb_array, scale)
 
     def show(self):
@@ -70,7 +68,6 @@ class GeoImage():
         image.show()
 
     def draw_point(self, i, j, color):
-        print(i, j)
         self.rgb_array[int(i*self.scale), int(j*self.scale)] = color
 
     def draw_line_seg(self, i1, j1, i2, j2, color):
@@ -93,12 +90,11 @@ class GeoImage():
 
         coords = rasterize(shape)
         for i_j in zip(*coords):
-            print((i_j))
             self.rgb_array[*i_j] = color
 
     def set_pixel(self, i, j, color):
-        i *= self.scale
-        j *= self.scale
+        i = math.floor(i)*self.scale
+        j = math.floor(j)*self.scale
         self.rgb_array[i:i+self.scale, j:j+self.scale] = color
 
     def set_pixel_for_shape(self, shape, color):
@@ -110,8 +106,8 @@ class GeoImage():
             self.set_pixel(*i_j, color)
 
     def outline_pixel(self, i, j, color):
-        i *= self.scale
-        j *= self.scale
+        i = math.floor(i)*self.scale
+        j = math.floor(j)*self.scale
         self.rgb_array[i:i+self.scale, j] = color
         self.rgb_array[i:i+self.scale, j+self.scale-1] = color
         self.rgb_array[i, j:j+self.scale] = color
@@ -129,4 +125,3 @@ class GeoImage():
 @functools.cache
 def _get_grey_scale():
     return [(x, x, x) for x in range(0, 256)]
-
