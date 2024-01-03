@@ -13,10 +13,10 @@ import logging
 from collections.abc import Iterable, Sequence
 from math import floor
 from numbers import Number
+from typing import NewType
 
 import numpy
 from shapely import Geometry, LinearRing, LineString, Point, Polygon, from_wkt
-from typing import NewType
 
 from idsse.common.grid_proj import GridProj, RoundingMethod
 from idsse.common.utils import round_half_away
@@ -165,9 +165,9 @@ def rasterize_polygon(
         polygon = from_wkt(polygon)
 
     if isinstance(polygon, Polygon):
-        coords = [[coord for coord in interior.coords] for interior in polygon.interiors]
-        coords.insert(0, [coord for coord in polygon.exterior.coords])
-    elif all([_is_coords(coords) for coords in polygon]):
+        coords = [list(interior.coords) for interior in polygon.interiors]
+        coords.insert(0, list(coord for coord in polygon.exterior.coords))
+    elif all(_is_coords(coords) for coords in polygon):
         coords = polygon
     else:
         raise TypeError(f'Passed geometry is type:{type(polygon)} but must be Polygon')
@@ -260,7 +260,7 @@ def geographic_polygon_to_pixel(
     if isinstance(poly, Polygon):
         exterior = poly.exterior.coords
         interiors = poly.interiors
-    elif all([_is_coords(coords) for coords in poly]):
+    elif all(_is_coords(coords) for coords in poly):
         exterior = poly[0]
         interiors = poly[1:]
     else:
@@ -384,8 +384,7 @@ def _pixels_for_line_seg(
 
 # pylint: disable=too-many-locals
 def _pixels_for_polygon(
-        polygon_boundary: LinearRing,
-        rounding: RoundingMethod = None
+        polygon_boundary: LinearRing
 ) -> list[Pixel]:
     """Get all pixels in a polygon using a line scan algorithm
 
@@ -428,11 +427,11 @@ def _pixels_for_polygon(
 
 
 def _is_coord(arg) -> bool:
-    return isinstance(arg, Iterable) and all([isinstance(v, Number) for v in arg])
+    return isinstance(arg, Iterable) and all(isinstance(v, Number) for v in arg)
 
 
 def _is_coords(arg) -> bool:
-    return isinstance(arg, Iterable) and all([_is_coord(v) for v in arg])
+    return isinstance(arg, Iterable) and all(_is_coord(v) for v in arg)
 
 
 def _round(*args, rounding: str | RoundingMethod) -> list[int]:
