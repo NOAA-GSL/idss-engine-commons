@@ -72,8 +72,8 @@ class GeoImage():
         step = 255./(max_-min_) if min_ != max_ else 0
         new_shape = [dim * scale for dim in data_grid.shape]+[3]
         rgb_array = np.zeros(new_shape, dtype=np.uint8)
-        for idx, x in np.ndenumerate(data_grid):
-            color = colors[255] if x == max_ else colors[int((x-min_)*step)]
+        for idx, value in np.ndenumerate(data_grid):
+            color = colors[255] if value == max_ else colors[int((value-min_)*step)]
             i, j = [i*scale for i in idx]
             rgb_array[i:i+scale, j:j+scale] = color
         return GeoImage(proj, rgb_array, scale)

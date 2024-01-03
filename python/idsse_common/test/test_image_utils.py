@@ -8,7 +8,7 @@
 #     Geary Layne (1)
 #
 # ----------------------------------------------------------------------------------
-# pylint: disable=missing-function-docstring
+# pylint: disable=missing-function-docstring, redefined-outer-name
 import numpy
 
 from pytest import fixture
@@ -39,7 +39,7 @@ def test_geo_image_from_data_grid(proj):
     expected_indices = numpy.repeat(data, 3)
     numpy.testing.assert_array_equal(values, expected_values)
     numpy.testing.assert_array_equal(indices, expected_indices)
-    assert all([cnt == 3 for cnt in counts])
+    assert all(cnt == 3 for cnt in counts)
 
 
 def test_geo_image_from_data_grid_with_scale(proj):
@@ -57,7 +57,7 @@ def test_geo_image_from_data_grid_with_scale(proj):
     expected_indices = numpy.repeat(numpy.repeat(data, [scale, scale, scale], axis=0), scale * 3)
     numpy.testing.assert_array_equal(values, expected_values)
     numpy.testing.assert_array_equal(indices, expected_indices)
-    assert all([cnt == scale * scale * 3 for cnt in counts])
+    assert all(cnt == scale * scale * 3 for cnt in counts)
 
 
 def test_set_pixel(proj):
@@ -65,8 +65,8 @@ def test_set_pixel(proj):
     width, height = 10, 5
     data = numpy.zeros((height, width))
     geo_image = GeoImage.from_data_grid(proj, data, scale=scale)
-    ij = (1.9, 4.9)
-    geo_image.set_pixel(*ij, (100, 100, 100))
+    i_j = (1.9, 4.9)
+    geo_image.set_pixel(*i_j, (100, 100, 100))
 
     values, indices, counts = numpy.unique(geo_image.rgb_array,
                                            return_inverse=True,
@@ -89,8 +89,8 @@ def test_outline_pixel(proj):
     width, height = 10, 5
     data = numpy.zeros((height, width))
     geo_image = GeoImage.from_data_grid(proj, data, scale=scale)
-    ij = (1.1, 2.1)
-    geo_image.outline_pixel(*ij, (100, 100, 100))
+    i_j = (1.1, 2.1)
+    geo_image.outline_pixel(*i_j, (100, 100, 100))
 
     values, indices, counts = numpy.unique(geo_image.rgb_array,
                                            return_inverse=True,
@@ -112,8 +112,8 @@ def test_draw_point(proj):
     width, height = 10, 5
     data = numpy.zeros((height, width))
     geo_image = GeoImage.from_data_grid(proj, data, scale=scale)
-    ij = (1.1, 2.1)
-    geo_image.draw_point(*ij, (100, 0, 0))
+    i_j = (1.1, 2.1)
+    geo_image.draw_point(*i_j, (100, 0, 0))
 
     values, indices, counts = numpy.unique(geo_image.rgb_array,
                                            return_inverse=True,
@@ -131,10 +131,10 @@ def test_draw_line_seg(proj):
     width, height = 10, 5
     data = numpy.zeros((height, width))
     geo_image = GeoImage.from_data_grid(proj, data, scale=scale)
-    ij1 = (1.1, 2.1)
-    ij2 = (1.9, 4.9)
+    i_j_1 = (1.1, 2.1)
+    i_j_2 = (1.9, 4.9)
 
-    geo_image.draw_line_seg(*ij1, *ij2, (100, 0, 0))
+    geo_image.draw_line_seg(*i_j_1, *i_j_2, (100, 0, 0))
 
     values, indices, counts = numpy.unique(geo_image.rgb_array,
                                            return_inverse=True,
