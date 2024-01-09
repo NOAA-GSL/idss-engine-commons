@@ -13,7 +13,8 @@ import json
 import logging
 import math
 import os
-from typing import NamedTuple, Self
+from collections.abc import Sequence
+from typing import Any, NamedTuple, Self
 
 import numpy as np
 from PIL import Image
@@ -52,13 +53,17 @@ class GeoImage():
         colors: ColorPalette | None = None,
         scale: int = 1
     ) -> Self:
-        """Method for building a geographical image from backing data in a ndarray
+        """Method for building a geographical image from previously indexed data in a ndarray.
+        Meaning that the data grid is has been mapped to indexed values that map to the provided
+        color palette
 
         Args:
             proj (GridProj): Grid projection to be used for this geo image, must match data_grid
-            data_grid (np.ndarray): Data to be used as base layer, such as a temperature field
-            colors (ColorPalette | None): The color palette used to map the data grid to color.
-                                          Defaults to None, in which case a grey scale will be used.
+            index_array (np.ndarray): Data to be used as base layer, such as a temperature field,
+                                      that has previously been mapped to color index.
+            colors (ColorPalette | None, optional): The color palette used to map the index grid to
+                                                    color. Defaults to None, in which case a grey
+                                                    scale will be used.
             scale (int, optional): The height and width that a grid cell will be scaled to in the
                                    image. Defaults to 1.
 
@@ -84,13 +89,14 @@ class GeoImage():
         colors: ColorPalette | None = None,
         scale: int = 1
     ) -> Self:
-        """Method for building a geographical image from backing data in a ndarray
+        """Method for building a geographical image from data in a ndarray.
 
         Args:
             proj (GridProj): Grid projection to be used for this geo image, must match data_grid
-            data_grid (np.ndarray): Data to be used as base layer, such as a temperature field
-            colors (ColorPalette | None): The color palette used to map the data grid to color.
-                                          Defaults to None, in which case a grey scale will be used.
+            data_array (np.ndarray): Data to be used as base layer, such as a temperature field.
+            colors (ColorPalette | None, optional): The color palette used to map the data grid to
+                                                    color. Defaults to None, in which case a grey
+                                                    scale will be used.
             scale (int, optional): The height and width that a grid cell will be scaled to in the
                                    image. Defaults to 1.
 
@@ -106,20 +112,34 @@ class GeoImage():
 
     @functools.cached_property
     def shape(self):
+        """Image shape property
+
+        Returns:
+            tuple(int, int): The width and height of this GeoImage object
+        """
         return self.rgb_array.shape
 
     @functools.cached_property
     def width(self):
+        """Image width (first dim) property
+
+        Returns:
+            int: The width of this GeoImage object
+        """
         return self.rgb_array.shape[0]
 
     @functools.cached_property
     def height(self):
+        """Image height (second dim) property
+
+        Returns:
+            int: The height of this GeoImage object
+        """
         return self.rgb_array.shape[1]
 
     def show(self):
         """A convenience method for showing the current state of the image"""
         image = Image.fromarray(np.flipud(np.transpose(self.rgb_array, [1, 0, 2])), mode='RGB')
-        # image = Image.fromarray(self.rgb_array, mode='RGB')
         image.show()
 
     def draw_point(self, i: float, j: float, color: Color, geo: bool = True):
@@ -129,6 +149,8 @@ class GeoImage():
             i (float): Location of the point, corresponding to the first dim
             j (float): Location of the point, corresponding to the second dim
             color (Color): RGB value as a tuple of three values between 0 and 255
+            geo (bool): Flag that indicates if the i,j are geographic (ie lon/lat) or pixel.
+                        Defaults to True.
         """
         if geo:
             i, j = self.proj.map_geo_to_pixel(i, j)
@@ -150,6 +172,8 @@ class GeoImage():
             i_2 (float): Location of the second point, corresponding to the first dim
             j_2 (float): Location of the second point, corresponding to the first dim
             color (Color): RGB value as a tuple of three values between 0 and 255
+            geo (bool): Flag that indicates if the i,j's are geographic (ie lon/lat) or pixel.
+                        Defaults to True.
         """
         self.draw_shape(f'LINESTRING ({i_1} {j_1}, {i_2} {j_2})', color, geo=geo)
 
@@ -165,7 +189,8 @@ class GeoImage():
         Args:
             shape (Geometry): A Shapely geometry
             color (Color): RGB value as a tuple of three values between 0 and 255
-            geo (bool): Indication that the shape is specified by geographic coordinates (lon/lat)
+            geo (bool): Indication that the shape is specified by geographic coordinates (lon/lat).
+                        Defaults to True.
 
         Raises:
             TypeError: Raised when the passed shape in not of a supported type
@@ -200,7 +225,8 @@ class GeoImage():
         Args:
             shape (Geometry): A Shapely geometry
             color (Color): RGB value as a tuple of three values between 0 and 255
-            geo (bool): Indication that the shape is specified by geographic coordinates (lon/lat)
+            geo (bool): Indication that the shape is specified by geographic coordinates (lon/lat).
+                        Defaults to True.
 
         Raises:
             TypeError: Raised when the passed shape in not of a supported type
@@ -222,13 +248,13 @@ class GeoImage():
         elif isinstance(shape, MultiPolygon):
             for poly in shape.geoms:
                 self.draw_shape(poly, color, False)
+            return
         else:
             raise TypeError(f'Passed shape (with type: {type(shape)}) in not currently supported')
 
         coords = rasterize(shape)
 
         for i, j in zip(*coords):
-            # print('\t', i_j)
             if 0 <= i < self.width and 0 <= j < self.height:
                 self.rgb_array[i, j] = color
 
@@ -239,6 +265,8 @@ class GeoImage():
             i (float): Location of the point, corresponding to the first dim
             j (float): Location of the point, corresponding to the second dim
             color (Color): RGB value as a tuple of three values between 0 and 255
+            geo (bool): Flag that indicates if the i,j are geographic (ie lon/lat) or pixel.
+                        Defaults to True.
         """
         if geo:
             i, j = self.proj.map_geo_to_pixel(i, j)
@@ -253,6 +281,8 @@ class GeoImage():
         Args:
             shape (Geometry): A Shapely geometry
             color (Color): RGB value as a tuple of three values between 0 and 255
+            geo (bool): Flag that indicates if the shape vertices are geographic (ie lon/lat)
+                        or pixel. Defaults to True.
         """
         if isinstance(shape, str):
             shape = from_wkt(shape)
@@ -269,6 +299,8 @@ class GeoImage():
             i (float): Location of the point, corresponding to the first dim
             j (float): Location of the point, corresponding to the second dim
             color (Color): RGB value as a tuple of three values between 0 and 255
+            geo (bool): Flag that indicates if the shape vertices are geographic (ie lon/lat)
+                        or pixel. Defaults to True.
         """
         if geo:
             i, j = self.proj.map_geo_to_pixel(i, j)
@@ -287,6 +319,8 @@ class GeoImage():
         Args:
             shape (Geometry): A Shapely geometry
             color (Color): RGB value as a tuple of three values between 0 and 255
+            geo (bool): Flag that indicates if the shape vertices are geographic (ie lon/lat)
+                        or pixel. Defaults to True.
         """
         if isinstance(shape, str):
             shape = from_wkt(shape)
@@ -296,10 +330,23 @@ class GeoImage():
             self.outline_pixel(*i_j, color, geo=False)
 
     def draw_state(self, state: str, color: Color):
+        """Draw state to image where all interior pixels are set to color
+
+        Args:
+            state (str): State name as string (Cap first letter of word, all other lower)
+            color (Color): RGB value as a tuple of three values between 0 and 255
+        """
         states = _get_states_json()
         self.draw_shape(states[state], color)
 
-    def draw_state_boundary(self, state: str, color: Color):
+    def draw_state_boundary(self, state: str | Sequence[str], color: Color):
+        """Draw state to image where all boundary pixels are set to color
+
+        Args:
+            state (str | Sequence[str]): State name or sequence of state names
+                                         (Cap firs, lower rest)
+            color (Color): RGB value as a tuple of three values between 0 and 255
+        """
         states = _get_states_json()
         if state == 'All':
             for name in states:
@@ -311,7 +358,34 @@ class GeoImage():
                 self.draw_linestring(states[name], color)
 
 
-def normalize(array, min_value=None, max_value=None, missing_value=None, N=None):
+def normalize(
+    array: np.ndarray,
+    min_value: float = None,
+    max_value: float = None,
+    missing_value: float = None
+) -> np.ndarray | np.ma.MaskedArray:
+    """Normalize a data array, map the values in array to between [0, 1]
+
+    Args:
+        array (np.ndarray): Input data array
+        min_value (float, optional): If provided, the minimum value to to be mapped.
+                                     Will map to zero, and all values less will map to -1
+                                     (-1 is out of range, but will be masked). Defaults to None.
+        max_value (float, optional): If provided, the maximum value to to be mapped.
+                                     Will map to 1, and all values greater will map to 2
+                                     (2 is out of range, but will be masked). Defaults to None.
+        missing_value (float, optional): If provided, the value representing fill, which will not
+                                     be mapped to [0, 1]. Will map to np.nan, (NaN is not a valid
+                                     float between [0, 1], but will be masked). Defaults to None.
+
+    Returns:
+        np.ndarray | np.ma.MaskedArray: If all data is mapped to [0, 1] the returned array will be
+                                        an unmasked ndarray, else a masked array will be returned,
+                                        masking all values not in range.
+                                        Below min -> -1
+                                        Above max ->  2
+                                        Fill      -> np.nan
+    """
     mask = array.mask if np.ma.is_masked(array) else np.isnan(array)
 
     min_mask = max_mask = missing_mask = None
@@ -361,12 +435,50 @@ def normalize(array, min_value=None, max_value=None, missing_value=None, N=None)
     return array
 
 
-def scale_to_color_palette(norm_array, num_colors,
-                           with_under=False, with_over=False, with_fill=False):
+def scale_to_color_palette(
+        norm_array: np.ndarray | np.ma.MaskedArray,
+        num_colors: int,
+        with_under: bool = False,
+        with_over: bool = False,
+        with_fill: bool = False
+) -> np.ndarray:
+    """Take a normalized array and build index array relative to a color palette.
 
-    under_idx = num_colors if with_under else 0
-    over_idx = num_colors + 1 if with_over else num_colors-1
-    bad_idx = num_colors + 2 if with_fill else 0
+    Args:
+        norm_array (np.ndarray | np.ma.MaskedArray): If norm_array is np.ndarray all values must be
+                                                     between [0, 1], else if it is a masked array
+                                                     all unmasked values must be between [0, 1] and
+                                                     all masked values should be -1, 2 or np.nan.
+        num_colors (int): The number of colors in the color palette that will be associated with the
+                          output array
+        with_under (bool, optional): Indicates of the associated color palette has a color used for
+                                     values below 0, if so the index for that color is the one more
+                                     than last valid index (typically num_colors).
+                                     Defaults to False.
+        with_over (bool, optional): Indicates of the associated color palette has a color used for
+                                     values above 1, if so the index for that color is the one more
+                                     than last valid index (typically num_colors+1).
+                                     Defaults to False.
+        with_fill (bool, optional): Indicates of the associated color palette as a color used for
+                                     fill values, if so the index for that color is the one more
+                                     than last valid index (typically num_colors+2).
+                                     Defaults to False.
+
+    Returns:
+        np.ndarray: Returns an array with values that can be used with a color palette lookup table.
+    """
+    next_idx = num_colors
+    under_idx = 0
+    if with_under:
+        under_idx = next_idx
+        next_idx += 1
+    over_idx = num_colors-1
+    if with_over:
+        over_idx = next_idx
+        next_idx += 1
+    bad_idx = 0
+    if with_fill:
+        bad_idx = next_idx
 
     with np.errstate(invalid="ignore"):
         array = (norm_array * (num_colors-1)).astype(int)
@@ -381,7 +493,8 @@ def scale_to_color_palette(norm_array, num_colors,
     return array
 
 
-def _get_states_json():
+def _get_states_json() -> dict[str, Any]:
+    """Load geojson of US states into a dict"""
     current_path = os.path.dirname(os.path.realpath(__file__))
     states_filename = os.path.join(current_path, 'resources', 'us_states.json')
     with open(states_filename, 'r', encoding='utf8') as file:

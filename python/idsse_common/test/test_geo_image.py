@@ -10,6 +10,7 @@
 # ----------------------------------------------------------------------------------
 # pylint: disable=missing-function-docstring, redefined-outer-name
 import numpy
+import os
 
 from pytest import fixture
 
@@ -186,6 +187,28 @@ def test_draw_polygon(proj):
     numpy.testing.assert_array_equal(numpy.where(indices == 1)[0], expected_indices)
 
 
+def test_draw_multi_polygon(proj):
+    scale = 3
+    width, height = 4, 4
+    data = numpy.zeros((height, width))
+    geo_image = GeoImage.from_data_grid(proj, data, scale=scale)
+
+    multi_poly = ('MULTIPOLYGON (((1.1 1.1, 1.1 1.9, 1.9 1.9, 1.9 1.1, 1.1 1.1)),'
+                  '((2.1 2.1, 2.5 2.9, 2.9 2.1, 2.1 2.1)))')
+    geo_image.draw_shape(multi_poly, (0, 100, 0), geo=False)
+
+    values, indices, counts = numpy.unique(geo_image.rgb_array,
+                                           return_inverse=True,
+                                           return_counts=True)
+
+    # values will be 0 or 100 (for polygon) and 0 everywhere else
+    numpy.testing.assert_array_equal(values, [0, 100])
+    numpy.testing.assert_array_equal(counts, [417, 15])
+    expected_indices = [118, 121, 124, 154, 157, 160, 190, 193,
+                        196, 235, 238, 271, 274, 277, 307]
+    numpy.testing.assert_array_equal(numpy.where(indices == 1)[0], expected_indices)
+
+
 def test_draw_geo_polygon(proj):
     scale = 10
     width, height = 5, 5
@@ -244,32 +267,86 @@ def test_set_outline_pixel_for_shape(proj):
     numpy.testing.assert_array_equal(numpy.where(indices == 2)[0], expected_indices)
 
 
-def test_add_state(proj):
-    # m = 3
-    # data_grid = numpy.array([[0, 1, 2],
-    #                          [m, 4, 5]])
-    # data_grid = normalize(data_grid, min_value=1, max_value=4, missing_value=m)
+def test_normalize():
+    data_array = numpy.array([[0, 1, 2],
+                              [3, 4, 5]])
+    norm_array = normalize(data_array)
 
-    # data_grid = scale_to_color_palette(data_grid, 256, True, True, True)
+    numpy.testing.assert_allclose(norm_array, [[0.0, 0.2, 0.4],
+                                               [0.6, 0.8, 1.0]], atol=0.00001)
 
-    # print('look after this')
-    # # data_grid = numpy.array([[0, 100],
-    # #                          [100, 255]], dtype=numpy.int16)
-    # geo_image = GeoImage.from_index_grid(proj, data_grid, scale=10)
-    # geo_image.show()
-    # # print(proj.shape)
-    # assert False
-    data = numpy.array(range(proj.width*proj.height)).reshape((proj.width, proj.height))
-    import os
+
+def test_normalize_with_excludes():
+    data_array = numpy.array([[0, 1, 2],
+                              [3, 4, 5]])
+    norm_array = normalize(data_array, min_value=1, max_value=4, missing_value=3)
+
+    numpy.testing.assert_allclose(norm_array, [[-1.0, 0.0, 0.3333333],
+                                               [numpy.nan, 1.0, 2.0]], atol=0.00001)
+    numpy.testing.assert_array_equal(norm_array.mask, [[True, False, False],
+                                                       [True, False, True]])
+
+
+def test_scale_to_color_palette():
+    norm_array = numpy.array([[0.0, 0.2, 0.4],
+                              [0.6, 0.8, 1.0]])
+    index_array = scale_to_color_palette(norm_array, 256)
+
+    numpy.testing.assert_array_equal(index_array, [[0, 51, 102],
+                                                   [153, 204, 255]])
+
+
+def test_scale_to_color_palette_force_excludes():
+    norm_array = numpy.array([[-1.0, 0.0, 0.3333333],
+                              [numpy.nan, 1.0, 2.0]])
+    index_array = scale_to_color_palette(norm_array, 256)
+
+    numpy.testing.assert_array_equal(index_array, [[0, 0, 84],
+                                                   [0, 255, 255]])
+
+
+def test_scale_to_color_palette_with_excludes():
+    norm_array = numpy.array([[-1.0, 0.0, 0.3333333],
+                              [numpy.nan, 1.0, 2.0]])
+    index_array = scale_to_color_palette(norm_array, 256, True, True, True)
+
+    numpy.testing.assert_array_equal(index_array, [[256, 0, 84],
+                                                   [258, 255, 257]])
+
+
+def test_add_one_state(proj):
+    data = numpy.zeros((proj.width, proj.height))
+    geo_image = GeoImage.from_data_grid(proj, data)
+    geo_image.draw_state_boundary('Florida', color=(255, 0, 0))
+
+    # confirm that at least three of the pixel along the state boundary are colored red
+    numpy.testing.assert_array_equal(geo_image.rgb_array[1665, 320], [255, 0, 0])
+    numpy.testing.assert_array_equal(geo_image.rgb_array[1850, 122], [255, 0, 0])
+    numpy.testing.assert_array_equal(geo_image.rgb_array[1801, 107], [255, 0, 0])
+
+
+def test_add_list_of_states(proj):
+    data = numpy.zeros((proj.width, proj.height))
+    geo_image = GeoImage.from_data_grid(proj, data)
+    geo_image.draw_state_boundary(['Nevada', 'Iowa', 'Delaware'], color=(255, 0, 0))
+
+    # confirm that at least three of the pixel along state boundaries are colored red
+    numpy.testing.assert_array_equal(geo_image.rgb_array[609, 678], [255, 0, 0])
+    numpy.testing.assert_array_equal(geo_image.rgb_array[1263, 792], [255, 0, 0])
+    numpy.testing.assert_array_equal(geo_image.rgb_array[1967, 797], [255, 0, 0])
+
+
+def test_add_all_states(proj):
     current_path = os.path.dirname(os.path.realpath(__file__))
     filename = os.path.join(current_path, 'resources', 'nbm_temp-202211111100-202211121300.nc')
     attrs, data = read_netcdf(filename)
     if attrs['data_order'] == 'latitude,longitude':
         data = numpy.transpose(data)
-    geo_image = GeoImage.from_data_grid(proj, data, scale=3)
-    # geo_image.draw_state_boundaries('Ohio', (0, 0, 0))
+    geo_image = GeoImage.from_data_grid(proj, data)
     geo_image.draw_state_boundary('All', color=(255, 0, 0))
-    geo_image.outline_pixel(-105, 40, (0, 255, 0))
-    # geo_image.show()
 
-    assert True
+    # confirm that at least three of the pixel along state boundaries are colored red
+    numpy.testing.assert_array_equal(geo_image.rgb_array[1707, 862], [255, 0, 0])
+    numpy.testing.assert_array_equal(geo_image.rgb_array[742, 889], [255, 0, 0])
+    numpy.testing.assert_array_equal(geo_image.rgb_array[1206, 229], [255, 0, 0])
+    # geo_image.show()
