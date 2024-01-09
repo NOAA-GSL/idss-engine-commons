@@ -16,7 +16,7 @@ from numbers import Number
 from typing import NewType
 
 import numpy
-from shapely import Geometry, LinearRing, LineString, Point, Polygon, from_wkt
+from shapely import Geometry, LinearRing, LineString, MultiPolygon, Point, Polygon, from_wkt
 
 from idsse.common.grid_proj import GridProj, RoundingMethod
 from idsse.common.utils import round_half_away
@@ -60,7 +60,17 @@ def rasterize(
         return rasterize_linestring(geometry, grid_proj, rounding)
     if isinstance(geometry, Polygon):
         return rasterize_polygon(geometry, grid_proj, rounding)
-    raise TypeError(f'Passed geometry (type:{type(geometry)}) is not supported')
+    if isinstance(geometry, MultiPolygon):
+        x_coords = numpy.empty(0, dtype=numpy.int32)
+        y_coords = numpy.empty(0, dtype=numpy.int32)
+        for poly in geometry.geoms:
+            poly_coords = rasterize_polygon(poly, grid_proj, rounding)
+            x_coords = numpy.concatenate((x_coords, poly_coords[0]))
+            y_coords = numpy.concatenate((y_coords, poly_coords[1]))
+
+        return x_coords, y_coords
+
+    raise TypeError(f'Passed geometry is type:{type(geometry)}, which is not supported')
 
 
 def rasterize_point(
@@ -92,7 +102,7 @@ def rasterize_point(
     elif _is_coord(point):
         coord = point
     else:
-        raise TypeError(f'Passed geometry is type:{type(point)} but must be Point')
+        raise TypeError(f'Passed geometry is type:{type(point)}, but must be Point')
 
     if grid_proj is not None:
         return _make_numpy([grid_proj.map_geo_to_pixel(*coord, rounding)])
@@ -120,17 +130,34 @@ def rasterize_linestring(
         TypeError: When the line_string arg does not represent a LineString
 
     Returns:
-        Tuple[numpy.array]: First array represent the x-coordinate and the seconde the y.
+        tuple[numpy.array]: First array represent the x-coordinate and the seconde the y.
     """
     if isinstance(linestring, str):
         linestring = from_wkt(linestring)
+
+    if isinstance(linestring, Polygon):
+        x_coords, y_coords = rasterize_linestring(linestring.exterior)
+        for interior in linestring.interiors:
+            interior_coords = rasterize_linestring(interior)
+            x_coords = numpy.concatenate((x_coords, interior_coords[0]))
+            y_coords = numpy.concatenate((y_coords, interior_coords[1]))
+        return x_coords, y_coords
+
+    if isinstance(linestring, MultiPolygon):
+        x_coords = numpy.empty(0, dtype=numpy.int32)
+        y_coords = numpy.empty(0, dtype=numpy.int32)
+        for poly in linestring.geoms:
+            interior_coords = rasterize_linestring(poly)
+            x_coords = numpy.concatenate((x_coords, interior_coords[0]))
+            y_coords = numpy.concatenate((y_coords, interior_coords[1]))
+        return x_coords, y_coords
 
     if isinstance(linestring, LineString):
         coords = linestring.coords
     elif _is_coords(linestring):
         coords = linestring
     else:
-        raise TypeError(f'Passed geometry is type:{type(linestring)} but must be LineString')
+        raise TypeError(f'Passed geometry is type:{type(linestring)}, but must be LineString')
 
     if grid_proj is not None:
         linestring = geographic_linestring_to_pixel(coords, grid_proj, rounding)
@@ -170,7 +197,7 @@ def rasterize_polygon(
     elif all(_is_coords(coords) for coords in polygon):
         coords = polygon
     else:
-        raise TypeError(f'Passed geometry is type:{type(polygon)} but must be Polygon')
+        raise TypeError(f'Passed geometry is type:{type(polygon)}, but must be Polygon')
 
     if grid_proj is not None:
         polygon = geographic_polygon_to_pixel(coords, grid_proj, rounding)
@@ -182,7 +209,7 @@ def rasterize_polygon(
     return pixels_in_polygon(polygon)
 
 
-def geographic_geometry_to_pixel(
+def geographic_to_pixel(
         geo: Geometry,
         grid_proj: GridProj,
         rounding: RoundingMethod | None = None
@@ -205,7 +232,11 @@ def geographic_geometry_to_pixel(
         return geographic_linestring_to_pixel(geo, grid_proj, rounding)
     if isinstance(geo, Polygon):
         return geographic_polygon_to_pixel(geo, grid_proj, rounding)
-    raise ValueError('Passed geometry is not of supported types')
+    if isinstance(geo, MultiPolygon):
+        return MultiPolygon([geographic_polygon_to_pixel(poly, grid_proj, rounding)
+                             for poly in geo.geoms])
+
+    raise ValueError(f'Passed geometry is type:{type(geo)}, which is not of supported types')
 
 
 def geographic_linestring_to_pixel(
@@ -266,9 +297,6 @@ def geographic_polygon_to_pixel(
     else:
         raise TypeError(f'Geometry must be a Polygon but is a {type(poly)}')
 
-    # exterior = [grid_proj.map_geo_to_pixel(*ll, rounding) for ll in poly.exterior.coords]
-    # interiors = [[grid_proj.map_geo_to_pixel(*ll, rounding) for ll in interior.coords]
-    #              for interior in poly.interiors]
     exterior = list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*exterior)), rounding)))
     interiors = [list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*interior.coords)), rounding)))
                  for interior in interiors]

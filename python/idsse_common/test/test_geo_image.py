@@ -13,8 +13,9 @@ import numpy
 
 from pytest import fixture
 
+from idsse.common.geo_image import GeoImage, normalize, scale_to_color_palette
 from idsse.common.grid_proj import GridProj
-from idsse.common.image_utils import GeoImage
+from idsse.common.netcdf_io import read_netcdf
 
 
 @fixture
@@ -66,14 +67,14 @@ def test_set_pixel(proj):
     data = numpy.zeros((height, width))
     geo_image = GeoImage.from_data_grid(proj, data, scale=scale)
     i_j = (1.9, 4.9)
-    geo_image.set_pixel(*i_j, (100, 100, 100))
+    geo_image.set_pixel(*i_j, (100, 100, 100), geo=False)
 
     values, indices, counts = numpy.unique(geo_image.rgb_array,
                                            return_inverse=True,
                                            return_counts=True)
-    # values will be 100 (for set pixel) and 255 everywhere else
-    numpy.testing.assert_array_equal(values, [100, 255])
-    numpy.testing.assert_array_equal(counts, [75, 3675])
+    # values will be 100 (for set pixel) and 0 everywhere else
+    numpy.testing.assert_array_equal(values, [0, 100])
+    numpy.testing.assert_array_equal(counts, [3675, 75])
     expected_indices = [810, 811, 812, 813, 814, 815, 816, 817, 818, 819, 820,
                         821, 822, 823, 824, 960, 961, 962, 963, 964, 965, 966,
                         967, 968, 969, 970, 971, 972, 973, 974, 1110, 1111, 1112,
@@ -81,7 +82,7 @@ def test_set_pixel(proj):
                         1124, 1260, 1261, 1262, 1263, 1264, 1265, 1266, 1267, 1268, 1269,
                         1270, 1271, 1272, 1273, 1274, 1410, 1411, 1412, 1413, 1414, 1415,
                         1416, 1417, 1418, 1419, 1420, 1421, 1422, 1423, 1424]
-    numpy.testing.assert_array_equal(numpy.where(indices == 0)[0], expected_indices)
+    numpy.testing.assert_array_equal(numpy.where(indices == 1)[0], expected_indices)
 
 
 def test_outline_pixel(proj):
@@ -90,21 +91,21 @@ def test_outline_pixel(proj):
     data = numpy.zeros((height, width))
     geo_image = GeoImage.from_data_grid(proj, data, scale=scale)
     i_j = (1.1, 2.1)
-    geo_image.outline_pixel(*i_j, (100, 100, 100))
+    geo_image.outline_pixel(*i_j, (100, 100, 100), geo=False)
 
     values, indices, counts = numpy.unique(geo_image.rgb_array,
                                            return_inverse=True,
                                            return_counts=True)
 
-    # values will be 100 (for outlined pixel) and 255 everywhere else
-    numpy.testing.assert_array_equal(values, [100, 255])
-    numpy.testing.assert_array_equal(counts, [48, 3702])
+    # values will be 100 (for outlined pixel) and 0 everywhere else
+    numpy.testing.assert_array_equal(values, [0, 100])
+    numpy.testing.assert_array_equal(counts, [3702, 48])
     expected_indices = [780, 781, 782, 783, 784, 785, 786, 787, 788, 789, 790,
                         791, 792, 793, 794, 930, 931, 932, 942, 943, 944, 1080,
                         1081, 1082, 1092, 1093, 1094, 1230, 1231, 1232, 1242, 1243, 1244,
                         1380, 1381, 1382, 1383, 1384, 1385, 1386, 1387, 1388, 1389, 1390,
                         1391, 1392, 1393, 1394]
-    numpy.testing.assert_array_equal(numpy.where(indices == 0)[0], expected_indices)
+    numpy.testing.assert_array_equal(numpy.where(indices == 1)[0], expected_indices)
 
 
 def test_draw_point(proj):
@@ -113,15 +114,15 @@ def test_draw_point(proj):
     data = numpy.zeros((height, width))
     geo_image = GeoImage.from_data_grid(proj, data, scale=scale)
     i_j = (1.1, 2.1)
-    geo_image.draw_point(*i_j, (100, 0, 0))
+    geo_image.draw_point(*i_j, (100, 0, 0), geo=False)
 
     values, indices, counts = numpy.unique(geo_image.rgb_array,
                                            return_inverse=True,
                                            return_counts=True)
 
-    # values will be 0 and 100 (for single point) and 255 everywhere else
-    numpy.testing.assert_array_equal(values, [0, 100, 255])
-    numpy.testing.assert_array_equal(counts, [2, 1, 14997])
+    # values will be 0 and 100 (for single point) and 0 everywhere else
+    numpy.testing.assert_array_equal(values, [0, 100])
+    numpy.testing.assert_array_equal(counts, [14999, 1])
     expected_indices = [3363]
     numpy.testing.assert_array_equal(numpy.where(indices == 1)[0], expected_indices)
 
@@ -134,15 +135,15 @@ def test_draw_line_seg(proj):
     i_j_1 = (1.1, 2.1)
     i_j_2 = (1.9, 4.9)
 
-    geo_image.draw_line_seg(*i_j_1, *i_j_2, (100, 0, 0))
+    geo_image.draw_line_seg(*i_j_1, *i_j_2, (100, 0, 0), geo=False)
 
     values, indices, counts = numpy.unique(geo_image.rgb_array,
                                            return_inverse=True,
                                            return_counts=True)
 
-    # values will be 0 or 100 (for line seg) and 255 everywhere else
-    numpy.testing.assert_array_equal(values, [0, 100, 255])
-    numpy.testing.assert_array_equal(counts, [282, 141, 374577])
+    # values will be 0 or 100 (for line seg) and 0 everywhere else
+    numpy.testing.assert_array_equal(values, [0, 100])
+    numpy.testing.assert_array_equal(counts, [374859, 141])
     expected_indices = [82815, 82818, 84321, 84324, 84327, 84330, 85833, 85836,
                         85839, 87342, 87345, 87348, 87351, 88854, 88857, 88860,
                         90363, 90366, 90369, 90372, 91875, 91878, 91881, 93384,
@@ -166,21 +167,58 @@ def test_draw_line_seg(proj):
 
 def test_draw_polygon(proj):
     scale = 3
-    width, height = 10, 5
+    width, height = 3, 3
     data = numpy.zeros((height, width))
     geo_image = GeoImage.from_data_grid(proj, data, scale=scale)
 
-    geo_image.draw_shape('POLYGON((1.1 1.1, 1.5 1.9, 1.9 1.1, 1.1 1.1))', (0, 100, 100))
+    geo_image.draw_shape('POLYGON((1.1 1.1, 1.5 1.9, 1.9 1.1, 1.1 1.1))',
+                         (0, 100, 0),
+                         geo=False)
 
     values, indices, counts = numpy.unique(geo_image.rgb_array,
                                            return_inverse=True,
                                            return_counts=True)
 
-    # values will be 0 or 100 (for polygon) and 255 everywhere else
-    numpy.testing.assert_array_equal(values, [0, 100, 255])
-    numpy.testing.assert_array_equal(counts, [6, 12, 1332])
-    expected_indices = [279, 282, 369, 372, 375, 459]
-    numpy.testing.assert_array_equal(numpy.where(indices == 0)[0], expected_indices)
+    # values will be 0 or 100 (for polygon) and 0 everywhere else
+    numpy.testing.assert_array_equal(values, [0, 100])
+    numpy.testing.assert_array_equal(counts, [237, 6])
+    expected_indices = [91, 94, 118, 121, 124, 145]
+    numpy.testing.assert_array_equal(numpy.where(indices == 1)[0], expected_indices)
+
+
+def test_draw_geo_polygon(proj):
+    scale = 10
+    width, height = 5, 5
+    data = numpy.zeros((height, width))
+    geo_image = GeoImage.from_data_grid(proj, data, scale=scale)
+
+    lon_lat_1 = proj.map_pixel_to_geo(1.3, 1.9)
+    lon_lat_2 = proj.map_pixel_to_geo(3.5, 2.7)
+    lon_lat_3 = proj.map_pixel_to_geo(3.0, 1.5)
+    poly_wkt = (f'POLYGON(({lon_lat_1[0]} {lon_lat_1[1]}, {lon_lat_2[0]} {lon_lat_2[1]}, '
+                f'{lon_lat_3[0]} {lon_lat_3[1]}, {lon_lat_1[0]} {lon_lat_1[1]}))')
+
+    geo_image.draw_shape(poly_wkt, (0, 0, 100))
+
+    values, indices, counts = numpy.unique(geo_image.rgb_array,
+                                           return_inverse=True,
+                                           return_counts=True)
+
+    # values will be 0 or 100 (for polygon) and 0 everywhere else
+    numpy.testing.assert_array_equal(values, [0, 100])
+    numpy.testing.assert_array_equal(counts, [7388, 112])
+    expected_indices = [2006, 2156, 2306, 2309, 2456, 2459, 2606, 2609, 2753, 2756, 2759,
+                        2762, 2903, 2906, 2909, 2912, 3053, 3056, 3059, 3062, 3203, 3206,
+                        3209, 3212, 3215, 3353, 3356, 3359, 3362, 3365, 3503, 3506, 3509,
+                        3512, 3515, 3650, 3653, 3656, 3659, 3662, 3665, 3668, 3800, 3803,
+                        3806, 3809, 3812, 3815, 3818, 3950, 3953, 3956, 3959, 3962, 3965,
+                        3968, 3971, 4100, 4103, 4106, 4109, 4112, 4115, 4118, 4121, 4250,
+                        4253, 4256, 4259, 4262, 4265, 4268, 4271, 4400, 4403, 4406, 4409,
+                        4412, 4415, 4418, 4421, 4424, 4547, 4550, 4553, 4556, 4559, 4562,
+                        4565, 4568, 4571, 4574, 4706, 4709, 4712, 4715, 4718, 4721, 4724,
+                        4862, 4865, 4868, 4871, 4874, 4877, 5018, 5021, 5024, 5027, 5174,
+                        5177, 5330]
+    numpy.testing.assert_array_equal(numpy.where(indices == 1)[0], expected_indices)
 
 
 def test_set_outline_pixel_for_shape(proj):
@@ -189,18 +227,49 @@ def test_set_outline_pixel_for_shape(proj):
     data = numpy.zeros((height, width))
     geo_image = GeoImage.from_data_grid(proj, data, scale=scale)
 
-    geo_image.set_pixel_for_shape('LINESTRING(1.5 7.5, 3.25 8.75)', (0, 100, 100))
-    geo_image.outline_pixel_for_shape('POINT(2.3 4)', (1, 100, 100))
+    geo_image.set_pixel_for_shape('LINESTRING(1.5 7.5, 3.25 8.75)', (1, 100, 100), geo=False)
+    geo_image.outline_pixel_for_shape('POINT(2.3 4)', (2, 100, 100), geo=False)
 
     values, indices, counts = numpy.unique(geo_image.rgb_array,
                                            return_inverse=True,
                                            return_counts=True)
 
-    numpy.testing.assert_array_equal(values, [0, 1, 100, 255])
-    numpy.testing.assert_array_equal(counts, [27, 8, 70, 1245])
+    numpy.testing.assert_array_equal(values, [0, 1, 2, 100])
+    numpy.testing.assert_array_equal(counts, [1245, 27, 8, 70])
     expected_indices = [333, 336, 339, 423, 426, 429, 513, 516, 519, 612, 615,
                         618, 702, 705, 708, 792, 795, 798, 882, 885, 888, 972,
                         975, 978, 1062, 1065, 1068]
-    numpy.testing.assert_array_equal(numpy.where(indices == 0)[0], expected_indices)
-    expected_indices = [576, 579, 582, 666, 672, 756, 759, 762]
     numpy.testing.assert_array_equal(numpy.where(indices == 1)[0], expected_indices)
+    expected_indices = [576, 579, 582, 666, 672, 756, 759, 762]
+    numpy.testing.assert_array_equal(numpy.where(indices == 2)[0], expected_indices)
+
+
+def test_add_state(proj):
+    # m = 3
+    # data_grid = numpy.array([[0, 1, 2],
+    #                          [m, 4, 5]])
+    # data_grid = normalize(data_grid, min_value=1, max_value=4, missing_value=m)
+
+    # data_grid = scale_to_color_palette(data_grid, 256, True, True, True)
+
+    # print('look after this')
+    # # data_grid = numpy.array([[0, 100],
+    # #                          [100, 255]], dtype=numpy.int16)
+    # geo_image = GeoImage.from_index_grid(proj, data_grid, scale=10)
+    # geo_image.show()
+    # # print(proj.shape)
+    # assert False
+    data = numpy.array(range(proj.width*proj.height)).reshape((proj.width, proj.height))
+    import os
+    current_path = os.path.dirname(os.path.realpath(__file__))
+    filename = os.path.join(current_path, 'resources', 'nbm_temp-202211111100-202211121300.nc')
+    attrs, data = read_netcdf(filename)
+    if attrs['data_order'] == 'latitude,longitude':
+        data = numpy.transpose(data)
+    geo_image = GeoImage.from_data_grid(proj, data, scale=3)
+    # geo_image.draw_state_boundaries('Ohio', (0, 0, 0))
+    geo_image.draw_state_boundary('All', color=(255, 0, 0))
+    geo_image.outline_pixel(-105, 40, (0, 255, 0))
+    # geo_image.show()
+
+    assert True
