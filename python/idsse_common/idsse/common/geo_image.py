@@ -349,8 +349,8 @@ class GeoImage():
         """
         states = _get_states_json()
         if state == 'All':
-            for name in states:
-                self.draw_linestring(states[name], color)
+            for state_geo in states.values():
+                self.draw_linestring(state_geo, color)
         elif isinstance(state, str):
             self.draw_linestring(states[state], color)
         else:
