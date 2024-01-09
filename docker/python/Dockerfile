@@ -19,6 +19,7 @@ RUN pip3 install --no-cache \
     pika==1.3.1 \
     requests==2.28.2 \
     cherrypy==18.8.0 \
+    flask==2.3.2 \
     python-dateutil==2.8.2 \
     jsonschema==4.19.0 \
     pycouchdb==1.14.2

@@ -26,6 +26,7 @@ RUN conda config --add channels conda-forge && \
     s5cmd==2.2.2 \
     shapely==2.0.2 \
     pillow==10.0.1 \
+    flask==2.3.2 \
     && conda clean -y --all
 
 # Get the latest package updates to keep security vulnerabilities down
