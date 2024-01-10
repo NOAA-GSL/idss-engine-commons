@@ -382,16 +382,18 @@ def test_add_all_states(proj):
     # geo_image.show()
 
 
-# def test_color_palette(proj):
+# def test_temp_data(proj):
 #     colors = [(252, 180, 252), (187, 85, 192), (57, 21, 144), (0, 190, 242), (30, 186, 0),
 #               (254, 254, 0), (226, 46, 5), (149, 12, 6)]
 #     # colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
 #     current_path = os.path.dirname(os.path.realpath(__file__))
 #     filename = os.path.join(current_path, 'resources', 'nbm_temp-202211111100-202211121300.nc')
 #     attrs, data = read_netcdf(filename)
+#     print(attrs)
 #     if attrs['data_order'] == 'latitude,longitude':
 #         data = numpy.transpose(data)
-#     geo_image = GeoImage.from_data_grid(proj, data, ColorPalette.linear(colors))
+#     geo_image = GeoImage.from_data_grid(proj, data, ColorPalette.linear(colors),
+#                                         min_value=-40, max_value=80)
 #     geo_image.draw_state_boundary('All', color=(0, 0, 0))
 #     geo_image.show()
 

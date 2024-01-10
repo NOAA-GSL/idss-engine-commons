@@ -140,7 +140,10 @@ class GeoImage():
         proj: GridProj,
         data_array: np.ndarray,
         colors: ColorPalette | None = None,
-        scale: int = 1
+        scale: int = 1,
+        min_value: float = None,
+        max_value: float = None,
+        fill_value: float = None
     ) -> Self:
         """Method for building a geographical image from data in a ndarray.
 
@@ -152,14 +155,20 @@ class GeoImage():
                                                     scale will be used.
             scale (int, optional): The height and width that a grid cell will be scaled to in the
                                    image. Defaults to 1.
+            min_value (float, optional): The minimum value used for normalizing the data.
+                                         Default to None, in which case use the min(data).
+            max_value (float, optional): The maximum value used for normalizing the data.
+                                         Default to None, in which case use the max(data).
+            fill_value (float, optional): If specified this value will not be normalized.
+                                         Default to None.
 
         Returns:
             Self: GeoImage
         """
         if colors is None:
             colors = ColorPalette.grey()
-
-        index_array = scale_to_color_palette(normalize(data_array), colors.num_colors)
+        norm_array = normalize(data_array, min_value, max_value, fill_value)
+        index_array = scale_to_color_palette(norm_array, colors.num_colors)
         return GeoImage.from_index_grid(proj, index_array, colors, scale)
 
     @functools.cached_property
