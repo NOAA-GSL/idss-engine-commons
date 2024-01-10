@@ -22,6 +22,7 @@ from shapely import from_geojson, from_wkt, Geometry, LineString, MultiPolygon, 
 
 
 from .grid_proj import GridProj
+from .utils import round_half_away as rnd_ha
 from .vectaster import geographic_to_pixel, rasterize
 
 logger = logging.getLogger(__name__)
@@ -34,11 +35,65 @@ class Color(NamedTuple):
     blue: float
 
 
-ColorPalette = np.ndarray[Color]
+class ColorPalette(NamedTuple):
+    """Color Palette Class"""
+    lut: Sequence[Color]
+    num_colors: int
+    under_idx: int
+    over_idx: int
+    fill_idx: int
+
+    # pylint: disable=invalid-name
+    @classmethod
+    def linear(cls, colors: Sequence[Color], anchors: Sequence[int] = None) -> Self:
+        """Create a color palette by linearly interpolating between colors
+
+        Args:
+            colors (Sequence[Color]): A list of colors, first will be mapped to index 0,
+                                      and last will be mapped to index 255.
+            anchors (Sequence[int], optional): A list to define what index each color
+                                      should be mapped to. Required: anchors[0] must equal 0,
+                                      and anchor[-1] must 255. Defaults to None.
+
+        Raises:
+            ValueError: Raised when the length of the colors and anchors do not match
+
+        Returns:
+            ColorPalette: A color palette to be used with GeoImage
+        """
+        num = len(colors)
+        if anchors is not None:
+            if len(anchors) != num:
+                raise ValueError('Colors and Anchors must be of the same length')
+            xp = anchors
+        else:
+            xp = [rnd_ha(pos) for pos in np.linspace(0, 255, num=num)]
+        lut = list((rnd_ha(r), rnd_ha(g), rnd_ha(b)) for (r, g, b) in
+                   zip(*list(np.interp(range(256), xp, fp) for fp in np.array(colors).T)))
+        return ColorPalette(lut, 256, 0, 255, 0)
+
+    @classmethod
+    def grey(cls, with_excludes: bool = True) -> Self:
+        """Create a grey scale color palette
+
+        Args:
+            with_excludes (bool, optional): Indicate is the resulting color palette should have
+                                            special colors for mapping values below/above min/max
+                                            and fill values. Defaults to True.
+
+        Returns:
+            ColorPalette:  A grey scale color palette to be used with GeoImage
+        """
+        color_palette = cls.linear([(0, 0, 0), (255, 255, 255)])
+        if with_excludes:
+            lut = list(color_palette.lut)
+            lut.extend((255, 142, 142) for _ in range(3))
+            color_palette = ColorPalette(lut, 256, 256, 257, 258)
+        return color_palette
 
 
 class GeoImage():
-    """AWS Utility Class"""
+    """Geographic Image Class"""
 
     def __init__(self, proj: GridProj, rgb_array: np.ndarray, scale: int = 1):
         self.proj = proj
@@ -71,13 +126,11 @@ class GeoImage():
             Self: GeoImage
         """
         if colors is None:
-            lut = np.array(_get_grey_scale(), dtype=np.uint8)
-        else:
-            lut = np.array(colors, dtype=np.uint8)
+            colors = ColorPalette.grey()
 
         if scale != 1:
             index_array = np.repeat(np.repeat(index_array, scale, axis=1), scale, axis=0)
-        rgb_array = lut[index_array]
+        rgb_array = np.array(colors.lut, np.uint8)[index_array]
 
         return GeoImage(proj, rgb_array, scale)
 
@@ -103,11 +156,10 @@ class GeoImage():
         Returns:
             Self: GeoImage
         """
-        num_colors = 256
-        if colors is not None and len(colors) < num_colors:
-            num_colors = len(colors)
+        if colors is None:
+            colors = ColorPalette.grey()
 
-        index_array = scale_to_color_palette(normalize(data_array), num_colors)
+        index_array = scale_to_color_palette(normalize(data_array), colors.num_colors)
         return GeoImage.from_index_grid(proj, index_array, colors, scale)
 
     @functools.cached_property
@@ -503,11 +555,3 @@ def _get_states_json() -> dict[str, Any]:
     for feature in states_json['features']:
         states[feature['properties']['NAME']] = from_geojson(json.dumps(feature))
     return states
-
-
-@functools.cache
-def _get_grey_scale():
-    grey_cm = [(x, x, x) for x in range(0, 256)]
-    # tack on three colors (light salmon) to use for under/over/fill values, just in case
-    grey_cm.extend((255, 142, 142) for _ in range(3))
-    return grey_cm

@@ -14,7 +14,7 @@ import os
 import numpy
 from pytest import fixture
 
-from idsse.common.geo_image import GeoImage, normalize, scale_to_color_palette
+from idsse.common.geo_image import ColorPalette, GeoImage, normalize, scale_to_color_palette
 from idsse.common.grid_proj import GridProj
 from idsse.common.netcdf_io import read_netcdf
 
@@ -314,6 +314,16 @@ def test_scale_to_color_palette_with_excludes():
                                                    [258, 255, 257]])
 
 
+def test_draw_state(proj):
+    data = numpy.zeros((proj.width, proj.height))
+    geo_image = GeoImage.from_data_grid(proj, data)
+    geo_image.draw_state('Rhode Island', color=(255, 0, 0))
+
+    values, counts = numpy.unique(geo_image.rgb_array, return_counts=True)
+    numpy.testing.assert_array_equal(values, [0, 255])
+    numpy.testing.assert_array_equal(counts, [11234306, 589])
+
+
 def test_add_one_state(proj):
     data = numpy.zeros((proj.width, proj.height))
     geo_image = GeoImage.from_data_grid(proj, data)
@@ -336,6 +346,26 @@ def test_add_list_of_states(proj):
     numpy.testing.assert_array_equal(geo_image.rgb_array[1967, 797], [255, 0, 0])
 
 
+def test_color_palette():
+    # get grey scale color palette (with excludes given default arg)
+    color_palette = ColorPalette.grey()
+    # length of the lookup table should be 256 (0->255) plus 3 extra for the excludes
+    assert len(color_palette.lut) == 256+3
+    # check that each rgb value matches it's position
+    for idx, (r, g, b) in enumerate(color_palette.lut[:256]):
+        assert idx == r == g == b
+
+
+def test_color_palette_with_anchor():
+    color_palette = ColorPalette.linear([(0, 0, 0), (100, 100, 100), (255, 255, 255)],
+                                        [0, 100, 255])
+    # this color palette will not have exclude
+    assert len(color_palette.lut) == 256
+    # without the anchors the value would not match position
+    for idx, (r, g, b) in enumerate(color_palette.lut[:256]):
+        assert idx == r == g == b
+
+
 def test_add_all_states(proj):
     current_path = os.path.dirname(os.path.realpath(__file__))
     filename = os.path.join(current_path, 'resources', 'nbm_temp-202211111100-202211121300.nc')
@@ -350,3 +380,19 @@ def test_add_all_states(proj):
     numpy.testing.assert_array_equal(geo_image.rgb_array[742, 889], [255, 0, 0])
     numpy.testing.assert_array_equal(geo_image.rgb_array[1206, 229], [255, 0, 0])
     # geo_image.show()
+
+
+# def test_color_palette(proj):
+#     colors = [(252, 180, 252), (187, 85, 192), (57, 21, 144), (0, 190, 242), (30, 186, 0),
+#               (254, 254, 0), (226, 46, 5), (149, 12, 6)]
+#     # colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
+#     current_path = os.path.dirname(os.path.realpath(__file__))
+#     filename = os.path.join(current_path, 'resources', 'nbm_temp-202211111100-202211121300.nc')
+#     attrs, data = read_netcdf(filename)
+#     if attrs['data_order'] == 'latitude,longitude':
+#         data = numpy.transpose(data)
+#     geo_image = GeoImage.from_data_grid(proj, data, ColorPalette.linear(colors))
+#     geo_image.draw_state_boundary('All', color=(0, 0, 0))
+#     geo_image.show()
+
+#     assert False
