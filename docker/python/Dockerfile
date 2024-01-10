@@ -22,7 +22,8 @@ RUN pip3 install --no-cache \
     flask==2.3.2 \
     python-dateutil==2.8.2 \
     jsonschema==4.19.0 \
-    pycouchdb==1.14.2
+    pycouchdb==1.14.2 \
+    gunicorn==21.2.0
 
 # Get the latest package updates to keep security vulnerabilities down
 RUN apk update && apk upgrade
