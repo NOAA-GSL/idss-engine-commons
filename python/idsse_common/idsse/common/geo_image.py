@@ -135,7 +135,7 @@ class GeoImage():
         return GeoImage(proj, rgb_array, scale)
 
     @classmethod
-    def from_data_grid(
+    def from_data_grid(  # pylint: disable=too-many-arguments
         cls,
         proj: GridProj,
         data_array: np.ndarray,
