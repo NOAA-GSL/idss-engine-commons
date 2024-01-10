@@ -352,8 +352,8 @@ def test_color_palette():
     # length of the lookup table should be 256 (0->255) plus 3 extra for the excludes
     assert len(color_palette.lut) == 256+3
     # check that each rgb value matches it's position
-    for idx, (r, g, b) in enumerate(color_palette.lut[:256]):
-        assert idx == r == g == b
+    for idx, (red, green, blue) in enumerate(color_palette.lut[:256]):
+        assert idx == red == green == blue
 
 
 def test_color_palette_with_anchor():
@@ -362,8 +362,8 @@ def test_color_palette_with_anchor():
     # this color palette will not have exclude
     assert len(color_palette.lut) == 256
     # without the anchors the value would not match position
-    for idx, (r, g, b) in enumerate(color_palette.lut[:256]):
-        assert idx == r == g == b
+    for idx, (red, green, blue) in enumerate(color_palette.lut[:256]):
+        assert idx == red == green == blue
 
 
 def test_add_all_states(proj):
