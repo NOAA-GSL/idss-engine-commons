@@ -379,4 +379,3 @@ def test_add_all_states(proj):
     numpy.testing.assert_array_equal(geo_image.rgb_array[1707, 862], [255, 0, 0])
     numpy.testing.assert_array_equal(geo_image.rgb_array[742, 889], [255, 0, 0])
     numpy.testing.assert_array_equal(geo_image.rgb_array[1206, 229], [255, 0, 0])
-
