@@ -9,9 +9,9 @@
 #
 # ----------------------------------------------------------------------------------
 # pylint: disable=missing-function-docstring, redefined-outer-name
-import numpy
 import os
 
+import numpy
 from pytest import fixture
 
 from idsse.common.geo_image import GeoImage, normalize, scale_to_color_palette
