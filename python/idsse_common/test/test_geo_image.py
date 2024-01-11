@@ -21,7 +21,7 @@ from idsse.common.netcdf_io import read_netcdf
 
 @fixture
 def proj():
-    proj_spec = '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +r=6371200'
+    proj_spec = '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +a=6371200'
     grid_spec = '+dx=2539.703 +dy=2539.703 +w=2345 +h=1597 +lat_ll=19.229 +lon_ll=-126.2766'
     return GridProj.from_proj_grid_spec(proj_spec, grid_spec)
 
