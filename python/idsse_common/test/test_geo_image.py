@@ -382,19 +382,45 @@ def test_add_all_states(proj):
     # geo_image.show()
 
 
-# def test_temp_data(proj):
-#     colors = [(252, 180, 252), (187, 85, 192), (57, 21, 144), (0, 190, 242), (30, 186, 0),
-#               (254, 254, 0), (226, 46, 5), (149, 12, 6)]
-#     # colors = [(255, 0, 0), (0, 255, 0), (0, 0, 255)]
-#     current_path = os.path.dirname(os.path.realpath(__file__))
-#     filename = os.path.join(current_path, 'resources', 'nbm_temp-202211111100-202211121300.nc')
-#     attrs, data = read_netcdf(filename)
-#     print(attrs)
-#     if attrs['data_order'] == 'latitude,longitude':
-#         data = numpy.transpose(data)
-#     geo_image = GeoImage.from_data_grid(proj, data, ColorPalette.linear(colors),
-#                                         min_value=-40, max_value=80)
-#     geo_image.draw_state_boundary('All', color=(0, 0, 0))
-#     geo_image.show()
+def test_temp_data(proj):
+    colors = [(252, 180, 252), (187, 85, 192), (57, 21, 144), (0, 190, 242), (30, 186, 0),
+              (254, 254, 0), (226, 46, 5), (149, 12, 6)]
+    # current_path = os.path.dirname(os.path.realpath(__file__))
+    # filename = os.path.join(current_path, 'resources', 'nbm_temp-202211111100-202211121300.nc')
+    filename = '/Users/geary.j.layne/idssEngine/data/2023/12/15/NBM.AWS.GRIB/TEMP/Fahrenheit/gridstore-727311935.nc'
+    filename = '/Users/geary.j.layne/idssEngine/data/2023/01/11/NBM.AWS.GRIB/TEMP/Fahrenheit/gridstore1470768705.nc'
+    filename = '/Users/geary.j.layne/idssEngine/data/2023/01/11/NBM.AWS.GRIB/TEMP/Fahrenheit/gridstore1346695458.nc'
+    filename = '/Users/geary.j.layne/idssEngine/data/2023/01/11/NBM.AWS.GRIB/TEMP/Kelvin/gridstore-96489521.nc'
 
-#     assert False
+    attrs, data = read_netcdf(filename)
+    print(attrs)
+    if attrs['data_order'] == 'latitude,longitude':
+        data = numpy.transpose(data)
+    geo_image = GeoImage.from_data_grid(proj, data, ColorPalette.linear(colors),
+                                        min_value=-40, max_value=80)
+    geo_image.draw_state_boundary('All', color=(0, 0, 0))
+
+    locations = {
+        'KABQ': (-106.6082622, 35.0389316),
+        'KORD': (-87.9081497, 41.9769403),
+        'KMIA': (-80.2901158, 25.7953611)
+    }
+    locations = {
+        'KABQ': (-106.62, 35.05),
+        'KORD': (-87.93, 41.98),
+        'KMIA': (-80.2901158, 25.7953611)
+    }
+    for key, (lon, lat) in locations.items():
+        geo_image.outline_pixel(lon, lat, (0, 0, 0))
+        i, j = proj.map_geo_to_pixel(lon, lat, rounding='FLOOR')
+        geo_image.outline_pixel(i, j, (255, 255, 255), geo=False)
+        print(f'{key} ({lon}, {lat}) -> ({i}, {j}): {data[i, j]}')
+    geo_image.show()
+
+    for i in range(864, 869):
+        for j in range(560, 565):
+            print(i, j, proj.map_pixel_to_geo(i, j), data[i, j])
+# KABQ (-106.6082622, 35.0389316) -> (866, 561): 30.524009704589844
+# KORD (-87.9081497, 41.9769403) -> (1532, 861): 35.56401062011719
+# KMIA (-80.2901158, 25.7953611) -> (1869, 168): 72.28401184082031
+    assert False
