@@ -16,6 +16,7 @@ from jsonschema import FormatChecker, RefResolver  # pylint: disable=no-name-in-
 from jsonschema.validators import validator_for
 from jsonschema.protocols import Validator
 
+
 def _get_refs(json_obj: Union[dict, list], result: Optional[set] = None) -> set:
     if result is None:
         result = set()

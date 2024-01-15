@@ -17,7 +17,7 @@ import numpy
 from pytest import fixture, MonkeyPatch
 
 from idsse.common.grid_proj import GridProj
-from idsse.common.vectaster import (geographic_geometry_to_pixel,
+from idsse.common.vectaster import (geographic_to_pixel,
                                     geographic_linestring_to_pixel,
                                     geographic_polygon_to_pixel,
                                     from_wkt,
@@ -72,9 +72,9 @@ def test_geographic_to_pixel(monkeypatch: MonkeyPatch, grid_proj: GridProj):
     monkeypatch.setattr('idsse.common.vectaster.geographic_linestring_to_pixel', line_string_mock)
     monkeypatch.setattr('idsse.common.vectaster.geographic_polygon_to_pixel', polygon_mock)
 
-    geographic_geometry_to_pixel(line_string, grid_proj)
+    geographic_to_pixel(line_string, grid_proj)
     line_string_mock.assert_called_once()
-    geographic_geometry_to_pixel(polygon, grid_proj)
+    geographic_to_pixel(polygon, grid_proj)
     polygon_mock.assert_called_once()
 
 
