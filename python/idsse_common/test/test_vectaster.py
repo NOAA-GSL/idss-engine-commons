@@ -19,6 +19,7 @@ from pytest import fixture, MonkeyPatch
 from idsse.common.grid_proj import GridProj
 from idsse.common.vectaster import (geographic_to_pixel,
                                     geographic_linestring_to_pixel,
+                                    geographic_point_to_pixel,
                                     geographic_polygon_to_pixel,
                                     from_wkt,
                                     rasterize,
@@ -37,6 +38,14 @@ def grid_proj() -> GridProj:
 
 
 # test
+def test_geographic_point_to_pixel(grid_proj: GridProj):
+    point = from_wkt('POINT (-105 40)')
+    pixel_point = from_wkt('POINT (941.5576426719887 778.2701810387533)')  # TODO
+    result = geographic_point_to_pixel(point, grid_proj)
+
+    assert result == pixel_point
+
+
 def test_geographic_linestring_to_pixel(grid_proj: GridProj):
     linestring = from_wkt('LINESTRING (-100 30, -110 40, -120 50)')
     pixel_linestring = from_wkt('LINESTRING (1099.1941683923565 324.546444238068,'
@@ -64,18 +73,25 @@ def test_geographic_polygon_to_pixel(grid_proj: GridProj):
 
 
 def test_geographic_to_pixel(monkeypatch: MonkeyPatch, grid_proj: GridProj):
+    point = from_wkt('POINT (-105 40)')
     line_string = from_wkt('LINESTRING (-105 40, -110 40, -110 50)')
     polygon = from_wkt('POLYGON ((-105 40, -110 40, -110 50, -105 50, -105 40))')
 
+    point_mock = Mock()
     line_string_mock = Mock()
     polygon_mock = Mock()
+    monkeypatch.setattr('idsse.common.vectaster.geographic_point_to_pixel', point_mock)
     monkeypatch.setattr('idsse.common.vectaster.geographic_linestring_to_pixel', line_string_mock)
     monkeypatch.setattr('idsse.common.vectaster.geographic_polygon_to_pixel', polygon_mock)
 
-    geographic_to_pixel(line_string, grid_proj)
-    line_string_mock.assert_called_once()
-    geographic_to_pixel(polygon, grid_proj)
-    polygon_mock.assert_called_once()
+    _ = geographic_to_pixel(point, grid_proj)
+    point_mock.assert_called_once_with(point, grid_proj, None)
+
+    _ = geographic_to_pixel(line_string, grid_proj)
+    line_string_mock.assert_called_once_with(line_string, grid_proj, None)
+
+    _ = geographic_to_pixel(polygon, grid_proj)
+    polygon_mock.assert_called_once_with(polygon, grid_proj, None)
 
 
 def test_rasterize_point(grid_proj: GridProj):

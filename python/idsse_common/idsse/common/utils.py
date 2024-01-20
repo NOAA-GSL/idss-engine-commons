@@ -219,9 +219,9 @@ def round_half_away(number: Scalar, precision: int = 0) -> Scalar:
     is_less_than_half = abs(factored_number - math.trunc(factored_number)) < 0.5
 
     rounded_number = (
-                         _round_toward_zero(factored_number) if is_less_than_half
-                         else _round_away_from_zero(factored_number)
-                     ) / factor
+        _round_toward_zero(factored_number) if is_less_than_half
+        else _round_away_from_zero(factored_number)
+    ) / factor
     return int(rounded_number) if precision == 0 else float(rounded_number)
 
 
