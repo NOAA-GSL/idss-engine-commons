@@ -31,9 +31,9 @@ Coords = NewType('Coords', Sequence[Coord])
 
 
 def rasterize(
-        geometry: str | Geometry,
-        grid_proj: GridProj | None = None,
-        rounding: RoundingMethod = RoundingMethod.FLOOR
+    geometry: str | Geometry,
+    grid_proj: GridProj | None = None,
+    rounding: RoundingMethod = RoundingMethod.FLOOR
 ) -> tuple[numpy.array]:
     """Takes a geographic geometry (specified with lon/lat) and determines all the
     associated pixels in the translated space (as specified by grid_proj).
@@ -74,9 +74,9 @@ def rasterize(
 
 
 def rasterize_point(
-        point: str | Coord | Point,
-        grid_proj: GridProj | None = None,
-        rounding: RoundingMethod = RoundingMethod.FLOOR
+    point: str | Coord | Point,
+    grid_proj: GridProj | None = None,
+    rounding: RoundingMethod = RoundingMethod.FLOOR
 ) -> tuple[numpy.array]:
     """Takes a geographic Point (specified with lon/lat) and determines the
     associated pixel in the translated space (as specified by grid_proj).
@@ -111,9 +111,9 @@ def rasterize_point(
 
 
 def rasterize_linestring(
-        linestring: str | Sequence[Coord] | LineString,
-        grid_proj: GridProj | None = None,
-        rounding: RoundingMethod = RoundingMethod.FLOOR
+    linestring: str | Sequence[Coord] | LineString,
+    grid_proj: GridProj | None = None,
+    rounding: RoundingMethod = RoundingMethod.FLOOR
 ) -> tuple[numpy.array]:
     """Takes a geographic LineString (specified with lon/lat) and determines all the
     associated pixels in the translated space (as specified by grid_proj).
@@ -168,9 +168,9 @@ def rasterize_linestring(
 
 
 def rasterize_polygon(
-        polygon: str | Sequence[Coords] | Polygon,
-        grid_proj: GridProj | None = None,
-        rounding: RoundingMethod = RoundingMethod.FLOOR
+    polygon: str | Sequence[Coords] | Polygon,
+    grid_proj: GridProj | None = None,
+    rounding: RoundingMethod = RoundingMethod.FLOOR
 ) -> tuple[numpy.array]:
     """Takes a geographic Polygon (specified with lon/lat) and determines all the
     associated pixels in the translated space (as specified by grid_proj).
@@ -228,6 +228,8 @@ def geographic_to_pixel(
         Geometry: Shapely geometry of the same type as input geometry with vertices
                     defined by x,y pixels
     """
+    if isinstance(geo, Point):
+        return geographic_point_to_pixel(geo, grid_proj, rounding)
     if isinstance(geo, LineString):
         return geographic_linestring_to_pixel(geo, grid_proj, rounding)
     if isinstance(geo, Polygon):
@@ -239,10 +241,34 @@ def geographic_to_pixel(
     raise ValueError(f'Passed geometry is type:{type(geo)}, which is not of supported types')
 
 
+def geographic_point_to_pixel(
+    point: Point,
+    grid_proj: GridProj,
+    rounding: RoundingMethod = None
+) -> Point:
+    """Map a Point specified in lat/lon space to geometry specified in pixel space
+
+    Args:
+        point (Point): Shapely geometry with vertices defined by lon,lat
+        grid_proj (GridProj): Projection plus pixel resolution
+        rounding (RoundingMethod, optional): One of None, 'floor', 'round'. Defaults to None.
+
+    Raises:
+        ValueError: If geometry is not a Point
+    Returns:
+        Point: Shapely Point with vertices defined by x,y pixels
+    """
+    if not isinstance(point, Point):
+        raise ValueError(f'Geometry must be a Point but is a {type(point)}')
+
+    coords = grid_proj.map_geo_to_pixel(*list(zip(*point.coords)), rounding)
+    return Point(coords)
+
+
 def geographic_linestring_to_pixel(
-        linestring: LineString | Sequence[Coord],
-        grid_proj: GridProj,
-        rounding: RoundingMethod | None = None
+    linestring: LineString | Sequence[Coord],
+    grid_proj: GridProj,
+    rounding: RoundingMethod | None = None
 ) -> LineString:
     """Map a LineString specified in lat/lon space to geometry specified in pixel space
 
@@ -263,17 +289,15 @@ def geographic_linestring_to_pixel(
     else:
         raise TypeError(f'Geometry must be a LineString but is a {type(linestring)}')
 
-    # coords = [grid_proj.map_geo_to_pixel(*ll, rounding) for ll in line_string.coords]
     coords = list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*coords)), rounding)))
 
-    pixel_linestring = LineString(coords)
-    return pixel_linestring
+    return LineString(coords)
 
 
 def geographic_polygon_to_pixel(
-        poly: Polygon | Sequence[Coords],
-        grid_proj: GridProj,
-        rounding: RoundingMethod | None = None
+    poly: Polygon | Sequence[Coords],
+    grid_proj: GridProj,
+    rounding: RoundingMethod | None = None
 ) -> Polygon:
     """Map a Polygon specified in lat/lon space to geometry specified in pixel space
 
@@ -301,8 +325,7 @@ def geographic_polygon_to_pixel(
     interiors = [list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*interior.coords)), rounding)))
                  for interior in interiors]
 
-    pixel_poly = Polygon(exterior, holes=interiors)
-    return pixel_poly
+    return Polygon(exterior, holes=interiors)
 
 
 def pixels_for_linestring(linestring: LineString) -> tuple[numpy.array]:
@@ -345,7 +368,7 @@ def _make_numpy(points: Sequence[Pixel]) -> tuple[numpy.ndarray]:
     Returns:
         Tuple[numpy.ndarray]: Same coordinates but restructured
     """
-    return tuple(numpy.array(dim_coord, dtype=numpy.int64) for dim_coord in map(list, zip(*points)))
+    return tuple(numpy.array(dim_coord, dtype=numpy.int64) for dim_coord in tuple(zip(*points)))
 
 
 def _pixels_for_linestring(
