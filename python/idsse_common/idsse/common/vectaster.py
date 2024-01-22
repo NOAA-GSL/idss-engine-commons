@@ -289,7 +289,7 @@ def geographic_linestring_to_pixel(
     else:
         raise TypeError(f'Geometry must be a LineString but is a {type(linestring)}')
 
-    coords = list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*linestring.coords)), rounding)))
+    coords = list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*coords)), rounding)))
 
     return LineString(coords)
 
