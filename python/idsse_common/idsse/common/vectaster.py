@@ -18,8 +18,8 @@ from typing import NewType
 import numpy
 from shapely import Geometry, LinearRing, LineString, MultiPolygon, Point, Polygon, from_wkt
 
-from idsse.common.grid_proj import GridProj, RoundingMethod
-from idsse.common.utils import round_half_away
+from idsse.common.grid_proj import GridProj
+from idsse.common.utils import round_half_away, RoundingMethod
 
 
 logger = logging.getLogger(__name__)
@@ -105,7 +105,7 @@ def rasterize_point(
         raise TypeError(f'Passed geometry is type:{type(point)}, but must be Point')
 
     if grid_proj is not None:
-        return _make_numpy([grid_proj.map_geo_to_pixel(*coord, rounding)])
+        return _make_numpy([grid_proj.map_geo_to_pixel(*coord, rounding=rounding)])
 
     return _make_numpy([_round(*coord, rounding=rounding)])
 

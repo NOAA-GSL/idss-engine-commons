@@ -21,9 +21,10 @@ import numpy as np
 from pyproj import CRS, Transformer
 from pyproj.enums import TransformDirection
 
-from .utils import round_half_away, Scalar
+from .utils import round_half_away, round_
 
 # type hints
+Scalar = Union[int, float, np.integer, np.float_]
 ScalarPair = Tuple[Scalar, Scalar]
 ScalarArray = Sequence[Scalar]
 Coordinate = Union[Scalar, ScalarPair, ScalarArray, np.ndarray]
@@ -287,7 +288,7 @@ class GridProj:
             j: float = (y - self._y_offset) / self._dy
 
             if rounding is not None:
-                return self._round_pixel((i, j), rounding, precision)
+                return tuple((round_(coord, precision, rounding=rounding) for coord in (i, j)))
             return i, j
 
         if isinstance(x, Iterable) and isinstance(y, Iterable):

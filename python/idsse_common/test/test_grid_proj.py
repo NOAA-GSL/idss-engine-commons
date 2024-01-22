@@ -18,8 +18,8 @@ from typing import Tuple, List
 import numpy as np
 from pytest import approx, fixture, raises
 
-from idsse.common.grid_proj import GridProj, RoundingMethod
-from idsse.common.utils import round_half_away
+from idsse.common.grid_proj import GridProj
+from idsse.common.utils import round_, RoundingMethod
 
 # cspell:ignore pyproj
 
@@ -126,7 +126,7 @@ def test_flip_both_lr_ud(grid_proj: GridProj):
 
 
 # transformation methods testing
-def test_map_crs_to_pixel_round_half_away(grid_proj: GridProj):
+def test_map_crs_to_pixel_round(grid_proj: GridProj):
     for index, crs_xy in enumerate(EXAMPLE_CRS):
         pixel_xy = grid_proj.map_crs_to_pixel(
             *crs_xy,
@@ -135,7 +135,7 @@ def test_map_crs_to_pixel_round_half_away(grid_proj: GridProj):
         assert pixel_xy == EXAMPLE_PIXELS[index]
 
 
-def test_map_crs_to_pixel_round_floor(grid_proj: GridProj):
+def test_map_crs_to_pixel_floor(grid_proj: GridProj):
     for index, crs_xy in enumerate(EXAMPLE_CRS):
         i, j = grid_proj.map_crs_to_pixel(
             *crs_xy,
@@ -174,15 +174,18 @@ def test_crs_to_pixel_no_rounding(grid_proj: GridProj):
     for index, geo in enumerate(EXAMPLE_CRS):
         i, j = grid_proj.map_crs_to_pixel(*geo)
         # round result, which will not be precisely the integer that was passed
-        assert (round_half_away(i, 6), round_half_away(j, 6)) == EXAMPLE_PIXELS[index]
+        assert (round_(i, 6), round_(j, 6)) == EXAMPLE_PIXELS[index]
 
 
 def test_crs_to_pixel_floor(grid_proj: GridProj):
     for index, geo in enumerate(EXAMPLE_CRS):
-        floor_ij = grid_proj.map_crs_to_pixel(*geo, RoundingMethod.FLOOR)
         i, j = grid_proj.map_crs_to_pixel(*geo)
-        assert (math.floor(i), math.floor(j)) == floor_ij
-        assert (round_half_away(i), round_half_away(j)) == EXAMPLE_PIXELS[index]
+        assert (round_(i), round_(j)) == EXAMPLE_PIXELS[index]
+
+        floor_ij = grid_proj.map_crs_to_pixel(*geo, RoundingMethod.FLOOR)
+        assert (
+            round_(i, rounding=RoundingMethod.FLOOR), round_(j, rounding=RoundingMethod.FLOOR)
+        ) == floor_ij
 
 
 def test_crs_to_pixel_round(grid_proj: GridProj):
@@ -211,7 +214,7 @@ def test_compound_transformations_stay_consistent(grid_proj: GridProj):
 
     # convert geographic coordinates back to pixel, full circle, and data should be unchanged
     pixel_x, pixel_y = grid_proj.map_crs_to_pixel(geo_x, geo_y)
-    assert (round_half_away(pixel_x, 6), round_half_away(pixel_y, 6)) == initial_pixel
+    assert (round_(pixel_x, 6), round_(pixel_y, 6)) == initial_pixel
 
     # convert pixel back to geographic coordinates
     geo_x, geo_y = grid_proj.map_pixel_to_crs(pixel_x, pixel_y)
@@ -238,8 +241,8 @@ def test_pixel_to_geo_array(grid_proj: GridProj):
     i_array, j_array = list(zip(*EXAMPLE_PIXELS))
 
     # pass full numpy arrays to map_pixel_to_geo
-    i_numpy_array = np.array(i_array)
-    j_numpy_array = np.array(j_array)
+    i_numpy_array = np.array(i_array, dtype=int)
+    j_numpy_array = np.array(j_array, dtype=int)
     geo_arrays = grid_proj.map_pixel_to_geo(i_numpy_array, j_numpy_array)
 
     expected_geos = tuple(np.array(values) for values in (list(zip(*EXAMPLE_LON_LAT))))

@@ -13,15 +13,21 @@ import copy
 import logging
 import math
 from datetime import datetime, timedelta, timezone
+from enum import Enum
 from subprocess import PIPE, Popen, TimeoutExpired
 from typing import Any, Generator, Optional, Sequence, Union
 from uuid import UUID
 
-import numpy as np
-
-Scalar = Union[int, float, np.integer, np.float_]  # type alias for rounding numbers
-
 logger = logging.getLogger(__name__)
+
+
+class RoundingMethod(Enum):
+    """Transformations indicators to be applied to numbers when rounding to ints"""
+    ROUND = 'ROUND'
+    FLOOR = 'FLOOR'
+
+
+RoundingParam = Union[str, RoundingMethod]
 
 
 class TimeDelta:
@@ -195,9 +201,10 @@ def _round_toward_zero(number: float) -> int:
     func = math.ceil if number < 0 else math.floor
     return func(number)
 
-
-def round_half_away(number: Scalar, precision: int = 0) -> Scalar:
+def round_half_away(number: int | float, precision: int = 0) -> int | float:
     """
+    *Deprecated: avoid using this function directly, instead use idsse.commons.round_()*
+
     Round a float to a set number of decimal places, using "ties away from zero" method,
     in contrast with Python 3's built-in round() or numpy.round() functions, both which
     use "ties to even" method.
@@ -208,11 +215,11 @@ def round_half_away(number: Scalar, precision: int = 0) -> Scalar:
     | -14.5 |     -14 |               -15 |
 
     Args:
-        number (float):
+        number (int | float | numpy.int | numpy.float_): a scalar value from a Python/numpy array
         precision (int): number of decimal places to preserve.
 
     Returns:
-        Union[int, float]: rounded number as int if precision is 0, otherwise as float
+        (int | float): rounded number as int if precision is 0, otherwise as float
     """
     factor = 10 ** precision
     factored_number = number * factor
@@ -223,6 +230,48 @@ def round_half_away(number: Scalar, precision: int = 0) -> Scalar:
         else _round_away_from_zero(factored_number)
     ) / factor
     return int(rounded_number) if precision == 0 else float(rounded_number)
+
+
+def round_(
+    number: int | float,
+    precision: int = 0,
+    rounding: RoundingParam = RoundingMethod.ROUND
+) -> int | float:
+    """
+    Round a float to a set number of decimal places, using "ties away from zero" method if rounding
+    is RoundingMethod.ROUND or math.floor() if RoundingMethod.FLOOR.
+
+    This behavior contrasts with Python 3's built-in round() or numpy.round() functions,
+    which use "ties to even" method.
+
+    | Input | round() | round_half_away() |
+    | ----- | ------- | ----------------- |
+    |   2.5 |       2 |                 3 |
+    | -14.5 |     -14 |               -15 |
+
+    Args:
+        number (int | float | numpy.int | numpy.float_): a number, often from a Python/numpy array
+        precision (int): number of decimal places to preserve. Defaults to 0.
+        rounding (RoundingMethod | str, optional): how number should be rounded. Either "nearest
+            integer, ties away from zero", or math.floor(). Defaults to RoundingMethod.ROUND.
+
+    Raises:
+        ValueError: if rounding argument is invalid.
+
+    Returns:
+        (int | float): rounded number as int if precision is 0, otherwise as float
+    """
+    if isinstance(rounding, str):  # cast str to RoundingMethod enum
+        try:
+            rounding = RoundingMethod[rounding.upper()]
+        except KeyError as exc:
+            raise ValueError(f'Unsupported rounding method {rounding}') from exc
+
+    if rounding is RoundingMethod.ROUND:
+        return round_half_away(number, precision)
+    if rounding is RoundingMethod.FLOOR:
+        return math.floor(number)
+    raise ValueError('rounding method cannot be None')
 
 
 def is_valid_uuid(uuid: str, version=4) -> bool:
