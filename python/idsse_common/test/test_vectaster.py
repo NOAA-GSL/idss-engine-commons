@@ -40,7 +40,7 @@ def grid_proj() -> GridProj:
 # test
 def test_geographic_point_to_pixel(grid_proj: GridProj):
     point = from_wkt('POINT (-105 40)')
-    pixel_point = from_wkt('POINT (941.5576426719887 778.2701810387533)')  # TODO
+    pixel_point = from_wkt('POINT (941.5576426719887 778.2701810387533)')
     result = geographic_point_to_pixel(point, grid_proj)
 
     assert result == pixel_point
