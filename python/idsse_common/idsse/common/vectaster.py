@@ -19,7 +19,7 @@ import numpy
 from shapely import Geometry, LinearRing, LineString, MultiPolygon, Point, Polygon, from_wkt
 
 from idsse.common.grid_proj import GridProj
-from idsse.common.utils import round_half_away, RoundingMethod
+from idsse.common.utils import round_, RoundingMethod
 
 
 logger = logging.getLogger(__name__)
@@ -107,7 +107,7 @@ def rasterize_point(
     if grid_proj is not None:
         return _make_numpy([grid_proj.map_geo_to_pixel(*coord, rounding=rounding)])
 
-    return _make_numpy([_round(*coord, rounding=rounding)])
+    return _make_numpy([_round_iterable(*coord, rounding=rounding)])
 
 
 def rasterize_linestring(
@@ -162,7 +162,7 @@ def rasterize_linestring(
     if grid_proj is not None:
         linestring = geographic_linestring_to_pixel(coords, grid_proj, rounding)
     else:
-        linestring = LineString([_round(*coord, rounding=rounding) for coord in linestring.coords])
+        linestring = LineString([_round_iterable(*coord, rounding=rounding) for coord in linestring.coords])
 
     return pixels_for_linestring(linestring)
 
@@ -202,7 +202,7 @@ def rasterize_polygon(
     if grid_proj is not None:
         polygon = geographic_polygon_to_pixel(coords, grid_proj, rounding)
     else:
-        coords = [[_round(*coord, rounding=rounding)
+        coords = [[_round_iterable(*coord, rounding=rounding)
                   for coord in ring] for ring in coords]
         polygon = Polygon(coords[0], holes=coords[1:])
 
@@ -421,14 +421,14 @@ def _pixels_for_line_seg(
         step = 1 if x1 < x2 else -1
         if exclude_first:
             x1 += step
-        pixels = [(x, round_half_away(slope * x + intercept)) for x in range(x1, x2+step, step)]
+        pixels = [(x, round_(slope * x + intercept)) for x in range(x1, x2+step, step)]
     else:
         slope = dx / dy
         intercept = x1 - slope * y1
         step = 1 if y1 < y2 else -1
         if exclude_first:
             y1 += step
-        pixels = [(round_half_away(slope * y + intercept), y) for y in range(y1, y2+step, step)]
+        pixels = [(round_(slope * y + intercept), y) for y in range(y1, y2+step, step)]
 
     return pixels
 
@@ -485,12 +485,7 @@ def _is_coords(arg) -> bool:
     return isinstance(arg, Iterable) and all(_is_coord(v) for v in arg)
 
 
-def _round(*args, rounding: str | RoundingMethod) -> list[int]:
-    if isinstance(rounding, str):
-        rounding = RoundingMethod[rounding.upper()]
-
-    if rounding is RoundingMethod.ROUND:
-        return [round_half_away(v) for v in args]
-    if rounding is RoundingMethod.FLOOR:
-        return [floor(v) for v in args]
+def _round_iterable(*args, rounding: str | RoundingMethod) -> list[int]:
+    if rounding is not None:
+        return [round_(v, rounding=rounding) for v in args]
     return [int(v) for v in args]

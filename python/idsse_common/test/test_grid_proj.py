@@ -11,8 +11,8 @@
 #
 # ----------------------------------------------------------------------------------
 # pylint: disable=missing-function-docstring,redefined-outer-name,invalid-name,protected-access
+# cspell:ignore pyproj
 
-import math
 from typing import Tuple, List
 
 import numpy as np
@@ -20,8 +20,6 @@ from pytest import approx, fixture, raises
 
 from idsse.common.grid_proj import GridProj
 from idsse.common.utils import round_, RoundingMethod
-
-# cspell:ignore pyproj
 
 
 # example data
@@ -63,11 +61,6 @@ def approx_tuple(values: Tuple[float, float]) -> Tuple:
 @fixture
 def grid_proj() -> GridProj:
     return GridProj.from_proj_grid_spec(EXAMPLE_PROJ_SPEC, EXAMPLE_GRID_SPEC)
-
-# my_proj = GridProj.from_proj_grid_spec(
-#     '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +r=6371200',
-#     '+dx=2539.703 +dy=2539.703 +w=2345 +h=1597 +lat_ll=19.229 +lon_ll=-126.2766'
-# )
 
 
 # test class methods
@@ -182,7 +175,7 @@ def test_crs_to_pixel_floor(grid_proj: GridProj):
         i, j = grid_proj.map_crs_to_pixel(*geo)
         assert (round_(i), round_(j)) == EXAMPLE_PIXELS[index]
 
-        floor_ij = grid_proj.map_crs_to_pixel(*geo, RoundingMethod.FLOOR)
+        floor_ij = grid_proj.map_crs_to_pixel(*geo, rounding=RoundingMethod.FLOOR)
         assert (
             round_(i, rounding=RoundingMethod.FLOOR), round_(j, rounding=RoundingMethod.FLOOR)
         ) == floor_ij
@@ -190,15 +183,15 @@ def test_crs_to_pixel_floor(grid_proj: GridProj):
 
 def test_crs_to_pixel_round(grid_proj: GridProj):
     for index, geo in enumerate(EXAMPLE_CRS):
-        i, j = grid_proj.map_crs_to_pixel(*geo, RoundingMethod.ROUND)
+        i, j = grid_proj.map_crs_to_pixel(*geo, rounding=RoundingMethod.ROUND)
         assert (i, j) == EXAMPLE_PIXELS[index]
 
 
 def test_crs_to_pixel_round_str(grid_proj: GridProj):
-    i, j = grid_proj.map_crs_to_pixel(*EXAMPLE_CRS[0], 'round')
+    i, j = grid_proj.map_crs_to_pixel(*EXAMPLE_CRS[0], rounding='round')
     assert (i, j) == EXAMPLE_PIXELS[0]
 
-    i, j = grid_proj.map_crs_to_pixel(*EXAMPLE_CRS[1], 'ROUND')
+    i, j = grid_proj.map_crs_to_pixel(*EXAMPLE_CRS[1], rounding='ROUND')
     assert (i, j) == EXAMPLE_PIXELS[1]
 
 
@@ -275,9 +268,3 @@ def test_unbalanced_pixel_or_crs_arrays_fail_to_transform(grid_proj: GridProj):
         bad_crs = (EXAMPLE_CRS[0], EXAMPLE_CRS[1][1])
         grid_proj.map_crs_to_pixel(*bad_crs, rounding=RoundingMethod.ROUND)
     assert 'Cannot transpose CRS values' in exc.value.args[0]
-
-
-def test_invalid_rounding_method_raises_error(grid_proj: GridProj):
-    with raises(ValueError) as exc:
-        grid_proj._round_pixel(EXAMPLE_PIXELS[0], rounding='MAGIC')
-    assert 'MAGIC' in exc.value.args[0]

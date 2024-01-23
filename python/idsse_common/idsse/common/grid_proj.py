@@ -15,13 +15,12 @@
 
 from typing import Self, Tuple, Union, Optional, Sequence, TypeVar, Iterable
 from enum import Enum
-import math
 
 import numpy as np
 from pyproj import CRS, Transformer
 from pyproj.enums import TransformDirection
 
-from .utils import round_half_away, round_
+from .utils import round_
 
 # type hints
 Scalar = Union[int, float, np.integer, np.float_]
@@ -182,8 +181,8 @@ class GridProj:
         # pylint: disable=not-an-iterable
         return self.map_crs_to_pixel(
             *crs_coordinates,
-            rounding=rounding,
-            precision=precision
+            precision=precision,
+            rounding=rounding
         )
 
     def map_pixel_to_geo(self, x: T, y: T) -> Tuple[T, T]:
@@ -258,8 +257,8 @@ class GridProj:
         self,
         x: T,
         y: T,
-        rounding: Optional[RoundingParam] = None,
-        precision: int = 0
+        precision: int = 0,
+        rounding: Optional[RoundingParam] = None
     ) -> Tuple[T, T]:
         """Map Coordinate Reference System (x,y) coordinates to pixel x and y
 
@@ -295,7 +294,7 @@ class GridProj:
             # Merge array of x coordinates with array of y coordinates to make list of CRS
             # x, y pairs. Transform each CRS pair to a pixel (recursively), then split back into
             # arrays of x coordinates and y coordinates (but now dimensions are pixel, not CRS)
-            pixel_pairs = [self.map_crs_to_pixel(*crs_coord, rounding, precision)
+            pixel_pairs = [self.map_crs_to_pixel(*crs_coord, precision, rounding)
                            for crs_coord in zip(x, y)]
             i_coordinates, j_coordinates = tuple(zip(*pixel_pairs))
 
@@ -310,23 +309,24 @@ class GridProj:
             f'Cannot transpose CRS values of ({type(x).__name__})({type(y).__name__}) to pixel'
         )
 
-    @staticmethod
-    def _round_pixel(
-        pixel: ScalarPair,
-        rounding: RoundingParam,
-        precision: int = 0
-    ) -> ScalarPair:
-        """Round i and j coordinates of pixel using rounding method requested"""
-        i, j = pixel
+    # TODO: remove this
+    # @staticmethod
+    # def _round_pixel(
+    #     pixel: ScalarPair,
+    #     rounding: RoundingParam,
+    #     precision: int = 0
+    # ) -> ScalarPair:
+    #     """Round i and j coordinates of pixel using rounding method requested"""
+    #     i, j = pixel
 
-        if isinstance(rounding, str):  # cast str to RoundingMethod enum
-            try:
-                rounding = RoundingMethod[rounding.upper()]
-            except KeyError as exc:
-                raise ValueError(f'Unsupported rounding method {rounding}') from exc
+    #     if isinstance(rounding, str):  # cast str to RoundingMethod enum
+    #         try:
+    #             rounding = RoundingMethod[rounding.upper()]
+    #         except KeyError as exc:
+    #             raise ValueError(f'Unsupported rounding method {rounding}') from exc
 
-        if rounding is RoundingMethod.ROUND:
-            return round_half_away(i, precision), round_half_away(j, precision)
-        if rounding is RoundingMethod.FLOOR:
-            return math.floor(i), math.floor(j)
-        raise ValueError('rounding method cannot be None')
+    #     if rounding is RoundingMethod.ROUND:
+    #         return round_half_away(i, precision), round_half_away(j, precision)
+    #     if rounding is RoundingMethod.FLOOR:
+    #         return math.floor(i), math.floor(j)
+    #     raise ValueError('rounding method cannot be None')

@@ -19,7 +19,7 @@ import pytest
 
 from idsse.common.utils import TimeDelta, Map
 from idsse.common.utils import (datetime_gen, hash_code, exec_cmd, to_compact,
-                                to_iso, dict_copy_with, round_half_away)
+                                to_iso, dict_copy_with, round_, round_half_away)
 
 
 def test_timedelta_minute():
@@ -175,3 +175,9 @@ def test_round_half_away_with_precision(number: float, expected: float):
     result = round_half_away(number, precision=3)
     assert isinstance(result, float)
     assert result == expected
+
+
+def test_invalid_rounding_method_raises_error():
+    with pytest.raises(ValueError) as exc:
+        round_(123.456, rounding='MAGIC')
+    assert 'MAGIC' in exc.value.args[0]

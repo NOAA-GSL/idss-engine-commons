@@ -22,7 +22,7 @@ from shapely import from_geojson, from_wkt, Geometry, LineString, MultiPolygon, 
 
 
 from .grid_proj import GridProj
-from .utils import round_half_away as rnd_ha
+from .utils import round_
 from .vectaster import geographic_to_pixel, rasterize
 
 logger = logging.getLogger(__name__)
@@ -67,8 +67,8 @@ class ColorPalette(NamedTuple):
                 raise ValueError('Colors and Anchors must be of the same length')
             xp = anchors
         else:
-            xp = [rnd_ha(pos) for pos in np.linspace(0, 255, num=num)]
-        lut = list((rnd_ha(r), rnd_ha(g), rnd_ha(b)) for (r, g, b) in
+            xp = [round_(pos) for pos in np.linspace(0, 255, num=num)]
+        lut = list((round_(r), round_(g), round_(b)) for (r, g, b) in
                    zip(*list(np.interp(range(256), xp, fp) for fp in np.array(colors).T)))
         return ColorPalette(lut, 256, 0, 255, 0)
 
@@ -313,7 +313,7 @@ class GeoImage():
         else:
             raise TypeError(f'Passed shape (with type: {type(shape)}) in not currently supported')
 
-        coords = rasterize(shape)
+        coords = rasterize(shape, rounding='round')
 
         for i, j in zip(*coords):
             if 0 <= i < self.width and 0 <= j < self.height:
@@ -348,7 +348,7 @@ class GeoImage():
         if isinstance(shape, str):
             shape = from_wkt(shape)
 
-        coords = rasterize(shape, self.proj) if geo else rasterize(shape)
+        coords = rasterize(shape, self.proj, 'round') if geo else rasterize(shape, rounding='round')
         for i_j in zip(*coords):
             self.set_pixel(*i_j, color, geo=False)
 
@@ -386,7 +386,7 @@ class GeoImage():
         if isinstance(shape, str):
             shape = from_wkt(shape)
 
-        coords = rasterize(shape, self.proj) if geo else rasterize(shape)
+        coords = rasterize(shape, self.proj, 'round') if geo else rasterize(shape, rounding='round')
         for i_j in zip(*coords):
             self.outline_pixel(*i_j, color, geo=False)
 
