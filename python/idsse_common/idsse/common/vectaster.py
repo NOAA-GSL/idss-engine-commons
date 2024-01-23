@@ -486,6 +486,6 @@ def _is_coords(arg) -> bool:
 
 
 def _round_iterable(*args, rounding: str | RoundingMethod) -> list[int]:
-    if rounding is not None:
-        return [round_(v, rounding=rounding) for v in args]
-    return [int(v) for v in args]
+    if rounding is None:
+        return [int(v) for v in args]
+    return [round_(v, rounding=rounding) for v in args]
