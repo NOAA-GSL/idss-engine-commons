@@ -25,7 +25,7 @@ test/test_vectaster.py .............                                     [100%]
 =================================== FAILURES ===================================
 ____________________________ test_draw_geo_polygon _____________________________
 
-proj = <idsse.common.grid_proj.GridProj object at 0x7f887dcf9b10>
+proj = <idsse.common.grid_proj.GridProj object at 0x7f2484838910>
 
     def test_draw_geo_polygon(proj):
         scale = 10
@@ -107,4 +107,4 @@ Max absolute difference: 7
 Max relative difference: 0.06481481
  x: array([7385,  115])
  y: array([7392,  108])
-================== 1 failed, 211 passed, 2 warnings in 5.03s ===================
+================== 1 failed, 211 passed, 2 warnings in 5.26s ===================
