@@ -1,5 +1,9 @@
 FROM ghcr.io/noaa-gsl/idss/commons/python/python-base:main
 
+# Install additional dependencies
+RUN pip3 install --no-cache \
+    cherrypy
+
 COPY couchdb.json couchdb.json
 COPY CouchEventPortfolioDB.py CouchEventPortfolioDB.py
 COPY Load.py Load.py
