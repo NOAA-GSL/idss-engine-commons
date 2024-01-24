@@ -1,16 +1,16 @@
 ============================= test session starts ==============================
-platform linux -- Python 3.11.7, pytest-7.4.4, pluggy-1.3.0
+platform linux -- Python 3.11.7, pytest-7.4.4, pluggy-1.4.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
 plugins: cov-4.1.0
-collected 211 items
+collected 212 items
 
 test/test_aws_utils.py ..................                                [  8%]
 test/test_config.py ............                                         [ 14%]
-test/test_geo_image.py ........F......FFF..F                             [ 24%]
+test/test_geo_image.py ........F............                             [ 24%]
 test/test_grid_proj.py ........................                          [ 35%]
 test/test_json_message.py ...........                                    [ 40%]
-test/test_log_util.py .....                                              [ 43%]
-test/test_netcdf_io.py ....                                              [ 45%]
+test/test_log_util.py .....                                              [ 42%]
+test/test_netcdf_io.py ....                                              [ 44%]
 test/test_path_builder.py ......................                         [ 55%]
 test/test_publish_confirm.py .........                                   [ 59%]
 test/test_rabbitmq_utils.py ......                                       [ 62%]
@@ -18,14 +18,14 @@ test/test_utils.py ........................                              [ 73%]
 test/test_validate_criteria_schema.py ......                             [ 76%]
 test/test_validate_das_schema.py ..............                          [ 83%]
 test/test_validate_das_web_schema.py .........                           [ 87%]
-test/test_validate_event_port_schema.py .....                            [ 90%]
-test/test_validate_new_data_schema.py .........                          [ 94%]
-test/test_vectaster.py ............                                      [100%]
+test/test_validate_event_port_schema.py .....                            [ 89%]
+test/test_validate_new_data_schema.py .........                          [ 93%]
+test/test_vectaster.py .............                                     [100%]
 
 =================================== FAILURES ===================================
 ____________________________ test_draw_geo_polygon _____________________________
 
-proj = <idsse.common.grid_proj.GridProj object at 0x7eff725c90d0>
+proj = <idsse.common.grid_proj.GridProj object at 0x7f887dcf9b10>
 
     def test_draw_geo_polygon(proj):
         scale = 10
@@ -47,12 +47,12 @@ proj = <idsse.common.grid_proj.GridProj object at 0x7eff725c90d0>
     
         # values will be 0 or 100 (for polygon) and 0 everywhere else
         numpy.testing.assert_array_equal(values, [0, 100])
->       numpy.testing.assert_array_equal(counts, [7388, 112])
+>       numpy.testing.assert_array_equal(counts, [7392, 108])
 
 test/test_geo_image.py:232: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-args = (<built-in function eq>, array([7385,  115]), [7388, 112])
+args = (<built-in function eq>, array([7385,  115]), [7392, 108])
 kwds = {'err_msg': '', 'header': 'Arrays are not equal', 'strict': False, 'verbose': True}
 
     @wraps(func)
@@ -63,144 +63,10 @@ E           AssertionError:
 E           Arrays are not equal
 E           
 E           Mismatched elements: 2 / 2 (100%)
-E           Max absolute difference: 3
-E           Max relative difference: 0.02678571
+E           Max absolute difference: 7
+E           Max relative difference: 0.06481481
 E            x: array([7385,  115])
-E            y: array([7388,  112])
-
-/opt/hostedtoolcache/Python/3.11.7/x64/lib/python3.11/contextlib.py:81: AssertionError
-_______________________________ test_draw_state ________________________________
-
-proj = <idsse.common.grid_proj.GridProj object at 0x7eff7258a810>
-
-    def test_draw_state(proj):
-        data = numpy.zeros((proj.width, proj.height))
-        geo_image = GeoImage.from_data_grid(proj, data)
-        geo_image.draw_state('Rhode Island', color=(255, 0, 0))
-    
-        values, counts = numpy.unique(geo_image.rgb_array, return_counts=True)
-        numpy.testing.assert_array_equal(values, [0, 255])
->       numpy.testing.assert_array_equal(counts, [11234306, 589])
-
-test/test_geo_image.py:324: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-args = (<built-in function eq>, array([11234304,      591]), [11234306, 589])
-kwds = {'err_msg': '', 'header': 'Arrays are not equal', 'strict': False, 'verbose': True}
-
-    @wraps(func)
-    def inner(*args, **kwds):
-        with self._recreate_cm():
->           return func(*args, **kwds)
-E           AssertionError: 
-E           Arrays are not equal
-E           
-E           Mismatched elements: 2 / 2 (100%)
-E           Max absolute difference: 2
-E           Max relative difference: 0.00339559
-E            x: array([11234304,      591])
-E            y: array([11234306,      589])
-
-/opt/hostedtoolcache/Python/3.11.7/x64/lib/python3.11/contextlib.py:81: AssertionError
-______________________________ test_add_one_state ______________________________
-
-proj = <idsse.common.grid_proj.GridProj object at 0x7eff725f6750>
-
-    def test_add_one_state(proj):
-        data = numpy.zeros((proj.width, proj.height))
-        geo_image = GeoImage.from_data_grid(proj, data)
-        geo_image.draw_state_boundary('Florida', color=(255, 0, 0))
-    
-        # confirm that at least three of the pixel along the state boundary are colored red
-        numpy.testing.assert_array_equal(geo_image.rgb_array[1665, 320], [255, 0, 0])
->       numpy.testing.assert_array_equal(geo_image.rgb_array[1850, 122], [255, 0, 0])
-
-test/test_geo_image.py:334: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-args = (<built-in function eq>, array([0, 0, 0], dtype=uint8), [255, 0, 0])
-kwds = {'err_msg': '', 'header': 'Arrays are not equal', 'strict': False, 'verbose': True}
-
-    @wraps(func)
-    def inner(*args, **kwds):
-        with self._recreate_cm():
->           return func(*args, **kwds)
-E           AssertionError: 
-E           Arrays are not equal
-E           
-E           Mismatched elements: 1 / 3 (33.3%)
-E           Max absolute difference: 255
-E           Max relative difference: 1.
-E            x: array([0, 0, 0], dtype=uint8)
-E            y: array([255,   0,   0])
-
-/opt/hostedtoolcache/Python/3.11.7/x64/lib/python3.11/contextlib.py:81: AssertionError
-___________________________ test_add_list_of_states ____________________________
-
-proj = <idsse.common.grid_proj.GridProj object at 0x7eff72589050>
-
-    def test_add_list_of_states(proj):
-        data = numpy.zeros((proj.width, proj.height))
-        geo_image = GeoImage.from_data_grid(proj, data)
-        geo_image.draw_state_boundary(['Nevada', 'Iowa', 'Delaware'], color=(255, 0, 0))
-    
-        # confirm that at least three of the pixel along state boundaries are colored red
->       numpy.testing.assert_array_equal(geo_image.rgb_array[609, 678], [255, 0, 0])
-
-test/test_geo_image.py:344: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-args = (<built-in function eq>, array([0, 0, 0], dtype=uint8), [255, 0, 0])
-kwds = {'err_msg': '', 'header': 'Arrays are not equal', 'strict': False, 'verbose': True}
-
-    @wraps(func)
-    def inner(*args, **kwds):
-        with self._recreate_cm():
->           return func(*args, **kwds)
-E           AssertionError: 
-E           Arrays are not equal
-E           
-E           Mismatched elements: 1 / 3 (33.3%)
-E           Max absolute difference: 255
-E           Max relative difference: 1.
-E            x: array([0, 0, 0], dtype=uint8)
-E            y: array([255,   0,   0])
-
-/opt/hostedtoolcache/Python/3.11.7/x64/lib/python3.11/contextlib.py:81: AssertionError
-_____________________________ test_add_all_states ______________________________
-
-proj = <idsse.common.grid_proj.GridProj object at 0x7eff6fbd2150>
-
-    def test_add_all_states(proj):
-        current_path = os.path.dirname(os.path.realpath(__file__))
-        filename = os.path.join(current_path, 'resources', 'nbm_temp-202211111100-202211121300.nc')
-        attrs, data = read_netcdf(filename)
-        if attrs['data_order'] == 'latitude,longitude':
-            data = numpy.transpose(data)
-        geo_image = GeoImage.from_data_grid(proj, data)
-        geo_image.draw_state_boundary('All', color=(255, 0, 0))
-    
-        # confirm that at least three of the pixel along state boundaries are colored red
->       numpy.testing.assert_array_equal(geo_image.rgb_array[1707, 862], [255, 0, 0])
-
-test/test_geo_image.py:379: 
-_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-
-args = (<built-in function eq>, array([145, 145, 145], dtype=uint8), [255, 0, 0])
-kwds = {'err_msg': '', 'header': 'Arrays are not equal', 'strict': False, 'verbose': True}
-
-    @wraps(func)
-    def inner(*args, **kwds):
-        with self._recreate_cm():
->           return func(*args, **kwds)
-E           AssertionError: 
-E           Arrays are not equal
-E           
-E           Mismatched elements: 3 / 3 (100%)
-E           Max absolute difference: 145
-E           Max relative difference: 0.43137255
-E            x: array([145, 145, 145], dtype=uint8)
-E            y: array([255,   0,   0])
+E            y: array([7392,  108])
 
 /opt/hostedtoolcache/Python/3.11.7/x64/lib/python3.11/contextlib.py:81: AssertionError
 =============================== warnings summary ===============================
@@ -228,49 +94,17 @@ idsse/common/publish_confirm.py     151     13    91%
 idsse/common/rabbitmq_utils.py       61      0   100%
 idsse/common/utils.py               103     14    86%
 idsse/common/validate_schema.py      40      0   100%
-idsse/common/vectaster.py           188     30    84%
+idsse/common/vectaster.py           193     31    84%
 -----------------------------------------------------
-TOTAL                              1269    100    92%
+TOTAL                              1274    101    92%
 
 =========================== short test summary info ============================
 FAILED test/test_geo_image.py::test_draw_geo_polygon - AssertionError: 
 Arrays are not equal
 
 Mismatched elements: 2 / 2 (100%)
-Max absolute difference: 3
-Max relative difference: 0.02678571
+Max absolute difference: 7
+Max relative difference: 0.06481481
  x: array([7385,  115])
- y: array([7388,  112])
-FAILED test/test_geo_image.py::test_draw_state - AssertionError: 
-Arrays are not equal
-
-Mismatched elements: 2 / 2 (100%)
-Max absolute difference: 2
-Max relative difference: 0.00339559
- x: array([11234304,      591])
- y: array([11234306,      589])
-FAILED test/test_geo_image.py::test_add_one_state - AssertionError: 
-Arrays are not equal
-
-Mismatched elements: 1 / 3 (33.3%)
-Max absolute difference: 255
-Max relative difference: 1.
- x: array([0, 0, 0], dtype=uint8)
- y: array([255,   0,   0])
-FAILED test/test_geo_image.py::test_add_list_of_states - AssertionError: 
-Arrays are not equal
-
-Mismatched elements: 1 / 3 (33.3%)
-Max absolute difference: 255
-Max relative difference: 1.
- x: array([0, 0, 0], dtype=uint8)
- y: array([255,   0,   0])
-FAILED test/test_geo_image.py::test_add_all_states - AssertionError: 
-Arrays are not equal
-
-Mismatched elements: 3 / 3 (100%)
-Max absolute difference: 145
-Max relative difference: 0.43137255
- x: array([145, 145, 145], dtype=uint8)
- y: array([255,   0,   0])
-================== 5 failed, 206 passed, 2 warnings in 5.27s ===================
+ y: array([7392,  108])
+================== 1 failed, 211 passed, 2 warnings in 5.03s ===================
