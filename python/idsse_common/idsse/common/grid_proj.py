@@ -308,25 +308,3 @@ class GridProj:
         raise TypeError(
             f'Cannot transpose CRS values of ({type(x).__name__})({type(y).__name__}) to pixel'
         )
-
-    # TODO: remove this
-    # @staticmethod
-    # def _round_pixel(
-    #     pixel: ScalarPair,
-    #     rounding: RoundingParam,
-    #     precision: int = 0
-    # ) -> ScalarPair:
-    #     """Round i and j coordinates of pixel using rounding method requested"""
-    #     i, j = pixel
-
-    #     if isinstance(rounding, str):  # cast str to RoundingMethod enum
-    #         try:
-    #             rounding = RoundingMethod[rounding.upper()]
-    #         except KeyError as exc:
-    #             raise ValueError(f'Unsupported rounding method {rounding}') from exc
-
-    #     if rounding is RoundingMethod.ROUND:
-    #         return round_half_away(i, precision), round_half_away(j, precision)
-    #     if rounding is RoundingMethod.FLOOR:
-    #         return math.floor(i), math.floor(j)
-    #     raise ValueError('rounding method cannot be None')
