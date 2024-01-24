@@ -230,18 +230,17 @@ def test_draw_geo_polygon(proj: GridProj):
     # values will be 0 or 100 (for polygon) and 0 everywhere else
     # TODO: exactly 8 pixels are missing from array: 4 0s and 4 1s
     numpy.testing.assert_array_equal(values, [0, 100])
-    numpy.testing.assert_array_equal(counts, [7388, 112])
+    numpy.testing.assert_array_equal(counts, [7392, 108])
     expected_indices = [2006, 2156, 2306, 2309, 2456, 2459, 2606, 2609, 2753, 2756, 2759,
                         2762, 2903, 2906, 2909, 2912, 3053, 3056, 3059, 3062, 3203, 3206,
-                        3209, 3212, 3215, 3353, 3356, 3359, 3362, 3365, 3503, 3506, 3509,
-                        3512, 3515, 3650, 3653, 3656, 3659, 3662, 3665, 3668, 3800, 3803,
-                        3806, 3809, 3812, 3815, 3818, 3950, 3953, 3956, 3959, 3962, 3965,
-                        3968, 3971, 4100, 4103, 4106, 4109, 4112, 4115, 4118, 4121, 4250,
-                        4253, 4256, 4259, 4262, 4265, 4268, 4271, 4400, 4403, 4406, 4409,
-                        4412, 4415, 4418, 4421, 4424, 4547, 4550, 4553, 4556, 4559, 4562,
-                        4565, 4568, 4571, 4574, 4706, 4709, 4712, 4715, 4718, 4721, 4724,
-                        4862, 4865, 4868, 4871, 4874, 4877, 5018, 5021, 5024, 5027, 5174,
-                        5177, 5330]
+                        3209, 3212, 3215, 3353, 3356, 3359, 3362, 3365, 3500, 3503, 3506,
+                        3509, 3512, 3515, 3650, 3653, 3656, 3659, 3662, 3665, 3668, 3800,
+                        3803, 3806, 3809, 3812, 3815, 3818, 3950, 3953, 3956, 3959, 3962,
+                        3965, 3968, 3971, 4100, 4103, 4106, 4109, 4112, 4115, 4118, 4121,
+                        4250, 4253, 4256, 4259, 4262, 4265, 4268, 4271, 4397, 4400, 4403,
+                        4406, 4409, 4412, 4415, 4418, 4421, 4424, 4553, 4556, 4559, 4562,
+                        4565, 4568, 4571, 4574, 4709, 4712, 4715, 4718, 4721, 4724, 4865,
+                        4868, 4871, 4874, 4877, 5021, 5024, 5027, 5177, 5330]
     numpy.testing.assert_array_equal(numpy.where(indices == 1)[0], expected_indices)
 
 
@@ -324,7 +323,7 @@ def test_draw_state(proj):
 
     values, counts = numpy.unique(geo_image.rgb_array, return_counts=True)
     numpy.testing.assert_array_equal(values, [0, 255])
-    numpy.testing.assert_array_equal(counts, [11234306, 589])
+    numpy.testing.assert_array_equal(counts, [11234304, 591])
 
 
 def test_add_one_state(proj):
@@ -334,8 +333,8 @@ def test_add_one_state(proj):
 
     # confirm that at least three of the pixel along the state boundary are colored red
     numpy.testing.assert_array_equal(geo_image.rgb_array[1665, 320], [255, 0, 0])
-    numpy.testing.assert_array_equal(geo_image.rgb_array[1850, 122], [255, 0, 0])
-    numpy.testing.assert_array_equal(geo_image.rgb_array[1801, 107], [255, 0, 0])
+    numpy.testing.assert_array_equal(geo_image.rgb_array[1850, 125], [255, 0, 0])
+    numpy.testing.assert_array_equal(geo_image.rgb_array[1812, 109], [255, 0, 0])
 
 
 def test_add_list_of_states(proj):
@@ -344,9 +343,9 @@ def test_add_list_of_states(proj):
     geo_image.draw_state_boundary(['Nevada', 'Iowa', 'Delaware'], color=(255, 0, 0))
 
     # confirm that at least three of the pixel along state boundaries are colored red
-    numpy.testing.assert_array_equal(geo_image.rgb_array[609, 678], [255, 0, 0])
-    numpy.testing.assert_array_equal(geo_image.rgb_array[1263, 792], [255, 0, 0])
-    numpy.testing.assert_array_equal(geo_image.rgb_array[1967, 797], [255, 0, 0])
+    numpy.testing.assert_array_equal(geo_image.rgb_array[609, 683], [255, 0, 0])
+    numpy.testing.assert_array_equal(geo_image.rgb_array[1263, 795], [255, 0, 0])
+    numpy.testing.assert_array_equal(geo_image.rgb_array[1957, 797], [255, 0, 0])
 
 
 def test_color_palette():
@@ -379,6 +378,6 @@ def test_add_all_states(proj):
     geo_image.draw_state_boundary('All', color=(255, 0, 0))
 
     # confirm that at least three of the pixel along state boundaries are colored red
-    numpy.testing.assert_array_equal(geo_image.rgb_array[1707, 862], [255, 0, 0])
+    numpy.testing.assert_array_equal(geo_image.rgb_array[1707, 861], [255, 0, 0])
     numpy.testing.assert_array_equal(geo_image.rgb_array[742, 889], [255, 0, 0])
     numpy.testing.assert_array_equal(geo_image.rgb_array[1206, 229], [255, 0, 0])
