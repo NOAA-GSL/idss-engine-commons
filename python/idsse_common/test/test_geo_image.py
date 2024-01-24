@@ -228,7 +228,6 @@ def test_draw_geo_polygon(proj: GridProj):
                                            return_counts=True)
 
     # values will be 0 or 100 (for polygon) and 0 everywhere else
-    # TODO: exactly 8 pixels are missing from array: 4 0s and 4 1s
     numpy.testing.assert_array_equal(values, [0, 100])
     numpy.testing.assert_array_equal(counts, [7392, 108])
     expected_indices = [2006, 2156, 2306, 2309, 2456, 2459, 2606, 2609, 2753, 2756, 2759,
@@ -259,7 +258,6 @@ def test_set_outline_pixel_for_shape(proj):
 
     numpy.testing.assert_array_equal(values, [0, 1, 2, 100])
 
-    # TODO: This array is missing [27, 18, 0, 9] from expected value
     numpy.testing.assert_array_equal(counts, [1245, 27, 8, 70])
     expected_indices = [333, 336, 339, 423, 426, 429, 513, 516, 519, 612, 615,
                         618, 702, 705, 708, 792, 795, 798, 882, 885, 888, 972,

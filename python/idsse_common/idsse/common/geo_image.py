@@ -313,7 +313,7 @@ class GeoImage():
         else:
             raise TypeError(f'Passed shape (with type: {type(shape)}) in not currently supported')
 
-        coords = rasterize(shape, rounding='round')
+        coords = rasterize(shape)
 
         for i, j in zip(*coords):
             if 0 <= i < self.width and 0 <= j < self.height:
@@ -348,7 +348,7 @@ class GeoImage():
         if isinstance(shape, str):
             shape = from_wkt(shape)
 
-        coords = rasterize(shape, self.proj, 'round') if geo else rasterize(shape, rounding='round')
+        coords = rasterize(shape, self.proj) if geo else rasterize(shape)
         for i_j in zip(*coords):
             self.set_pixel(*i_j, color, geo=False)
 
@@ -386,7 +386,7 @@ class GeoImage():
         if isinstance(shape, str):
             shape = from_wkt(shape)
 
-        coords = rasterize(shape, self.proj, 'round') if geo else rasterize(shape, rounding='round')
+        coords = rasterize(shape, self.proj) if geo else rasterize(shape)
         for i_j in zip(*coords):
             self.outline_pixel(*i_j, color, geo=False)
 
