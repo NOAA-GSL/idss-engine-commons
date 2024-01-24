@@ -218,9 +218,9 @@ def test_compound_transformations_stay_consistent(grid_proj: GridProj):
     assert (proj_x, proj_y) == approx_tuple(initial_geo)
 
 
-def test_geo_to_pixel_array(grid_proj: GridProj):
+def test_geo_to_pixel_list(grid_proj: GridProj):
     # split example list of tuples into: list of lats and list of lons
-    lon_lat_arrays: Tuple[List[float], List[float]] = list(zip(*EXAMPLE_LON_LAT))
+    lon_lat_arrays: tuple[list[float]] = tuple(zip(*EXAMPLE_LON_LAT))
 
     # pass full arrays to map_geo_to_pixel
     pixel_arrays = grid_proj.map_geo_to_pixel(*lon_lat_arrays, rounding=RoundingMethod.ROUND)
@@ -230,12 +230,12 @@ def test_geo_to_pixel_array(grid_proj: GridProj):
     assert pixel_arrays[1] == expected_ys
 
 
-def test_pixel_to_geo_array(grid_proj: GridProj):
+def test_pixel_to_geo_numpy_array(grid_proj: GridProj):
     i_array, j_array = list(zip(*EXAMPLE_PIXELS))
 
     # pass full numpy arrays to map_pixel_to_geo
-    i_numpy_array = np.array(i_array, dtype=int)
-    j_numpy_array = np.array(j_array, dtype=int)
+    i_numpy_array = np.array(i_array)
+    j_numpy_array = np.array(j_array)
     geo_arrays = grid_proj.map_pixel_to_geo(i_numpy_array, j_numpy_array)
 
     expected_geos = tuple(np.array(values) for values in zip(*EXAMPLE_LON_LAT))
@@ -245,13 +245,13 @@ def test_pixel_to_geo_array(grid_proj: GridProj):
     np.testing.assert_almost_equal(geo_arrays, expected_geos)
 
 
-def test_geo_to_pixel_ndarray(grid_proj: GridProj):
+def test_geo_to_pixel_numpy_array(grid_proj: GridProj):
     x_values, y_values = list(zip(*EXAMPLE_LON_LAT))
     pixel_arrays = grid_proj.map_geo_to_pixel(
         np.array(x_values), np.array(y_values), rounding=RoundingMethod.ROUND
     )
 
-    expected_arrays = np.array(list(zip(*EXAMPLE_PIXELS)), dtype=np.int64)
+    expected_arrays = np.array(list(zip(*EXAMPLE_PIXELS)))
 
     # both x and y coordinate arrays returned should be numpy arrays
     assert all(isinstance(arr, np.ndarray) for arr in pixel_arrays)

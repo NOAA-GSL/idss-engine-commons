@@ -12,11 +12,8 @@
 
 import copy
 import logging
-import math
-from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import NewType, Sequence
-from uuid import UUID
 
 import numpy
 # import shapely
@@ -29,15 +26,18 @@ Coord = NewType('Coord', Sequence[float])
 Coords = NewType('Coords', Sequence[Coord])
 
 
-def split_coordinate_pairs(points: Sequence[Pixel], dtype = numpy.int64) -> tuple[numpy.ndarray]:
-    """Convert a list of (x,y) tuples to a tuple of x values (as numpy array) and y
-    values (numpy array).
+def coordinate_pairs_to_axes(
+    points: Sequence[Pixel] | Coords, dtype: numpy.dtype | None = None
+) -> tuple[numpy.ndarray]:
+    """Convert a list of (x,y) tuples to a tuple of values on the x axis and values on the y axis,
+        represented as numpy arrays.
 
     Args:
         points (Sequence[Pixel]): list of (x,y) coordinates
-        dtype: (numpy.dtype, optional): data type of resulting numpy arrays. Default: int64
+        dtype: (numpy.dtype | None): data type of resulting numpy arrays. Default: None
 
     Returns:
-        Tuple[numpy.ndarray]: Same coordinates but restructured
+        tuple[numpy.ndarray]: Same coordinates but restructured
+            as all coordinates on x axis, followed by all coordinates on y axis
     """
     return tuple(numpy.array(dim_coord, dtype=dtype) for dim_coord in tuple(zip(*points)))

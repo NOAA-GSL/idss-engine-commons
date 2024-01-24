@@ -20,7 +20,8 @@ import numpy as np
 from pyproj import CRS, Transformer
 from pyproj.enums import TransformDirection
 
-from .utils import round_, round_values, RoundingParam
+from idsse.common.utils import round_values, RoundingParam
+from idsse.common.scientific_utils import coordinate_pairs_to_axes
 
 # type hints
 Scalar = Union[int, float, np.integer, np.float_]
@@ -220,13 +221,12 @@ class GridProj:
             # Merge x array/tuple/list and y array/tuple/list into list of x/y pairs, transform
             # each pixel pair to a CRS pair, then split list again into array of x coordinates
             # and y coordinates (now in CRS dimensions) and return
-            crs_pairs = [self.map_pixel_to_crs(*pixel_coordinates)
-                         for pixel_coordinates in zip(x, y)]
-            x_coordinates, y_coordinates = tuple(zip(*crs_pairs))
+            crs_pairs = [self.map_pixel_to_crs(*pixel_coords) for pixel_coords in zip(x, y)]
 
+            # if passed as numpy arrays, return numpy arrays. Otherwise return as lists
             if isinstance(x, np.ndarray) and isinstance(y, np.ndarray):
-                return np.array(x_coordinates), np.array(y_coordinates)
-            return x_coordinates, y_coordinates
+                return coordinate_pairs_to_axes(crs_pairs)
+            return tuple(zip(*crs_pairs))
 
         raise TypeError(
             f'Cannot transpose pixel values of ({type(x).__name__})({type(y).__name__}) to CRS'
@@ -287,13 +287,11 @@ class GridProj:
             # arrays of x coordinates and y coordinates (but now dimensions are pixel, not CRS)
             pixel_pairs = [self.map_crs_to_pixel(*crs_coord, precision, rounding)
                            for crs_coord in zip(x, y)]
-            i_coordinates, j_coordinates = tuple(zip(*pixel_pairs))
 
-            # if passed as numpy array, preserve type in return value. Otherwise return as tuples
+            # if passed as numpy arrays, return numpy arrays. Otherwise return as lists
             if isinstance(x, np.ndarray) and isinstance(y, np.ndarray):
-                return np.array(i_coordinates), np.array(j_coordinates)
-
-            return i_coordinates, j_coordinates
+                return coordinate_pairs_to_axes(pixel_pairs)
+            return tuple(zip(*pixel_pairs))
 
         # x value(s) and y value(s) were not the same shape
         raise TypeError(

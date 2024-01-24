@@ -19,7 +19,7 @@ from shapely import Geometry, LinearRing, LineString, MultiPolygon, Point, Polyg
 
 from idsse.common.grid_proj import GridProj
 from idsse.common.utils import round_, round_values, RoundingMethod, RoundingParam
-from idsse.common.scientific_utils import Pixel, Coord, Coords, split_coordinate_pairs
+from idsse.common.scientific_utils import Pixel, Coord, Coords, coordinate_pairs_to_axes
 
 logger = logging.getLogger(__name__)
 
@@ -99,10 +99,11 @@ def rasterize_point(
         raise TypeError(f'Passed geometry is type:{type(point)}, but must be Point')
 
     if grid_proj is not None:
-        return split_coordinate_pairs([grid_proj.map_geo_to_pixel(*coord, rounding=rounding)])
+        return coordinate_pairs_to_axes([grid_proj.map_geo_to_pixel(*coord, rounding=rounding)],
+                                         dtype=numpy.int64)
 
-    coords = [tuple(round_values(*coord, rounding=rounding))]
-    return split_coordinate_pairs(coords)
+    return coordinate_pairs_to_axes([tuple(round_values(*coord, rounding=rounding))],
+                                     dtype=numpy.int64)
 
 
 def rasterize_linestring(
@@ -333,7 +334,7 @@ def pixels_for_linestring(linestring: LineString) -> tuple[numpy.array]:
     Returns:
         Tuple[numpy.array]: First array represent the x-coordinate and the seconde the y.
     """
-    return split_coordinate_pairs(_pixels_for_linestring(linestring))
+    return coordinate_pairs_to_axes(_pixels_for_linestring(linestring), dtype=numpy.int64)
 
 
 def pixels_in_polygon(poly: Polygon) -> tuple[numpy.ndarray]:
@@ -352,7 +353,7 @@ def pixels_in_polygon(poly: Polygon) -> tuple[numpy.ndarray]:
             if pixel not in pixels_on_inner_edge:
                 pixels.remove(pixel)
 
-    return split_coordinate_pairs(pixels)
+    return coordinate_pairs_to_axes(pixels, dtype=numpy.int64)
 
 
 def _pixels_for_linestring(
