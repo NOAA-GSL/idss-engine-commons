@@ -20,7 +20,7 @@ import numpy as np
 from pyproj import CRS, Transformer
 from pyproj.enums import TransformDirection
 
-from .utils import round_
+from .utils import round_, RoundingParam
 
 # type hints
 Scalar = Union[int, float, np.integer, np.float_]
@@ -32,15 +32,6 @@ CoordinatePair = Tuple[Coordinate, Coordinate]
 # variables passed to GridProj.map_* methods can be anything in this list, but
 # method will always preserve the argument's type in the return value
 T = TypeVar('T', Scalar, ScalarPair, ScalarArray, np.ndarray)
-
-
-class RoundingMethod(Enum):
-    """Transformations indicators to be applied to pixel values when casting to ints"""
-    ROUND = 'ROUND'
-    FLOOR = 'FLOOR'
-
-
-RoundingParam = Union[str, RoundingMethod]
 
 
 class Flip(Enum):
