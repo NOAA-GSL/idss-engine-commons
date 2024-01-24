@@ -20,7 +20,7 @@ import numpy as np
 from pyproj import CRS, Transformer
 from pyproj.enums import TransformDirection
 
-from .utils import round_, RoundingParam
+from .utils import round_, round_values, RoundingParam
 
 # type hints
 Scalar = Union[int, float, np.integer, np.float_]
@@ -278,7 +278,7 @@ class GridProj:
             j: float = (y - self._y_offset) / self._dy
 
             if rounding is not None:
-                return tuple((round_(coord, precision, rounding=rounding) for coord in (i, j)))
+                return tuple(round_values(i, j, precision=precision, rounding=rounding))
             return i, j
 
         if isinstance(x, Iterable) and isinstance(y, Iterable):

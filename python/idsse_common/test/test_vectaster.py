@@ -96,14 +96,14 @@ def test_geographic_to_pixel(monkeypatch: MonkeyPatch, grid_proj: GridProj):
 
 def test_rasterize_point(grid_proj: GridProj):
     point = 'POINT (-100.5 30.5)'
-    pixels = ((numpy.array([1081]), numpy.array([347])))
+    pixels = (numpy.array([1081]), numpy.array([347]))
     result = rasterize_point(point, grid_proj)
     numpy.testing.assert_array_equal(result, pixels)
 
 
 def test_rasterize_point_from_coord(grid_proj: GridProj):
     point = (-100.5, 30.5)
-    pixels = ((numpy.array([1081]), numpy.array([347])))
+    pixels = (numpy.array([1081]), numpy.array([347]))
     result = rasterize_point(point, grid_proj)
     numpy.testing.assert_array_equal(result, pixels)
 

@@ -274,6 +274,23 @@ def round_(
     raise ValueError('rounding method cannot be None')
 
 
+def round_values(
+    *args: int | float,
+    rounding: RoundingParam | None,
+    precision: int = 0,
+) -> list[int | float]:
+    """Round a list/tuple of floats to a given number of decimal places, default 0.
+
+    Args:
+        *args: all scalar values to be rounded
+        rounding (RoundingParam | None): one of None, 'round', 'floor'. Default is None.
+        precision (int): Number of decimal places to preserve. Default is 0.
+    """
+    if rounding is None:
+        return [int(v) for v in args]
+    return [round_(v, precision=precision, rounding=rounding) for v in args]
+
+
 def is_valid_uuid(uuid: str, version=4) -> bool:
     """Checks for a valid UUID
 

@@ -13,27 +13,21 @@ import logging
 from collections.abc import Iterable, Sequence
 from math import floor
 from numbers import Number
-from typing import NewType
 
 import numpy
 from shapely import Geometry, LinearRing, LineString, MultiPolygon, Point, Polygon, from_wkt
 
 from idsse.common.grid_proj import GridProj
-from idsse.common.utils import round_, RoundingMethod
-
+from idsse.common.utils import round_, round_values, RoundingMethod, RoundingParam
+from idsse.common.scientific_utils import Pixel, Coord, Coords, split_coordinate_pairs
 
 logger = logging.getLogger(__name__)
-
-
-Pixel = NewType('Pixel', Sequence[int])
-Coord = NewType('Coord', Sequence[float])
-Coords = NewType('Coords', Sequence[Coord])
 
 
 def rasterize(
     geometry: str | Geometry,
     grid_proj: GridProj | None = None,
-    rounding: RoundingMethod = RoundingMethod.FLOOR
+    rounding: RoundingParam = RoundingMethod.FLOOR
 ) -> tuple[numpy.array]:
     """Takes a geographic geometry (specified with lon/lat) and determines all the
     associated pixels in the translated space (as specified by grid_proj).
@@ -42,8 +36,8 @@ def rasterize(
         geometry (str | Geometry): Either a shapely Geometry (or sub-class)
                                    or a well-known-text representation of a geometry.
         grid_proj (GridProj | None): A projection (CRS) with scale and offsets. Defaults to None.
-        rounding (RoundingMethod | None): Rounding role for mapping float coordinate values
-                                             to integers. Defaults to RoundingMethod.FLOOR.
+        rounding (RoundingParam | None): Rounding role for mapping float coordinate values
+                                         to integers. Defaults to RoundingMethod.FLOOR.
 
     Raises:
         TypeError: When the geometry type is not supported
@@ -76,17 +70,17 @@ def rasterize(
 def rasterize_point(
     point: str | Coord | Point,
     grid_proj: GridProj | None = None,
-    rounding: RoundingMethod = RoundingMethod.FLOOR
+    rounding: RoundingParam | None = RoundingMethod.FLOOR
 ) -> tuple[numpy.array]:
     """Takes a geographic Point (specified with lon/lat) and determines the
     associated pixel in the translated space (as specified by grid_proj).
 
     Args:
         point (str | Coord | Point): Either a 2D coordinate, a shapely Point,
-                                          or a well-known-text representation of a Point.
+                                     or a well-known-text representation of a Point.
         grid_proj (GridProj | None): A projection (CRS) with scale and offsets. Defaults to None.
-        rounding (RoundingMethod |  None): Rounding role for mapping float coordinate values
-                                           to integers. Defaults to RoundingMethod.FLOOR.
+        rounding (RoundingParam | None): Rounding role for mapping float coordinate values
+                                         to integers. Defaults to RoundingMethod.FLOOR.
 
     Raises:
         TypeError: When the point arg does not represent a Point
@@ -105,15 +99,16 @@ def rasterize_point(
         raise TypeError(f'Passed geometry is type:{type(point)}, but must be Point')
 
     if grid_proj is not None:
-        return _make_numpy([grid_proj.map_geo_to_pixel(*coord, rounding=rounding)])
+        return split_coordinate_pairs([grid_proj.map_geo_to_pixel(*coord, rounding=rounding)])
 
-    return _make_numpy([_round_iterable(*coord, rounding=rounding)])
+    coords = [tuple(round_values(*coord, rounding=rounding))]
+    return split_coordinate_pairs(coords)
 
 
 def rasterize_linestring(
     linestring: str | Sequence[Coord] | LineString,
     grid_proj: GridProj | None = None,
-    rounding: RoundingMethod = RoundingMethod.FLOOR
+    rounding: RoundingParam | None = RoundingMethod.FLOOR
 ) -> tuple[numpy.array]:
     """Takes a geographic LineString (specified with lon/lat) and determines all the
     associated pixels in the translated space (as specified by grid_proj).
@@ -123,7 +118,7 @@ def rasterize_linestring(
                                                          LineString, or a well-known-text
                                                          representation of a LineString.
         grid_proj (GridProj | None): A projection (CRS) with scale and offsets. Defaults to None.
-        rounding (RoundingMethod | None): Rounding role for mapping float coordinate values
+        rounding (RoundingParam | None): Rounding role for mapping float coordinate values
                                           to integers. Defaults to RoundingMethod.FLOOR.
 
     Raises:
@@ -162,7 +157,8 @@ def rasterize_linestring(
     if grid_proj is not None:
         linestring = geographic_linestring_to_pixel(coords, grid_proj, rounding)
     else:
-        linestring = LineString([_round_iterable(*coord, rounding=rounding) for coord in linestring.coords])
+        linestring = LineString([round_values(*coord, rounding=rounding)
+                                 for coord in linestring.coords])
 
     return pixels_for_linestring(linestring)
 
@@ -170,7 +166,7 @@ def rasterize_linestring(
 def rasterize_polygon(
     polygon: str | Sequence[Coords] | Polygon,
     grid_proj: GridProj | None = None,
-    rounding: RoundingMethod = RoundingMethod.FLOOR
+    rounding: RoundingParam | None = RoundingMethod.FLOOR
 ) -> tuple[numpy.array]:
     """Takes a geographic Polygon (specified with lon/lat) and determines all the
     associated pixels in the translated space (as specified by grid_proj).
@@ -179,8 +175,8 @@ def rasterize_polygon(
         geometry (str | Sequence[Coords] | Polygon): Either a sequence of coords, a shapely Polygon,
                                                    or a well-known-text representation of a Polygon.
         grid_proj (GridProj | None): A projection (CRS) with scale and offsets. Defaults to None.
-        rounding (RoundingMethod | None): Rounding role for mapping float coordinate values
-                                             to integers. Defaults to RoundingMethod.FLOOR.
+        rounding (RoundingParam | None): Rounding role for mapping float coordinate values
+                                         to integers. Defaults to RoundingMethod.FLOOR.
 
     Raises:
         TypeError: When the polygon arg does not represent a Polygon
@@ -202,7 +198,7 @@ def rasterize_polygon(
     if grid_proj is not None:
         polygon = geographic_polygon_to_pixel(coords, grid_proj, rounding)
     else:
-        coords = [[_round_iterable(*coord, rounding=rounding)
+        coords = [[round_values(*coord, rounding=rounding)
                   for coord in ring] for ring in coords]
         polygon = Polygon(coords[0], holes=coords[1:])
 
@@ -210,16 +206,16 @@ def rasterize_polygon(
 
 
 def geographic_to_pixel(
-        geo: Geometry,
-        grid_proj: GridProj,
-        rounding: RoundingMethod | None = None
+    geo: Geometry,
+    grid_proj: GridProj,
+    rounding: RoundingParam | None = None
 ) -> Geometry:
     """Map a geometry specified in lat/lon space to geometry specified in pixel space
 
     Args:
         geo (Geometry): Shapely geometry with vertices defined by lon,lat
         grid_proj (GridProj): Projection plus pixel resolution
-        rounding (RoundingMethod | None): One of None, 'floor', 'round'. Defaults to None.
+        rounding (RoundingParam | None): One of None, 'floor', 'round'. Defaults to None.
 
     Raises:
         ValueError: If geometry type is not currently supported
@@ -244,14 +240,14 @@ def geographic_to_pixel(
 def geographic_point_to_pixel(
     point: Point,
     grid_proj: GridProj,
-    rounding: RoundingMethod = None
+    rounding: RoundingParam | None = None
 ) -> Point:
     """Map a Point specified in lat/lon space to geometry specified in pixel space
 
     Args:
         point (Point): Shapely geometry with vertices defined by lon,lat
         grid_proj (GridProj): Projection plus pixel resolution
-        rounding (RoundingMethod, optional): One of None, 'floor', 'round'. Defaults to None.
+        rounding (RoundingParam | None): One of None, 'floor', 'round'. Defaults to None.
 
     Raises:
         ValueError: If geometry is not a Point
@@ -268,14 +264,14 @@ def geographic_point_to_pixel(
 def geographic_linestring_to_pixel(
     linestring: LineString | Sequence[Coord],
     grid_proj: GridProj,
-    rounding: RoundingMethod | None = None
+    rounding: RoundingParam | None = None
 ) -> LineString:
     """Map a LineString specified in lat/lon space to geometry specified in pixel space
 
     Args:
         linestring (LineString | Sequence[Coord]): Shapely geometry with vertices defined by lon,lat
         grid_proj (GridProj): Projection plus pixel resolution
-        rounding (RoundingMethod | None): One of None, 'floor', 'round'. Defaults to None.
+        rounding (RoundingParam | None): One of None, 'floor', 'round'. Defaults to None.
 
     Raises:
         TypeError: If geometry is not a LineString
@@ -297,7 +293,7 @@ def geographic_linestring_to_pixel(
 def geographic_polygon_to_pixel(
     poly: Polygon | Sequence[Coords],
     grid_proj: GridProj,
-    rounding: RoundingMethod | None = None
+    rounding: RoundingParam | None = None
 ) -> Polygon:
     """Map a Polygon specified in lat/lon space to geometry specified in pixel space
 
@@ -305,7 +301,7 @@ def geographic_polygon_to_pixel(
         poly (Polygon | Sequence[Coords]): A sequence of coords used as the exterior of the polygon,
                                         or Shapely geometry, either with vertices defined by lon,lat
         grid_proj (GridProj): Projection plus pixel resolution
-        rounding (RoundingMethod | None): One of None, 'floor', 'round'. Defaults to None.
+        rounding (RoundingParam | None): One of None, 'floor', 'round'. Defaults to None.
 
     Raises:
         TypeError: If geometry is not a LineString
@@ -337,7 +333,7 @@ def pixels_for_linestring(linestring: LineString) -> tuple[numpy.array]:
     Returns:
         Tuple[numpy.array]: First array represent the x-coordinate and the seconde the y.
     """
-    return _make_numpy(_pixels_for_linestring(linestring))
+    return split_coordinate_pairs(_pixels_for_linestring(linestring))
 
 
 def pixels_in_polygon(poly: Polygon) -> tuple[numpy.ndarray]:
@@ -356,19 +352,7 @@ def pixels_in_polygon(poly: Polygon) -> tuple[numpy.ndarray]:
             if pixel not in pixels_on_inner_edge:
                 pixels.remove(pixel)
 
-    return _make_numpy(pixels)
-
-
-def _make_numpy(points: Sequence[Pixel]) -> tuple[numpy.ndarray]:
-    """Map a list of (x,y) tuples to a tuple of x values (as numpy array) and y values (numpy array)
-
-    Args:
-        points (Sequence[Pixel]): list of (x,y) coordinates
-
-    Returns:
-        Tuple[numpy.ndarray]: Same coordinates but restructured
-    """
-    return tuple(numpy.array(dim_coord, dtype=numpy.int64) for dim_coord in tuple(zip(*points)))
+    return split_coordinate_pairs(pixels)
 
 
 def _pixels_for_linestring(
@@ -391,9 +375,9 @@ def _pixels_for_linestring(
 
 # pylint: disable=invalid-name
 def _pixels_for_line_seg(
-        pnt1: tuple[int, int],
-        pnt2: tuple[int, int],
-        exclude_first: bool = False
+    pnt1: tuple[int, int],
+    pnt2: tuple[int, int],
+    exclude_first: bool = False
 ) -> list[Pixel]:
     """Get pixels crossed while traversing a line segment
 
@@ -435,7 +419,7 @@ def _pixels_for_line_seg(
 
 # pylint: disable=too-many-locals
 def _pixels_for_polygon(
-        polygon_boundary: LinearRing
+    polygon_boundary: LinearRing
 ) -> list[Pixel]:
     """Get all pixels in a polygon using a line scan algorithm
 
@@ -483,9 +467,3 @@ def _is_coord(arg) -> bool:
 
 def _is_coords(arg) -> bool:
     return isinstance(arg, Iterable) and all(_is_coord(v) for v in arg)
-
-
-def _round_iterable(*args, rounding: str | RoundingMethod) -> list[int]:
-    if rounding is None:
-        return [int(v) for v in args]
-    return [round_(v, rounding=rounding) for v in args]
