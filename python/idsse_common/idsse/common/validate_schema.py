@@ -12,9 +12,14 @@ import json
 import os
 from typing import Optional, Union
 
-from jsonschema import FormatChecker, RefResolver  # pylint: disable=no-name-in-module
-from jsonschema.validators import validator_for
+from jsonschema import Draft202012Validator, FormatChecker
 from jsonschema.protocols import Validator
+from referencing import Registry
+from referencing.jsonschema import DRAFT202012
+
+# these two must (at least should) be the same draft
+_validator = Draft202012Validator
+_draft = DRAFT202012
 
 
 def _get_refs(json_obj: Union[dict, list], result: Optional[set] = None) -> set:
@@ -48,11 +53,9 @@ def get_validator(schema_name) -> Validator:
     schema_dir = os.path.join(current_path, 'schema')
     schema_filename = os.path.join(schema_dir, schema_name+'.json')
     with open(schema_filename, 'r', encoding='utf8') as file:
-        schema = json.load(file)
+        schema: dict = json.load(file)
 
-    base: dict = json.loads('{"$schema": "http://json-schema.org/draft-07/schema#"}')
-
-    dependencies = {base.get('$id'): base}
+    dependencies = {}
     refs = _get_refs(schema)
     while len(refs):
         new_refs = set()
@@ -60,11 +63,11 @@ def get_validator(schema_name) -> Validator:
             schema_filename = os.path.join(schema_dir, ref)
             with open(schema_filename, 'r', encoding='utf8') as file:
                 ref_schema: dict = json.load(file)
-            dependencies[ref_schema.get('$id', ref)] = ref_schema
+            dependencies[ref_schema.get('$id', ref)] = _draft.create_resource(ref_schema)
             new_refs = _get_refs(ref_schema, new_refs)
         refs = {ref for ref in new_refs if ref not in dependencies}
 
-    resolver = RefResolver.from_schema(schema=base,
-                                       store=dependencies)
-
-    return validator_for(base)(schema, resolver=resolver, format_checker=FormatChecker())
+    # used default Validator type
+    return _validator(schema=schema,
+                      registry=Registry().with_resources(dependencies.items()),
+                      format_checker=FormatChecker())
