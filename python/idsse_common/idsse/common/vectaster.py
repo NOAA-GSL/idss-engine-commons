@@ -99,7 +99,7 @@ def rasterize_point(
         raise TypeError(f'Passed geometry is type:{type(point)}, but must be Point')
 
     if grid_proj is not None:
-        return coordinate_pairs_to_axes([grid_proj.map_geo_to_pixel(*coord, rounding=rounding)],
+        return coordinate_pairs_to_axes([grid_proj.map_geo_to_pixel(*coord, rounding)],
                                          dtype=numpy.int64)
 
     return coordinate_pairs_to_axes([tuple(round_values(*coord, rounding=rounding))],

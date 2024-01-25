@@ -158,12 +158,12 @@ class GridProj:
             lon (T): single x geographic coordinate, or array of all x coordinates
             lat (T): single y geographic coordinate, or array of all y coordinates
             rounding (Optional[RoundingParam]):
-                ROUND to apply round_half_away() to pixel values,
+                ROUND to apply round_() to pixel values,
                 FLOOR to apply math.floor().
                 Supports RoundingMethod enum value or str value (case insensitive).
                 By default, float pixels are not rounded and will be returned as floats
-            precision (int): number of decimal places to round to. If rounding parameter
-                is None, this will be ignored
+            precision (int): number of decimal places to round to. If rounding argument is None,
+                this will be ignored.
 
         Returns:
             T: x, y values (or arrays) of pixel, matching the type passed as lon/lat. Values are
@@ -173,8 +173,8 @@ class GridProj:
         # pylint: disable=not-an-iterable
         return self.map_crs_to_pixel(
             *crs_coordinates,
-            precision=precision,
-            rounding=rounding
+            rounding,
+            precision
         )
 
     def map_pixel_to_geo(self, x: T, y: T) -> Tuple[T, T]:
@@ -248,8 +248,8 @@ class GridProj:
         self,
         x: T,
         y: T,
+        rounding: Optional[RoundingParam] = None,
         precision: int = 0,
-        rounding: Optional[RoundingParam] = None
     ) -> Tuple[T, T]:
         """Map Coordinate Reference System (x,y) coordinates to pixel x and y
 
@@ -257,12 +257,13 @@ class GridProj:
             x (T): x scalar, or array/list of x scalars, in CRS dimensions
             y (T): y scalar, or array/list of y scalars, in CRS dimensions
             rounding (Optional[RoundingParam]):
-                ROUND to apply round_half_away() to pixel values,
+                ROUND to apply round_() to pixel values,
                 FLOOR to apply math.floor().
                 Supports RoundingMethod enum value or str value (case insensitive).
                 By default, pixels are not rounded and will be returned as floats
-            precision (int): number of decimal places to round to. If rounding parameter
-                is None, this will be ignored
+            precision (int): number of decimal places to round to. If rounding arg is None,
+                this will be ignored.
+
 
         Returns:
             Pixel: x, y values of pixel, rounded to ints if rounding passed, otherwise preserved
@@ -278,14 +279,14 @@ class GridProj:
             j: float = (y - self._y_offset) / self._dy
 
             if rounding is not None:
-                return tuple(round_values(i, j, precision=precision, rounding=rounding))
+                return tuple(round_values(i, j, rounding=rounding, precision=precision))
             return i, j
 
         if isinstance(x, Iterable) and isinstance(y, Iterable):
             # Merge array of x coordinates with array of y coordinates to make list of CRS
             # x, y pairs. Transform each CRS pair to a pixel (recursively), then split back into
             # arrays of x coordinates and y coordinates (but now dimensions are pixel, not CRS)
-            pixel_pairs = [self.map_crs_to_pixel(*crs_coord, precision, rounding)
+            pixel_pairs = [self.map_crs_to_pixel(*crs_coord, rounding, precision)
                            for crs_coord in zip(x, y)]
 
             # if passed as numpy arrays, return numpy arrays. Otherwise return as lists
