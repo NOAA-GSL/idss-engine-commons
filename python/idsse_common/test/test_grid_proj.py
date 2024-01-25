@@ -23,12 +23,12 @@ from idsse.common.utils import round_, RoundingMethod
 
 
 # example data
-EXAMPLE_PROJ_SPEC = '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +r=6371200'
+EXAMPLE_PROJ_SPEC = '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +a=6371200'
 EXAMPLE_GRID_SPEC = '+dx=2539.703 +dy=2539.703 +w=2345 +h=1597 +lat_ll=19.229 +lon_ll=-126.2766'
 
 PROJ_SPEC_WITH_OFFSET = (
     '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 '
-    '+x_0=3275807.350733357 +y_0=260554.63043505285 +r=6371200'
+    '+x_0=3275807.350733357 +y_0=260554.63043505285 +a=6371200'
 )
 GRID_SPEC_WITHOUT_LOWER_LEFT = '+dx=2539.703 +dy=2539.703 +w=2345 +h=1597'
 
