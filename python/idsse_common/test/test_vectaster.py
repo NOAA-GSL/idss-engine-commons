@@ -28,7 +28,7 @@ from idsse.common.vectaster import (geographic_to_pixel,
                                     rasterize_polygon)
 
 
-EXAMPLE_PROJ_SPEC = '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +r=6371200'
+EXAMPLE_PROJ_SPEC = '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +a=6371200'
 EXAMPLE_GRID_SPEC = '+dx=2539.703 +dy=2539.703 +w=2345 +h=1597 +lat_ll=19.229 +lon_ll=-126.2766'
 
 
@@ -96,14 +96,14 @@ def test_geographic_to_pixel(monkeypatch: MonkeyPatch, grid_proj: GridProj):
 
 def test_rasterize_point(grid_proj: GridProj):
     point = 'POINT (-100.5 30.5)'
-    pixels = ((numpy.array([1081]), numpy.array([347])))
+    pixels = (numpy.array([1081]), numpy.array([347]))
     result = rasterize_point(point, grid_proj)
     numpy.testing.assert_array_equal(result, pixels)
 
 
 def test_rasterize_point_from_coord(grid_proj: GridProj):
     point = (-100.5, 30.5)
-    pixels = ((numpy.array([1081]), numpy.array([347])))
+    pixels = (numpy.array([1081]), numpy.array([347]))
     result = rasterize_point(point, grid_proj)
     numpy.testing.assert_array_equal(result, pixels)
 

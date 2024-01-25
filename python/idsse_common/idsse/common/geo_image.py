@@ -22,7 +22,7 @@ from shapely import from_geojson, from_wkt, Geometry, LineString, MultiPolygon, 
 
 
 from .grid_proj import GridProj
-from .utils import round_half_away as rnd_ha
+from .utils import round_
 from .vectaster import geographic_to_pixel, rasterize
 
 logger = logging.getLogger(__name__)
@@ -67,9 +67,10 @@ class ColorPalette(NamedTuple):
                 raise ValueError('Colors and Anchors must be of the same length')
             xp = anchors
         else:
-            xp = [rnd_ha(pos) for pos in np.linspace(0, 255, num=num)]
-        lut = list((rnd_ha(r), rnd_ha(g), rnd_ha(b)) for (r, g, b) in
-                   zip(*list(np.interp(range(256), xp, fp) for fp in np.array(colors).T)))
+            xp = [round_(pos, rounding='floor') for pos in np.linspace(0, 255, num=num)]
+        lut = list(
+            (round_(r, 0, 'floor'), round_(g, 0, 'floor'), round_(b, 0, 'floor')) for (r, g, b) in
+            zip(*list(np.interp(range(256), xp, fp) for fp in np.array(colors).T)))
         return ColorPalette(lut, 256, 0, 255, 0)
 
     @classmethod

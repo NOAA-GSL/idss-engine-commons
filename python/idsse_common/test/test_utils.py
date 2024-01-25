@@ -18,8 +18,17 @@ from os import path
 import pytest
 
 from idsse.common.utils import TimeDelta, Map
-from idsse.common.utils import (datetime_gen, hash_code, exec_cmd, to_compact,
-                                to_iso, dict_copy_with, round_half_away)
+from idsse.common.utils import (
+    datetime_gen,
+    dict_copy_with,
+    exec_cmd,
+    is_valid_uuid,
+    hash_code,
+    round_,
+    round_half_away,
+    to_compact,
+    to_iso
+)
 
 
 def test_timedelta_minute():
@@ -175,3 +184,24 @@ def test_round_half_away_with_precision(number: float, expected: float):
     result = round_half_away(number, precision=3)
     assert isinstance(result, float)
     assert result == expected
+
+
+def test_invalid_rounding_method_raises_error():
+    with pytest.raises(ValueError) as exc:
+        round_(123.456, rounding='MAGIC')
+    assert 'MAGIC' in exc.value.args[0]
+
+    with pytest.raises(ValueError) as exc:
+        round_(123.456, rounding=None)
+    assert 'None' in exc.value.args[0]
+
+
+def test_is_valid_uuid_success():
+    assert is_valid_uuid('f848406c-44eb-491f-99df-d0461090425c')
+    assert is_valid_uuid('f848406c-44eb-491f-99df-d0461090425c', version=4)
+    assert is_valid_uuid('1d10609e-ba56-11ee-af51-fa605d1346b6', version=1)
+
+
+def test_is_valid_uuid_failure():
+    assert not is_valid_uuid('abc-def-ghi-jlk')  # badly-formed UUID
+    assert not is_valid_uuid('1d10609e-ba56-11ee-af51-fa605d1346b6', version=7)  # invalid version
