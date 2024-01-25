@@ -21,7 +21,7 @@ from idsse.common.netcdf_io import read_netcdf
 
 @fixture
 def proj():
-    proj_spec = '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +r=6371200'
+    proj_spec = '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +a=6371200'
     grid_spec = '+dx=2539.703 +dy=2539.703 +w=2345 +h=1597 +lat_ll=19.229 +lon_ll=-126.2766'
     return GridProj.from_proj_grid_spec(proj_spec, grid_spec)
 
@@ -387,10 +387,10 @@ def test_temp_data(proj):
               (254, 254, 0), (226, 46, 5), (149, 12, 6)]
     # current_path = os.path.dirname(os.path.realpath(__file__))
     # filename = os.path.join(current_path, 'resources', 'nbm_temp-202211111100-202211121300.nc')
-    filename = '/Users/geary.j.layne/idssEngine/data/2023/12/15/NBM.AWS.GRIB/TEMP/Fahrenheit/gridstore-727311935.nc'
-    filename = '/Users/geary.j.layne/idssEngine/data/2023/01/11/NBM.AWS.GRIB/TEMP/Fahrenheit/gridstore1470768705.nc'
-    filename = '/Users/geary.j.layne/idssEngine/data/2023/01/11/NBM.AWS.GRIB/TEMP/Fahrenheit/gridstore1346695458.nc'
-    filename = '/Users/geary.j.layne/idssEngine/data/2023/01/11/NBM.AWS.GRIB/TEMP/Kelvin/gridstore-96489521.nc'
+    filename = ('/Users/geary.j.layne/idssEngine/data/2024/01/12/'
+                'NBM.AWS.GRIB/TEMP/Fahrenheit/gridstore-74919423.nc')
+    # filename = ('/Users/geary.j.layne/idssEngine/data/2024/01/12/'
+    #             'NBM.AWS.GRIB/TEMP/Kelvin/gridstore-1518104402.nc')
 
     attrs, data = read_netcdf(filename)
     print(attrs)
@@ -400,15 +400,23 @@ def test_temp_data(proj):
                                         min_value=-40, max_value=80)
     geo_image.draw_state_boundary('All', color=(0, 0, 0))
 
+    # location of airport from https://airnav.com/airport/
     locations = {
         'KABQ': (-106.6082622, 35.0389316),
         'KORD': (-87.9081497, 41.9769403),
         'KMIA': (-80.2901158, 25.7953611)
     }
+    # location of ASOS from https://www.faa.gov/air_traffic/weather/asos
+    locations = {
+        'KABQ': (-106.615, 35.042),
+        'KORD': (-87.932, 41.960),
+        'KMIA': (-80.317, 25.788)
+    }
+    # location of Sites from DESI (maybe via AWIPS)
     locations = {
         'KABQ': (-106.62, 35.05),
         'KORD': (-87.93, 41.98),
-        'KMIA': (-80.2901158, 25.7953611)
+        'KMIA': (-80.28, 25.8)
     }
     for key, (lon, lat) in locations.items():
         geo_image.outline_pixel(lon, lat, (0, 0, 0))
@@ -417,10 +425,30 @@ def test_temp_data(proj):
         print(f'{key} ({lon}, {lat}) -> ({i}, {j}): {data[i, j]}')
     geo_image.show()
 
-    for i in range(864, 869):
-        for j in range(560, 565):
-            print(i, j, proj.map_pixel_to_geo(i, j), data[i, j])
-# KABQ (-106.6082622, 35.0389316) -> (866, 561): 30.524009704589844
-# KORD (-87.9081497, 41.9769403) -> (1532, 861): 35.56401062011719
-# KMIA (-80.2901158, 25.7953611) -> (1869, 168): 72.28401184082031
+    # Convert Kelvin to Fahrenheit
+    # for i in range(864, 869):
+    #     for j in range(560, 565):
+    #         in_k = Q_(data[i, j], ureg.degK)
+    #         in_f = in_k.to('degF')
+    #         print(i, j, proj.map_pixel_to_geo(i, j),
+    #               data[i, j], in_k, in_f, in_f.to('degK'))
+
+    for (i, j) in [(865, 564), (1529, 865), (1867, 170)]:
+        print(i, j, ':', data[i, j])
+
+    # From DESI
+    # KABQ:
+    # lon, lat: -106.62, 35.05
+    # i, j: 865, 564
+    # 18 degF
+    # KORD:
+    # lon, lat: -87.93, 41.98
+    # i, j: 1529, 865
+    # 33 degF
+    # KMIA:
+    # lon, lat: -80.28, 25.8
+    # i, j: 1867, 170
+    # 76 degF
+
+    print(proj.map_geo_to_pixel(-105.2612, 39.9939))
     assert False
