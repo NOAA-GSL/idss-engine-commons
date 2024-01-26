@@ -25,7 +25,7 @@ test/test_vectaster.py FFF.FF.FFFF..                                     [100%]
 =================================== FAILURES ===================================
 ___________________________ test_from_proj_grid_spec ___________________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feed279b190>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca2d2e8d0>
 
     def test_from_proj_grid_spec(grid_proj: GridProj):
         assert isinstance(grid_proj, GridProj)
@@ -55,7 +55,7 @@ E         + (-126.3265786600057, 19.247681535953287)
 test/test_grid_proj.py:86: AssertionError
 _________________________ test_map_crs_to_pixel_round __________________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feed18dd8d0>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca3217d90>
 
     def test_map_crs_to_pixel_round(grid_proj: GridProj):
         for index, crs_xy in enumerate(EXAMPLE_CRS):
@@ -73,7 +73,7 @@ E             + (-2, 1)
 test/test_grid_proj.py:128: AssertionError
 _________________________ test_map_crs_to_pixel_floor __________________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feed1a97250>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca101d010>
 
     def test_map_crs_to_pixel_floor(grid_proj: GridProj):
         for index, crs_xy in enumerate(EXAMPLE_CRS):
@@ -93,7 +93,7 @@ E             + (-2 ± 1.0e+00, 1 ± 1.0e+00)
 test/test_grid_proj.py:139: AssertionError
 _____________________________ test_map_geo_to_crs ______________________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feed1cd4a50>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca35466d0>
 
     def test_map_geo_to_crs(grid_proj: GridProj):
         for index, lon_lat in enumerate(EXAMPLE_LON_LAT):
@@ -108,7 +108,7 @@ E             + (-3271151.6058371724, -263793.7334645616)
 test/test_grid_proj.py:145: AssertionError
 ____________________________ test_map_pixel_to_crs _____________________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feed171ad10>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca381c610>
 
     def test_map_pixel_to_crs(grid_proj: GridProj):
         for index, pixel in enumerate(EXAMPLE_PIXELS):
@@ -123,7 +123,7 @@ E             + (-3271151.6058371724, -263793.7334645616)
 test/test_grid_proj.py:151: AssertionError
 ____________________________ test_map_pixel_to_geo _____________________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feed1cd5bd0>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca328fe50>
 
     def test_map_pixel_to_geo(grid_proj: GridProj):
         for index, pixel in enumerate(EXAMPLE_PIXELS):
@@ -138,7 +138,7 @@ E             + (-126.28210431967231, 19.25112362717893)
 test/test_grid_proj.py:157: AssertionError
 _____________________________ test_map_crs_to_geo ______________________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feecf197bd0>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca3547890>
 
     def test_map_crs_to_geo(grid_proj: GridProj):
         for index, geo in enumerate(EXAMPLE_CRS):
@@ -153,7 +153,7 @@ E             + (-126.32657866000567, 19.247681535953287)
 test/test_grid_proj.py:163: AssertionError
 ________________________ test_crs_to_pixel_no_rounding _________________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feed1406450>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca10b38d0>
 
     def test_crs_to_pixel_no_rounding(grid_proj: GridProj):
         for index, geo in enumerate(EXAMPLE_CRS):
@@ -169,7 +169,7 @@ E             + (-1.833185, 1.275387)
 test/test_grid_proj.py:170: AssertionError
 ___________________________ test_crs_to_pixel_floor ____________________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feeceb16910>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca35474d0>
 
     def test_crs_to_pixel_floor(grid_proj: GridProj):
         for index, geo in enumerate(EXAMPLE_CRS):
@@ -184,7 +184,7 @@ E             + (-2, 1)
 test/test_grid_proj.py:176: AssertionError
 ___________________________ test_crs_to_pixel_round ____________________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feecea98f10>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca2cb7490>
 
     def test_crs_to_pixel_round(grid_proj: GridProj):
         for index, geo in enumerate(EXAMPLE_CRS):
@@ -199,7 +199,7 @@ E             + (-2, 1)
 test/test_grid_proj.py:187: AssertionError
 _________________________ test_crs_to_pixel_round_str __________________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feed13ca9d0>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca3546b50>
 
     def test_crs_to_pixel_round_str(grid_proj: GridProj):
         i, j = grid_proj.map_crs_to_pixel(*EXAMPLE_CRS[0], rounding='round')
@@ -213,7 +213,7 @@ E         + (-2, 1)
 test/test_grid_proj.py:192: AssertionError
 ____________________________ test_geo_to_pixel_list ____________________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feeced0e2d0>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca328d010>
 
     def test_geo_to_pixel_list(grid_proj: GridProj):
         # split example list of tuples into: list of lats and list of lons
@@ -233,7 +233,7 @@ E         + (0, 0, 1996)
 test/test_grid_proj.py:229: AssertionError
 ________________________ test_pixel_to_geo_numpy_array _________________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feecf1e0d50>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca0f231d0>
 
     def test_pixel_to_geo_numpy_array(grid_proj: GridProj):
         i_array, j_array = list(zip(*EXAMPLE_PIXELS))
@@ -257,7 +257,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
     return func(*args, **kwds)
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-args = (<function assert_array_almost_equal.<locals>.compare at 0x7feed17c2700>, (array([-126.2766    , -126.28210432,  -71.0...3, 54.01407727])), (array([-126.2766   , -126.2820965,  -71.1286076]), array([19.229     , 19.2512249 , 54.09108721])))
+args = (<function assert_array_almost_equal.<locals>.compare at 0x7f6ca345a660>, (array([-126.2766    , -126.28210432,  -71.0...3, 54.01407727])), (array([-126.2766   , -126.2820965,  -71.1286076]), array([19.229     , 19.2512249 , 54.09108721])))
 kwds = {'err_msg': '', 'header': 'Arrays are not almost equal to 7 decimals', 'precision': 7, 'verbose': True}
 
     @wraps(func)
@@ -278,7 +278,7 @@ E                  [  19.229    ,   19.2512249,   54.0910872]])
 /opt/hostedtoolcache/Python/3.11.7/x64/lib/python3.11/contextlib.py:81: AssertionError
 ________________________ test_geo_to_pixel_numpy_array _________________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feeced1ca90>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca0bdf890>
 
     def test_geo_to_pixel_numpy_array(grid_proj: GridProj):
         x_values, y_values = list(zip(*EXAMPLE_LON_LAT))
@@ -389,7 +389,7 @@ E           }
 test/test_netcdf_io.py:72: AssertionError
 ________________________ test_geographic_point_to_pixel ________________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feecef6d8d0>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca3581e50>
 
     def test_geographic_point_to_pixel(grid_proj: GridProj):
         point = from_wkt('POINT (-105 40)')
@@ -402,7 +402,7 @@ E       assert <POINT (940.528 781.343)> == <POINT (941.558 778.27)>
 test/test_vectaster.py:46: AssertionError
 _____________________ test_geographic_linestring_to_pixel ______________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feecef8c410>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca0fcc710>
 
     def test_geographic_linestring_to_pixel(grid_proj: GridProj):
         linestring = from_wkt('LINESTRING (-100 30, -110 40, -120 50)')
@@ -416,7 +416,7 @@ E       assert <LINESTRING (1097.724 326.579, 767.38 797.352, 509.396 1309.283)>
 test/test_vectaster.py:55: AssertionError
 _______________________ test_geographic_polygon_to_pixel _______________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feecef6e110>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca07c4550>
 
     def test_geographic_polygon_to_pixel(grid_proj: GridProj):
         poly = from_wkt('POLYGON ((-105 40, -110 40, -110 50, -105 50, -105 40), '
@@ -438,7 +438,7 @@ E       assert <POLYGON ((940.528 781.343, 767.38 797.352, 819.14 1263.254, 975.
 test/test_vectaster.py:72: AssertionError
 _____________________________ test_rasterize_point _____________________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feecf361710>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca0f23b90>
 
     def test_rasterize_point(grid_proj: GridProj):
         point = 'POINT (-100.5 30.5)'
@@ -470,7 +470,7 @@ E                  [ 347]])
 /opt/hostedtoolcache/Python/3.11.7/x64/lib/python3.11/contextlib.py:81: AssertionError
 _______________________ test_rasterize_point_from_coord ________________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feecefeb6d0>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca33cf590>
 
     def test_rasterize_point_from_coord(grid_proj: GridProj):
         point = (-100.5, 30.5)
@@ -502,7 +502,7 @@ E                  [ 347]])
 /opt/hostedtoolcache/Python/3.11.7/x64/lib/python3.11/contextlib.py:81: AssertionError
 __________________________ test_rasterize_linestring ___________________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feecef7bad0>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca0cb5f50>
 
     def test_rasterize_linestring(grid_proj: GridProj):
         linestring = 'LINESTRING (-100 30, -100.1 30.1, -100.2 30)'
@@ -535,7 +535,7 @@ E                  [ 324,  325,  326,  327,  328,  329,  328,  327,  326,  325, 
 /opt/hostedtoolcache/Python/3.11.7/x64/lib/python3.11/contextlib.py:81: AssertionError
 ____________________ test_rasterize_linestring_from_coords _____________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feecef6e910>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca3580d50>
 
     def test_rasterize_linestring_from_coords(grid_proj: GridProj):
         linestring = [(-100, 30), (-100.01, 30.02), (-100.02, 30)]
@@ -567,7 +567,7 @@ E                  [ 324,  325,  324]])
 /opt/hostedtoolcache/Python/3.11.7/x64/lib/python3.11/contextlib.py:81: AssertionError
 ___________________________ test_rasterize_polygon__ ___________________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feecf360cd0>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca33be310>
 
     def test_rasterize_polygon__(grid_proj: GridProj):
         poly = 'POLYGON ((-105 40, -105.1 40, -105.1 40.1, -105 40.1, -105 40))'
@@ -608,7 +608,7 @@ E                   781, 781, 781, 782, 782, 782, 782, 782, 783]])
 /opt/hostedtoolcache/Python/3.11.7/x64/lib/python3.11/contextlib.py:81: AssertionError
 ______________________ test_rasterize_polygon_from_coords ______________________
 
-grid_proj = <idsse.common.grid_proj.GridProj object at 0x7feecf352010>
+grid_proj = <idsse.common.grid_proj.GridProj object at 0x7f6ca0c075d0>
 
     def test_rasterize_polygon_from_coords(grid_proj: GridProj):
         poly = (((-105, 40), (-105.1, 40), (-105.1, 40.1), (-105, 40)),)
@@ -639,13 +639,6 @@ E            y: array([[938, 939, 940, 941, 938, 939, 940, 938, 939, 938, 939, 9
 E                  [778, 778, 778, 778, 779, 779, 779, 780, 780, 781, 781, 782, 783]])
 
 /opt/hostedtoolcache/Python/3.11.7/x64/lib/python3.11/contextlib.py:81: AssertionError
-=============================== warnings summary ===============================
-idsse/common/validate_schema.py:15
-idsse/common/validate_schema.py:15
-  /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/idsse/common/validate_schema.py:15: DeprecationWarning: jsonschema.RefResolver is deprecated as of v4.18.0, in favor of the https://github.com/python-jsonschema/referencing library, which provides more compliant referencing behavior as well as more flexible APIs for customization. A future release will remove RefResolver. Please file a feature request (on referencing) if you are missing an API for the kind of customization you need.
-    from jsonschema import FormatChecker, RefResolver  # pylint: disable=no-name-in-module
-
--- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 - generated xml file: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/pytest.xml -
 
 ---------- coverage: platform linux, python 3.11.7-final-0 -----------
@@ -664,10 +657,10 @@ idsse/common/publish_confirm.py      151     13    91%
 idsse/common/rabbitmq_utils.py        61      0   100%
 idsse/common/scientific_utils.py       9      0   100%
 idsse/common/utils.py                121     10    92%
-idsse/common/validate_schema.py       40      0   100%
+idsse/common/validate_schema.py       41      0   100%
 idsse/common/vectaster.py            180     30    83%
 ------------------------------------------------------
-TOTAL                               1270     95    93%
+TOTAL                               1271     95    93%
 
 =========================== short test summary info ============================
 FAILED test/test_grid_proj.py::test_from_proj_grid_spec - assert (-3271151.605...93.7334645616) == (-3275807.350...285 ± 2.6e-01)
@@ -866,4 +859,4 @@ Max relative difference: 0.00385604
        [781, 781, 781, 781, 782, 782, 782, 783, 783, 784, 784, 785, 786]])
  y: array([[938, 939, 940, 941, 938, 939, 940, 938, 939, 938, 939, 938, 938],
        [778, 778, 778, 778, 779, 779, 779, 780, 780, 781, 781, 782, 783]])
-================== 26 failed, 188 passed, 2 warnings in 5.39s ==================
+======================== 26 failed, 188 passed in 5.26s ========================
