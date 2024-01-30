@@ -66,11 +66,11 @@ def test_read_netcdf(example_netcdf_data: Tuple[Dict[str, any], ndarray]):
     attrs, grid = example_netcdf_data
 
     assert grid.shape == (1597, 2345)
-    x_dimensions, y_dimensions = grid.shape
+    y_max, x_max = grid.shape
 
-    assert grid[0][0] == approx(72.80599)
-    assert grid[round(x_dimensions / 2)][round(y_dimensions / 2)] == approx(26.005991)
-    assert grid[x_dimensions - 1][y_dimensions - 1] == approx(15.925991)
+    assert grid[0, 0] == approx(72.80599)
+    assert grid[round(y_max / 2), round(x_max / 2)] == approx(26.005991)
+    assert grid[y_max - 1, x_max - 1] == approx(15.925991)
 
     assert attrs == EXAMPLE_ATTRIBUTES
 
