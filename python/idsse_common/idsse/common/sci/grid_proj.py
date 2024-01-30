@@ -21,7 +21,7 @@ from pyproj import CRS, Transformer
 from pyproj.enums import TransformDirection
 
 from idsse.common.utils import round_values, RoundingParam
-from idsse.common.scientific_utils import coordinate_pairs_to_axes
+from idsse.common.sci.utils import coordinate_pairs_to_axes
 
 # type hints
 Scalar = Union[int, float, np.integer, np.float_]

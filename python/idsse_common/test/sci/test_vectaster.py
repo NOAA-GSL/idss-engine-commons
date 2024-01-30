@@ -16,8 +16,8 @@ from unittest.mock import Mock
 import numpy
 from pytest import fixture, MonkeyPatch
 
-from idsse.common.grid_proj import GridProj
-from idsse.common.vectaster import (geographic_to_pixel,
+from idsse.common.sci.grid_proj import GridProj
+from idsse.common.sci.vectaster import (geographic_to_pixel,
                                     geographic_linestring_to_pixel,
                                     geographic_point_to_pixel,
                                     geographic_polygon_to_pixel,
@@ -80,9 +80,9 @@ def test_geographic_to_pixel(monkeypatch: MonkeyPatch, grid_proj: GridProj):
     point_mock = Mock()
     line_string_mock = Mock()
     polygon_mock = Mock()
-    monkeypatch.setattr('idsse.common.vectaster.geographic_point_to_pixel', point_mock)
-    monkeypatch.setattr('idsse.common.vectaster.geographic_linestring_to_pixel', line_string_mock)
-    monkeypatch.setattr('idsse.common.vectaster.geographic_polygon_to_pixel', polygon_mock)
+    monkeypatch.setattr('idsse.common.sci.vectaster.geographic_point_to_pixel', point_mock)
+    monkeypatch.setattr('idsse.common.sci.vectaster.geographic_linestring_to_pixel', line_string_mock)
+    monkeypatch.setattr('idsse.common.sci.vectaster.geographic_polygon_to_pixel', polygon_mock)
 
     _ = geographic_to_pixel(point, grid_proj)
     point_mock.assert_called_once_with(point, grid_proj, None)
@@ -172,9 +172,9 @@ def test_rasterize(monkeypatch: MonkeyPatch, grid_proj: GridProj):
     point_mock = Mock()
     linestring_mock = Mock()
     polygon_mock = Mock()
-    monkeypatch.setattr('idsse.common.vectaster.rasterize_point', point_mock)
-    monkeypatch.setattr('idsse.common.vectaster.rasterize_linestring', linestring_mock)
-    monkeypatch.setattr('idsse.common.vectaster.rasterize_polygon', polygon_mock)
+    monkeypatch.setattr('idsse.common.sci.vectaster.rasterize_point', point_mock)
+    monkeypatch.setattr('idsse.common.sci.vectaster.rasterize_linestring', linestring_mock)
+    monkeypatch.setattr('idsse.common.sci.vectaster.rasterize_polygon', polygon_mock)
 
     rasterize(point, grid_proj)
     point_mock.assert_called_once()

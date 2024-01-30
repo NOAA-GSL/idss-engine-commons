@@ -16,15 +16,11 @@ from typing import Dict, Tuple
 from pytest import fixture, approx
 from numpy import ndarray
 
-from idsse.common.netcdf_io import read_netcdf, read_netcdf_global_attrs, write_netcdf
+from idsse.common.sci.netcdf_io import read_netcdf, read_netcdf_global_attrs, write_netcdf
 
 
 # test data
-EXAMPLE_NETCDF_FILEPATH = os.path.join(
-    os.path.dirname(__file__),
-    'resources',
-    'gridstore55657865.nc'
-)
+EXAMPLE_NETCDF_FILEPATH = f'{os.path.dirname(__file__)}/../resources/gridstore55657865.nc'
 
 EXAMPLE_ATTRIBUTES = {
     'product': 'NBM.AWS.GRIB',
