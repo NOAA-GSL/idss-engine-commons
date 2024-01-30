@@ -40,7 +40,7 @@ def grid_proj() -> GridProj:
 # test
 def test_geographic_point_to_pixel(grid_proj: GridProj):
     point = from_wkt('POINT (-105 40)')
-    pixel_point = from_wkt('POINT (941.5576426719887 778.2701810387533)')
+    pixel_point = from_wkt('POINT (940.5282319922111 781.3426922405841)')
     result = geographic_point_to_pixel(point, grid_proj)
 
     assert result == pixel_point
@@ -48,9 +48,9 @@ def test_geographic_point_to_pixel(grid_proj: GridProj):
 
 def test_geographic_linestring_to_pixel(grid_proj: GridProj):
     linestring = from_wkt('LINESTRING (-100 30, -110 40, -120 50)')
-    pixel_linestring = from_wkt('LINESTRING (1099.1941683923565 324.546444238068,'
-                                '768.0092501944506 794.3170139903758,'
-                                '509.1550445412777 1305.9671045297775)')
+    pixel_linestring = from_wkt('LINESTRING (1097.723937434988 326.5786009191758,'
+                                '767.3803599551428 797.3524918062432,'
+                                '509.3960133013222 1309.2825656112072)')
     result = geographic_linestring_to_pixel(linestring, grid_proj)
     assert result == pixel_linestring
 
@@ -58,16 +58,16 @@ def test_geographic_linestring_to_pixel(grid_proj: GridProj):
 def test_geographic_polygon_to_pixel(grid_proj: GridProj):
     poly = from_wkt('POLYGON ((-105 40, -110 40, -110 50, -105 50, -105 40), '
                     '(-107 42, -107 47, -108 47, -108 42, -107 42))')
-    pixel_poly = from_wkt('POLYGON ((941.5576426719887 778.2701810387533,'
-                          '768.0092501944506 794.3170139903758,'
-                          '819.7238357524881 1259.816223819563,'
-                          '976.0731562314586 1245.359671430866,'
-                          '941.5576426719887 778.2701810387533),'
-                          '(880.1253951755987 874.7112000835223,'
-                          '900.7222774204608 1106.8022369109524,'
-                          '868.391509125368 1109.7916419444564,'
-                          '846.0832806150518 877.8588416022637,'
-                          '880.1253951755987 874.7112000835223))')
+    pixel_poly = from_wkt('POLYGON ((940.5282319922111 781.3426922405841,'
+                          '767.3803599551428 797.3524918062432,'
+                          '819.139672193266 1263.254300515678,'
+                          '975.0735971750927 1248.836156907704,'
+                          '940.5282319922111 781.3426922405841),'
+                          '(879.2683115975804 877.9054076290231,'
+                          '899.8846796684276 1110.2160158217966,'
+                          '867.636632346796 1113.1977722126155,'
+                          '845.307298979268 881.0455502058236,'
+                          '879.2683115975804 877.9054076290231))')
     result = geographic_polygon_to_pixel(poly, grid_proj)
     assert result == pixel_poly
 
@@ -96,14 +96,14 @@ def test_geographic_to_pixel(monkeypatch: MonkeyPatch, grid_proj: GridProj):
 
 def test_rasterize_point(grid_proj: GridProj):
     point = 'POINT (-100.5 30.5)'
-    pixels = (numpy.array([1081]), numpy.array([347]))
+    pixels = (numpy.array([1079]), numpy.array([349]))
     result = rasterize_point(point, grid_proj)
     numpy.testing.assert_array_equal(result, pixels)
 
 
 def test_rasterize_point_from_coord(grid_proj: GridProj):
     point = (-100.5, 30.5)
-    pixels = (numpy.array([1081]), numpy.array([347]))
+    pixels = (numpy.array([1079]), numpy.array([349]))
     result = rasterize_point(point, grid_proj)
     numpy.testing.assert_array_equal(result, pixels)
 
@@ -123,33 +123,33 @@ def test_rasterize_point_without_grid_proj():
 
 def test_rasterize_linestring(grid_proj: GridProj):
     linestring = 'LINESTRING (-100 30, -100.1 30.1, -100.2 30)'
-    pixels = (numpy.array([1099, 1098, 1097, 1097, 1096, 1095, 1094, 1093, 1093, 1092, 1091]),
-              numpy.array([324, 325, 326, 327, 328, 329, 328, 327, 326, 325, 324]))
+    pixels = (numpy.array([1097, 1096, 1096, 1095, 1095, 1094, 1093, 1092, 1092, 1091, 1090]),
+              numpy.array([326, 327, 328, 329, 330, 331, 330, 329, 328, 327, 326]))
     result = rasterize_linestring(linestring, grid_proj)
     numpy.testing.assert_array_equal(result, pixels)
 
 
 def test_rasterize_linestring_from_coords(grid_proj: GridProj):
     linestring = [(-100, 30), (-100.01, 30.02), (-100.02, 30)]
-    pixels = (numpy.array([1099, 1098, 1098]), numpy.array([324, 325, 324]))
+    pixels = (numpy.array([1097, 1097, 1096]), numpy.array([326, 327, 326]))
     result = rasterize_linestring(linestring, grid_proj)
     numpy.testing.assert_array_equal(result, pixels)
 
 
 def test_rasterize_polygon__(grid_proj: GridProj):
     poly = 'POLYGON ((-105 40, -105.1 40, -105.1 40.1, -105 40.1, -105 40))'
-    pixels = (numpy.array([938, 939, 940, 941, 938, 939, 940, 941, 938, 939, 940,
-                           941, 938, 939, 940, 941, 938, 939, 940, 941, 941, 938]),
-              numpy.array([778, 778, 778, 778, 779, 779, 779, 779, 780, 780, 780,
-                           780, 781, 781, 781, 781, 782, 782, 782, 782, 782, 783]))
+    pixels = (numpy.array([937, 938, 939, 940, 937, 938, 939, 940, 937, 938, 939,
+                           940, 937, 938, 939, 940, 937, 938, 939, 940, 940, 937]),
+              numpy.array([781, 781, 781, 781, 782, 782, 782, 782, 783, 783, 783,
+                           783, 784, 784, 784, 784, 785, 785, 785, 785, 785, 786]))
     result = rasterize_polygon(poly, grid_proj)
     numpy.testing.assert_array_equal(result, pixels)
 
 
 def test_rasterize_polygon_from_coords(grid_proj: GridProj):
     poly = (((-105, 40), (-105.1, 40), (-105.1, 40.1), (-105, 40)),)
-    pixels = (numpy.array([938, 939, 940, 941, 938, 939, 940, 938, 939, 938, 939, 938, 938]),
-              numpy.array([778, 778, 778, 778, 779, 779, 779, 780, 780, 781, 781, 782, 783]))
+    pixels = (numpy.array([937, 938, 939, 940, 937, 938, 939, 937, 938, 937, 938, 937, 937]),
+              numpy.array([781, 781, 781, 781, 782, 782, 782, 783, 783, 784, 784, 785, 786]))
     result = rasterize_polygon(poly, grid_proj)
     numpy.testing.assert_array_equal(result, pixels)
 
