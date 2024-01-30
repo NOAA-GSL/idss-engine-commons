@@ -22,7 +22,9 @@ RUN pip3 install --no-cache \
     python-dateutil==2.8.2 \
     jsonschema==4.19.0 \
     pycouchdb==1.14.2 \
-    gunicorn==21.2.0
+    gunicorn==21.2.0 \
+    shapely==2.0.2 \
+    geojson==3.1.0
 
 # Get the latest package updates to keep security vulnerabilities down
 RUN apk update && apk upgrade

@@ -25,6 +25,7 @@ RUN conda config --add channels conda-forge && \
     awscli==1.27.161 \
     jsonschema==4.19.0 \
     s5cmd==2.2.2 \
+    geojson==3.1.0 \
     shapely==2.0.2 \
     pillow==10.0.1 \
     && conda clean -y --all
