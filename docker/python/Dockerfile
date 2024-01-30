@@ -23,7 +23,6 @@ RUN pip3 install --no-cache \
     jsonschema==4.19.0 \
     pycouchdb==1.14.2 \
     gunicorn==21.2.0 \
-    shapely==2.0.2 \
     geojson==3.1.0
 
 # Get the latest package updates to keep security vulnerabilities down
