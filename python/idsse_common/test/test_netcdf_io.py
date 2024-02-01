@@ -37,7 +37,10 @@ EXAMPLE_ATTRIBUTES = {
     'proj_name': 'NBM',
     'proj_spec': '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +a=6371200',
     'grid_spec': '+dx=2539.703 +dy=2539.703 +w=2345 +h=1597 +lat_ll=19.229 +lon_ll=-126.2766',
-    'data_key': 'NBM.AWS.GRIB:CO:TEMP::Fahrenheit::20221111140000.20221111170000'
+    'data_key': 'NBM.AWS.GRIB:CO:TEMP::Fahrenheit::20221111140000.20221111170000',
+    'data_name': 'Temperature: 2m',
+    'data_loc': 'arn:aws:s3:::noaa-nbm-grib2-pds:',
+    'data_order': 'latitude,longitude'
 }
 
 EXAMPLE_PROD_KEY = (
@@ -55,7 +58,7 @@ def example_netcdf_data() -> Tuple[Dict[str, any], ndarray]:
 def test_read_netcdf_global_attrs():
     attrs = read_netcdf_global_attrs(EXAMPLE_NETCDF_FILEPATH)
 
-    assert len(attrs) == 11
+    assert len(attrs) == len(EXAMPLE_ATTRIBUTES)
     assert attrs == EXAMPLE_ATTRIBUTES
 
 
@@ -63,11 +66,11 @@ def test_read_netcdf(example_netcdf_data: Tuple[Dict[str, any], ndarray]):
     attrs, grid = example_netcdf_data
 
     assert grid.shape == (1597, 2345)
-    x_dimensions, y_dimensions = grid.shape
+    y_max, x_max = grid.shape
 
-    assert grid[0][0] == approx(72.98599)
-    assert grid[round(x_dimensions / 2)][round(y_dimensions / 2)] == approx(12.505991)
-    assert grid[x_dimensions - 1][y_dimensions - 1] == approx(2.4259913)
+    assert grid[0, 0] == approx(72.80599)
+    assert grid[round(y_max / 2), round(x_max / 2)] == approx(26.005991)
+    assert grid[y_max - 1, x_max - 1] == approx(15.925991)
 
     assert attrs == EXAMPLE_ATTRIBUTES
 
