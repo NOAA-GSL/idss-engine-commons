@@ -4,45 +4,46 @@ rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_
 plugins: cov-4.1.0
 collected 214 items
 
-test/test_aws_utils.py ..................                                [  8%]
-test/test_config.py ............                                         [ 14%]
-test/test_geo_image.py .....................                             [ 23%]
-test/test_grid_proj.py .......................                           [ 34%]
-test/test_json_message.py ...........                                    [ 39%]
-test/test_log_util.py .....                                              [ 42%]
-test/test_netcdf_io.py ....                                              [ 43%]
-test/test_path_builder.py ......................                         [ 54%]
-test/test_publish_confirm.py .........                                   [ 58%]
-test/test_rabbitmq_utils.py ......                                       [ 61%]
-test/test_utils.py ...........................                           [ 73%]
-test/test_validate_criteria_schema.py ......                             [ 76%]
-test/test_validate_das_schema.py ..............                          [ 83%]
-test/test_validate_das_web_schema.py .........                           [ 87%]
-test/test_validate_event_port_schema.py .....                            [ 89%]
-test/test_validate_new_data_schema.py .........                          [ 93%]
-test/test_vectaster.py .............                                     [100%]
+test/sci/test_geo_image.py .....................                         [  9%]
+test/sci/test_grid_proj.py .......................                       [ 20%]
+test/sci/test_netcdf_io.py ....                                          [ 22%]
+test/sci/test_vectaster.py .............                                 [ 28%]
+test/test_aws_utils.py ..................                                [ 36%]
+test/test_config.py ............                                         [ 42%]
+test/test_json_message.py ...........                                    [ 47%]
+test/test_log_util.py .....                                              [ 50%]
+test/test_path_builder.py ......................                         [ 60%]
+test/test_publish_confirm.py .........                                   [ 64%]
+test/test_rabbitmq_utils.py ......                                       [ 67%]
+test/test_utils.py ...........................                           [ 79%]
+test/test_validate_criteria_schema.py ......                             [ 82%]
+test/test_validate_das_schema.py ..............                          [ 89%]
+test/test_validate_das_web_schema.py .........                           [ 93%]
+test/test_validate_event_port_schema.py .....                            [ 95%]
+test/test_validate_new_data_schema.py .........                          [100%]
 
 - generated xml file: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/pytest.xml -
 
 ---------- coverage: platform linux, python 3.11.7-final-0 -----------
-Name                               Stmts   Miss  Cover
-------------------------------------------------------
-idsse/common/__init__.py               0      0   100%
-idsse/common/aws_utils.py             86      5    94%
-idsse/common/config.py                68      8    88%
-idsse/common/geo_image.py            219     14    94%
-idsse/common/grid_proj.py             94      1    99%
-idsse/common/json_message.py          23      1    96%
-idsse/common/log_util.py              43      3    93%
-idsse/common/netcdf_io.py             47      0   100%
-idsse/common/path_builder.py         128     10    92%
-idsse/common/publish_confirm.py      151     13    91%
-idsse/common/rabbitmq_utils.py        61      0   100%
-idsse/common/scientific_utils.py       9      0   100%
-idsse/common/utils.py                121     10    92%
-idsse/common/validate_schema.py       41      0   100%
-idsse/common/vectaster.py            180     30    83%
-------------------------------------------------------
-TOTAL                               1271     95    93%
+Name                              Stmts   Miss  Cover
+-----------------------------------------------------
+idsse/common/__init__.py              0      0   100%
+idsse/common/aws_utils.py            86      5    94%
+idsse/common/config.py               68      8    88%
+idsse/common/json_message.py         23      1    96%
+idsse/common/log_util.py             43      3    93%
+idsse/common/path_builder.py        128     10    92%
+idsse/common/publish_confirm.py     151     13    91%
+idsse/common/rabbitmq_utils.py       61      0   100%
+idsse/common/sci/__init__.py          0      0   100%
+idsse/common/sci/geo_image.py       219     14    94%
+idsse/common/sci/grid_proj.py        94      1    99%
+idsse/common/sci/netcdf_io.py        47      0   100%
+idsse/common/sci/utils.py             9      0   100%
+idsse/common/sci/vectaster.py       180     30    83%
+idsse/common/utils.py               121     10    92%
+idsse/common/validate_schema.py      41      0   100%
+-----------------------------------------------------
+TOTAL                              1271     95    93%
 
-============================= 214 passed in 5.08s ==============================
+============================= 214 passed in 4.80s ==============================
