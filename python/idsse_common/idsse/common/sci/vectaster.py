@@ -17,9 +17,9 @@ from numbers import Number
 import numpy
 from shapely import Geometry, LinearRing, LineString, MultiPolygon, Point, Polygon, from_wkt
 
-from idsse.common.grid_proj import GridProj
+from idsse.common.sci.grid_proj import GridProj
+from idsse.common.sci.utils import Pixel, Coord, Coords, coordinate_pairs_to_axes
 from idsse.common.utils import round_, round_values, RoundingMethod, RoundingParam
-from idsse.common.scientific_utils import Pixel, Coord, Coords, coordinate_pairs_to_axes
 
 logger = logging.getLogger(__name__)
 

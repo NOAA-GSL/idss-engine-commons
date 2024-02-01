@@ -18,7 +18,7 @@ from typing import Tuple, List
 import numpy as np
 from pytest import approx, fixture, raises
 
-from idsse.common.grid_proj import GridProj
+from idsse.common.sci.grid_proj import GridProj
 from idsse.common.utils import round_, RoundingMethod
 
 

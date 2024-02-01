@@ -20,10 +20,9 @@ import numpy as np
 from PIL import Image
 from shapely import from_geojson, from_wkt, Geometry, LineString, MultiPolygon, Polygon
 
-
-from .grid_proj import GridProj
-from .utils import round_
-from .vectaster import geographic_to_pixel, rasterize
+from idsse.common.utils import round_
+from idsse.common.sci.grid_proj import GridProj
+from idsse.common.sci.vectaster import geographic_to_pixel, rasterize
 
 logger = logging.getLogger(__name__)
 

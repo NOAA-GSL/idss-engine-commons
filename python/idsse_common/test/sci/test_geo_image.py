@@ -14,9 +14,9 @@ import os
 import numpy
 from pytest import fixture, approx
 
-from idsse.common.geo_image import ColorPalette, GeoImage, normalize, scale_to_color_palette
-from idsse.common.grid_proj import GridProj
-from idsse.common.netcdf_io import read_netcdf
+from idsse.common.sci.geo_image import ColorPalette, GeoImage, normalize, scale_to_color_palette
+from idsse.common.sci.grid_proj import GridProj
+from idsse.common.sci.netcdf_io import read_netcdf
 
 
 @fixture
@@ -376,8 +376,8 @@ def test_color_palette_with_anchor():
 
 
 def test_add_all_states(proj):
-    current_path = os.path.dirname(os.path.realpath(__file__))
-    filename = os.path.join(current_path, 'resources', 'nbm_temp-202211111100-202211121300.nc')
+    filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'resources',
+                            'nbm_temp-202211111100-202211121300.nc')
     attrs, data = read_netcdf(filename)
     if attrs['data_order'] == 'latitude,longitude':
         data = numpy.transpose(data)
