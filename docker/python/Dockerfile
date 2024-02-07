@@ -1,11 +1,11 @@
-# alpine:3.18.2 includes python 3.11
-FROM alpine:3.18.2
+# alpine:3.18.6 includes python 3.11.6
+FROM alpine:3.18.6
 
 # reduce python printing to stdout on build
 ENV PYTHONBUFFERED=1
 
 RUN echo "Installing python" && \
-    apk add --no-cache python3 && \
+    apk add --update --no-cache python3 && \
     if [ ! -e /usr/bin/python ]; then ln -sf python3 /usr/bin/python ; fi && \
     \
     echo "Installing pip" && \
@@ -31,6 +31,12 @@ RUN apk update && apk upgrade
 # Install idsse common python code
 WORKDIR /python/idsse_common
 
-COPY ./python/idsse_common /python/idsse_common
+# Copy the common code
+COPY ./python/idsse_common/idsse/common /python/idsse_common/idsse/common
+COPY ./docker/python/setup.py /python/idsse_common
 
+# Remove the scientific packages from the base directory
+RUN rm -rf /python/idsse_common/sci
+
+# Run the setup.py
 RUN python3 /python/idsse_common/setup.py install

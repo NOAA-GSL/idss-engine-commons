@@ -13,7 +13,7 @@ ENV LANGUAGE en_US.UTF-8
 
 # Install dependencies (and force Python 3.11 update)
 RUN conda config --add channels conda-forge && \
-    conda install -y python=3.11 && \
+    conda install -y python=3.11.6 && \
     conda install -y \
     pika==1.3.1 \
     python-dateutil==2.8.2 \
