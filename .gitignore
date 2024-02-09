@@ -33,6 +33,9 @@ local.properties
 # VSCode
 .vscode
 
+# PyCharm
+.idea
+
 # iOS
 .DS_Store
 
