@@ -18,7 +18,8 @@ setup(name='idsse',
         'pint',
         'importlib_metadata',
         'pika',
-        'jsonschema'
+        'jsonschema',
+	'python-logging-rabbitmq'
       ],
       extras_require={
         'develop': [
