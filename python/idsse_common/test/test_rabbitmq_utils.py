@@ -24,7 +24,7 @@ from idsse.common.rabbitmq_utils import Conn, Exch, Queue, RabbitMqParams, subsc
 # Example data objects
 CONN = Conn('localhost', '/', port=5672, username='user', password='password')
 RMQ_PARAMS = RabbitMqParams(
-    Exch('ims_data', 'topic'),
+    Exch('ims_data', 'topic', True),
     Queue('ims_data', '', True, False, True)
 )
 
@@ -91,7 +91,8 @@ def test_connection_params_works(monkeypatch: MonkeyPatch, mock_connection: Mock
     # assert exchange was declared
     _channel.exchange_declare.assert_called_once_with(
         exchange=RMQ_PARAMS.exchange.name,
-        exchange_type=RMQ_PARAMS.exchange.type
+        exchange_type=RMQ_PARAMS.exchange.type,
+        durable=RMQ_PARAMS.exchange.durable
     )
 
     # assert queue was declared and bound
