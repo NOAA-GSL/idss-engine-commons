@@ -271,7 +271,7 @@ class PublishConfirm:
         self._channel.add_on_close_callback(self._on_channel_closed)
 
         # Declare exchange on our new channel
-        exch_name, exch_type, exch_durable = self._rmq_params.exchange
+        exch_name, exch_type, exch_durable = self._rmq_params.exchange  # pylint: disable=unused-variable
         logger.debug('Declaring exchange %s', exch_name)
 
         # Note: using functools.partial is not required, it is demonstrating
