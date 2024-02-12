@@ -63,6 +63,7 @@ class PublishConfirm:
     be closed, which usually are tied to permission related issues or
     socket timeouts.
     """
+
     def __init__(self, conn: Conn, exchange: Exch, queue: Queue):
         """Setup the example publisher object, passing in the RabbitMqUtils we will use to
         connect to RabbitMQ.
@@ -74,7 +75,7 @@ class PublishConfirm:
                 a "private queue", i.e. not intended for consumers, and all published messages
                 will have a 10-second TTL.
         """
-        self._thread = Thread(name=f'PublishConfirm-{randint(0,9)}',
+        self._thread = Thread(name=f'PublishConfirm-{randint(0, 9)}',
                               daemon=True,
                               target=self._run)
 
@@ -89,7 +90,7 @@ class PublishConfirm:
 
     def publish_message(self,
                         message: Dict,
-                        routing_key = '',
+                        routing_key='',
                         corr_id: Optional[str] = None) -> bool:
         """If the class is not stopping, publish a message to RabbitMQ,
         appending a list of deliveries with the message number that was sent.
@@ -113,8 +114,8 @@ class PublishConfirm:
         # We expect a JSON message format, do a check here...
         try:
             properties = BasicProperties(content_type='application/json',
-                                                content_encoding='utf-8',
-                                                correlation_id=corr_id)
+                                         content_encoding='utf-8',
+                                         correlation_id=corr_id)
 
             logger.info('Publishing message to queue %s, message length: %d',
                         self._rmq_params.queue.name, len(json.dumps(message)))
@@ -124,8 +125,8 @@ class PublishConfirm:
             self._records.message_number += 1
             self._records.deliveries[self._records.message_number] = message
             logger.debug('Published message # %i to exchange %s, queue %s, routing_key %s',
-                        self._records.message_number, self._rmq_params.exchange.name,
-                        self._rmq_params.queue.name, routing_key)
+                         self._records.message_number, self._rmq_params.exchange.name,
+                         self._rmq_params.queue.name, routing_key)
             return True
 
         except Exception as e:  # pylint: disable=broad-exception-caught
@@ -269,14 +270,16 @@ class PublishConfirm:
         logger.debug('Adding channel close callback')
         self._channel.add_on_close_callback(self._on_channel_closed)
 
-        # Decleare exchange on our new channel
-        exch_name, exch_type = self._rmq_params.exchange
+        # Declare exchange on our new channel
+        exch_name, exch_type, exch_durable = self._rmq_params.exchange
         logger.debug('Declaring exchange %s', exch_name)
 
         # Note: using functools.partial is not required, it is demonstrating
         # how arbitrary data can be passed to the callback when it is called
         cb = functools.partial(self._on_exchange_declareok, userdata=exch_name)
-        self._channel.exchange_declare(exchange=exch_name, exchange_type=exch_type, callback=cb)
+        self._channel.exchange_declare(exchange=exch_name,
+                                       exchange_type=exch_type,
+                                       callback=cb)
 
     def _on_channel_closed(self, channel: Channel, reason: Exception):
         """Invoked by pika when RabbitMQ unexpectedly closes the channel.
@@ -378,7 +381,7 @@ class PublishConfirm:
         delivery_tag = method.delivery_tag
 
         logger.info('Received %s for delivery tag: %i (multiple: %s)',
-                     confirmation_type, delivery_tag, ack_multiple)
+                    confirmation_type, delivery_tag, ack_multiple)
 
         if confirmation_type == 'ack':
             self._records.acked += 1
