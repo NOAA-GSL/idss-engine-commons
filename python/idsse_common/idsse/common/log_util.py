@@ -27,9 +27,9 @@ corr_id_context_var: ContextVar[str] = ContextVar('correlation_id')
 
 
 def set_corr_id_context_var(
-    originator: str,
-    key: Optional[uuid.UUID] = None,
-    issue_dt: Optional[Union[str, datetime]] = None
+        originator: str,
+        key: Optional[uuid.UUID] = None,
+        issue_dt: Optional[Union[str, datetime]] = None
 ) -> None:
     """
     Build and set correlation ID ContextVar for logging module, based on originator and
@@ -63,6 +63,7 @@ def get_corr_id_context_var_parts() -> List[str]:
 
 class AddCorrelationIdFilter(logging.Filter):
     """"Provides correlation id parameter for the logger"""
+
     def filter(self, record: logging.LogRecord) -> bool:
         try:
             record.corr_id = corr_id_context_var.get()
@@ -73,6 +74,7 @@ class AddCorrelationIdFilter(logging.Filter):
 
 class CorrIdFilter(logging.Filter):
     """"Provides correlation id parameter for the logger"""
+
     def __init__(self, corr_id, name: str = "") -> None:
         self._corr_id = corr_id
         super().__init__(name)
@@ -86,7 +88,11 @@ class UTCFormatter(logging.Formatter):
     converter = time.gmtime
 
 
-def get_default_log_config(level: str, with_corr_id=True):
+def get_default_log_config(level: str,
+                           with_corr_id: bool = True,
+                           host: str = 'localhost',
+                           port: int = 5672,
+                           report_level: str = 'ERROR'):
     """
     Get standardized python logging config (formatters, handlers directing to stdout, rabbitmq etc.)
     as a dictionary. This dictionary can be passed directly to logging.config.dictConfig:
@@ -101,6 +107,9 @@ def get_default_log_config(level: str, with_corr_id=True):
     Args:
         level (str): logging level, such as 'DEBUG'
         with_corr_id (bool): whether to include correlation ID in log messages. Default: True
+        host (str): rabbitmq hostname
+        port (int): rabbitmq port number
+        report_level: rabbitmq logging level
     """
     set_corr_id_context_var('None', uuid.UUID('00000000-0000-0000-0000-000000000000'))
     if with_corr_id:
@@ -139,18 +148,18 @@ def get_default_log_config(level: str, with_corr_id=True):
             },
             'rabbit': {
                 'class': 'python_logging_rabbitmq.RabbitMQHandler',
-                'host': 'localhost',
-                'port': 5672,
+                'host': host,
+                'port': port,
                 'formatter': 'standard',
                 'filters': filter_list,
-                'level': 'ERROR',
+                'level': report_level,
                 'declare_exchange': True,
             },
         },
         'loggers': {
             '': {
                 'level': level,
-                'handlers': ['default', 'rabbit'],
+                'handlers': ['default', 'rabbit']
             },
         }
     }
