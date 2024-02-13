@@ -38,7 +38,7 @@ def set_corr_id_context_var(
     Args:
         originator (str): Function, class, service name, etc. that is using logging module
         key (Optional[uuid.UUID]): a UUID. Default: randomly generated UUID.
-        issue_dt (Optional[Union[str, datettime]]): Datetime when a relevant forecast was issued
+        issue_dt (Optional[Union[str, datetime]]): Datetime when a relevant forecast was issued
     """
     if not key:
         key = uuid.uuid4()
@@ -88,7 +88,7 @@ class UTCFormatter(logging.Formatter):
 
 def get_default_log_config(level: str, with_corr_id=True):
     """
-    Get standardized python logging config (formatters, handlers directing to stdout, etc.)
+    Get standardized python logging config (formatters, handlers directing to stdout, rabbitmq etc.)
     as a dictionary. This dictionary can be passed directly to logging.config.dictConfig:
 
     import logging
@@ -137,11 +137,20 @@ def get_default_log_config(level: str, with_corr_id=True):
                 'formatter': 'standard',
                 'filters': filter_list,
             },
+            'rabbit': {
+                'class': 'python_logging_rabbitmq.RabbitMQHandler',
+                'host': 'localhost',
+                'port': 5672,
+                'formatter': 'standard',
+                'filters': filter_list,
+                'level': 'ERROR',
+                'declare_exchange': True,
+            },
         },
         'loggers': {
             '': {
                 'level': level,
-                'handlers': ['default', ],
+                'handlers': ['default', 'rabbit'],
             },
         }
     }
