@@ -13,7 +13,7 @@
 # pylint: disable=missing-function-docstring,redefined-outer-name,invalid-name,protected-access
 # cspell:ignore pyproj
 
-from typing import Sequence
+from collections.abc import Sequence
 
 import numpy as np
 from pytest import approx, fixture, raises

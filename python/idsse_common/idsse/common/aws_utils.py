@@ -12,8 +12,8 @@
 import logging
 import fnmatch
 import os
+from collections.abc import Sequence
 from datetime import datetime, timedelta
-from typing import Sequence
 
 from .path_builder import PathBuilder
 from .utils import TimeDelta, datetime_gen, exec_cmd

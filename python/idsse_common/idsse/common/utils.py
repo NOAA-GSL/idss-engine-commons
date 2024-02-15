@@ -12,10 +12,11 @@
 import copy
 import logging
 import math
+from collections.abc import Sequence
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from subprocess import PIPE, Popen, TimeoutExpired
-from typing import Any, Generator, Sequence
+from typing import Any, Generator
 from uuid import UUID
 
 logger = logging.getLogger(__name__)

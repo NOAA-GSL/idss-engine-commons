@@ -11,7 +11,8 @@
 # ------------------------------------------------------------------------------------
 
 import logging
-from typing import NewType, Sequence
+from collections.abc import Sequence
+from typing import NewType
 
 import numpy
 # import shapely

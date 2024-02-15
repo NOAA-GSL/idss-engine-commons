@@ -12,8 +12,8 @@
 # ----------------------------------------------------------------------------------
 # pylint: disable=invalid-name
 # cspell:word fliplr, flipud
-
-from typing import Self, Sequence, TypeVar, Iterable
+from collections.abc import Sequence, Iterable
+from typing import Self, TypeVar
 from enum import Enum
 
 import numpy as np
