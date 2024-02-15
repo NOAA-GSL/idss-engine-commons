@@ -12,22 +12,28 @@ ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8
 
 # Install dependencies (and force Python 3.11 update)
-RUN conda config --add channels conda-forge && \
-    conda install -y python=3.11 && \
+RUN conda config --set solver classic && \
+    conda config --add channels conda-forge && \
+    conda config --remove channels defaults && \
+    conda config --set channel_priority strict && \
+    conda install -y python=3.12.1 && \
     conda install -y \
     pika==1.3.1 \
     python-dateutil==2.8.2 \
-    pint==0.21 \
-    numpy==1.24.3 \
-    netcdf4==1.6.3 \
-    h5netcdf==1.1.0 \
-    pygrib \
-    awscli==1.27.161 \
-    jsonschema==4.19.0 \
-    s5cmd==2.2.2 \
+    pint==0.23 \
+    numpy==1.26.4 \
+    netcdf4==1.6.5 \
+    h5netcdf==1.3.0 \
+    pygrib==2.1.5 \
+    awscli==1.32.41 \
+    jsonschema==4.21.1 \
+    s5cmd \
     geojson==3.1.0 \
     shapely==2.0.2 \
-    pillow==10.0.1 \
+    pillow==10.2.0 \
+    flask==2.3.2 \
+    #gunicorn=21.0.1 \
+    gunicorn \
     && conda clean -y --all
 
 # Get the latest package updates to keep security vulnerabilities down
