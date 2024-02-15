@@ -15,7 +15,7 @@ import math
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from subprocess import PIPE, Popen, TimeoutExpired
-from typing import Any, Generator, Optional, Sequence, Union
+from typing import Any, Generator, Sequence
 from uuid import UUID
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class RoundingMethod(Enum):
     FLOOR = 'FLOOR'
 
 
-RoundingParam = Union[str, RoundingMethod]
+RoundingParam = str | RoundingMethod
 
 
 class TimeDelta:
@@ -84,7 +84,7 @@ class Map(dict):
         del self.__dict__[key]
 
 
-def exec_cmd(commands: Sequence[str], timeout: Optional[int] = None) -> Sequence[str]:
+def exec_cmd(commands: Sequence[str], timeout: int | None = None) -> Sequence[str]:
     """Execute the passed commands via a Popen call
 
     Args:
@@ -161,7 +161,7 @@ def dict_copy_with(old_dict: dict, **kwargs) -> dict:
 
 def datetime_gen(dt_start: datetime,
                  time_delta: timedelta,
-                 dt_end: Optional[datetime] = None,
+                 dt_end: datetime | None = None,
                  max_num: int = 100) -> Generator[datetime, Any, None]:
     """Create a date/time sequence generator, given a starting date/time and a time stride
 
