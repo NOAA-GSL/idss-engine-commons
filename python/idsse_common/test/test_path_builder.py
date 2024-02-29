@@ -11,7 +11,7 @@
 # pylint: disable=missing-function-docstring,invalid-name,redefined-outer-name,protected-access
 # cspell:words pathbuilder
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 import pytest
 
 from idsse.common.utils import TimeDelta
@@ -70,8 +70,8 @@ def test_path_fmt(local_path_builder: PathBuilder):
 
 
 # methods
-EXAMPLE_ISSUE = datetime(1970, 10, 3, 12)  # a.k.a. issued at
-EXAMPLE_VALID = datetime(1970, 10, 3, 14)  # a.k.a. valid until
+EXAMPLE_ISSUE = datetime(1970, 10, 3, 12, tzinfo=UTC)  # a.k.a. issued at
+EXAMPLE_VALID = datetime(1970, 10, 3, 14, tzinfo=UTC)  # a.k.a. valid until
 EXAMPLE_LEAD = TimeDelta(EXAMPLE_VALID - EXAMPLE_ISSUE)  # a.k.a. duration of time that issue lasts
 
 EXAMPLE_FULL_PATH = '~/blend.19701003/12/core/blend.t12z.core.f002.co.grib2.idx'

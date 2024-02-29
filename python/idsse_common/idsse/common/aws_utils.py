@@ -12,7 +12,7 @@
 import logging
 import fnmatch
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Sequence, Set, Tuple, Optional
 
 from .path_builder import PathBuilder
@@ -118,7 +118,7 @@ class AwsUtils():
     def get_issues(self,
                    num_issues: int = 1,
                    issue_start: Optional[datetime] = None,
-                   issue_end: datetime = datetime.utcnow(),
+                   issue_end: datetime = datetime.now(UTC),
                    time_delta: timedelta = timedelta(hours=1)
                    ) -> Sequence[datetime]:
         """Determine the available issue date/times
@@ -182,22 +182,22 @@ class AwsUtils():
             return [valids_and_filenames] if valids_and_filenames is not None else []
 
         dir_path = self.path_builder.build_dir(issue=issue)
-        valid_file = [(self.path_builder.get_valid(file_path), file_path)
-                      for file_path in self.aws_ls(dir_path)
-                      if file_path.endswith(self.path_builder.file_ext)]
+        valid_and_file = [(self.path_builder.get_valid(file_path), file_path)
+                          for file_path in self.aws_ls(dir_path)
+                          if file_path.endswith(self.path_builder.file_ext)]
 
         if valid_start:
             if valid_end:
-                valid_file = [(valid, filename)
-                              for valid, filename in valid_file
-                              if valid_start <= valid <= valid_end]
+                valid_and_file = [(valid, filename)
+                                  for valid, filename in valid_and_file
+                                  if valid_start <= valid <= valid_end]
             else:
-                valid_file = [(valid, filename)
-                              for valid, filename in valid_file
-                              if valid >= valid_start]
+                valid_and_file = [(valid, filename)
+                                  for valid, filename in valid_and_file
+                                  if valid >= valid_start]
         elif valid_end:
-            valid_file = [(valid, filename)
-                          for valid, filename in valid_file
-                          if valid <= valid_end]
+            valid_and_file = [(valid, filename)
+                              for valid, filename in valid_and_file
+                              if valid <= valid_end]
 
-        return valid_file
+        return valid_and_file

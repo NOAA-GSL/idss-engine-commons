@@ -13,7 +13,7 @@
 # pylint: disable=missing-function-docstring,redefined-outer-name,pointless-statement
 # pylint: disable=invalid-name,unused-argument
 
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import List
 from unittest.mock import Mock
 
@@ -21,8 +21,8 @@ from pytest import fixture, MonkeyPatch
 
 from idsse.common.aws_utils import AwsUtils
 
-EXAMPLE_ISSUE = datetime(1970, 10, 3, 12)
-EXAMPLE_VALID = datetime(1970, 10, 3, 14)
+EXAMPLE_ISSUE = datetime(1970, 10, 3, 12, tzinfo=UTC)
+EXAMPLE_VALID = datetime(1970, 10, 3, 14, tzinfo=UTC)
 
 EXAMPLE_DIR = 's3://noaa-nbm-grib2-pds/blend.19701003/12/core/'
 EXAMPLE_FILES = ['blend.t12z.core.f002.co.grib2',
@@ -146,7 +146,7 @@ def test_check_for_succeeds(aws_utils: AwsUtils, mock_exec_cmd):
 
 
 def test_check_for_does_not_find_valid(aws_utils: AwsUtils, mock_exec_cmd):
-    unexpected_valid = datetime(1970, 10, 3, 23)
+    unexpected_valid = datetime(1970, 10, 3, 23, tzinfo=UTC)
     result = aws_utils.check_for(EXAMPLE_ISSUE, unexpected_valid)
     assert result is None
 
@@ -172,7 +172,7 @@ def test_get_issues_latest_issue_from_today_if_no_args_passed(aws_utils: AwsUtil
     # with current mocks returned issue (latest issue) will always be "now" with
     # truncated minute, second, and microsecond
     assert len(result) == 1
-    assert result[0] == datetime.utcnow().replace(minute=0, second=0, microsecond=0)
+    assert result[0] == datetime.now(UTC).replace(minute=0, second=0, microsecond=0)
 
 
 def test_get_valids_all(aws_utils: AwsUtils, mock_exec_cmd):
