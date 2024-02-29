@@ -92,7 +92,7 @@ def das_data_message() -> dict:
 def test_validate_das_issue_request(available_data_validator: Validator):
     message = {'sourceType': 'issue',
                'sourceObj': {'product': 'NBM.AWS.GRIB',
-                             'region': 'PR',
+                             'region': 'PUERTO_RICO',
                              'field': 'TEMP',
                              }}
     try:
@@ -115,7 +115,7 @@ def test_validate_das_bad_issue_request(available_data_validator: Validator):
 def test_validate_das_valid_request(available_data_validator: Validator):
     message = {'sourceType': 'valid',
                'sourceObj': {'product': 'NBM.AWS.GRIB',
-                             'region': 'PR',
+                             'region': 'PUERTO_RICO',
                              'field': 'TEMP',
                              'issue': '2022-01-02T12:00:00.000Z'
                              }}
@@ -129,7 +129,7 @@ def test_validate_das_bad_valid_request(available_data_validator: Validator):
     # message is missing 'field'
     message = {'sourceType': 'valid',
                'sourceObj': {'product': 'NBM.AWS.GRIB',
-                             'region': 'PR',
+                             'region': 'PUERTO_RICO',
                              'issue': '2022-01-02T12:00:00.000Z'
                              }}
     with raises(ValidationError):
@@ -139,7 +139,7 @@ def test_validate_das_bad_valid_request(available_data_validator: Validator):
 def test_validate_das_lead_request(available_data_validator: Validator):
     message = {'sourceType': 'lead',
                'sourceObj': {'product': 'NBM.AWS.GRIB',
-                             'region': 'PR',
+                             'region': 'PUERTO_RICO',
                              'field': 'TEMP',
                              'issue': '2022-01-02T12:00:00.000Z'
                              }}
@@ -152,7 +152,7 @@ def test_validate_das_lead_request(available_data_validator: Validator):
 def test_validate_das_bad_lead_request(available_data_validator: Validator):
     # message is missing 'product'
     message = {'sourceType': 'valid',
-               'sourceObj': {'region': 'PR',
+               'sourceObj': {'region': 'PUERTO_RICO',
                              'field': 'TEMP',
                              'issue': '2022-01-02T12:00:00.000Z'
                              }}
@@ -163,7 +163,7 @@ def test_validate_das_bad_lead_request(available_data_validator: Validator):
 def test_validate_das_field_request(available_data_validator: Validator):
     message = {'sourceType': 'field',
                'sourceObj': {'product': 'NBM.AWS.GRIB',
-                             'region': 'PR',
+                             'region': 'PUERTO_RICO',
                              'field': 'TEMP',
                              'issue': '2022-01-02T12:00:00.000Z',
                              'valid': '2022-01-02T15:00:00.000Z'
@@ -178,7 +178,7 @@ def test_validate_das_bad_field_request(available_data_validator: Validator):
     # message is missing 'issue'
     message = {'sourceType': 'field',
                'sourceObj': {'product': 'NBM.AWS.GRIB',
-                             'region': 'PR',
+                             'region': 'PUERTO_RICO',
                              'field': 'TEMP',
                              'valid': '2022-01-02T15:00:00.000Z'
                              }}

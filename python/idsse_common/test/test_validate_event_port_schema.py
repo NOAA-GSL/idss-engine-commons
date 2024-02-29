@@ -65,7 +65,7 @@ def simple_event_port_message() -> dict:
                 "name": "A",
                 "duration": 0,
                 "arealPercentage": 0,
-                "region": "CO",
+                "region": "CONUS",
                 "product": {
                     "fcst": [
                         "NBM"
