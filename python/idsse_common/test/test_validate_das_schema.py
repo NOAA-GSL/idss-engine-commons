@@ -53,7 +53,7 @@ def das_data_message() -> dict:
                                 'sourceObj': {
                                     'product': 'NBM',
                                     'field': 'TEMP',
-                                    'region': 'CO',
+                                    'region': 'CONUS',
                                     'valid': '2022-11-12T00:00:00.000Z',
                                     'issue': '2022-11-11T14:00:00.000Z'}}},
                         'label': 'NBM:TEMP:Fahrenheit'},
@@ -76,7 +76,7 @@ def das_data_message() -> dict:
                                 'sourceObj': {
                                     'product': 'NBM',
                                     'field': 'WINDSPEED',
-                                    'region': 'CO',
+                                    'region': 'CONUS',
                                     'valid': '2022-11-12T00:00:00.000Z',
                                     'issue': '2022-11-11T14:00:00.000Z'}}},
                         'label': 'NBM:WINDSPEED:MilesPerHour'},
@@ -191,7 +191,7 @@ def test_validate_das_data_request(data_request_validator: Validator):
         'sourceType': 'data',
         'sourceObj': {
             'product': 'NBM',
-            'region': 'CO',
+            'region': 'CONUS',
             'field': 'WINDSPEED',
             'valid': '2022-11-12T00:00:00.000Z',
             'issue': '2022-11-11T14:00:00.000Z'
@@ -208,7 +208,7 @@ def test_validate_das_bad_data_request(data_request_validator: Validator):
     message = {
         'sourceType': 'data',
         'sourceObj': {
-            'region': 'CO',
+            'region': 'CONUS',
             'field': 'WINDSPEED',
             'valid': '2022-11-12T00:00:00.000Z',
             'issue': '2022-11-11T14:00:00.000Z'
@@ -228,7 +228,7 @@ def test_validate_das_opr_with_single_source_request(data_request_validator: Val
                 'sourceType': 'data',
                 'sourceObj': {
                     'product': 'NBM.AWS.GRIB',
-                    'region': 'CO',
+                    'region': 'CONUS',
                     'issue': '2022-01-02T12:00:00.000Z',
                     'valid': '2022-01-02T15:00:00.000Z',
                     'field': 'TEMP'
@@ -252,7 +252,7 @@ def test_validate_das_bad_opr_with_single_source_request(data_request_validator:
                 'sourceType': 'field',
                 'sourceObj': {
                     'product': 'NBM.AWS.GRIB',
-                    'region': 'CO',
+                    'region': 'CONUS',
                     'issue': '2022-01-02T12:00:00.000Z',
                     'valid': '2022-01-02T15:00:00.000Z',
                     'field': 'TEMP'

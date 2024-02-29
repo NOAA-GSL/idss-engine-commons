@@ -2,6 +2,6 @@
     "Region": {
         "description": "Identifier for a geographic region",
         "type": "string",
-        "enum": ["CO", "AK", "PR", "HI"]
+        "enum": ["CONUS", "ALASKA", "PUERTO_RICO", "HAWAII", "GUAM"]
     }
 }
