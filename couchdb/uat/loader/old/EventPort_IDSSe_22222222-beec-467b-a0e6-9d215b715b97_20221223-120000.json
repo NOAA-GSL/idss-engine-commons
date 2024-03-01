@@ -94,7 +94,7 @@
 			"name": "A",
 			"duration": 0,
 			"arealPercentage": 0,
-			"region": "CO",
+			"region": "CONUS",
 			"product": { "fcst": ["NBM"] },
 			"field": "1 HR SNOWFALL",
 			"units": "INCHES",

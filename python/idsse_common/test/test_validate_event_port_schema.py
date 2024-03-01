@@ -65,7 +65,7 @@ def simple_event_port_message() -> dict:
                 "name": "A",
                 "duration": 0,
                 "arealPercentage": 0,
-                "region": "CO",
+                "region": "CONUS",
                 "product": {
                     "fcst": [
                         "NBM"
@@ -102,7 +102,7 @@ def simple_event_port_message() -> dict:
                 ],
                 "dataDescript": [
                     {
-                        "partName": "B",
+                        "partName": "A",
                         "dataName": "Temperature: 2m",
                         "dataLocation": "arn:aws:s3:::noaa-nbm-grib2-pds:",
                         "issueDt": "2022-11-11T14:00:00.000Z"

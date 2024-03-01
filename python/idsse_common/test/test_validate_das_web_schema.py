@@ -44,7 +44,7 @@ def das_web_request_message() -> dict:
                 'product': 'NBM',
                 'field': 'WINDSPEED',
                 'units': 'MilesPerHour',
-                'region': 'CO',
+                'region': 'CONUS',
                 'relational': 'GREATER THAN',
                 'thresh': 5,
                 'mapping': {
@@ -60,7 +60,7 @@ def das_web_request_message() -> dict:
                 'product': 'NBM',
                 'field': 'TEMPERATURE',
                 'units': 'Fahrenheit',
-                'region': 'CO',
+                'region': 'CONUS',
                 'relational': 'LESS THAN OR EQUAL',
                 'thresh': 30,
                 'mapping': {
@@ -105,7 +105,7 @@ def das_web_response_message() -> dict:
                 'product': 'NBM',
                 'field': 'WINDSPEED',
                 'units': 'MilesPerHour',
-                'region': 'CO',
+                'region': 'CONUS',
                 'relational': 'GREATER THAN',
                 'thresh': 5,
                 'mapping': {

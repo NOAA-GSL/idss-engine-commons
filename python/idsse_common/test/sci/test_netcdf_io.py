@@ -28,7 +28,7 @@ EXAMPLE_ATTRIBUTES = {
     'valid_dt': '2022-11-11 17:00:00+00:00',
     'issue_dt': '2022-11-11 14:00:00+00:00',
     'task': 'data_task',
-    'region': 'CO',
+    'region': 'CONUS',
     'units': 'Fahrenheit',
     'proj_name': 'NBM',
     'proj_spec': '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +a=6371200',

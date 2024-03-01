@@ -18,7 +18,7 @@ In this weather forecasting data context,
 
 import os
 import re
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, UTC
 from typing import Dict, Self, Union
 
 from .utils import TimeDelta
@@ -258,7 +258,8 @@ class PathBuilder:
                             parsed_args.get('issue.hour', 0),
                             parsed_args.get('issue.minute', 0),
                             parsed_args.get('issue.second', 0),
-                            parsed_args.get('issue.microsecond', 0))
+                            parsed_args.get('issue.microsecond', 0),
+                            tzinfo=UTC)
 
         if lead is None and 'lead.hour' in parsed_args:
             lead = PathBuilder.get_lead_from_time_args(parsed_args)
@@ -295,7 +296,8 @@ class PathBuilder:
                             parsed_args.get('valid.hour', 0),
                             parsed_args.get('valid.minute', 0),
                             parsed_args.get('valid.second', 0),
-                            parsed_args.get('valid.microsecond', 0))
+                            parsed_args.get('valid.microsecond', 0),
+                            tzinfo=UTC)
 
         if lead is None and 'lead.hour' in parsed_args:
             lead = PathBuilder.get_lead_from_time_args(parsed_args)

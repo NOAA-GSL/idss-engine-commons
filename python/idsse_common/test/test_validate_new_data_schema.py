@@ -30,7 +30,7 @@ def new_data_validator() -> Validator:
 def new_field_message() -> dict:
     return {
         "product": "NBM",
-        "region": "CO",
+        "region": "CONUS",
         "issueDt": "2023-09-15T16:00:00.000Z",
         "validDt": "2023-09-17T06:00:00.000Z",
         "field": "TEMP"
@@ -41,7 +41,7 @@ def new_field_message() -> dict:
 def new_valid_message() -> dict:
     return {
         "product": "NBM",
-        "region": "CO",
+        "region": "CONUS",
         "issueDt": "2023-09-15T16:00:00.000Z",
         "validDt": "2023-09-17T06:00:00.000Z",
         "field": ["TEMP", "WINDSPEED"]
@@ -52,7 +52,7 @@ def new_valid_message() -> dict:
 def new_issue_message() -> dict:
     return {
         "product": "NBM",
-        "region": "CO",
+        "region": "CONUS",
         "issueDt": "2023-09-15T16:00:00.000Z",
         "field": {
             "2023-09-15T17:00:00.000Z": ["TEMP", "WINDSPEED"],

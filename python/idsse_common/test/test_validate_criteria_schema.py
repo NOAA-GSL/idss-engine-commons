@@ -72,7 +72,7 @@ def simple_criteria_message() -> dict:
                 },
                 "field": "TEMPERATURE",
                 "units": "DEG F",
-                "region": "CO",
+                "region": "CONUS",
                 "relational": "GREATER THAN",
                 "thresh": 30,
                 "mapping": {
@@ -141,7 +141,7 @@ def criteria_message() -> dict:
                 },
                 "field": "DEW POINT",
                 "units": "Fahrenheit",
-                "region": "CO",
+                "region": "CONUS",
                 "relational": "LESS THAN",
                 "thresh": 60,
                 "mapping": {
@@ -161,7 +161,7 @@ def criteria_message() -> dict:
                 },
                 "field": "RELATIVE HUMIDITY",
                 "units": "PERCENT",
-                "region": "CO",
+                "region": "CONUS",
                 "relational": "GREATER THAN",
                 "thresh": 30,
                 "mapping": {
