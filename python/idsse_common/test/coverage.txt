@@ -1,5 +1,5 @@
 ============================= test session starts ==============================
-platform linux -- Python 3.11.8, pytest-8.0.0, pluggy-1.4.0
+platform linux -- Python 3.11.8, pytest-8.0.2, pluggy-1.4.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
 plugins: cov-4.1.0
 collected 214 items
@@ -25,7 +25,7 @@ test/test_validate_new_data_schema.py .........                          [100%]
 =================================== FAILURES ===================================
 ___________________ test_get_default_log_config_with_corr_id ___________________
 
-self = <logging.config.DictConfigurator object at 0x7f9a9dc50050>
+self = <logging.config.DictConfigurator object at 0x7ff09395b250>
 s = 'python_logging_rabbitmq.RabbitMQHandler'
 
     def resolve(self, s):
@@ -43,7 +43,7 @@ E           ModuleNotFoundError: No module named 'python_logging_rabbitmq'
 
 The above exception was the direct cause of the following exception:
 
-self = <logging.config.DictConfigurator object at 0x7f9a9dc50050>
+self = <logging.config.DictConfigurator object at 0x7ff09395b250>
 
     def configure(self):
         """Do the configuration."""
@@ -125,7 +125,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
     klass = self.resolve(cname)
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <logging.config.DictConfigurator object at 0x7f9a9dc50050>
+self = <logging.config.DictConfigurator object at 0x7ff09395b250>
 s = 'python_logging_rabbitmq.RabbitMQHandler'
 
     def resolve(self, s):
@@ -154,7 +154,7 @@ E           ValueError: Cannot resolve 'python_logging_rabbitmq.RabbitMQHandler'
 
 The above exception was the direct cause of the following exception:
 
-capsys = <_pytest.capture.CaptureFixture object at 0x7f9a9dc50550>
+capsys = <_pytest.capture.CaptureFixture object at 0x7ff09395a890>
 
     def test_get_default_log_config_with_corr_id(capsys):
 >       logging.config.dictConfig(get_default_log_config('INFO'))
@@ -165,7 +165,7 @@ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
     dictConfigClass(config).configure()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <logging.config.DictConfigurator object at 0x7f9a9dc50050>
+self = <logging.config.DictConfigurator object at 0x7ff09395b250>
 
     def configure(self):
         """Do the configuration."""
@@ -277,4 +277,4 @@ TOTAL                              1272     95    93%
 
 =========================== short test summary info ============================
 FAILED test/test_log_util.py::test_get_default_log_config_with_corr_id - ValueError: Unable to configure handler 'rabbit'
-======================== 1 failed, 213 passed in 5.04s =========================
+======================== 1 failed, 213 passed in 5.03s =========================
