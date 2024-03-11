@@ -9,6 +9,7 @@
             "product": {"$ref": "product.json#/Product"},
             "field": {"type": "string"},
             "region": {"$ref": "region.json#/Region"},
+            "regionCoords": {"$ref": "region.json#/RegionCoords"},
             "units": {"type": "string"},
             "relational": {"type": "string"},
             "thresh": {"type": "number"},
@@ -37,11 +38,14 @@
             "duration",
             "product",
             "field",
-            "region",
             "units",
             "relational",
             "thresh",
             "mapping"
+        ],
+        "oneOf": [
+            {"required": ["region"]},
+            {"required": ["regionCoords"]}
         ]
     },
 
@@ -62,6 +66,7 @@
             },
             "field": {"type": "string"},
             "region": {"$ref": "region.json#/Region"},
+            "regionCoords": {"$ref": "region.json#/RegionCoords"},
             "units": {"type": "string"},
             "relational": {"type": "string"},
             "thresh": {"type": "number"},
@@ -90,11 +95,14 @@
             "duration",
             "product",
             "field",
-            "region",
             "units",
             "relational",
             "thresh",
             "mapping"
+        ],
+        "oneOf": [
+            {"required": ["region"]},
+            {"required": ["regionCoords"]}
         ]
     }
 }
