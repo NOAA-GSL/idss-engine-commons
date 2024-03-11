@@ -1,7 +1,19 @@
 {
     "Region": {
-        "description": "Identifier for a geographic region",
+        "description": "Identifier for a geographic region either by name",
         "type": "string",
         "enum": ["CONUS", "ALASKA", "PUERTO_RICO", "HAWAII", "GUAM"]
-    }
+    },
+
+    "RegionCoords": {
+        "description": "Specify geographic coordinates (lon/lat) used to identify region",
+        "type": "array",
+        "items": {
+            "type": "array",
+            "items": {"type": "number"},
+            "minItems": 2,
+            "maxItems": 2
+        },
+        "minItems": 1
+    }    
 }

@@ -5,16 +5,20 @@
         "properties": {
             "product": {"$ref": "product.json#/Product"},
             "region": {"$ref": "region.json#/Region"},
+            "regionCoords": {"$ref": "region.json#/RegionCoords"},
             "field": {"$ref": "field.json#/Field"},
             "issue": {"$ref": "timing.json#/TimeString"},
             "valid": {"$ref": "timing.json#/TimeString"}
         },
         "required": [
             "product",
-            "region",
             "field",
             "issue",
             "valid"
+        ],
+        "oneOf": [
+            {"required": ["region"]},
+            {"required": ["regionCoords"]}
         ]
     }
 }
