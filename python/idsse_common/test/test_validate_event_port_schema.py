@@ -159,7 +159,7 @@ def simple_event_port_message() -> dict:
                                 "startDt": "2022-11-12T00:00:00.000Z",
                                 "endDt": "2022-11-12T00:00:00.000Z",
                                 "maxAt": "2022-11-12T00:00:00.000Z",
-                                "criteriaMet": "true"
+                                "empirical": "HIT"
                             }
                         ]
                     },
@@ -175,7 +175,7 @@ def simple_event_port_message() -> dict:
                                 "startDt": "2022-11-12T00:00:00.000Z",
                                 "endDt": "2022-11-12T00:00:00.000Z",
                                 "maxAt": "2022-11-12T00:00:00.000Z",
-                                "criteriaMet": "true"
+                                "empirical": "HIT"
                             }
                         ]
                     }
