@@ -75,12 +75,7 @@
         "description": "Mechanism for storing the a contiguous state (when the criteria is met or not met",
         "type": "object",
         "properties": {
-            "criteriaMet": {         
-                "oneOf" : [
-                    {"type": "boolean"},
-                    {"type": "string", "enum": ["true", "false"]}
-                ]
-            },
+            "empirical": {"type": "string", "enum": ["HIT", "MISS", "PROXIMAL"]},
             "startDt": {"$ref": "timing.json#/TimeString"},
             "endDt": {"$ref": "timing.json#/TimeString"},
             "durationInMin": {"type": "integer"},
@@ -90,7 +85,7 @@
             "maxAt": {"$ref": "timing.json#/TimeString"}
         },
         "required": [
-            "criteriaMet",
+            "empirical",
             "startDt",
             "endDt",
             "durationInMin",
