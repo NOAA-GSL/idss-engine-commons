@@ -43,17 +43,6 @@ From the IDSS Engine project root directory `idss-engine/build/<env>/<arch>/`:
 
 > **Image Name** `idsse/commons/python-base-sci:<tag>`
 
-### Java Base Image
----
-Any java based microservices within IDSS Engine should use the following image as its base
-
-#### Build
-From the IDSS Engine project root directory `idss-engine/build/<env>/<arch>/`:
-
-`$ docker-compose build java_base`
-
-> **Image Name** `idsse/commons/java-base:<tag>`
-
 ### RabbitMQ Server
 ---
 The IDSS Engine can be deployed with Docker and/or Kubernetes. If developers are deploying locally with Docker, they
