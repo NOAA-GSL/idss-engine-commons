@@ -1,5 +1,5 @@
 ============================= test session starts ==============================
-platform linux -- Python 3.11.8, pytest-8.1.1, pluggy-1.4.0
+platform linux -- Python 3.11.9, pytest-8.1.1, pluggy-1.4.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
 plugins: cov-4.1.0
 collected 214 items
@@ -25,7 +25,7 @@ test/test_validate_new_data_schema.py .........                          [100%]
 =================================== FAILURES ===================================
 ___________________ test_get_default_log_config_with_corr_id ___________________
 
-self = <logging.config.DictConfigurator object at 0x7fa10f47f3d0>
+self = <logging.config.DictConfigurator object at 0x7ff3e5c60310>
 s = 'python_logging_rabbitmq.RabbitMQHandler'
 
     def resolve(self, s):
@@ -39,11 +39,11 @@ s = 'python_logging_rabbitmq.RabbitMQHandler'
 >           found = self.importer(used)
 E           ModuleNotFoundError: No module named 'python_logging_rabbitmq'
 
-/opt/hostedtoolcache/Python/3.11.8/x64/lib/python3.11/logging/config.py:396: ModuleNotFoundError
+/opt/hostedtoolcache/Python/3.11.9/x64/lib/python3.11/logging/config.py:396: ModuleNotFoundError
 
 The above exception was the direct cause of the following exception:
 
-self = <logging.config.DictConfigurator object at 0x7fa10f47f3d0>
+self = <logging.config.DictConfigurator object at 0x7ff3e5c60310>
 
     def configure(self):
         """Do the configuration."""
@@ -119,13 +119,13 @@ self = <logging.config.DictConfigurator object at 0x7fa10f47f3d0>
                     try:
 >                       handler = self.configure_handler(handlers[name])
 
-/opt/hostedtoolcache/Python/3.11.8/x64/lib/python3.11/logging/config.py:573: 
+/opt/hostedtoolcache/Python/3.11.9/x64/lib/python3.11/logging/config.py:573: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.11.8/x64/lib/python3.11/logging/config.py:735: in configure_handler
+/opt/hostedtoolcache/Python/3.11.9/x64/lib/python3.11/logging/config.py:735: in configure_handler
     klass = self.resolve(cname)
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <logging.config.DictConfigurator object at 0x7fa10f47f3d0>
+self = <logging.config.DictConfigurator object at 0x7ff3e5c60310>
 s = 'python_logging_rabbitmq.RabbitMQHandler'
 
     def resolve(self, s):
@@ -150,22 +150,22 @@ s = 'python_logging_rabbitmq.RabbitMQHandler'
 >           raise v from e
 E           ValueError: Cannot resolve 'python_logging_rabbitmq.RabbitMQHandler': No module named 'python_logging_rabbitmq'
 
-/opt/hostedtoolcache/Python/3.11.8/x64/lib/python3.11/logging/config.py:407: ValueError
+/opt/hostedtoolcache/Python/3.11.9/x64/lib/python3.11/logging/config.py:407: ValueError
 
 The above exception was the direct cause of the following exception:
 
-capsys = <_pytest.capture.CaptureFixture object at 0x7fa10f47f110>
+capsys = <_pytest.capture.CaptureFixture object at 0x7ff3e5c63710>
 
     def test_get_default_log_config_with_corr_id(capsys):
 >       logging.config.dictConfig(get_default_log_config('INFO'))
 
 test/test_log_util.py:75: 
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
-/opt/hostedtoolcache/Python/3.11.8/x64/lib/python3.11/logging/config.py:823: in dictConfig
+/opt/hostedtoolcache/Python/3.11.9/x64/lib/python3.11/logging/config.py:823: in dictConfig
     dictConfigClass(config).configure()
 _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ 
 
-self = <logging.config.DictConfigurator object at 0x7fa10f47f3d0>
+self = <logging.config.DictConfigurator object at 0x7ff3e5c60310>
 
     def configure(self):
         """Do the configuration."""
@@ -250,10 +250,10 @@ self = <logging.config.DictConfigurator object at 0x7fa10f47f3d0>
                                              '%r' % name) from e
 E                                            ValueError: Unable to configure handler 'rabbit'
 
-/opt/hostedtoolcache/Python/3.11.8/x64/lib/python3.11/logging/config.py:580: ValueError
+/opt/hostedtoolcache/Python/3.11.9/x64/lib/python3.11/logging/config.py:580: ValueError
 - generated xml file: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/pytest.xml -
 
----------- coverage: platform linux, python 3.11.8-final-0 -----------
+---------- coverage: platform linux, python 3.11.9-final-0 -----------
 Name                              Stmts   Miss  Cover
 -----------------------------------------------------
 idsse/common/__init__.py              0      0   100%
@@ -277,4 +277,4 @@ TOTAL                              1272     95    93%
 
 =========================== short test summary info ============================
 FAILED test/test_log_util.py::test_get_default_log_config_with_corr_id - ValueError: Unable to configure handler 'rabbit'
-======================== 1 failed, 213 passed in 5.16s =========================
+======================== 1 failed, 213 passed in 5.68s =========================
