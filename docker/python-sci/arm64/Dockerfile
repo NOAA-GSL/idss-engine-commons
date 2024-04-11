@@ -16,7 +16,7 @@ RUN conda config --add channels conda-forge && \
     conda install -y python=3.11 && \
     conda install -y \
     pika==1.3.1 \
-    python-dateutil==2.8.2 \
+    python-dateutil==2.9.0 \
     pint==0.21 \
     numpy==1.24.3 \
     netcdf4==1.6.3 \

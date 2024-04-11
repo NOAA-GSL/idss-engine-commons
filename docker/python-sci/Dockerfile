@@ -19,7 +19,7 @@ RUN conda config --set solver classic && \
     conda install -y python=3.12.1 && \
     conda install -y \
     pika==1.3.1 \
-    python-dateutil==2.8.2 \
+    python-dateutil==2.9.0 \
     pint==0.23 \
     numpy==1.26.4 \
     netcdf4==1.6.5 \
