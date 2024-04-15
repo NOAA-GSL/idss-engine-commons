@@ -420,11 +420,17 @@ def test_syracuse(proj):
           125, 126, 126, 126, 122, 123, 124, 125]
     ys = [62, 63, 64, 61, 61, 62, 62, 62, 62, 62, 62, 62, 62, 63, 63, 63, 63, 63, 63, 63,
           63, 63, 63, 63, 64, 64, 64, 64, 64, 64, 64, 64, 64, 65, 65, 65, 65]
+    xy = set(zip(xs, ys))
+    print(xy)
+    print('x size:', len(xs))
+    print('xy size:', len(xy))
+    exit()
     result = rasterize_polygon(syracuse, proj, rounding='floor')
     print(result)
     xs, ys = list(result[0]), list(result[1])
     print(xs)
     print(ys)
+    print('x and y size:', len(xs))
     for x, y in zip(xs, ys):
         geo_image.outline_pixel(x, y, (0, 0, 255), geo=False)
 

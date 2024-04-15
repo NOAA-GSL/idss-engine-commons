@@ -376,9 +376,13 @@ def _pixels_for_linestring(
         list[Pixel]: List of x,y tuples in pixel space
     """
     coords = linestring.coords
-    pixels = _pixels_for_line_seg(coords[0], coords[1])
+    pixels = set(_pixels_for_line_seg(coords[0], coords[1]))
     for pnt1, pnt2 in zip(coords[1:-1], coords[2:]):
-        pixels.extend(_pixels_for_line_seg(pnt1, pnt2, exclude_first=True))
+        pixels.update(_pixels_for_line_seg(pnt1, pnt2, exclude_first=True))
+
+    pixels = list(pixels)
+    pixels.sort()
+
     return pixels
 
 
@@ -414,14 +418,17 @@ def _pixels_for_line_seg(
         step = 1 if x1 < x2 else -1
         if exclude_first:
             x1 += step
-        pixels = [(x, round_(slope * x + intercept)) for x in range(x1, x2+step, step)]
+        pixels = set((x, round_(slope * x + intercept)) for x in range(x1, x2+step, step))
     else:
         slope = dx / dy
         intercept = x1 - slope * y1
         step = 1 if y1 < y2 else -1
         if exclude_first:
             y1 += step
-        pixels = [(round_(slope * y + intercept), y) for y in range(y1, y2+step, step)]
+        pixels = set((round_(slope * y + intercept), y) for y in range(y1, y2+step, step))
+
+    pixels = list(pixels)
+    pixels.sort()
 
     return pixels
 
