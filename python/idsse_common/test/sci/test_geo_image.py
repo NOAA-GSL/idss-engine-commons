@@ -383,8 +383,50 @@ def test_add_all_states(proj):
         data = numpy.transpose(data)
     geo_image = GeoImage.from_data_grid(proj, data)
     geo_image.draw_state_boundary('All', color=(255, 0, 0))
+    geo_image.show()
 
     # confirm that at least three of the pixel along state boundaries are colored red
     numpy.testing.assert_array_equal(geo_image.rgb_array[1707, 861], [255, 0, 0])
     numpy.testing.assert_array_equal(geo_image.rgb_array[742, 889], [255, 0, 0])
     numpy.testing.assert_array_equal(geo_image.rgb_array[1206, 229], [255, 0, 0])
+
+
+def test_syracuse(proj):
+    from idsse.common.sci.vectaster import rasterize_polygon
+
+    proj_spec = '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +a=6371200'
+    grid_spec = '+dx=2539.703 +dy=2539.703 +w=200 +h=100 +lat_ll=42 +lon_ll=-80'
+
+    proj = GridProj.from_proj_grid_spec(proj_spec, grid_spec)
+
+    filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'resources',
+                            'nbm_temp-202211111100-202211121300.nc')
+    attrs, data = read_netcdf(filename)
+    if attrs['data_order'] == 'latitude,longitude':
+        data = numpy.transpose(data)
+    # geo_image = GeoImage.from_data_grid(proj, data)
+    geo_image = GeoImage.from_proj(proj, scale=50)
+
+    geo_image.draw_state_boundary('All', color=(255, 0, 0))
+    filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'tmp',
+                            '2022122312_Syracuse_temp_wind.json')
+    import json
+    with open(filename, encoding='utf-8') as json_file:
+        syracuse = json.load(json_file)['location']['features'][0]['geometry']
+    geo_image.draw_shape(syracuse, color=(0, 255, 0))
+
+    xs = [121, 121, 121, 123, 124, 122, 122, 122, 123, 123, 124, 124, 125, 122, 122, 122,
+          122, 123, 124, 125, 125, 126, 126, 126, 122, 122, 123, 124, 125,
+          125, 126, 126, 126, 122, 123, 124, 125]
+    ys = [62, 63, 64, 61, 61, 62, 62, 62, 62, 62, 62, 62, 62, 63, 63, 63, 63, 63, 63, 63,
+          63, 63, 63, 63, 64, 64, 64, 64, 64, 64, 64, 64, 64, 65, 65, 65, 65]
+    result = rasterize_polygon(syracuse, proj, rounding='floor')
+    print(result)
+    xs, ys = list(result[0]), list(result[1])
+    print(xs)
+    print(ys)
+    for x, y in zip(xs, ys):
+        geo_image.outline_pixel(x, y, (0, 0, 255), geo=False)
+
+    geo_image.show()
+    assert False

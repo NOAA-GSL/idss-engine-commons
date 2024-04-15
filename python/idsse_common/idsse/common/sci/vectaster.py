@@ -9,13 +9,16 @@
 #
 # ----------------------------------------------------------------------------------
 
+import json
 import logging
 from collections.abc import Iterable, Sequence
 from math import floor
 from numbers import Number
 
 import numpy
-from shapely import Geometry, LinearRing, LineString, MultiPolygon, Point, Polygon, from_wkt
+from shapely import (Geometry, LinearRing, LineString,
+                     MultiPolygon, Point, Polygon,
+                     from_geojson, from_wkt)
 
 from idsse.common.sci.grid_proj import GridProj
 from idsse.common.sci.utils import Pixel, Coord, Coords, coordinate_pairs_to_axes
@@ -100,10 +103,10 @@ def rasterize_point(
 
     if grid_proj is not None:
         return coordinate_pairs_to_axes([grid_proj.map_geo_to_pixel(*coord, rounding)],
-                                         dtype=numpy.int64)
+                                        dtype=numpy.int64)
 
     return coordinate_pairs_to_axes([tuple(round_values(*coord, rounding=rounding))],
-                                     dtype=numpy.int64)
+                                    dtype=numpy.int64)
 
 
 def rasterize_linestring(
@@ -188,6 +191,9 @@ def rasterize_polygon(
     if isinstance(polygon, str):
         polygon = from_wkt(polygon)
 
+    if isinstance(polygon, dict):
+        polygon = from_geojson(json.dumps(polygon))
+
     if isinstance(polygon, Polygon):
         coords = [list(interior.coords) for interior in polygon.interiors]
         coords.insert(0, list(coord for coord in polygon.exterior.coords))
@@ -196,12 +202,14 @@ def rasterize_polygon(
     else:
         raise TypeError(f'Passed geometry is type:{type(polygon)}, but must be Polygon')
 
+    print('coords:', coords)
     if grid_proj is not None:
         polygon = geographic_polygon_to_pixel(coords, grid_proj, rounding)
     else:
         coords = [[round_values(*coord, rounding=rounding)
                   for coord in ring] for ring in coords]
         polygon = Polygon(coords[0], holes=coords[1:])
+    print('polygon:', polygon)
 
     return pixels_in_polygon(polygon)
 
@@ -435,7 +443,6 @@ def _pixels_for_polygon(
     x_offset = 0 if xmin >= 0 else int(1-xmin)
     ymin = floor(ymin)
     ymax = floor(ymax)
-
     edge_info = []
     for (x1, y1), (x2, y2) in zip(polygon_boundary.coords[:-1], polygon_boundary.coords[1:]):
         int_y1, int_y2 = int(y1), int(y2)
@@ -447,7 +454,7 @@ def _pixels_for_polygon(
 
             edge_info.append((int_y1, int_y2, x1+x_offset, (x2 - x1)/(y2 - y1)))
 
-    pixels = []
+    pixels = set()
     for y in range(ymin, ymax+1):
         x_list = []
         for y1, y2, x, slope in edge_info:
@@ -457,7 +464,12 @@ def _pixels_for_polygon(
         x_list.sort()
 
         for x1, x2 in zip(x_list[:-1], x_list[1:]):
-            pixels.extend([(x, y) for x in range(x1-x_offset, x2-x_offset+1)])
+            pixels.update([(x, y) for x in range(x1-x_offset, x2-x_offset+1)])
+
+    # make sure the edges are included in list of pixels
+    pixels.update(_pixels_for_linestring(polygon_boundary))
+    pixels = list(pixels)
+    pixels.sort()
 
     return pixels
 

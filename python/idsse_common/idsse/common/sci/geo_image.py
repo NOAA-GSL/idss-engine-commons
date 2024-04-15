@@ -101,6 +101,17 @@ class GeoImage():
         self.scale = scale
 
     @classmethod
+    def from_proj(
+        cls,
+        proj: GridProj,
+        fill_color: Color = (255, 255, 255),
+        scale: int = 1
+    ) -> Self:
+        rgb_array = np.zeros((proj.width*scale, proj.height*scale, 3), np.uint8)
+        rgb_array[...] = fill_color
+        return GeoImage(proj, rgb_array, scale)
+
+    @classmethod
     def from_index_grid(
         cls,
         proj: GridProj,
@@ -276,7 +287,7 @@ class GeoImage():
 
     def draw_shape(
         self,
-        shape: Geometry,
+        shape: Geometry | str | dict,
         color: Color,
         geo: bool = True
     ):
@@ -284,7 +295,7 @@ class GeoImage():
         and polygon will be filled, doesn't make use of scale.
 
         Args:
-            shape (Geometry): A Shapely geometry
+            shape (Geometry): A Shapely geometry. If string, must be wkt; if dict, must be geojson.
             color (Color): RGB value as a tuple of three values between 0 and 255
             geo (bool): Indication that the shape is specified by geographic coordinates (lon/lat).
                         Defaults to True.
@@ -294,6 +305,9 @@ class GeoImage():
         """
         if isinstance(shape, str):
             shape = from_wkt(shape)
+
+        if isinstance(shape, dict):
+            shape = from_geojson(json.dumps(shape))
 
         if geo:
             shape = geographic_to_pixel(shape, self.proj)

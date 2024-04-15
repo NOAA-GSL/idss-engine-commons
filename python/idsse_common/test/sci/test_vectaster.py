@@ -18,14 +18,14 @@ from pytest import fixture, MonkeyPatch
 
 from idsse.common.sci.grid_proj import GridProj
 from idsse.common.sci.vectaster import (geographic_to_pixel,
-                                    geographic_linestring_to_pixel,
-                                    geographic_point_to_pixel,
-                                    geographic_polygon_to_pixel,
-                                    from_wkt,
-                                    rasterize,
-                                    rasterize_point,
-                                    rasterize_linestring,
-                                    rasterize_polygon)
+                                        geographic_linestring_to_pixel,
+                                        geographic_point_to_pixel,
+                                        geographic_polygon_to_pixel,
+                                        from_wkt,
+                                        rasterize,
+                                        rasterize_point,
+                                        rasterize_linestring,
+                                        rasterize_polygon)
 
 
 EXAMPLE_PROJ_SPEC = '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +a=6371200'
@@ -78,17 +78,17 @@ def test_geographic_to_pixel(monkeypatch: MonkeyPatch, grid_proj: GridProj):
     polygon = from_wkt('POLYGON ((-105 40, -110 40, -110 50, -105 50, -105 40))')
 
     point_mock = Mock()
-    line_string_mock = Mock()
+    line_str_mock = Mock()
     polygon_mock = Mock()
     monkeypatch.setattr('idsse.common.sci.vectaster.geographic_point_to_pixel', point_mock)
-    monkeypatch.setattr('idsse.common.sci.vectaster.geographic_linestring_to_pixel', line_string_mock)
+    monkeypatch.setattr('idsse.common.sci.vectaster.geographic_linestring_to_pixel', line_str_mock)
     monkeypatch.setattr('idsse.common.sci.vectaster.geographic_polygon_to_pixel', polygon_mock)
 
     _ = geographic_to_pixel(point, grid_proj)
     point_mock.assert_called_once_with(point, grid_proj, None)
 
     _ = geographic_to_pixel(line_string, grid_proj)
-    line_string_mock.assert_called_once_with(line_string, grid_proj, None)
+    line_str_mock.assert_called_once_with(line_string, grid_proj, None)
 
     _ = geographic_to_pixel(polygon, grid_proj)
     polygon_mock.assert_called_once_with(polygon, grid_proj, None)
