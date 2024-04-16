@@ -25,6 +25,7 @@ RUN conda config --add channels conda-forge && \
     awscli==1.27.161 \
     jsonschema==4.19.0 \
     pillow==10.0.1 \
+    python-logging-rabbitmq==2.0.0 \
     && conda clean -y --all
 
 # Get the latest package updates to keep security vulnerabilities down
