@@ -41,10 +41,18 @@ class ColorPalette(NamedTuple):
     under_idx: int
     over_idx: int
     fill_idx: int
+    min_value: float = None
+    max_value: float = None
 
     # pylint: disable=invalid-name
     @classmethod
-    def linear(cls, colors: Sequence[Color], anchors: Sequence[int] = None) -> Self:
+    def linear(
+        cls,
+        colors: Sequence[Color],
+        anchors: Sequence[int] = None,
+        min_value: float = None,
+        max_value: float = None
+    ) -> Self:
         """Create a color palette by linearly interpolating between colors
 
         Args:
@@ -53,6 +61,8 @@ class ColorPalette(NamedTuple):
             anchors (Sequence[int], optional): A list to define what index each color
                                       should be mapped to. Required: anchors[0] must equal 0,
                                       and anchor[-1] must 255. Defaults to None.
+            min_value (float, optional): If provided, used to shift the anchors down.
+            max_value (float, optional): If provided, used to scale the anchors.
 
         Raises:
             ValueError: Raised when the length of the colors and anchors do not match
@@ -64,13 +74,17 @@ class ColorPalette(NamedTuple):
         if anchors is not None:
             if len(anchors) != num:
                 raise ValueError('Colors and Anchors must be of the same length')
+            if min_value:
+                anchors = [x-min_value for x in anchors]
+            if max_value:
+                anchors = [x/max_value*255 for x in anchors]
             xp = anchors
         else:
             xp = [round_(pos, rounding='floor') for pos in np.linspace(0, 255, num=num)]
         lut = list(
             (round_(r, 0, 'floor'), round_(g, 0, 'floor'), round_(b, 0, 'floor')) for (r, g, b) in
             zip(*list(np.interp(range(256), xp, fp) for fp in np.array(colors).T)))
-        return ColorPalette(lut, 256, 0, 255, 0)
+        return ColorPalette(lut, 256, 0, 255, 0, min_value, max_value)
 
     @classmethod
     def grey(cls, with_excludes: bool = True) -> Self:
@@ -178,6 +192,10 @@ class GeoImage():
         """
         if colors is None:
             colors = ColorPalette.grey()
+        if not min_value:
+            min_value = colors.min_value
+        if not max_value:
+            max_value = colors.max_value
         norm_array = normalize(data_array, min_value, max_value, fill_value)
         index_array = scale_to_color_palette(norm_array, colors.num_colors)
         return GeoImage.from_index_grid(proj, index_array, colors, scale)
