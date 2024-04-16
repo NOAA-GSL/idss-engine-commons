@@ -401,12 +401,23 @@ def test_syracuse(proj):
 
     filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'resources',
                             'nbm_temp-202211111100-202211121300.nc')
-    filename = '/Users/geary.j.layne/idssEngine/data/2024/04/14/NBM.AWS.GRIB/WINDGUST/Knots/gridstore1724685503.nc'
-    # filename = '/Users/geary.j.layne/idssEngine/data/2024/04/14/NBM.AWS.GRIB/WINDGUST/MilesPerHour/gridstore-1940192827.nc'
+    # filename = '/Users/geary.j.layne/idssEngine/data/2024/04/14/NBM.AWS.GRIB/WINDGUST/Knots/gridstore1724685503.nc'
+    filename = '/Users/geary.j.layne/idssEngine/data/2024/04/14/NBM.AWS.GRIB/WINDGUST/MilesPerHour/gridstore-1940192827.nc'
     # filename = '/Users/geary.j.layne/idssEngine/data/2024/04/14/NBM.AWS.GRIB/WINDGUST/MetersPerSecond/gridstore-571158813.nc'
     attrs, data = read_netcdf(filename)
     if attrs['data_order'] == 'latitude,longitude':
         data = numpy.transpose(data)
+
+    locations = {
+       'KABQ': (-106.62, 35.05),
+       'KORD': (-87.93, 41.98),
+       'KMIA': (-80.28, 25.8)
+    }
+    for key, (lon, lat) in locations.items():
+        i, j = proj.map_geo_to_pixel(lon, lat, rounding='FLOOR')
+        print(f'{key} ({lon}, {lat}) -> ({i}, {j}): {data[i, j]}')
+    exit()
+
     print(numpy.min(data), numpy.max(data))
 
     # print(numpy.argwhere(data >= 30))
@@ -445,7 +456,6 @@ def test_syracuse(proj):
     # color_palette = None
     # print(color_palette.num_colors)
 
-    geo_image = GeoImage.from_data_grid(proj, data, color_palette)
     geo_image = GeoImage.from_data_grid(proj, data, color_palette)
     # geo_image = GeoImage.from_proj(proj, scale=50)
 
