@@ -471,8 +471,8 @@ def test_syracuse(proj):
     result = rasterize_polygon(syracuse, proj, rounding='floor')
     # print(result)
     xs, ys = list(result[0]), list(result[1])
-    # print(xs)
-    # print(ys)
+    print(xs)
+    print(ys)
     # print('x and y size:', len(xs))
     for x, y in zip(xs, ys):
         geo_image.outline_pixel(x, y, (0, 0, 255), geo=False)
