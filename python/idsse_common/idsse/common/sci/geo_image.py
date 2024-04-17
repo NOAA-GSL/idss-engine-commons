@@ -121,6 +121,17 @@ class GeoImage():
         fill_color: Color = (255, 255, 255),
         scale: int = 1
     ) -> Self:
+        """Method for building a geographical image without background data.
+
+        Args:
+            proj (GridProj): Grid projection to be used for this geo image, must match data_grid.
+            fill_color (Color): The color to fill the image with. Default is white.
+            scale (int, optional): The height and width that a grid cell will be scaled to in the
+                                   image. Defaults to 1.
+
+        Returns:
+            Self: GeoImage
+        """
         rgb_array = np.zeros((proj.width*scale, proj.height*scale, 3), np.uint8)
         rgb_array[...] = fill_color
         return GeoImage(proj, rgb_array, scale)
