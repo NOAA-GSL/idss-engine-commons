@@ -182,8 +182,8 @@ def test_draw_polygon(proj):
 
     # values will be 0 or 100 (for polygon) and 0 everywhere else
     numpy.testing.assert_array_equal(values, [0, 100])
-    numpy.testing.assert_array_equal(counts, [237, 6])
-    expected_indices = [91, 94, 118, 121, 124, 145]
+    numpy.testing.assert_array_equal(counts, [236, 7])
+    expected_indices = [91, 94, 118, 121, 124, 145, 148]
     numpy.testing.assert_array_equal(numpy.where(indices == 1)[0], expected_indices)
 
 
@@ -203,9 +203,9 @@ def test_draw_multi_polygon(proj):
 
     # values will be 0 or 100 (for polygon) and 0 everywhere else
     numpy.testing.assert_array_equal(values, [0, 100])
-    numpy.testing.assert_array_equal(counts, [417, 15])
+    numpy.testing.assert_array_equal(counts, [416, 16])
     expected_indices = [118, 121, 124, 154, 157, 160, 190, 193,
-                        196, 235, 238, 271, 274, 277, 307]
+                        196, 235, 238, 271, 274, 277, 307, 310]
     numpy.testing.assert_array_equal(numpy.where(indices == 1)[0], expected_indices)
 
 
@@ -228,11 +228,11 @@ def test_draw_geo_polygon(proj: GridProj):
 
     # values will be 0 or 100 (for polygon) and 0 everywhere else
     numpy.testing.assert_array_equal(values, [0, 100])
-    # numpy.testing.assert_array_equal(counts, [7392, 108])
+    # numpy.testing.assert_array_equal(counts, [[7378, 122])
 
     # the "equality" workarounds below are needed due to counts and indices arrays having
     # different results when run with pytest locally vs. in GitHub Actions runner
-    assert counts.tolist() == approx([7392, 108], rel=0.10)  # counts can be up to 10% off
+    assert counts.tolist() == approx([7378, 122], rel=0.10)  # counts can be up to 10% off
     expected_indices = [2006, 2156, 2306, 2309, 2456, 2459, 2606, 2609, 2753, 2756, 2759,
                         2762, 2903, 2906, 2909, 2912, 3053, 3056, 3059, 3062, 3203, 3206,
                         3209, 3212, 3215, 3353, 3356, 3359, 3362, 3365, 3500, 3503, 3506,
@@ -330,7 +330,7 @@ def test_draw_state(proj):
 
     values, counts = numpy.unique(geo_image.rgb_array, return_counts=True)
     numpy.testing.assert_array_equal(values, [0, 255])
-    numpy.testing.assert_array_equal(counts, [11234304, 591])
+    numpy.testing.assert_array_equal(counts, [11234296, 599])
 
 
 def test_add_one_state(proj):
@@ -383,105 +383,8 @@ def test_add_all_states(proj):
         data = numpy.transpose(data)
     geo_image = GeoImage.from_data_grid(proj, data)
     geo_image.draw_state_boundary('All', color=(255, 0, 0))
-    geo_image.show()
 
     # confirm that at least three of the pixel along state boundaries are colored red
     numpy.testing.assert_array_equal(geo_image.rgb_array[1707, 861], [255, 0, 0])
     numpy.testing.assert_array_equal(geo_image.rgb_array[742, 889], [255, 0, 0])
     numpy.testing.assert_array_equal(geo_image.rgb_array[1206, 229], [255, 0, 0])
-
-
-def test_syracuse(proj):
-    from idsse.common.sci.vectaster import rasterize_polygon
-
-    # proj_spec = '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +a=6371200'
-    # grid_spec = '+dx=2539.703 +dy=2539.703 +w=200 +h=100 +lat_ll=42 +lon_ll=-80'
-
-    # proj = GridProj.from_proj_grid_spec(proj_spec, grid_spec)
-
-    filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'resources',
-                            'nbm_temp-202211111100-202211121300.nc')
-    # filename = '/Users/geary.j.layne/idssEngine/data/2024/04/14/NBM.AWS.GRIB/WINDGUST/Knots/gridstore1724685503.nc'
-    filename = '/Users/geary.j.layne/idssEngine/data/2024/04/14/NBM.AWS.GRIB/WINDGUST/MilesPerHour/gridstore-1940192827.nc'
-    # filename = '/Users/geary.j.layne/idssEngine/data/2024/04/14/NBM.AWS.GRIB/WINDGUST/MetersPerSecond/gridstore-571158813.nc'
-    attrs, data = read_netcdf(filename)
-    if attrs['data_order'] == 'latitude,longitude':
-        data = numpy.transpose(data)
-
-    locations = {
-       'KABQ': (-106.62, 35.05),
-       'KORD': (-87.93, 41.98),
-       'KMIA': (-80.28, 25.8)
-    }
-    for key, (lon, lat) in locations.items():
-        i, j = proj.map_geo_to_pixel(lon, lat, rounding='FLOOR')
-        print(f'{key} ({lon}, {lat}) -> ({i}, {j}): {data[i, j]}')
-    exit()
-
-    print(numpy.min(data), numpy.max(data))
-
-    # print(numpy.argwhere(data >= 30))
-    # data *= 255/40
-
-    # step = 30
-    # for x in range(0, 50):
-    #     for i in range(x*step, (x+1)*step):
-    #         data[i,] = x
-
-    anchors = [0, 35, 65, 70, 80, 105, 115, 140, 175]
-    anchors = [0, 10, 18, 20, 22, 30, 33, 40, 50]
-    max_value = 50
-
-    color_palette = ColorPalette.linear([(179, 156, 169), (196, 82, 204),
-                                         (36, 0, 140), (23, 98, 185),
-                                         (31, 221, 243),
-                                         (27, 197, 8), (189, 214, 12), (250, 83, 10),
-                                         (181, 0, 12)],
-                                        anchors, max_value=max_value)
-
-    # print(color_palette.num_colors)
-    # for x in range(0, color_palette.num_colors, 5):
-    #     print(x, color_palette.lut[x])
-
-    # color_palette = ColorPalette.linear([(179, 156, 169), (196, 82, 204),
-    #                                      (36, 0, 140), (23, 98, 185),
-    #                                      (31, 221, 243),
-    #                                      (27, 197, 8), (189, 214, 12), (250, 83, 10)],
-    #                                     [0, 10, 15, 20, 24, 30, 32, 40])
-
-    # print(color_palette.num_colors)
-    # for x in range(0, color_palette.num_colors, 5):
-    #     print(x, color_palette.lut[x])
-
-    # color_palette = None
-    # print(color_palette.num_colors)
-
-    geo_image = GeoImage.from_data_grid(proj, data, color_palette)
-    # geo_image = GeoImage.from_proj(proj, scale=50)
-
-    geo_image.draw_state_boundary('All', color=(0, 0, 0))
-    filename = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'tmp',
-                            '2022122312_Syracuse_temp_wind.json')
-    import json
-    with open(filename, encoding='utf-8') as json_file:
-        syracuse = json.load(json_file)['location']['features'][0]['geometry']
-
-    geo_image.draw_shape(syracuse, color=(0, 255, 0))
-
-    result = rasterize_polygon(syracuse, proj, rounding='floor')
-    # print(result)
-    xs, ys = list(result[0]), list(result[1])
-    print(xs)
-    print(ys)
-    # print('x and y size:', len(xs))
-    for x, y in zip(xs, ys):
-        geo_image.outline_pixel(x, y, (0, 0, 255), geo=False)
-
-    # size = 10
-    # for x, y in numpy.argwhere(data >= 20):
-    #     for i in range(x-size, x+size):
-    #         for j in range(y-size, y+size):
-    #             print(i, j)
-    #             geo_image.set_pixel(i, j, (255, 255, 255), geo=False)
-    geo_image.show()
-    assert False

@@ -202,14 +202,12 @@ def rasterize_polygon(
     else:
         raise TypeError(f'Passed geometry is type:{type(polygon)}, but must be Polygon')
 
-    # print('coords:', coords)
     if grid_proj is not None:
         polygon = geographic_polygon_to_pixel(coords, grid_proj, rounding)
     else:
         coords = [[round_values(*coord, rounding=rounding)
                   for coord in ring] for ring in coords]
         polygon = Polygon(coords[0], holes=coords[1:])
-    # print('polygon:', polygon)
 
     return pixels_in_polygon(polygon)
 
