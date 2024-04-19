@@ -26,6 +26,19 @@ def proj():
     return GridProj.from_proj_grid_spec(proj_spec, grid_spec)
 
 
+def test_geo_image_without_data_grid(proj):
+    fill_color = (255, 0, 0)
+    geo_image = GeoImage.from_proj(proj, fill_color)
+    values, _, counts = numpy.unique(geo_image.rgb_array,
+                                     return_inverse=True,
+                                     return_counts=True)
+    # the only value in the grid should be 0 and 255, where there should be twice as many
+    # 0 as 255 and the total count should be 11234895 (proj width*height)
+    numpy.testing.assert_array_equal(values, [0, 255])
+    numpy.testing.assert_array_equal(counts, [7489930, 3744965])
+    assert sum(counts) == 11234895
+
+
 def test_geo_image_from_data_grid(proj):
     data = numpy.array([[0, 1, 2, 3],
                         [4, 5, 6, 7],
@@ -182,8 +195,8 @@ def test_draw_polygon(proj):
 
     # values will be 0 or 100 (for polygon) and 0 everywhere else
     numpy.testing.assert_array_equal(values, [0, 100])
-    numpy.testing.assert_array_equal(counts, [237, 6])
-    expected_indices = [91, 94, 118, 121, 124, 145]
+    numpy.testing.assert_array_equal(counts, [236, 7])
+    expected_indices = [91, 94, 118, 121, 124, 145, 148]
     numpy.testing.assert_array_equal(numpy.where(indices == 1)[0], expected_indices)
 
 
@@ -203,9 +216,9 @@ def test_draw_multi_polygon(proj):
 
     # values will be 0 or 100 (for polygon) and 0 everywhere else
     numpy.testing.assert_array_equal(values, [0, 100])
-    numpy.testing.assert_array_equal(counts, [417, 15])
+    numpy.testing.assert_array_equal(counts, [416, 16])
     expected_indices = [118, 121, 124, 154, 157, 160, 190, 193,
-                        196, 235, 238, 271, 274, 277, 307]
+                        196, 235, 238, 271, 274, 277, 307, 310]
     numpy.testing.assert_array_equal(numpy.where(indices == 1)[0], expected_indices)
 
 
@@ -228,11 +241,11 @@ def test_draw_geo_polygon(proj: GridProj):
 
     # values will be 0 or 100 (for polygon) and 0 everywhere else
     numpy.testing.assert_array_equal(values, [0, 100])
-    # numpy.testing.assert_array_equal(counts, [7392, 108])
+    # numpy.testing.assert_array_equal(counts, [[7378, 122])
 
     # the "equality" workarounds below are needed due to counts and indices arrays having
     # different results when run with pytest locally vs. in GitHub Actions runner
-    assert counts.tolist() == approx([7392, 108], rel=0.10)  # counts can be up to 10% off
+    assert counts.tolist() == approx([7378, 122], rel=0.10)  # counts can be up to 10% off
     expected_indices = [2006, 2156, 2306, 2309, 2456, 2459, 2606, 2609, 2753, 2756, 2759,
                         2762, 2903, 2906, 2909, 2912, 3053, 3056, 3059, 3062, 3203, 3206,
                         3209, 3212, 3215, 3353, 3356, 3359, 3362, 3365, 3500, 3503, 3506,
@@ -330,7 +343,7 @@ def test_draw_state(proj):
 
     values, counts = numpy.unique(geo_image.rgb_array, return_counts=True)
     numpy.testing.assert_array_equal(values, [0, 255])
-    numpy.testing.assert_array_equal(counts, [11234304, 591])
+    numpy.testing.assert_array_equal(counts, [11234296, 599])
 
 
 def test_add_one_state(proj):

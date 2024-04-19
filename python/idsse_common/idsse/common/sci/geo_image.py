@@ -41,10 +41,18 @@ class ColorPalette(NamedTuple):
     under_idx: int
     over_idx: int
     fill_idx: int
+    min_value: float = None
+    max_value: float = None
 
     # pylint: disable=invalid-name
     @classmethod
-    def linear(cls, colors: Sequence[Color], anchors: Sequence[int] = None) -> Self:
+    def linear(
+        cls,
+        colors: Sequence[Color],
+        anchors: Sequence[int] = None,
+        min_value: float = None,
+        max_value: float = None
+    ) -> Self:
         """Create a color palette by linearly interpolating between colors
 
         Args:
@@ -53,6 +61,8 @@ class ColorPalette(NamedTuple):
             anchors (Sequence[int], optional): A list to define what index each color
                                       should be mapped to. Required: anchors[0] must equal 0,
                                       and anchor[-1] must 255. Defaults to None.
+            min_value (float, optional): If provided, used to shift the anchors down.
+            max_value (float, optional): If provided, used to scale the anchors.
 
         Raises:
             ValueError: Raised when the length of the colors and anchors do not match
@@ -64,13 +74,17 @@ class ColorPalette(NamedTuple):
         if anchors is not None:
             if len(anchors) != num:
                 raise ValueError('Colors and Anchors must be of the same length')
+            if min_value:
+                anchors = [x-min_value for x in anchors]
+            if max_value:
+                anchors = [x/max_value*255 for x in anchors]
             xp = anchors
         else:
             xp = [round_(pos, rounding='floor') for pos in np.linspace(0, 255, num=num)]
         lut = list(
             (round_(r, 0, 'floor'), round_(g, 0, 'floor'), round_(b, 0, 'floor')) for (r, g, b) in
             zip(*list(np.interp(range(256), xp, fp) for fp in np.array(colors).T)))
-        return ColorPalette(lut, 256, 0, 255, 0)
+        return ColorPalette(lut, 256, 0, 255, 0, min_value, max_value)
 
     @classmethod
     def grey(cls, with_excludes: bool = True) -> Self:
@@ -99,6 +113,28 @@ class GeoImage():
         self.proj = proj
         self.rgb_array = rgb_array
         self.scale = scale
+
+    @classmethod
+    def from_proj(
+        cls,
+        proj: GridProj,
+        fill_color: Color = (255, 255, 255),
+        scale: int = 1
+    ) -> Self:
+        """Method for building a geographical image without background data.
+
+        Args:
+            proj (GridProj): Grid projection to be used for this geo image, must match data_grid.
+            fill_color (Color): The color to fill the image with. Default is white.
+            scale (int, optional): The height and width that a grid cell will be scaled to in the
+                                   image. Defaults to 1.
+
+        Returns:
+            Self: GeoImage
+        """
+        rgb_array = np.zeros((proj.width*scale, proj.height*scale, 3), np.uint8)
+        rgb_array[...] = fill_color
+        return GeoImage(proj, rgb_array, scale)
 
     @classmethod
     def from_index_grid(
@@ -167,6 +203,10 @@ class GeoImage():
         """
         if colors is None:
             colors = ColorPalette.grey()
+        if not min_value:
+            min_value = colors.min_value
+        if not max_value:
+            max_value = colors.max_value
         norm_array = normalize(data_array, min_value, max_value, fill_value)
         index_array = scale_to_color_palette(norm_array, colors.num_colors)
         return GeoImage.from_index_grid(proj, index_array, colors, scale)
@@ -276,7 +316,7 @@ class GeoImage():
 
     def draw_shape(
         self,
-        shape: Geometry,
+        shape: Geometry | str | dict,
         color: Color,
         geo: bool = True
     ):
@@ -284,7 +324,7 @@ class GeoImage():
         and polygon will be filled, doesn't make use of scale.
 
         Args:
-            shape (Geometry): A Shapely geometry
+            shape (Geometry): A Shapely geometry. If string, must be wkt; if dict, must be geojson.
             color (Color): RGB value as a tuple of three values between 0 and 255
             geo (bool): Indication that the shape is specified by geographic coordinates (lon/lat).
                         Defaults to True.
@@ -294,6 +334,9 @@ class GeoImage():
         """
         if isinstance(shape, str):
             shape = from_wkt(shape)
+
+        if isinstance(shape, dict):
+            shape = from_geojson(json.dumps(shape))
 
         if geo:
             shape = geographic_to_pixel(shape, self.proj)

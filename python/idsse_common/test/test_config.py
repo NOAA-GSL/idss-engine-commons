@@ -18,7 +18,6 @@ from pytest import raises, MonkeyPatch
 from idsse.common.config import Config
 
 
-
 def test_load_from_dict_without_key():
     class WithoutKeyConfig(Config):
         """Config class that doesn't use a key to find config data"""
@@ -94,6 +93,7 @@ def test_load_with_missing_attribute_should_fail():
         WithoutKeyConfig({'diff_key': 'value found'})
     assert exc is not None
 
+
 def test_config_str_with_no_files_raises_error(monkeypatch: MonkeyPatch):
     class WithoutKeyConfig(Config):
         """Config class that doesn't use a key to find config data"""
@@ -118,10 +118,13 @@ def test_config_list_of_dicts_succeeds():
             self.b_key = None
             super().__init__(config, keys='', ignore_missing=True)
 
-    config = WithoutKeyConfig([{'a_key': 'value for a'}, {'b_key': 'value for b'}])
+    config = WithoutKeyConfig([{'a_key': 'value for a'},
+                               {'b_key': 'value for b'}])
 
     assert config.a_key == 'value for a'
-    assert config.next.b_key == 'value for b'
+    config = config.next
+    assert config.b_key == 'value for b'
+    assert config.first.a_key == 'value for a'
 
 
 def test_load_with_ignore_missing_attribute():
