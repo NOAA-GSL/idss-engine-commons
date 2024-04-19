@@ -26,6 +26,19 @@ def proj():
     return GridProj.from_proj_grid_spec(proj_spec, grid_spec)
 
 
+def test_geo_image_without_data_grid(proj):
+    fill_color = (255, 0, 0)
+    geo_image = GeoImage.from_proj(proj, fill_color)
+    values, indices, counts = numpy.unique(geo_image.rgb_array,
+                                           return_inverse=True,
+                                           return_counts=True)
+    # the only value in the grid should be 0 and 255, where there should be twice as many
+    # 0 as 255 and the total count should be 11234895 (proj width*height)
+    numpy.testing.assert_array_equal(values, [0, 255])
+    numpy.testing.assert_array_equal(counts, [7489930, 3744965])
+    assert sum(counts) == 11234895
+
+
 def test_geo_image_from_data_grid(proj):
     data = numpy.array([[0, 1, 2, 3],
                         [4, 5, 6, 7],
