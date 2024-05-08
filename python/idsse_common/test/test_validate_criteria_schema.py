@@ -48,10 +48,12 @@ def simple_criteria_message() -> dict:
                 }
             ]
         },
-        "validDt": {
-            "start": "2022-11-12T00:00:00.000Z",
-            "end": "2022-11-12T00:00:00.000Z"
-        },
+        "validDt": [
+            {
+                "start": "2022-11-12T00:00:00.000Z",
+                "end": "2022-11-12T00:00:00.000Z"
+            }
+        ],
         "conditions": [
             {
                 "name": "Above Freeze Temp",
@@ -117,10 +119,12 @@ def criteria_message() -> dict:
                 }
             ]
         },
-        "validDt": {
-            "start": "2022/10/08 0:00:00",
-            "end": "2022/10/08 12:00:00"
-        },
+        "validDt": [
+            {
+                "start": "2022/10/08 0:00:00",
+                "end": "2022/10/08 12:00:00"
+            }
+        ],
         "conditions": [
             {
                 "name": "Two part Condition",

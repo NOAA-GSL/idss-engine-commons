@@ -48,10 +48,12 @@ def simple_event_port_message() -> dict:
                 }
             ]
         },
-        "validDt": {
-            "start": "2022-11-12T00:00:00.000Z",
-            "end": "2022-11-12T00:00:00.000Z"
-        },
+        "validDt": [
+            {
+                "start": "2022-11-12T00:00:00.000Z",
+                "end": "2022-11-12T00:00:00.000Z"
+            }
+        ],
         "conditions": [
             {
                 "name": "Abq TEMP",

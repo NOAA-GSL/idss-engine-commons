@@ -4,7 +4,7 @@
         "type": "object",
         "properties": {   
             "corrId": {"$ref": "corr_id.json#/CorrId"},
-            "issueDt": {"$ref": "timing.json#/Timing"},
+            "issueDt": {"$ref": "timing.json#/TimeString"},
             "tags": {"$ref": "tags.json#/Tags"},
             "validDt": {"$ref": "timing.json#/Timing"},
             "location": {"$ref": "location.json#/Location"},
