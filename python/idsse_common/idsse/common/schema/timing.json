@@ -18,7 +18,7 @@
         "properties": {
           "start": {"$ref": "#/TimeString" },
           "end": {"$ref": "#/TimeString" },
-          "specific": {"$ref": "#/TimeList"},
+          "times": {"$ref": "#/TimeList"},
           "proximal": {"type": "boolean"}
         },
         "dependencies": {
@@ -27,7 +27,7 @@
         },
         "oneOf": [
           { "required": ["start"] },
-          { "required": ["specific"] }
+          { "required": ["times"] }
         ]
     },
     
