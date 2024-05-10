@@ -49,7 +49,7 @@
     },
 
     "Data": {
-        "description": "Mechanism for storing the a contiguous state (when the criteria is met or not met",
+        "description": "Mechanism for storing the data values contained the criteria location",
         "type": "object",
         "properties": {
             "name": {"type": "string"},
@@ -71,11 +71,30 @@
         ]
     },
 
+    "DataSummary": {
+        "description": "Mechanism for storing the data associated with a criteria for a specific set of valid date/times",
+        "type": "object",
+        "properties": {
+            "validDt": {"type": "array", "items": {"$ref": "timing.json#/TimeString"}, "minItems": 1},
+            "data": {"type": "array", "items": {"$ref": "#/Data"}, "minItems": 2}
+        },
+        "required": [
+            "validDt",
+            "data"
+        ]
+    },
+
+    "StateType": {
+        "type": "string", "enum": ["HIT", "MISS", "PROXIMAL", "NONE"]
+    },
+
     "State": {
         "description": "Mechanism for storing the a contiguous state (when the criteria is met or not met",
         "type": "object",
         "properties": {
-            "empirical": {"type": "string", "enum": ["HIT", "MISS", "PROXIMAL"]},
+            "empirical": {"$ref": "#/StateType"},
+            "geographic": {"$ref": "#/StateType"},
+            "temporal": {"$ref": "#/StateType"},
             "startDt": {"$ref": "timing.json#/TimeString"},
             "endDt": {"$ref": "timing.json#/TimeString"},
             "durationInMin": {"type": "integer"},
@@ -123,19 +142,17 @@
             "conditionKey": {"type": "string"},
             "locationKey": {"type": "string"},
             "productKey": {"type": "string"},
-            "validDt": {"type": "array", "items": {"$ref": "timing.json#/TimeString"}, "minItems": 1},
             "dataDescript": {"type": "array", "items": {"$ref": "#/DataDescription"}, "minItems": 1},
-            "data": {"type": "array", "items": {"$ref": "#/Data"}, "minItems": 2},
+            "dataSummary": {"type": "array", "items": {"$ref": "#/DataSummary"}, "minItems": 1},
             "metaData": {"type": "array", "items": {"$ref": "#/MetaData"}, "minItems": 1}
         },
         "required": [
             "evaluatedAt",
             "conditionKey",
             "locationKey",
-            "productKey",                    
-            "validDt",
+            "productKey",    
             "dataDescript",
-            "data",
+            "dataSummary",
             "metaData"
         ]
     }
