@@ -31,8 +31,10 @@ jobs:
 
       - name: Test with pytest
         working-directory: python/idsse_common
+        # run Pytest, exiting nonzero if pytest throws errors (otherwise "| tee" obfuscates)
         run: |
-          pytest ./test --cov=./idsse/common --cov-report=term --junitxml=./test/pytest.xml | tee ./test/coverage.txt
+          set -o pipefail;
+          pytest ./test --cov=./idsse/common --cov-report=term --junitxml=./test/pytest.xml | tee ./test/coverage.txt;
 
       - name: Pytest coverage comment
         if: ${{ github.ref == 'refs/heads/main' }}
