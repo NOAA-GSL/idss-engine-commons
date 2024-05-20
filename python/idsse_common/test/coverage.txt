@@ -1,5 +1,5 @@
 ============================= test session starts ==============================
-platform linux -- Python 3.11.9, pytest-8.2.0, pluggy-1.5.0
+platform linux -- Python 3.11.9, pytest-8.2.1, pluggy-1.5.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
 plugins: cov-4.1.0
 collected 217 items
@@ -46,4 +46,4 @@ idsse/common/validate_schema.py      41      0   100%
 -----------------------------------------------------
 TOTAL                              1299     82    94%
 
-============================= 217 passed in 5.74s ==============================
+============================= 217 passed in 5.48s ==============================
