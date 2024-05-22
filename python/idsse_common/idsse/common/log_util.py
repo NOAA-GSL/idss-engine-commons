@@ -15,9 +15,9 @@
 import logging
 import time
 import uuid
+from collections.abc import Sequence
 from contextvars import ContextVar
 from datetime import datetime
-from typing import Union, Optional, List
 
 from .utils import to_iso
 
@@ -28,8 +28,8 @@ corr_id_context_var: ContextVar[str] = ContextVar('correlation_id')
 
 def set_corr_id_context_var(
         originator: str,
-        key: Optional[uuid.UUID] = None,
-        issue_dt: Optional[Union[str, datetime]] = None
+        key: uuid.UUID | None = None,
+        issue_dt: str | datetime | None = None
 ) -> None:
     """
     Build and set correlation ID ContextVar for logging module, based on originator and
@@ -37,8 +37,8 @@ def set_corr_id_context_var(
 
     Args:
         originator (str): Function, class, service name, etc. that is using logging module
-        key (Optional[uuid.UUID]): a UUID. Default: randomly generated UUID.
-        issue_dt (Optional[Union[str, datetime]]): Datetime when a relevant forecast was issued
+        key (uuid.UUID, optional): a UUID. Default: randomly generated UUID.
+        issue_dt (str | datetime, optional): Datetime when a relevant forecast was issued
     """
     if not key:
         key = uuid.uuid4()
@@ -56,7 +56,7 @@ def get_corr_id_context_var_str() -> str:
     return corr_id_context_var.get()
 
 
-def get_corr_id_context_var_parts() -> List[str]:
+def get_corr_id_context_var_parts() -> Sequence[str]:
     """Split correlation ID ContextVar into its parts, such as [originator, key, issue_datetime]"""
     return corr_id_context_var.get().split(';')
 
@@ -146,20 +146,21 @@ def get_default_log_config(level: str,
                 'formatter': 'standard',
                 'filters': filter_list,
             },
-            'rabbit': {
-                'class': 'python_logging_rabbitmq.RabbitMQHandler',
-                'host': host,
-                'port': port,
-                'formatter': 'standard',
-                'filters': filter_list,
-                'level': report_level,
-                'declare_exchange': True,
-            },
+            # 'rabbit': {
+            #     'class': 'python_logging_rabbitmq.RabbitMQHandler',
+            #     'host': host,
+            #     'port': port,
+            #     'formatter': 'standard',
+            #     'filters': filter_list,
+            #     'level': report_level,
+            #     'declare_exchange': True,
+            # },
         },
         'loggers': {
             '': {
                 'level': level,
-                'handlers': ['default', 'rabbit']
+                # 'handlers': ['default', 'rabbit']
+                'handlers': ['default']
             },
         }
     }

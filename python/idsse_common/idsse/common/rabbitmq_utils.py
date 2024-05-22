@@ -13,10 +13,11 @@
 
 import logging
 import logging.config
-from typing import Callable, NamedTuple, Optional, Tuple, Union
+from typing import Callable, NamedTuple
 
 from pika import BasicProperties, ConnectionParameters, PlainCredentials
-from pika.adapters import BlockingConnection, blocking_connection
+from pika.adapters import BlockingConnection
+from pika.adapters.blocking_connection import BlockingChannel
 from pika.frame import Method
 from pika.spec import Basic
 
@@ -77,7 +78,7 @@ class RabbitMqParams(NamedTuple):
 
 
 def _initialize_exchange_and_queue(
-    channel: blocking_connection.BlockingChannel,
+    channel: BlockingChannel,
     params: RabbitMqParams
 ) -> str:
     """Declare and bind RabbitMQ exchange and queue using the provided channel.
@@ -111,12 +112,12 @@ def _initialize_exchange_and_queue(
 
 
 def subscribe_to_queue(
-    connection: Union[Conn, BlockingConnection],
+    connection: Conn | BlockingConnection,
     params: RabbitMqParams,
     on_message_callback: Callable[
-        [blocking_connection.BlockingChannel, Basic.Deliver, BasicProperties, bytes], None],
-    channel: Optional[blocking_connection.BlockingChannel] = None
-) -> Tuple[BlockingConnection, blocking_connection.BlockingChannel]:
+        [BlockingChannel, Basic.Deliver, BasicProperties, bytes], None],
+    channel: BlockingChannel | None = None
+) -> tuple[BlockingConnection, BlockingChannel]:
     """
     Function that handles setup of consumer of RabbitMQ queue messages, declaring the exchange and
     queue if needed, and invoking the provided callback when a message is received.
@@ -129,18 +130,18 @@ def subscribe_to_queue(
     close gracefully with connection.close()
 
     Args:
-        connection (Union[Conn, BlockingConnection]): connection parameters to establish new
+        connection (Conn | BlockingConnection): connection parameters to establish new
             RabbitMQ connection, or existing RabbitMQ connection to reuse for this consumer.
         params (RabbitMqParams): parameters for the RabbitMQ exchange and queue from which to
             consume messages.
         on_message_callback (Callable[
             [BlockingChannel, Basic.Deliver, BasicProperties, bytes], None]):
             function to handle messages that are received over the subscribed exchange and queue.
-        channel (Optional[BlockingChannel]): optional existing (open) RabbitMQ channel to reuse.
+        channel (BlockingChannel | None): optional existing (open) RabbitMQ channel to reuse.
             Default is to create unique channel for this consumer.
 
     Returns:
-        Tuple[BlockingConnection, BlockingChannel]: the connection and channel, which are now open
+        tuple[BlockingConnection, BlockingChannel]: the connection and channel, which are now open
             and subscribed to the provided queue.
     """
     if isinstance(connection, Conn):

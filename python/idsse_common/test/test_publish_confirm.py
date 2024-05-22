@@ -13,7 +13,7 @@
 # pylint: disable=too-few-public-methods,unused-argument
 
 from time import sleep
-from typing import Callable, Union, Any, NamedTuple, Self
+from typing import Callable, Any, NamedTuple, Self
 from unittest.mock import Mock
 
 from pytest import fixture, raises, MonkeyPatch
@@ -29,7 +29,7 @@ EXAMPLE_QUEUE = Queue('pub.conf', '#', False, False, True)
 
 class Method(NamedTuple):
     """mock of pika.frame.Method data class"""
-    method: Union[Basic.Ack, Basic.Nack]
+    method: Basic.Ack | Basic.Nack
 
 
 class MockPika:

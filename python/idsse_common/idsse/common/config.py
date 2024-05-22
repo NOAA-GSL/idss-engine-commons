@@ -12,8 +12,9 @@
 import glob
 import json
 import logging
+from collections.abc import Iterable
 from inspect import signature
-from typing import Self, Union, List, Optional
+from typing import Self
 
 logger = logging.getLogger(__name__)
 
@@ -21,8 +22,8 @@ logger = logging.getLogger(__name__)
 class Config:
     """Configuration data class"""
     def __init__(self,
-                 config: Union[dict, List[dict], str],
-                 keys: Optional[Union[list, str]] = None,
+                 config: dict | Iterable[dict] | str,
+                 keys: Iterable | str | None = None,
                  recursive: bool = False,
                  ignore_missing: bool = False) -> None:
 
@@ -90,7 +91,7 @@ class Config:
         with open(filepath, 'r', encoding='utf8') as file:
             return json.load(file)
 
-    def _from_filepaths(self, filepaths: List[str], keys: str) -> Self:
+    def _from_filepaths(self, filepaths: Iterable[str], keys: str) -> Self:
         config_dicts = [self._load_from_filepath(filepath)
                         for filepath in filepaths]
         self._from_config_dicts(config_dicts, keys)
@@ -106,7 +107,7 @@ class Config:
         # update the instance dictionary to hold all configuration attributes
         return self.__dict__.update(config_dict)
 
-    def _from_config_dicts(self, config_dicts: List[dict], keys: str) -> Self:
+    def _from_config_dicts(self, config_dicts: Iterable[dict], keys: str) -> Self:
         self._from_config_dict(config_dicts[0], keys)
         for config_dict in config_dicts[1:]:
             # if inherited class takes only one argument

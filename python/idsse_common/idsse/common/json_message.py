@@ -10,23 +10,24 @@
 # ------------------------------------------------------------------------------
 
 import json
-from typing import Any, Dict, List, Optional, Tuple, Union
+from collections.abc import Sequence
+from typing import Any
 from uuid import UUID, uuid4
 
-Json = Union[Dict[str, Any], List[Any], int, str, float, bool, type[None]]
+Json = dict[str, Any] | Sequence[Any] | int | str | float | bool | None
 
 
 def get_corr_id(
-    message: Union[str, dict]
-) -> Optional[Tuple[Optional[str], Optional[Union[UUID, str]], Optional[str]]]:
+    message: str | dict
+) -> tuple[str | None, UUID | str | None, str | None] | None:
     """Extract the correlation id from a json message.
        The correlation id is made of three parts: originator, uuid, issue date/time
 
     Args:
-        message (Union[str, json]): The message to be searched as either a string or json obj
+        message (str | json]): The message to be searched as either a string or json obj
 
     Returns:
-        Optional[Tuple[Optional[str], Optional[Union[UUID, str]], Optional[str]]]:
+        Optional[Tuple[Optional[str], Optional[UUID | str]], Optional[str]]]:
             A tuple containing originator, uuid, and issue date/time, or None if a given part
             was not found. Returns simply None if no parts found
     """
@@ -46,16 +47,16 @@ def get_corr_id(
     return None
 
 
-def add_corr_id(message: Union[dict, str],
+def add_corr_id(message: dict | str,
                 originator: str,
-                uuid_: Optional[Union[UUID, str]] = None,
-                issue_dt: Optional[str] = None) -> dict:
+                uuid_: UUID | str | None = None,
+                issue_dt: str | None = None) -> dict:
     """Add (or overwrites) the three part correlation id to a json message
 
     Args:
-        message (Union[dict, str]): The message to be updated
+        message (dict | str): The message to be updated
         originator (str): String representation of the originating service
-        uuid_ (Union[UUID, str], optional): A UUID. Defaults to None.
+        uuid_ (UUID | str, optional): A UUID. Defaults to None.
         issue_dt (str, optional): The specific issue date/time associated with the message.
                                   Defaults to None.
 

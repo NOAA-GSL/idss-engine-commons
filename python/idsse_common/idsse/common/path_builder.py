@@ -19,7 +19,7 @@ In this weather forecasting data context,
 import os
 import re
 from datetime import datetime, timedelta, UTC
-from typing import Dict, Self, Union
+from typing import Self
 
 from .utils import TimeDelta
 
@@ -117,7 +117,7 @@ class PathBuilder:
     def build_dir(self,
                   issue: datetime = None,
                   valid: datetime = None,
-                  lead: Union[timedelta, TimeDelta] = None) -> str:
+                  lead: timedelta | TimeDelta = None) -> str:
         """Attempts to build the directory with provided arguments
 
         Args:
@@ -125,7 +125,7 @@ class PathBuilder:
                                         directory is dependant on it. Defaults to None.
             valid (datetime, optional): Valid datetime, should be provided is the
                                         directory is dependant on it. . Defaults to None.
-            lead (Union[timedelta, TimeDelta], optional): Lead can be provided in addition
+            lead (timedelta | TimeDelta, optional): Lead can be provided in addition
                                                           to issue or valid. Defaults to None.
 
         Returns:
@@ -139,7 +139,7 @@ class PathBuilder:
     def build_filename(self,
                        issue: datetime = None,
                        valid: datetime = None,
-                       lead: Union[timedelta, TimeDelta] = None) -> str:
+                       lead: timedelta | TimeDelta = None) -> str:
         """Attempts to build the filename with provided arguments
 
         Args:
@@ -147,7 +147,7 @@ class PathBuilder:
                                         filename is dependant on it. Defaults to None.
             valid (datetime, optional): Valid datetime, should be provided is the
                                         filename is dependant on it. . Defaults to None.
-            lead (Union[timedelta, TimeDelta], optional): Lead can be provided in addition
+            lead (timedelta | TimeDelta, optional): Lead can be provided in addition
                                                           to issue or valid. Defaults to None.
 
         Returns:
@@ -159,7 +159,7 @@ class PathBuilder:
     def build_path(self,
                    issue: datetime = None,
                    valid: datetime = None,
-                   lead: Union[timedelta, TimeDelta] = None) -> str:
+                   lead: timedelta | TimeDelta = None) -> str:
         """Attempts to build the path with provided arguments
 
         Args:
@@ -167,7 +167,7 @@ class PathBuilder:
                                         path is dependant on it. Defaults to None.
             valid (datetime, optional): Valid datetime, should be provided is the
                                         path is dependant on it. . Defaults to None.
-            lead (Union[timedelta, TimeDelta], optional): Lead can be provided in addition
+            lead (timedelta | TimeDelta, optional): Lead can be provided in addition
                                                           to issue or valid. Defaults to None.
 
         Returns:
@@ -235,7 +235,7 @@ class PathBuilder:
         return self.get_valid_from_time_args(time_args)
 
     @staticmethod
-    def get_issue_from_time_args(parsed_args: Dict,
+    def get_issue_from_time_args(parsed_args: dict,
                                  valid: datetime = None,
                                  lead: timedelta = None) -> datetime:
         """Static method for creating an issue date/time from parsed arguments and optional inputs
@@ -329,7 +329,7 @@ class PathBuilder:
     @staticmethod
     def _ensure_lead(issue: datetime,
                      valid: datetime,
-                     lead: Union[timedelta, TimeDelta]) -> TimeDelta:
+                     lead: timedelta | TimeDelta) -> TimeDelta:
         if lead:
             if isinstance(lead, timedelta):
                 return TimeDelta(lead)
@@ -338,8 +338,8 @@ class PathBuilder:
             return TimeDelta(valid-issue)
         return None
 
-    def _parse_times(self, string: str, format_str: str) -> Dict:
-        def parse_args(key: str, value: str, result: Dict):
+    def _parse_times(self, string: str, format_str: str) -> dict:
+        def parse_args(key: str, value: str, result: dict):
             for arg in key.split('{')[1:]:
                 var_name, var_size = arg.split(':')
                 var_type = var_size[2:3]

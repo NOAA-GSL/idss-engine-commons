@@ -12,8 +12,8 @@
 import logging
 import fnmatch
 import os
+from collections.abc import Sequence
 from datetime import datetime, timedelta, UTC
-from typing import Sequence, Set, Tuple, Optional
 
 from .path_builder import PathBuilder
 from .utils import TimeDelta, datetime_gen, exec_cmd
@@ -91,7 +91,7 @@ class AwsUtils():
             finally:
                 pass
 
-    def check_for(self, issue: datetime, valid: datetime) -> Optional[Tuple[datetime, str]]:
+    def check_for(self, issue: datetime, valid: datetime) -> tuple[datetime, str] | None:
         """Checks if an object passed issue/valid exists
 
         Args:
@@ -99,7 +99,7 @@ class AwsUtils():
             valid (datetime): The valid date/time used to format the path to the object's location
 
         Returns:
-            Optional[Tuple[datetime, str]]: A tuple of the valid date/time (indicated by object's
+            [tuple[datetime, str] | None]: A tuple of the valid date/time (indicated by object's
                                             location) and location (path) of a object, or None
                                             if object does not exist
         """
@@ -117,7 +117,7 @@ class AwsUtils():
 
     def get_issues(self,
                    num_issues: int = 1,
-                   issue_start: Optional[datetime] = None,
+                   issue_start: datetime | None = None,
                    issue_end: datetime = datetime.now(UTC),
                    time_delta: timedelta = timedelta(hours=1)
                    ) -> Sequence[datetime]:
@@ -136,7 +136,7 @@ class AwsUtils():
         if time_delta == zero_time_delta:
             raise ValueError('Time delta must be non zero')
 
-        issues_set: Set[datetime] = set()
+        issues_set: set[datetime] = set()
         if issue_start:
             datetimes = datetime_gen(issue_end, time_delta, issue_start, num_issues)
         else:
@@ -161,8 +161,8 @@ class AwsUtils():
 
     def get_valids(self,
                    issue: datetime,
-                   valid_start: Optional[datetime] = None,
-                   valid_end: Optional[datetime] = None) -> Sequence[Tuple[datetime, str]]:
+                   valid_start: datetime | None = None,
+                   valid_end: datetime | None = None) -> Sequence[tuple[datetime, str]]:
         """Get all objects consistent with the passed issue date/time and filter by valid range
 
         Args:
@@ -173,7 +173,7 @@ class AwsUtils():
                                             Defaults to None.
 
         Returns:
-            Sequence[Tuple[datetime, str]]: A sequence of tuples with valid date/time (indicated by
+            Sequence[tuple[datetime, str]]: A sequence of tuples with valid date/time (indicated by
                                             object's location) and the object's location (path).
                                             Empty Sequence if no valids found for given time range.
         """

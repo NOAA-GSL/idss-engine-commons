@@ -13,8 +13,8 @@
 # pylint: disable=missing-function-docstring,redefined-outer-name,pointless-statement
 # pylint: disable=invalid-name,unused-argument
 
+from collections.abc import Iterable, Sequence
 from datetime import datetime, timedelta, UTC
-from typing import List
 from unittest.mock import Mock
 
 from pytest import fixture, MonkeyPatch
@@ -55,7 +55,7 @@ def aws_utils_with_wild() -> AwsUtils:
 
 @fixture
 def mock_exec_cmd(monkeypatch: MonkeyPatch) -> Mock:
-    def get_files_for_dir(args: List[str]) -> List[str]:
+    def get_files_for_dir(args: Iterable[str]) -> Sequence[str]:
         hour = args[-1].split('/')[-3]
         return [f'blend.t{hour}z.core.f002.co.grib2',
                 f'blend.t{hour}z.core.f003.co.grib2',
