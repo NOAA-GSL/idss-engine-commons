@@ -146,21 +146,20 @@ def get_default_log_config(level: str,
                 'formatter': 'standard',
                 'filters': filter_list,
             },
-            # 'rabbit': {
-            #     'class': 'python_logging_rabbitmq.RabbitMQHandler',
-            #     'host': host,
-            #     'port': port,
-            #     'formatter': 'standard',
-            #     'filters': filter_list,
-            #     'level': report_level,
-            #     'declare_exchange': True,
-            # },
+            'rabbit': {
+                'class': 'python_logging_rabbitmq.RabbitMQHandler',
+                'host': host,
+                'port': port,
+                'formatter': 'standard',
+                'filters': filter_list,
+                'level': report_level,
+                'declare_exchange': True,
+            },
         },
         'loggers': {
             '': {
                 'level': level,
-                # 'handlers': ['default', 'rabbit']
-                'handlers': ['default']
+                'handlers': ['default', 'rabbit']
             },
         }
     }
