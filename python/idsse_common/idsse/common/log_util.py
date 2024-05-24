@@ -28,7 +28,7 @@ corr_id_context_var: ContextVar[str] = ContextVar('correlation_id')
 
 def set_corr_id_context_var(
         originator: str,
-        key: uuid.UUID | None = None,
+        key: uuid.UUID = uuid.uuid4(),
         issue_dt: str | datetime | None = None
 ) -> None:
     """
@@ -38,11 +38,8 @@ def set_corr_id_context_var(
     Args:
         originator (str): Function, class, service name, etc. that is using logging module
         key (uuid.UUID, optional): a UUID. Default: randomly generated UUID.
-        issue_dt (str | datetime, optional): Datetime when a relevant forecast was issued
+        issue_dt (str | datetime | None, optional): Datetime when a relevant forecast was issued
     """
-    if not key:
-        key = uuid.uuid4()
-
     if issue_dt:
         if not isinstance(issue_dt, str):
             issue_dt = to_iso(issue_dt)
@@ -159,7 +156,8 @@ def get_default_log_config(level: str,
         'loggers': {
             '': {
                 'level': level,
-                'handlers': ['default', 'rabbit']
+                # 'handlers': ['default', 'rabbit']
+                'handlers': ['default']
             },
         }
     }

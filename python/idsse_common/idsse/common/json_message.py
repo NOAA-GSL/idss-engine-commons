@@ -56,8 +56,8 @@ def add_corr_id(message: dict | str,
     Args:
         message (dict | str): The message to be updated
         originator (str): String representation of the originating service
-        uuid_ (UUID | str, optional): A UUID. Defaults to None.
-        issue_dt (str, optional): The specific issue date/time associated with the message.
+        uuid_ (UUID | str | None, optional): A UUID. Defaults to None.
+        issue_dt (str | None, optional): The specific issue date/time associated with the message.
                                   Defaults to None.
 
     Returns:

@@ -167,10 +167,10 @@ class AwsUtils():
 
         Args:
             issue (datetime): The issue date/time used to format the path to the object's location
-            valid_start (datetime, optional): All returned objects will be for
+            valid_start (datetime | None, optional): All returned objects will be for
                                               valids >= valid_start. Defaults to None.
-            valid_end (datetime, optional): All returned objects will be for valids <= valid_end.
-                                            Defaults to None.
+            valid_end (datetime | None, optional): All returned objects will be for
+                                            valids <= valid_end. Defaults to None.
 
         Returns:
             Sequence[tuple[datetime, str]]: A sequence of tuples with valid date/time (indicated by

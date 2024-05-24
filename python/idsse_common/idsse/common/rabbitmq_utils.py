@@ -13,7 +13,8 @@
 
 import logging
 import logging.config
-from typing import Callable, NamedTuple
+from collections.abc import Callable
+from typing import NamedTuple
 
 from pika import BasicProperties, ConnectionParameters, PlainCredentials
 from pika.adapters import BlockingConnection

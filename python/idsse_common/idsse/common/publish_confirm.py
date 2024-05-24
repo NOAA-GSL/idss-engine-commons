@@ -17,10 +17,11 @@ import logging
 import logging.config
 import json
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from random import randint
 from threading import Thread, Event
-from typing import NamedTuple, Callable, cast
+from typing import NamedTuple, cast
 
 from pika import SelectConnection, BasicProperties
 from pika.channel import Channel

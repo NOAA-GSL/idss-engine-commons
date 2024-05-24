@@ -170,7 +170,7 @@ def datetime_gen(dt_start: datetime,
         dt_start (datetime): Starting date/time, will be the first date/time made available
         time_delta (timedelta): Time delta, can be either positive or negative. The sign of this
                                 will be switch based on the order of start_dt and end_dt.
-        dt_end (datetime, optional): Ending date/time, will be the last, unless generation is
+        dt_end (datetime | None, optional): Ending date/time, will be the last, unless generation is
                                      halted by max_num. Defaults to None.
         max_num (int, optional): Max number of date/times that generator will return.
                                  Defaults to 100.
