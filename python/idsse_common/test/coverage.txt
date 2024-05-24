@@ -29,21 +29,21 @@ Name                              Stmts   Miss  Cover
 -----------------------------------------------------
 idsse/common/__init__.py              0      0   100%
 idsse/common/aws_utils.py            86      5    94%
-idsse/common/config.py               68      5    93%
-idsse/common/json_message.py         23      1    96%
-idsse/common/log_util.py             43      3    93%
+idsse/common/config.py               69      5    93%
+idsse/common/json_message.py         24      1    96%
+idsse/common/log_util.py             41      3    93%
 idsse/common/path_builder.py        128     10    92%
-idsse/common/publish_confirm.py     151     13    91%
-idsse/common/rabbitmq_utils.py       62      0   100%
+idsse/common/publish_confirm.py     152     13    91%
+idsse/common/rabbitmq_utils.py       64      0   100%
 idsse/common/sci/__init__.py          0      0   100%
 idsse/common/sci/geo_image.py       236     17    93%
-idsse/common/sci/grid_proj.py        94      1    99%
-idsse/common/sci/netcdf_io.py        47      0   100%
-idsse/common/sci/utils.py             9      0   100%
+idsse/common/sci/grid_proj.py        95      1    99%
+idsse/common/sci/netcdf_io.py        48      0   100%
+idsse/common/sci/utils.py            10      0   100%
 idsse/common/sci/vectaster.py       190     17    91%
-idsse/common/utils.py               121     10    92%
-idsse/common/validate_schema.py      41      0   100%
+idsse/common/utils.py               122     10    92%
+idsse/common/validate_schema.py      40      0   100%
 -----------------------------------------------------
-TOTAL                              1299     82    94%
+TOTAL                              1305     82    94%
 
-============================= 217 passed in 5.48s ==============================
+============================= 217 passed in 5.31s ==============================
