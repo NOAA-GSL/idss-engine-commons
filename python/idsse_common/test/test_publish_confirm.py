@@ -13,7 +13,8 @@
 # pylint: disable=too-few-public-methods,unused-argument
 
 from time import sleep
-from typing import Callable, Any, NamedTuple, Self
+from collections.abc import Callable
+from typing import Any, NamedTuple, Self
 from unittest.mock import Mock
 
 from pytest import fixture, raises, MonkeyPatch
