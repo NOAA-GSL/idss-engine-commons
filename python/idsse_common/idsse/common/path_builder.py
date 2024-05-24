@@ -19,7 +19,7 @@ In this weather forecasting data context,
 import os
 import re
 from datetime import datetime, timedelta, UTC
-from typing import Dict, Self, Union
+from typing import Self
 
 from .utils import TimeDelta
 
@@ -115,17 +115,17 @@ class PathBuilder:
         return os.path.join(self.dir_fmt, self.filename_fmt)
 
     def build_dir(self,
-                  issue: datetime = None,
-                  valid: datetime = None,
-                  lead: Union[timedelta, TimeDelta] = None) -> str:
+                  issue: datetime | None = None,
+                  valid: datetime | None = None,
+                  lead: timedelta | TimeDelta | None = None) -> str:
         """Attempts to build the directory with provided arguments
 
         Args:
-            issue (datetime, optional): Issue datetime, should be provided is the
+            issue (datetime | None, optional): Issue datetime, should be provided is the
                                         directory is dependant on it. Defaults to None.
-            valid (datetime, optional): Valid datetime, should be provided is the
+            valid (datetime | None, optional): Valid datetime, should be provided is the
                                         directory is dependant on it. . Defaults to None.
-            lead (Union[timedelta, TimeDelta], optional): Lead can be provided in addition
+            lead (timedelta | TimeDelta | None, optional): Lead can be provided in addition
                                                           to issue or valid. Defaults to None.
 
         Returns:
@@ -137,17 +137,17 @@ class PathBuilder:
         return self.dir_fmt.format(issue=issue, valid=valid, lead=lead)
 
     def build_filename(self,
-                       issue: datetime = None,
-                       valid: datetime = None,
-                       lead: Union[timedelta, TimeDelta] = None) -> str:
+                       issue: datetime | None = None,
+                       valid: datetime | None = None,
+                       lead: timedelta | TimeDelta | None = None) -> str:
         """Attempts to build the filename with provided arguments
 
         Args:
-            issue (datetime, optional): Issue datetime, should be provided is the
+            issue (datetime | None, optional): Issue datetime, should be provided is the
                                         filename is dependant on it. Defaults to None.
-            valid (datetime, optional): Valid datetime, should be provided is the
+            valid (datetime | None, optional): Valid datetime, should be provided is the
                                         filename is dependant on it. . Defaults to None.
-            lead (Union[timedelta, TimeDelta], optional): Lead can be provided in addition
+            lead (timedelta | TimeDelta | None, optional): Lead can be provided in addition
                                                           to issue or valid. Defaults to None.
 
         Returns:
@@ -157,17 +157,17 @@ class PathBuilder:
         return self.filename_fmt.format(issue=issue, valid=valid, lead=lead)
 
     def build_path(self,
-                   issue: datetime = None,
-                   valid: datetime = None,
-                   lead: Union[timedelta, TimeDelta] = None) -> str:
+                   issue: datetime | None = None,
+                   valid: datetime | None = None,
+                   lead: timedelta | TimeDelta | None = None) -> str:
         """Attempts to build the path with provided arguments
 
         Args:
-            issue (datetime, optional): Issue datetime, should be provided is the
+            issue (datetime | None, optional): Issue datetime, should be provided is the
                                         path is dependant on it. Defaults to None.
-            valid (datetime, optional): Valid datetime, should be provided is the
+            valid (datetime | None, optional): Valid datetime, should be provided is the
                                         path is dependant on it. . Defaults to None.
-            lead (Union[timedelta, TimeDelta], optional): Lead can be provided in addition
+            lead (timedelta | TimeDelta | None, optional): Lead can be provided in addition
                                                           to issue or valid. Defaults to None.
 
         Returns:
@@ -235,17 +235,17 @@ class PathBuilder:
         return self.get_valid_from_time_args(time_args)
 
     @staticmethod
-    def get_issue_from_time_args(parsed_args: Dict,
-                                 valid: datetime = None,
-                                 lead: timedelta = None) -> datetime:
+    def get_issue_from_time_args(parsed_args: dict,
+                                 valid: datetime | None = None,
+                                 lead: timedelta | None = None) -> datetime:
         """Static method for creating an issue date/time from parsed arguments and optional inputs
 
         Args:
             parsed_args (dict): A dictionary of issue, valid and/or lead info resulting
                                 from parsing a path, dir, or filename
-            valid (datetime, optional): Depending on info found during parsing, valid date/time
-                                        can be useful. Defaults to None.
-            lead (timedelta, optional): Depending on info found during parsing, lead time
+            valid (datetime | None, optional): Depending on info found during parsing,
+                                        valid date/time can be useful. Defaults to None.
+            lead (timedelta | None, optional): Depending on info found during parsing, lead time
                                         can be useful. . Defaults to None.
 
         Returns:
@@ -274,17 +274,17 @@ class PathBuilder:
 
     @staticmethod
     def get_valid_from_time_args(parsed_args: dict,
-                                 issue: datetime = None,
-                                 lead: timedelta = None) -> datetime:
+                                 issue: datetime | None = None,
+                                 lead: timedelta | None = None) -> datetime:
         """Static method for creating a valid date/time from parsed arguments and optional inputs
 
         Args:
             parsed_args (dict): A dictionary of issue, valid and/or lead info resulting
                                 from parsing a path, dir, or filename
-            issue (datetime, optional): Depending on info found during parsing, issue date/time
+            issue (datetime | None, optional): Depending on info found during parsing,
+                                        issue date/time can be useful. Defaults to None.
+            lead (timedelta | None, optional): Depending on info found during parsing, lead time
                                         can be useful. Defaults to None.
-            lead (timedelta, optional): Depending on info found during parsing, lead time
-                                        can be useful. . Defaults to None.
 
         Returns:
             datetime: Valid date/time
@@ -329,7 +329,7 @@ class PathBuilder:
     @staticmethod
     def _ensure_lead(issue: datetime,
                      valid: datetime,
-                     lead: Union[timedelta, TimeDelta]) -> TimeDelta:
+                     lead: timedelta | TimeDelta) -> TimeDelta:
         if lead:
             if isinstance(lead, timedelta):
                 return TimeDelta(lead)
@@ -338,8 +338,8 @@ class PathBuilder:
             return TimeDelta(valid-issue)
         return None
 
-    def _parse_times(self, string: str, format_str: str) -> Dict:
-        def parse_args(key: str, value: str, result: Dict):
+    def _parse_times(self, string: str, format_str: str) -> dict:
+        def parse_args(key: str, value: str, result: dict):
             for arg in key.split('{')[1:]:
                 var_name, var_size = arg.split(':')
                 var_type = var_size[2:3]

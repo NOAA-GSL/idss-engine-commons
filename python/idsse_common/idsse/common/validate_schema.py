@@ -10,7 +10,6 @@
 # ----------------------------------------------------------------------------------
 import json
 import os
-from typing import Optional, Union
 
 from jsonschema import Draft202012Validator, FormatChecker
 from jsonschema.protocols import Validator
@@ -22,7 +21,7 @@ _validator = Draft202012Validator
 _draft = DRAFT202012
 
 
-def _get_refs(json_obj: Union[dict, list], result: Optional[set] = None) -> set:
+def _get_refs(json_obj: dict | list, result: set | None = None) -> set:
     if result is None:
         result = set()
     if isinstance(json_obj, dict):

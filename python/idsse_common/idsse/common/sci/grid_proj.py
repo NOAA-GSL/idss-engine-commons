@@ -13,8 +13,9 @@
 # pylint: disable=invalid-name
 # cspell:word fliplr, flipud
 
-from typing import Self, Tuple, Union, Optional, Sequence, TypeVar, Iterable
+from collections.abc import Sequence
 from enum import Enum
+from typing import Self, TypeVar, Iterable
 
 import numpy as np
 from pyproj import CRS, Transformer
@@ -24,11 +25,11 @@ from idsse.common.utils import round_values, RoundingParam
 from idsse.common.sci.utils import coordinate_pairs_to_axes
 
 # type hints
-Scalar = Union[int, float, np.integer, np.float_]
-ScalarPair = Tuple[Scalar, Scalar]
+Scalar = int | float | np.integer | np.float_
+ScalarPair = tuple[Scalar, Scalar]
 ScalarArray = Sequence[Scalar]
-Coordinate = Union[Scalar, ScalarPair, ScalarArray, np.ndarray]
-CoordinatePair = Tuple[Coordinate, Coordinate]
+Coordinate = Scalar | ScalarPair | ScalarArray | np.ndarray
+CoordinatePair = tuple[Coordinate, Coordinate]
 
 # variables passed to GridProj.map_* methods can be anything in this list, but
 # method will always preserve the argument's type in the return value
@@ -49,12 +50,12 @@ class GridProj:
     """
     def __init__(self,
                  crs: CRS,
-                 lower_left_lat: Optional[float],
-                 lower_left_lon: Optional[float],
+                 lower_left_lat: float | None,
+                 lower_left_lon: float | None,
                  width: float,
                  height: float,
                  dx: float,
-                 dy: Optional[float] = None):
+                 dy: float | None = None):
         # pylint: disable=too-many-arguments,unpacking-non-sequence
         self._trans = Transformer.from_crs(crs.geodetic_crs, crs)
         self._x_offset = 0.0
@@ -136,9 +137,9 @@ class GridProj:
         self,
         xx: T,
         yy: T,
-        direction: Union[TransformDirection, str] = TransformDirection.FORWARD
-    ) -> Tuple[T, T]:
-        """Transform any x coordinate/array and y coordinate/array to a Tuple of the same types,
+        direction: TransformDirection | str = TransformDirection.FORWARD
+    ) -> tuple[T, T]:
+        """Transform any x coordinate/array and y coordinate/array to a tuple of the same types,
         converted into the GridProj's coordination system.
 
         Wrapper for Transformer.transform() with more specific type hinting than pyproj (Any)
@@ -149,15 +150,15 @@ class GridProj:
         self,
         lon: T,
         lat: T,
-        rounding: Optional[RoundingParam] = None,
+        rounding: RoundingParam | None = None,
         precision: int = 0
-    ) -> Tuple[T, T]:
+    ) -> tuple[T, T]:
         """Map geographic coordinates to a pixel.
 
         Args:
             lon (T): single x geographic coordinate, or array of all x coordinates
             lat (T): single y geographic coordinate, or array of all y coordinates
-            rounding (Optional[RoundingParam]):
+            rounding ([RoundingParam | None]):
                 ROUND to apply round_() to pixel values,
                 FLOOR to apply math.floor().
                 Supports RoundingMethod enum value or str value (case insensitive).
@@ -177,7 +178,7 @@ class GridProj:
             precision
         )
 
-    def map_pixel_to_geo(self, x: T, y: T) -> Tuple[T, T]:
+    def map_pixel_to_geo(self, x: T, y: T) -> tuple[T, T]:
         """Map one or more pixel(s) x,y to a projection
 
         Args:
@@ -185,13 +186,13 @@ class GridProj:
             y (T): y coordinate (or array) in pixel space
 
         Returns:
-            Tuple[T, T]: Single geographic coordinate as lon,lat, or
+            tuple[T, T]: Single geographic coordinate as lon,lat, or
                 entire array of lat,lon pairs if arrays were passed
         """
         crs_coordinates = self.map_pixel_to_crs(x, y)
         return self.map_crs_to_geo(*crs_coordinates)
 
-    def map_geo_to_crs(self, lon: T, lat: T) -> Tuple[T, T]:
+    def map_geo_to_crs(self, lon: T, lat: T) -> tuple[T, T]:
         """Map geographic coordinate (lon, lat), or array of longitudes and latitudes, to CRS
 
         Args:
@@ -199,11 +200,11 @@ class GridProj:
             lat (T): y geographic coordinate
 
         Returns:
-            Tuple[T, T]: Coordinate Reference System
+            tuple[T, T]: Coordinate Reference System
         """
         return self._transform(lon, lat)
 
-    def map_pixel_to_crs(self, x: T, y: T) -> Tuple[T, T]:
+    def map_pixel_to_crs(self, x: T, y: T) -> tuple[T, T]:
         """Map pixel space (x,y) to Coordinate Reference System
 
         Args:
@@ -211,7 +212,7 @@ class GridProj:
             y (T): y coordinate, or array of coordinates, in pixel space
 
         Returns:
-            Tuple[T, T]: Coordinate Reference System x and y pair (or pair of arrays)
+            tuple[T, T]: Coordinate Reference System x and y pair (or pair of arrays)
         """
         if isinstance(x, Scalar) and isinstance(y, Scalar):
             # single x, y Pixel (base case)
@@ -232,7 +233,7 @@ class GridProj:
             f'Cannot transpose pixel values of ({type(x).__name__})({type(y).__name__}) to CRS'
         )
 
-    def map_crs_to_geo(self, x: T, y: T) -> Tuple[T, T]:
+    def map_crs_to_geo(self, x: T, y: T) -> tuple[T, T]:
         """Map Coordinate Reference System (x,y) to Geographical space (lon,lat)
 
         Args:
@@ -240,7 +241,7 @@ class GridProj:
             y (T): y coordinate, or array of coordinates, in CRS space
 
         Returns:
-            Tuple[T, T]: Geographic coordinate as lon,lat
+            tuple[T, T]: Geographic coordinate as lon,lat
         """
         return self._transform(x, y, direction=TransformDirection.INVERSE)
 
@@ -248,15 +249,15 @@ class GridProj:
         self,
         x: T,
         y: T,
-        rounding: Optional[RoundingParam] = None,
+        rounding: RoundingParam | None = None,
         precision: int = 0,
-    ) -> Tuple[T, T]:
+    ) -> tuple[T, T]:
         """Map Coordinate Reference System (x,y) coordinates to pixel x and y
 
         Args:
             x (T): x scalar, or array/list of x scalars, in CRS dimensions
             y (T): y scalar, or array/list of y scalars, in CRS dimensions
-            rounding (Optional[RoundingParam]):
+            rounding ([RoundingParam | None]):
                 ROUND to apply round_() to pixel values,
                 FLOOR to apply math.floor().
                 Supports RoundingMethod enum value or str value (case insensitive).

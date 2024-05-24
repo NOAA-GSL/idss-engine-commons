@@ -13,7 +13,8 @@
 
 import logging
 import os
-from typing import List, Protocol, Tuple
+from collections.abc import Sequence
+from typing import Protocol
 
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 import h5netcdf as h5nc
@@ -25,11 +26,11 @@ logger = logging.getLogger(__name__)
 # cSpell:ignore ncattrs, getncattr, maskandscale
 class HasNcAttr(Protocol):
     """Protocol that allows retrieving attributes"""
-    def ncattrs(self) -> List[str]:
+    def ncattrs(self) -> Sequence[str]:
         """Gives access to list of keys
 
         Returns:
-            List[str]: Keys names for the attributes
+            Sequence[str]: Keys names for the attributes
         """
 
     def getncattr(self, key: str) -> any:
@@ -55,7 +56,7 @@ def read_netcdf_global_attrs(filepath: str) -> dict:
     return _read_attrs(Dataset(filepath))
 
 
-def read_netcdf(filepath: str, use_h5_lib = False) -> Tuple[dict, np.ndarray]:
+def read_netcdf(filepath: str, use_h5_lib = False) -> tuple[dict, np.ndarray]:
     """Reads DAS Netcdf file.
 
     Args:
@@ -64,7 +65,7 @@ def read_netcdf(filepath: str, use_h5_lib = False) -> Tuple[dict, np.ndarray]:
             If False, netCDF4 library will be used. Default is False (netcdf4 will be used).
 
     Returns:
-        Tuple[dict, np.ndarray]: Global attributes and data
+        tuple[dict, np.ndarray]: Global attributes and data
     """
     if use_h5_lib:
         with h5nc.File(filepath, 'r') as nc_file:

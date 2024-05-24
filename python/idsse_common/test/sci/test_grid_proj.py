@@ -13,7 +13,7 @@
 # pylint: disable=missing-function-docstring,redefined-outer-name,invalid-name,protected-access
 # cspell:ignore pyproj
 
-from typing import Tuple, List
+from collections.abc import Sequence
 
 import numpy as np
 from pytest import approx, fixture, raises
@@ -35,7 +35,7 @@ GRID_SPEC_WITHOUT_LOWER_LEFT = '+dx=2539.703 +dy=2539.703 +w=2345 +h=1597'
 WIDTH = 2345
 HEIGHT = 1597
 
-EXAMPLE_PIXELS: List[Tuple[int, int]] = [
+EXAMPLE_PIXELS: Sequence[tuple[int, int]] = [
     (0, 0),
     (0, 1),
     (2000, 1500)
@@ -53,7 +53,7 @@ EXAMPLE_CRS = [
 
 
 # utility to roughly compare tuples of floats with less floating point precision
-def approx_tuple(values: Tuple[float, float]) -> Tuple:
+def approx_tuple(values: tuple[float, float]) -> tuple:
     return (approx(values[0]), approx(values[1]))
 
 

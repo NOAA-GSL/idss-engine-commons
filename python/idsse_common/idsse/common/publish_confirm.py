@@ -17,10 +17,11 @@ import logging
 import logging.config
 import json
 import time
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from random import randint
 from threading import Thread, Event
-from typing import Optional, Dict, NamedTuple, Union, Callable, cast
+from typing import NamedTuple, cast
 
 from pika import SelectConnection, BasicProperties
 from pika.channel import Channel
@@ -37,12 +38,12 @@ class PublishConfirmRecords:
     """Data class to track RabbitMQ activity metadata
 
     Args:
-        deliveries (Dict[int, str]): mapping of delivered message IDs to message content
+        deliveries (dict[int, str]): mapping of delivered message IDs to message content
         acked (int): Count of acknowledged RabbitMQ messages
         nacked (int): Count of unacknowledged RabbitMQ messages
         message_number (int): The ID which will be assigned to the next published message
     """
-    deliveries: Dict[int, str] = field(default_factory=dict)
+    deliveries: dict[int, str] = field(default_factory=dict)
     acked: int = 0
     nacked: int = 0
     message_number: int = 0
@@ -79,29 +80,29 @@ class PublishConfirm:
                               daemon=True,
                               target=self._run)
 
-        self._connection: Optional[SelectConnection] = None
-        self._channel: Optional[Channel] = None
+        self._connection: SelectConnection | None = None
+        self._channel: Channel | None = None
 
         self._stopping = False
         self._rmq_params = PublishConfirmParams(conn, exchange, queue)
 
         self._records = PublishConfirmRecords()  # data class to track message activity
-        self._on_ready_callback: Optional[Callable[[], None]] = None
+        self._on_ready_callback: Callable[[], None] | None = None
 
     def publish_message(self,
-                        message: Dict,
+                        message: dict,
                         routing_key='',
-                        corr_id: Optional[str] = None) -> bool:
+                        corr_id: str | None = None) -> bool:
         """If the class is not stopping, publish a message to RabbitMQ,
         appending a list of deliveries with the message number that was sent.
         This list will be used to check for delivery confirmations in the
         on_delivery_confirmations method.
 
         Args:
-            message (Dict): message to publish (should be valid json)
+            message (dict): message to publish (should be valid json)
             routing_key (str): routing_key to route the message to correct consumer.
                 Default is empty str
-            corr_id (Optional[str]): optional correlation_id to include in message
+            corr_id (str | None): optional correlation_id to include in message
 
         Returns:
             bool: True if message successfully published to queue (channel was open and
@@ -173,12 +174,12 @@ class PublishConfirm:
             # Finish closing
             self._connection.ioloop.start()
 
-    def _start(self, callback: Optional[Callable[[], None]] = None):
+    def _start(self, callback: Callable[[], None] | None = None):
         """
         Start a thread to handle PublishConfirm operations
 
         Args:
-            callback (Optional[Callable[[], None]]): callback function to be invoked
+            callback (Callable[[], None] | None): callback function to be invoked
                 once instance is ready to publish messages (all RabbitMQ connection and channel
                 are set up, delivery confirmation is enabled, etc.). Default to None.
         """
@@ -297,12 +298,12 @@ class PublishConfirm:
         if not self._stopping:
             self._close_connection()
 
-    def _on_exchange_declareok(self, _unused_frame: Method, userdata: Union[str, bytes]):
+    def _on_exchange_declareok(self, _unused_frame: Method, userdata: str | bytes):
         """Invoked by pika when RabbitMQ has finished the Exchange.Declare RPC command.
 
         Args:
             _unused_frame (Frame.Method): Exchange.DeclareOk response frame
-            userdata (Union[str, bytes]): Extra user data (exchange name)
+            userdata (str | bytes): Extra user data (exchange name)
         """
         logger.debug('Exchange declared: %s', userdata)
 
@@ -374,7 +375,7 @@ class PublishConfirm:
             method_frame (Method): Basic.Ack or Basic.Nack frame
         """
         # tell python type checker that method will be an Ack or Nack (per pika docs)
-        method = cast(Union[Basic.Ack, Basic.Nack], method_frame.method)
+        method = cast(Basic.Ack | Basic.Nack, method_frame.method)
 
         confirmation_type = method.NAME.split('.')[1].lower()
         ack_multiple = method.multiple

@@ -12,10 +12,11 @@
 import copy
 import logging
 import math
+from collections.abc import Sequence
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from subprocess import PIPE, Popen, TimeoutExpired
-from typing import Any, Generator, Optional, Sequence, Union
+from typing import Any, Generator
 from uuid import UUID
 
 logger = logging.getLogger(__name__)
@@ -27,7 +28,7 @@ class RoundingMethod(Enum):
     FLOOR = 'FLOOR'
 
 
-RoundingParam = Union[str, RoundingMethod]
+RoundingParam = str | RoundingMethod
 
 
 class TimeDelta:
@@ -84,7 +85,7 @@ class Map(dict):
         del self.__dict__[key]
 
 
-def exec_cmd(commands: Sequence[str], timeout: Optional[int] = None) -> Sequence[str]:
+def exec_cmd(commands: Sequence[str], timeout: int | None = None) -> Sequence[str]:
     """Execute the passed commands via a Popen call
 
     Args:
@@ -161,7 +162,7 @@ def dict_copy_with(old_dict: dict, **kwargs) -> dict:
 
 def datetime_gen(dt_start: datetime,
                  time_delta: timedelta,
-                 dt_end: Optional[datetime] = None,
+                 dt_end: datetime | None = None,
                  max_num: int = 100) -> Generator[datetime, Any, None]:
     """Create a date/time sequence generator, given a starting date/time and a time stride
 
@@ -169,7 +170,7 @@ def datetime_gen(dt_start: datetime,
         dt_start (datetime): Starting date/time, will be the first date/time made available
         time_delta (timedelta): Time delta, can be either positive or negative. The sign of this
                                 will be switch based on the order of start_dt and end_dt.
-        dt_end (datetime, optional): Ending date/time, will be the last, unless generation is
+        dt_end (datetime | None, optional): Ending date/time, will be the last, unless generation is
                                      halted by max_num. Defaults to None.
         max_num (int, optional): Max number of date/times that generator will return.
                                  Defaults to 100.

@@ -11,7 +11,6 @@
 # pylint: disable=missing-function-docstring,redefined-outer-name,protected-access,unused-argument
 
 import os
-from typing import Dict, Tuple
 
 from pytest import fixture, approx
 from numpy import ndarray
@@ -46,7 +45,7 @@ EXAMPLE_PROD_KEY = (
 
 # pytest fixtures
 @fixture
-def example_netcdf_data() -> Tuple[Dict[str, any], ndarray]:
+def example_netcdf_data() -> tuple[dict[str, any], ndarray]:
     return read_netcdf(EXAMPLE_NETCDF_FILEPATH)
 
 
@@ -58,7 +57,7 @@ def test_read_netcdf_global_attrs():
     assert attrs == EXAMPLE_ATTRIBUTES
 
 
-def test_read_netcdf(example_netcdf_data: Tuple[Dict[str, any], ndarray]):
+def test_read_netcdf(example_netcdf_data: tuple[dict[str, any], ndarray]):
     attrs, grid = example_netcdf_data
 
     assert grid.shape == (1597, 2345)
@@ -71,7 +70,7 @@ def test_read_netcdf(example_netcdf_data: Tuple[Dict[str, any], ndarray]):
     assert attrs == EXAMPLE_ATTRIBUTES
 
 
-def test_read_and_write_netcdf(example_netcdf_data: Tuple[Dict[str, any], ndarray]):
+def test_read_and_write_netcdf(example_netcdf_data: tuple[dict[str, any], ndarray]):
     # cleanup existing test file if needed
     temp_netcdf_filepath = './tmp/test_netcdf_file.nc'
     if os.path.exists(temp_netcdf_filepath):
@@ -94,7 +93,7 @@ def test_read_and_write_netcdf(example_netcdf_data: Tuple[Dict[str, any], ndarra
     os.remove(temp_netcdf_filepath)
 
 
-def test_read_and_write_netcdf_with_h5nc(example_netcdf_data: Tuple[Dict[str, any], ndarray]):
+def test_read_and_write_netcdf_with_h5nc(example_netcdf_data: tuple[dict[str, any], ndarray]):
     # create h5nc file
     temp_netcdf_h5_filepath = './tmp/test_netcdf_h5_file.nc'
     if os.path.exists(temp_netcdf_h5_filepath):

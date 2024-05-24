@@ -49,9 +49,9 @@ class ColorPalette(NamedTuple):
     def linear(
         cls,
         colors: Sequence[Color],
-        anchors: Sequence[int] = None,
-        min_value: float = None,
-        max_value: float = None
+        anchors: Sequence[int] | None = None,
+        min_value: float | None = None,
+        max_value: float | None = None
     ) -> Self:
         """Create a color palette by linearly interpolating between colors
 
@@ -177,9 +177,9 @@ class GeoImage():
         data_array: np.ndarray,
         colors: ColorPalette | None = None,
         scale: int = 1,
-        min_value: float = None,
-        max_value: float = None,
-        fill_value: float = None
+        min_value: float | None = None,
+        max_value: float | None = None,
+        fill_value: float | None = None
     ) -> Self:
         """Method for building a geographical image from data in a ndarray.
 
@@ -191,11 +191,11 @@ class GeoImage():
                                                     scale will be used.
             scale (int, optional): The height and width that a grid cell will be scaled to in the
                                    image. Defaults to 1.
-            min_value (float, optional): The minimum value used for normalizing the data.
+            min_value (float | None, optional): The minimum value used for normalizing the data.
                                          Default to None, in which case use the min(data).
-            max_value (float, optional): The maximum value used for normalizing the data.
+            max_value (float | None, optional): The maximum value used for normalizing the data.
                                          Default to None, in which case use the max(data).
-            fill_value (float, optional): If specified this value will not be normalized.
+            fill_value (float | None, optional): If specified this value will not be normalized.
                                          Default to None.
 
         Returns:
@@ -464,23 +464,24 @@ class GeoImage():
 
 def normalize(
     array: np.ndarray,
-    min_value: float = None,
-    max_value: float = None,
-    missing_value: float = None
+    min_value: float | None = None,
+    max_value: float | None = None,
+    missing_value: float | None = None
 ) -> np.ndarray | np.ma.MaskedArray:
     """Normalize a data array, map the values in array to between [0, 1]
 
     Args:
         array (np.ndarray): Input data array
-        min_value (float, optional): If provided, the minimum value to to be mapped.
+        min_value (float | None, optional): If provided, the minimum value to to be mapped.
                                      Will map to zero, and all values less will map to -1
                                      (-1 is out of range, but will be masked). Defaults to None.
-        max_value (float, optional): If provided, the maximum value to to be mapped.
+        max_value (float | None, optional): If provided, the maximum value to to be mapped.
                                      Will map to 1, and all values greater will map to 2
                                      (2 is out of range, but will be masked). Defaults to None.
-        missing_value (float, optional): If provided, the value representing fill, which will not
-                                     be mapped to [0, 1]. Will map to np.nan, (NaN is not a valid
-                                     float between [0, 1], but will be masked). Defaults to None.
+        missing_value (float | None, optional): If provided, the value representing fill, which
+                                     will not be mapped to [0, 1]. Will map to np.nan, (NaN is not
+                                     a valid float between [0, 1], but will be masked).
+                                     Defaults to None.
 
     Returns:
         np.ndarray | np.ma.MaskedArray: If all data is mapped to [0, 1] the returned array will be
