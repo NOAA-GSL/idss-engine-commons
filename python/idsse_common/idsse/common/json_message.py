@@ -27,7 +27,7 @@ def get_corr_id(
         message (str | json]): The message to be searched as either a string or json obj
 
     Returns:
-        Optional[Tuple[Optional[str], Optional[UUID | str]], Optional[str]]]:
+        tuple[str | None, UUID | str | None, str | None] | None:
             A tuple containing originator, uuid, and issue date/time, or None if a given part
             was not found. Returns simply None if no parts found
     """
