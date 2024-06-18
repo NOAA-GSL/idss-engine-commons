@@ -48,10 +48,12 @@ def simple_criteria_message() -> dict:
                 }
             ]
         },
-        "validDt": {
-            "start": "2022-11-12T00:00:00.000Z",
-            "end": "2022-11-12T00:00:00.000Z"
-        },
+        "validDt": [
+            {
+                "start": "2022-11-12T00:00:00.000Z",
+                "end": "2022-11-12T00:00:00.000Z"
+            }
+        ],
         "conditions": [
             {
                 "name": "Above Freeze Temp",
@@ -99,9 +101,9 @@ def criteria_message() -> dict:
         "corrId": {
             "originator": "IDSSe",
             "uuid": "4899d220-beec-467b-a0e6-9d215b715b97",
-            "issueDt": "2022/10/07 14:00:00"
+            "issueDt": "2022-10-07T14:00:00.000Z"
         },
-        "issueDt": "2022/10/07 14:00:00",
+        "issueDt": "2022-10-07T14:00:00.000Z",
         "location": {
             "features": [
                 {
@@ -117,10 +119,12 @@ def criteria_message() -> dict:
                 }
             ]
         },
-        "validDt": {
-            "start": "2022/10/08 0:00:00",
-            "end": "2022/10/08 12:00:00"
-        },
+        "validDt": [
+            {
+                "start": "2022-10-08T0:00:00.000Z",
+                "end": "2022-10-08T12:00:00.000Z"
+            }
+        ],
         "conditions": [
             {
                 "name": "Two part Condition",

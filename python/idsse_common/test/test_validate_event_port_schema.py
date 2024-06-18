@@ -48,10 +48,12 @@ def simple_event_port_message() -> dict:
                 }
             ]
         },
-        "validDt": {
-            "start": "2022-11-12T00:00:00.000Z",
-            "end": "2022-11-12T00:00:00.000Z"
-        },
+        "validDt": [
+            {
+                "start": "2022-11-12T00:00:00.000Z",
+                "end": "2022-11-12T00:00:00.000Z"
+            }
+        ],
         "conditions": [
             {
                 "name": "Abq TEMP",
@@ -97,9 +99,6 @@ def simple_event_port_message() -> dict:
                 "conditionKey": "Abq TEMP",
                 "productKey": "NBM",
                 "locationKey": "Single Location",
-                "validDt": [
-                    "2022-11-12T00:00:00.000Z"
-                ],
                 "dataDescript": [
                     {
                         "partName": "A",
@@ -108,43 +107,50 @@ def simple_event_port_message() -> dict:
                         "issueDt": "2022-11-11T14:00:00.000Z"
                     }
                 ],
-                "data": [
+                "dataSummary": [
                     {
-                        "name": "Abq TEMP",
-                        "type": "condition",
-                        "singleValue": [
-                            0.18964463472366333
+                        "validDt": [
+                            "2022-11-12T00:00:00.000Z"
                         ],
-                        "geoDist": [
+                        "data": [
                             {
-                                "0.18964463472366333": 1
+                                "name": "Abq TEMP",
+                                "type": "condition",
+                                "singleValue": [
+                                    0.18964463472366333
+                                ],
+                                "geoDist": [
+                                    {
+                                        "0.18964463472366333": 1
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "A",
+                                "type": "criteria",
+                                "singleValue": [
+                                    0.18964463472366333
+                                ],
+                                "geoDist": [
+                                    {
+                                        "0.18964463472366333": 1
+                                    }
+                                ]
+                            },
+                            {
+                                "name": "A",
+                                "type": "raw",
+                                "singleValue": [
+                                    38.53400802612305
+                                ],
+                                "geoDist": [
+                                    {
+                                        "1.7941197416604382E-9": 1
+                                    }
+                                ]
                             }
-                        ]
+                        ],
                     },
-                    {
-                        "name": "A",
-                        "type": "criteria",
-                        "singleValue": [
-                            0.18964463472366333
-                        ],
-                        "geoDist": [
-                            {
-                                "0.18964463472366333": 1
-                            }
-                        ]
-                    },
-                    {
-                        "name": "A",
-                        "type": "raw",
-                        "singleValue": [
-                            38.53400802612305
-                        ],
-                        "geoDist": [
-                            {
-                                "1.7941197416604382E-9": 1
-                            }
-                        ]
-                    }
                 ],
                 "metaData": [
                     {
@@ -202,7 +208,8 @@ def test_validate_event_port_message_without_results(event_port_validator: Valid
 
 def test_validate_event_port_message_with_bad_geo_dist(event_port_validator: Validator,
                                                        simple_event_port_message: dict):
-    criteria_geo_dist = simple_event_port_message['riskResults'][0]['data'][0]['geoDist']
+    data_summary = simple_event_port_message['riskResults'][0]['dataSummary']
+    criteria_geo_dist = data_summary[0]['data'][0]['geoDist']
     criteria_geo_dist.append({"not a number": 3})
     with raises(ValidationError):
         event_port_validator.validate(simple_event_port_message)

@@ -11,27 +11,31 @@
         "items": {"$ref": "#/TimeString"},
         "minItems": 1
     },
-    
-    "TimeRange": {
-        "description": "Date/time string specifying the start and end date/ times",
+
+    "TimeObject": {
+        "description": "Either a time range specifying the start and end date/times, or a list of specific date/times",
         "type": "object",
         "properties": {
-            "start": {"$ref": "#/TimeString"},
-            "end": {"$ref": "#/TimeString"}
+          "start": {"$ref": "#/TimeString" },
+          "end": {"$ref": "#/TimeString" },
+          "times": {"$ref": "#/TimeList"},
+          "proximal": {"type": "boolean"}
         },
-        "required": [
-            "start",
-            "end"
+        "dependencies": {
+          "start": ["end"],
+          "end": ["start"]
+        },
+        "oneOf": [
+          { "required": ["start"] },
+          { "required": ["times"] }
         ]
     },
     
     "Timing": {
-        "description": "Either a TimeString, TimeList, or TimeRange",
-        "oneOf": [
-            {"$ref": "#/TimeString"},
-            {"$ref": "#/TimeList"},
-            {"$ref": "#/TimeRange"}
-        ]
+        "description": "A list of one or more timing objects",
+        "type": "array",
+        "items": {"$ref": "#/TimeObject"},
+        "minItems": 1
     }
 }    
 
