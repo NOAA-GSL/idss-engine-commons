@@ -143,7 +143,7 @@ class PublishConfirm:
         Raises:
             RuntimeError: if PublishConfirm thread is already running
         """
-        logger.debug('Starting thread')
+        logger.info('Starting thread')
 
         # not possible to start Thread when it's already running
         if self._thread.is_alive() or (self._connection is not None and self._connection.is_open):
@@ -185,7 +185,7 @@ class PublishConfirm:
                 once instance is ready to publish messages (all RabbitMQ connection and channel
                 are set up, delivery confirmation is enabled, etc.). Default to None.
         """
-        logger.debug('Starting thread with callback')
+        logger.info('Starting thread with callback')
         if callback is not None:
             self._on_ready_callback = callback  # to be invoked after all pika setup is done
         self._thread.start()
@@ -216,7 +216,9 @@ class PublishConfirm:
 
             # pass callback to flip is_ready flag, and block until flag changes
             is_ready = Event()
+            logger.info('DEBUG: calling _start() with callback')
             self._start(callback=is_ready.set)
+            logger.info('DEBUG: waiting for is_ready flag to be set')
             is_ready.wait()
 
             logger.info('Connection and channel setup complete, ready to publish message')
