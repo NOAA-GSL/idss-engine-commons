@@ -219,7 +219,7 @@ class PublishConfirm:
             logger.info('DEBUG: calling _start() with callback')
             self._start(callback=is_ready.set)
             logger.info('DEBUG: waiting for is_ready flag to be set')
-            is_ready.wait()
+            is_ready.wait(30.0) # wait 30 seconds before failing
 
             logger.info('Connection and channel setup complete, ready to publish message')
 
