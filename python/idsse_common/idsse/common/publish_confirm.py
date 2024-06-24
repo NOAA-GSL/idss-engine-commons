@@ -110,9 +110,8 @@ class PublishConfirm:
         Raises:
             RuntimeError: if channel is uninitialized (start() not completed yet) or is closed
         """
-        logger.info('DEBUG: in publish_message, waiting for channel to be ready...')
         self._wait_for_channel_to_be_ready()
-        logger.info('DEBUG: channel is ready to publish message')
+        logger.debug('channel is ready to publish message')
 
         # We expect a JSON message format, do a check here...
         try:
@@ -143,7 +142,7 @@ class PublishConfirm:
         Raises:
             RuntimeError: if PublishConfirm thread is already running
         """
-        logger.info('Starting thread')
+        logger.debug('Starting thread')
 
         # not possible to start Thread when it's already running
         if self._thread.is_alive() or (self._connection is not None and self._connection.is_open):
@@ -185,7 +184,7 @@ class PublishConfirm:
                 once instance is ready to publish messages (all RabbitMQ connection and channel
                 are set up, delivery confirmation is enabled, etc.). Default to None.
         """
-        logger.info('Starting thread with callback')
+        logger.debug('Starting thread with callback')
         if callback is not None:
             self._on_ready_callback = callback  # to be invoked after all pika setup is done
         self._thread.start()
@@ -197,7 +196,7 @@ class PublishConfirm:
         :rtype: pika.SelectConnection
         """
         conn = self._rmq_params.conn
-        logger.info('Connecting to RabbitMQ: %s', conn)
+        logger.debug('Connecting to RabbitMQ: %s', conn)
         return SelectConnection(
             parameters=conn.connection_parameters,
             on_open_callback=self._on_connection_open,
@@ -209,19 +208,20 @@ class PublishConfirm:
         RabbitMQ setup. This method will not return until channel is confirmed ready for use"""
 
         # validate that PublishConfirm thread has been set up and connected to RabbitMQ
-        logger.info('DEBUG: in _wait_for_channel_to_be_ready')
         if not (self._connection and self._connection.is_open
                 and self._channel and self._channel.is_open):
-            logger.info('Channel is not ready to publish, calling _start() now')
+            logger.debug('Channel is not ready to publish, calling _start() now')
 
             # pass callback to flip is_ready flag, and block until flag changes
             is_ready = Event()
-            logger.info('DEBUG: calling _start() with callback')
+            
+            logger.debug('calling _start() with callback')
             self._start(callback=is_ready.set)
-            logger.info('DEBUG: waiting for is_ready flag to be set')
-            is_ready.wait(30.0) # wait 30 seconds before failing
-
-            logger.info('Connection and channel setup complete, ready to publish message')
+            
+            logger.debug('waiting for is_ready flag to be set')
+            is_ready.wait()
+            
+            logger.debug('Connection and channel setup complete, ready to publish message')
 
     def _on_connection_open(self, connection: SelectConnection):
         """This method is called by pika once the connection to RabbitMQ has been established.
