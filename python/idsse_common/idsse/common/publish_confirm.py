@@ -214,13 +214,13 @@ class PublishConfirm:
 
             # pass callback to flip is_ready flag, and block until flag changes
             is_ready = Event()
-            
+
             logger.debug('calling _start() with callback')
             self._start(callback=is_ready.set)
-            
+
             logger.debug('waiting for is_ready flag to be set')
             is_ready.wait()
-            
+
             logger.debug('Connection and channel setup complete, ready to publish message')
 
     def _on_connection_open(self, connection: SelectConnection):
