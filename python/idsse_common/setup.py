@@ -19,7 +19,7 @@ setup(name='idsse',
         'importlib_metadata',
         'pika',
         'jsonschema',
-	    'python-logging-rabbitmq'
+        'python-logging-rabbitmq'
       ],
       extras_require={
         'develop': [
