@@ -111,7 +111,7 @@ class PublishConfirm:
             RuntimeError: if channel is uninitialized (start() not completed yet) or is closed
         """
         self._wait_for_channel_to_be_ready()
-        logger.debug('channel is ready to publish message')
+        logger.info('DEBUG: channel is ready to publish message')
 
         # We expect a JSON message format, do a check here...
         try:
@@ -210,18 +210,18 @@ class PublishConfirm:
         # validate that PublishConfirm thread has been set up and connected to RabbitMQ
         if not (self._connection and self._connection.is_open
                 and self._channel and self._channel.is_open):
-            logger.debug('Channel is not ready to publish, calling _start() now')
+            logger.info('Channel is not ready to publish, calling _start() now')
 
             # pass callback to flip is_ready flag, and block until flag changes
             is_ready = Event()
 
-            logger.debug('calling _start() with callback')
+            logger.info('calling _start() with callback')
             self._start(callback=is_ready.set)
 
-            logger.debug('waiting for is_ready flag to be set')
+            logger.info('waiting for is_ready flag to be set')
             is_ready.wait()
 
-            logger.debug('Connection and channel setup complete, ready to publish message')
+            logger.info('Connection and channel setup complete, ready to publish message')
 
     def _on_connection_open(self, connection: SelectConnection):
         """This method is called by pika once the connection to RabbitMQ has been established.
