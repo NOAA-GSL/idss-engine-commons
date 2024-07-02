@@ -210,9 +210,7 @@ class PublishConfirm:
         # validate that PublishConfirm thread has been set up and connected to RabbitMQ
         logger.info('DEBUG _wait_for_channel_to_be_ready state')
         logger.info(self._connection)
-        logger.info(self._connection.is_open)
         logger.info(self._channel)
-        logger.info(self._channel.is_open)
         logger.info('----------------------')
         if not (self._connection and self._connection.is_open
                 and self._channel and self._channel.is_open):
