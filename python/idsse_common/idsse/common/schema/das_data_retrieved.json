@@ -1,0 +1,71 @@
+{
+    "Filenames": {
+        "description": "Filenames description",
+        "type": "object",
+        "properties": {
+          "Deterministic": {"type": "string"}
+        },
+        "required": [
+            "Deterministic"
+        ]
+    },
+
+    "DataRetrieved": {
+        "description": "Mechanism for specifying the data that was retrieved",
+        "type": "object",
+        "properties": {
+            "filenames": {"$ref": "#/Filenames"},
+            "issue_dt": {"$ref": "timing.json#/TimeString"},
+            "valid_dt": {"$ref": "timing.json#/TimeString"},
+            "proj_name": {"type": "string"},
+            "proj_spec": {"type": "string"},
+            "grid_spec": {"type": "string"},
+            "data_prod": {"$ref": "product.json#/Product"},
+            "data_name": {"type": "string"},
+            "data_loc": {"type": "string"},
+            "units": {"type": "string"},
+            "region": {"$ref": "region.json#/Region"},
+            "slice": {"type": "string"}
+        },
+        "required": [
+            "filenames",
+            "issue_dt",
+            "valid_dt",
+            "proj_name",
+            "proj_spec",
+            "grid_spec",
+            "data_prod",
+            "data_name",
+            "data_loc",
+            "units",
+            "region",
+            "slice" 
+        ]
+    },
+
+    "DasDataRetrieved": {
+        "description": "Mechanism for providing the response to a DAS data request",
+        "properties": {
+            "request": {
+                "allOf": [
+                    {"$ref": "source.json#/Source"}
+                ]
+            },
+            "corrId": {"$ref": "corr_id.json#/CorrId"}
+        },
+        "patternProperties": {
+            "^(?!(corrId|request)$).*$": {
+                "allOf": [
+                    {"ref": "data_retrieved.json/DataRetrieved"}
+                ]
+            },
+            "additionalProperties":false
+        },
+        "additionalProperties": false,
+        "minProperties": 3,
+        "required": [
+            "corrId",
+            "request"
+        ]
+    }
+}
