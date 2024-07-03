@@ -20,7 +20,7 @@ from pika import BlockingConnection
 from pika.adapters import blocking_connection
 
 from idsse.common.rabbitmq_utils import (
-    Conn, Exch, Queue, RabbitMqParams, SimplePublisher, subscribe_to_queue
+    Conn, Exch, Queue, RabbitMqParams, PublisherSync, subscribe_to_queue
 )
 
 # Example data objects
@@ -202,7 +202,7 @@ def test_simple_publisher(monkeypatch: MonkeyPatch, mock_connection: Mock):
         'idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection
     )
 
-    publisher = SimplePublisher(CONN, RMQ_PARAMS)
+    publisher = PublisherSync(CONN, RMQ_PARAMS)
     mock_blocking_connection.assert_called_once()
     _channel = mock_blocking_connection.return_value.channel
     _channel.assert_called_once()

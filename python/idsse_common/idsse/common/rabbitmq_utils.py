@@ -193,11 +193,11 @@ def subscribe_to_queue(
     return _connection, _channel
 
 
-class SimplePublisher:
+class PublisherSync:
     """
-    SimplePublisher to use simple blocking RabbitMQ connection to publish messages. No guarantee of
-    delivery. It's recommended that you gracefully close the connection when you're done with it
-    using close().
+    Uses a synchronous, blocking RabbitMQ connection to publish messages (no thread safety
+    or multithreading support). It's recommended that you gracefully close the connection when
+    you're done with it using close().
 
     Args:
         connection (Conn | BlockingConnection): connection parameters to establish a new
@@ -211,11 +211,13 @@ class SimplePublisher:
         params: RabbitMqParams,
         channel: Channel | None = None,
     ) -> tuple[BlockingConnection, Channel]:
-        self._exchange_name = params.exchange.name
+
         # establish BlockingConnection and declare exchange and queue on Channel
         self._connection, self._channel, self._queue_name = _initialize_connection_and_channel(
             connection, params, channel,
         )
+        self._exchange_name = params.exchange.name
+        self._channel.confirm_delivery() # enable delivery confirmations from RabbitMQ broker
 
     def close(self):
         """Cleanly close any open RabbitMQ connection and channel"""
@@ -245,9 +247,8 @@ class SimplePublisher:
                                          correlation_id=corr_id)
             self._channel.basic_publish(self._exchange_name, routing_key,
                                         json.dumps(message, ensure_ascii=True), properties)
-            logger.debug('Published message to exchange %s, queue %s, routing_key %s',
-                         self._exchange_name, self._queue_name, routing_key)
-            return True  # seems like it worked
+
+            return True
         except Exception as exc:  # pylint: disable=broad-exception-caught
             logger.error('Publish message problem: [%s] %s', type(exc), str(exc))
             return False
