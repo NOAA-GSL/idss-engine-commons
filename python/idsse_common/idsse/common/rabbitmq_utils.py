@@ -38,7 +38,7 @@ class Conn(NamedTuple):
     username: str
     password: str
 
-    def to_connection(self,) -> BlockingConnection:
+    def to_connection(self) -> BlockingConnection:
         """Establish a new RabbitMQ connection using attributes in Conn data class
 
         Returns:
