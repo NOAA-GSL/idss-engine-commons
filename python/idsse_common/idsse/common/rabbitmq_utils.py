@@ -248,6 +248,6 @@ class SimplePublisher:
             logger.debug('Published message to exchange %s, queue %s, routing_key %s',
                          self._exchange_name, self._queue_name, routing_key)
             return True  # seems like it worked
-        except Exception as e:  # pylint: disable=broad-exception-caught
-            logger.error('Publish message problem: [%s] %s', type(e), str(e))
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            logger.error('Publish message problem: [%s] %s', type(exc), str(exc))
             return False
