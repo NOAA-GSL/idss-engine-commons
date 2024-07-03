@@ -2,7 +2,7 @@
 platform linux -- Python 3.11.9, pytest-8.2.2, pluggy-1.5.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
 plugins: cov-4.1.0
-collected 217 items
+collected 218 items
 
 test/sci/test_geo_image.py ......................                        [ 10%]
 test/sci/test_grid_proj.py .......................                       [ 20%]
@@ -14,9 +14,9 @@ test/test_json_message.py ...........                                    [ 48%]
 test/test_log_util.py .....                                              [ 50%]
 test/test_path_builder.py ......................                         [ 60%]
 test/test_publish_confirm.py .........                                   [ 64%]
-test/test_rabbitmq_utils.py ......                                       [ 67%]
+test/test_rabbitmq_utils.py .......                                      [ 67%]
 test/test_utils.py ...........................                           [ 80%]
-test/test_validate_criteria_schema.py ......                             [ 82%]
+test/test_validate_criteria_schema.py ......                             [ 83%]
 test/test_validate_das_schema.py ..............                          [ 89%]
 test/test_validate_das_web_schema.py .........                           [ 93%]
 test/test_validate_event_port_schema.py .....                            [ 95%]
@@ -34,7 +34,7 @@ idsse/common/json_message.py         24      1    96%
 idsse/common/log_util.py             41      3    93%
 idsse/common/path_builder.py        128     10    92%
 idsse/common/publish_confirm.py     159     13    92%
-idsse/common/rabbitmq_utils.py       64      0   100%
+idsse/common/rabbitmq_utils.py       88      3    97%
 idsse/common/sci/__init__.py          0      0   100%
 idsse/common/sci/geo_image.py       236     17    93%
 idsse/common/sci/grid_proj.py        95      1    99%
@@ -44,6 +44,6 @@ idsse/common/sci/vectaster.py       190     17    91%
 idsse/common/utils.py               122     10    92%
 idsse/common/validate_schema.py      40      0   100%
 -----------------------------------------------------
-TOTAL                              1312     82    94%
+TOTAL                              1336     85    94%
 
-============================= 217 passed in 5.71s ==============================
+============================= 218 passed in 5.63s ==============================
