@@ -19,7 +19,9 @@ from pytest import fixture, raises, MonkeyPatch
 from pika import BlockingConnection
 from pika.adapters import blocking_connection
 
-from idsse.common.rabbitmq_utils import Conn, Exch, Queue, RabbitMqParams, subscribe_to_queue
+from idsse.common.rabbitmq_utils import (
+    Conn, Exch, Queue, RabbitMqParams, PublisherSync, subscribe_to_queue
+)
 
 # Example data objects
 CONN = Conn('localhost', '/', port=5672, username='user', password='password')
@@ -190,3 +192,26 @@ def test_default_exchange_does_not_try_to_declare_exchange(
     new_channel.exchange_declare.assert_not_called()
     new_channel.queue_declare.assert_called_once()
     new_channel.basic_consume.assert_called_once()
+
+
+def test_simple_publisher(monkeypatch: MonkeyPatch, mock_connection: Mock):
+    # add mock to get Connnection callback to invoke immediately
+    mock_connection.add_callback_threadsafe = Mock(side_effect=lambda callback: callback())
+    mock_blocking_connection = Mock(return_value=mock_connection)
+    monkeypatch.setattr(
+        'idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection
+    )
+
+    publisher = PublisherSync(CONN, RMQ_PARAMS)
+    mock_blocking_connection.assert_called_once()
+    _channel = mock_blocking_connection.return_value.channel
+    _channel.assert_called_once()
+    assert publisher._connection == mock_connection
+
+    result = publisher.publish_message({'data': 123})
+    assert result
+    _channel.return_value.basic_publish.assert_called_once()
+
+    publisher.close()
+    _channel.return_value.close.assert_called_once()
+    mock_blocking_connection.return_value.close.assert_called_once()
