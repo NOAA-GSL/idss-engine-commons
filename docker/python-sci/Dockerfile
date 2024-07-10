@@ -11,6 +11,10 @@ ENV LC_ALL en_US.UTF-8
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US.UTF-8
 
+# Get latest packages before installing dependencies to
+# help keep security vulnerabilities down
+RUN conda update --all
+
 # Install dependencies (and force Python 3.12.1 update)
 RUN conda config --set solver classic && \
     conda config --add channels conda-forge && \
@@ -27,7 +31,7 @@ RUN conda config --set solver classic && \
     pygrib==2.1.5 \
     awscli==1.32.41 \
     jsonschema==4.21.1 \
-    s5cmd \
+    s5cmd=2.2.2 \
     geojson==3.1.0 \
     shapely==2.0.2 \
     pillow==10.2.0 \
@@ -38,7 +42,6 @@ RUN conda config --set solver classic && \
 
 # Get the latest package updates to keep security vulnerabilities down
 RUN apk update && apk upgrade
-RUN conda update python
 
 # Install idsse common python code
 WORKDIR /python/idsse_common
