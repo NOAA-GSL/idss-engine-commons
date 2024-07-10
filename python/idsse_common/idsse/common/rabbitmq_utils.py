@@ -17,10 +17,11 @@ import logging.config
 from collections.abc import Callable
 from typing import NamedTuple
 
-from pika import AMQPConnectionError, BasicProperties, ConnectionParameters, PlainCredentials
+from pika import BasicProperties, ConnectionParameters, PlainCredentials
 from pika.adapters import BlockingConnection
-from pika.channel import Channel
 from pika.adapters.blocking_connection import BlockingChannel
+from pika.channel import Channel
+from pika.exceptions import AMQPConnectionError
 from pika.frame import Method
 from pika.spec import Basic
 
@@ -200,14 +201,14 @@ class PublisherSync:
     you're done with it using close().
 
     Args:
-        conn_params (Conn | BlockingConnection): connection parameters to establish a new
-            RabbitMQ connection, or existing RabbitMQ to reuse
+        conn_params (Conn): connection parameters to establish a new
+            RabbitMQ connection
         rmq_params (RabbitMqParams): parameters for RabbitMQ exchange and queue on which to publish
             messages
     """
     def __init__(
         self,
-        conn_params: Conn | BlockingConnection,
+        conn_params: Conn,
         rmq_params: RabbitMqParams,
         channel: Channel | None = None,
     ) -> tuple[BlockingConnection, Channel]:
