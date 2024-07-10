@@ -148,7 +148,7 @@ def _initialize_connection_and_channel(
 
 
 def subscribe_to_queue(
-    conn_params: Conn | BlockingConnection,
+    conn: Conn | BlockingConnection,
     rmq_params: RabbitMqParams,
     on_message_callback: Callable[
         [BlockingChannel, Basic.Deliver, BasicProperties, bytes], None],
@@ -166,7 +166,7 @@ def subscribe_to_queue(
     close gracefully with connection.close()
 
     Args:
-        conn_params (Conn | BlockingConnection): connection parameters to establish new
+        conn (Conn | BlockingConnection): connection parameters to establish new
             RabbitMQ connection, or existing RabbitMQ connection to reuse for this consumer.
         rmq_params (RabbitMqParams): parameters for the RabbitMQ exchange and queue from which to
             consume messages.
@@ -181,7 +181,7 @@ def subscribe_to_queue(
             and subscribed to the provided queue.
     """
     _connection, _channel, queue_name = _initialize_connection_and_channel(
-        conn_params, rmq_params, channel
+        conn, rmq_params, channel
     )
 
     # begin consuming messages
