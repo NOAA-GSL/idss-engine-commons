@@ -220,7 +220,7 @@ class PublisherSync:
         self._connection, self._channel, self._queue_name = _initialize_connection_and_channel(
             conn_params, rmq_params, channel,
         )
-        self._exchange_name = rmq_params.exchange.name
+
         self._channel.confirm_delivery()  # enable delivery confirmations from RabbitMQ broker
 
     def close(self):
@@ -250,7 +250,7 @@ class PublisherSync:
                                      content_encoding='utf-8',
                                      correlation_id=corr_id)
         try:
-            self._channel.basic_publish(self._exchange_name, routing_key,
+            self._channel.basic_publish(self._rmq_params.exchange.name, routing_key,
                                         json.dumps(message, ensure_ascii=True), properties)
 
             return True
@@ -258,7 +258,7 @@ class PublisherSync:
             try:
                 self._connection, self._channel, self._queue_name = \
                     _initialize_connection_and_channel(self._conn_params, self._rmq_params)
-                self._channel.basic_publish(self._exchange_name, routing_key,
+                self._channel.basic_publish(self._rmq_params.exchange.name, routing_key,
                                             json.dumps(message, ensure_ascii=True), properties)
 
                 return True
