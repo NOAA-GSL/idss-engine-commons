@@ -166,7 +166,7 @@ def subscribe_to_queue(
     close gracefully with connection.close()
 
     Args:
-        conn (Conn | BlockingConnection): connection parameters to establish new
+        connection (Conn | BlockingConnection): connection parameters to establish new
             RabbitMQ connection, or existing RabbitMQ connection to reuse for this consumer.
         rmq_params (RabbitMqParams): parameters for the RabbitMQ exchange and queue from which to
             consume messages.
