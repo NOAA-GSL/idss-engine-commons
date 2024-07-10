@@ -2,22 +2,22 @@
 platform linux -- Python 3.11.9, pytest-8.2.2, pluggy-1.5.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
 plugins: cov-4.1.0
-collected 218 items
+collected 219 items
 
 test/sci/test_geo_image.py ......................                        [ 10%]
 test/sci/test_grid_proj.py .......................                       [ 20%]
 test/sci/test_netcdf_io.py ....                                          [ 22%]
 test/sci/test_vectaster.py ...............                               [ 29%]
 test/test_aws_utils.py ..................                                [ 37%]
-test/test_config.py ............                                         [ 43%]
-test/test_json_message.py ...........                                    [ 48%]
+test/test_config.py ............                                         [ 42%]
+test/test_json_message.py ...........                                    [ 47%]
 test/test_log_util.py .....                                              [ 50%]
 test/test_path_builder.py ......................                         [ 60%]
 test/test_publish_confirm.py .........                                   [ 64%]
 test/test_rabbitmq_utils.py .......                                      [ 67%]
-test/test_utils.py ...........................                           [ 80%]
-test/test_validate_criteria_schema.py ......                             [ 83%]
-test/test_validate_das_schema.py ..............                          [ 89%]
+test/test_utils.py ...........................                           [ 79%]
+test/test_validate_criteria_schema.py ......                             [ 82%]
+test/test_validate_das_schema.py ...............                         [ 89%]
 test/test_validate_das_web_schema.py .........                           [ 93%]
 test/test_validate_event_port_schema.py .....                            [ 95%]
 test/test_validate_new_data_schema.py .........                          [100%]
@@ -46,4 +46,4 @@ idsse/common/validate_schema.py      40      0   100%
 -----------------------------------------------------
 TOTAL                              1336     85    94%
 
-============================= 218 passed in 5.63s ==============================
+============================= 219 passed in 6.74s ==============================
