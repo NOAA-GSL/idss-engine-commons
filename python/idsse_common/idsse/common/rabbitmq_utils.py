@@ -148,7 +148,7 @@ def _initialize_connection_and_channel(
 
 
 def subscribe_to_queue(
-    conn: Conn | BlockingConnection,
+    connection: Conn | BlockingConnection,
     rmq_params: RabbitMqParams,
     on_message_callback: Callable[
         [BlockingChannel, Basic.Deliver, BasicProperties, bytes], None],
@@ -181,7 +181,7 @@ def subscribe_to_queue(
             and subscribed to the provided queue.
     """
     _connection, _channel, queue_name = _initialize_connection_and_channel(
-        conn, rmq_params, channel
+        connection, rmq_params, channel
     )
 
     # begin consuming messages
