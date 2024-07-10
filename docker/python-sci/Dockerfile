@@ -38,7 +38,7 @@ RUN conda config --set solver classic && \
 
 # Get the latest package updates to keep security vulnerabilities down
 RUN apk update && apk upgrade
-RUN conda update stdlib
+RUN conda update python
 
 # Install idsse common python code
 WORKDIR /python/idsse_common
