@@ -32,8 +32,9 @@ RUN conda config --set solver classic && \
     shapely==2.0.2 \
     pillow==10.2.0 \
     flask==2.3.2 \
-    gunicorn==21.2.0 \
+    gunicorn==22.0.0 \
     python-logging-rabbitmq==2.0.0 \
+    stdlib==1.22.4 \
     && conda clean -y --all
 
 # Get the latest package updates to keep security vulnerabilities down
