@@ -1,0 +1,7 @@
+
+{
+    "description": "Mechanism for making a DAS data request",
+    "allOf": [
+        {"$ref": "das_data_retrieved.json#/DasDataRetrieved"}
+    ]
+}

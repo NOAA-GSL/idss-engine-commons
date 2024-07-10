@@ -32,6 +32,12 @@ def data_request_validator() -> Validator:
 
 
 @fixture
+def data_response_validator() -> Validator:
+    schema_name = 'das_data_response_schema'
+    return get_validator(schema_name)
+
+
+@fixture
 def das_data_message() -> dict:
     return {
         'sourceType': 'join',
@@ -280,3 +286,46 @@ def test_validate_das_bad_opr_with_multi_sources_request(data_request_validator:
     mapping_opr['not_source'] = mapping_opr.pop('source')
     with raises(ValidationError):
         data_request_validator.validate(das_data_message)
+
+
+def test_validate_das_data_response(data_response_validator: Validator):
+    message = {
+        "corrId": {
+            "issueDt": "2023-01-10T08:00:00Z",
+            "originator": "IDSSe",
+            "uuid": "53430eaa-1db4-4095-bf13-a26e45223d9a"
+        },
+        "request": {
+            'sourceType': 'data',
+            'sourceObj': {
+                'product': 'NBM',
+                'region': 'CONUS',
+                'field': 'TEMP',
+                'valid': '2022-11-12T00:00:00.000Z',
+                'issue': '2022-11-11T14:00:00.000Z'
+            }
+        },
+        "data_requested": {
+            "filenames": {
+                "Deterministic":
+                "/data/share/2023/01/10/NBM.AWS.GRIB/Criteria/Criteria/gridstore-1309066818.nc"
+            },
+            "issue_dt": "2023-01-10T08:00:00Z",
+            "valid_dt": "2023-01-11T06:00:00Z",
+            "proj_name": "NBM",
+            "proj_spec": "+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +a=6371200",
+            "grid_spec": ("+dx=2539.703 +dy=2539.703 +w=100 +h=100 "
+                          "+lat_ll=41.05894633497196 +lon_ll=-106.02046021316575"),
+            "data_prod": "NBM",
+            "data_name": "TEMP",
+            "data_loc": "",
+            "units": "Fahrenheit",
+            "region": "CONUS",
+            "slice": "slice"
+        }
+    }
+
+    try:
+        data_response_validator.validate(message)
+    except ValidationError as exc:
+        assert False, f'Validate message raised an exception {exc}'
