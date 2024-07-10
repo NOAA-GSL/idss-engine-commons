@@ -19,8 +19,9 @@ from typing import NamedTuple
 
 from pika import BasicProperties, ConnectionParameters, PlainCredentials
 from pika.adapters import BlockingConnection
-from pika.channel import Channel
 from pika.adapters.blocking_connection import BlockingChannel
+from pika.channel import Channel
+from pika.exceptions import AMQPConnectionError
 from pika.frame import Method
 from pika.spec import Basic
 
@@ -148,7 +149,7 @@ def _initialize_connection_and_channel(
 
 def subscribe_to_queue(
     connection: Conn | BlockingConnection,
-    params: RabbitMqParams,
+    rmq_params: RabbitMqParams,
     on_message_callback: Callable[
         [BlockingChannel, Basic.Deliver, BasicProperties, bytes], None],
     channel: BlockingChannel | None = None
@@ -167,7 +168,7 @@ def subscribe_to_queue(
     Args:
         connection (Conn | BlockingConnection): connection parameters to establish new
             RabbitMQ connection, or existing RabbitMQ connection to reuse for this consumer.
-        params (RabbitMqParams): parameters for the RabbitMQ exchange and queue from which to
+        rmq_params (RabbitMqParams): parameters for the RabbitMQ exchange and queue from which to
             consume messages.
         on_message_callback (Callable[
             [BlockingChannel, Basic.Deliver, BasicProperties, bytes], None]):
@@ -180,7 +181,7 @@ def subscribe_to_queue(
             and subscribed to the provided queue.
     """
     _connection, _channel, queue_name = _initialize_connection_and_channel(
-        connection, params, channel
+        connection, rmq_params, channel
     )
 
     # begin consuming messages
@@ -200,24 +201,27 @@ class PublisherSync:
     you're done with it using close().
 
     Args:
-        connection (Conn | BlockingConnection): connection parameters to establish a new
-            RabbitMQ connection, or existing RabbitMQ to reuse
-        params (RabbitMqParams): parameters for RabbitMQ exchange and queue on which to publish
+        conn_params (Conn): connection parameters to establish a new
+            RabbitMQ connection
+        rmq_params (RabbitMqParams): parameters for RabbitMQ exchange and queue on which to publish
             messages
     """
     def __init__(
         self,
-        connection: Conn | BlockingConnection,
-        params: RabbitMqParams,
+        conn_params: Conn,
+        rmq_params: RabbitMqParams,
         channel: Channel | None = None,
     ) -> tuple[BlockingConnection, Channel]:
+        # save params
+        self._conn_params = conn_params
+        self._rmq_params = rmq_params
 
         # establish BlockingConnection and declare exchange and queue on Channel
         self._connection, self._channel, self._queue_name = _initialize_connection_and_channel(
-            connection, params, channel,
+            conn_params, rmq_params, channel,
         )
-        self._exchange_name = params.exchange.name
-        self._channel.confirm_delivery() # enable delivery confirmations from RabbitMQ broker
+
+        self._channel.confirm_delivery()  # enable delivery confirmations from RabbitMQ broker
 
     def close(self):
         """Cleanly close any open RabbitMQ connection and channel"""
@@ -241,14 +245,23 @@ class PublisherSync:
         Returns:
             bool: True if message was published to the queue
         """
+
+        properties = BasicProperties(content_type='application/json',
+                                     content_encoding='utf-8',
+                                     correlation_id=corr_id)
         try:
-            properties = BasicProperties(content_type='application/json',
-                                         content_encoding='utf-8',
-                                         correlation_id=corr_id)
-            self._channel.basic_publish(self._exchange_name, routing_key,
+            self._channel.basic_publish(self._rmq_params.exchange.name, routing_key,
                                         json.dumps(message, ensure_ascii=True), properties)
 
             return True
-        except Exception as exc:  # pylint: disable=broad-exception-caught
-            logger.error('Publish message problem: [%s] %s', type(exc), str(exc))
-            return False
+        except AMQPConnectionError:  # pylint: disable=broad-exception-caught
+            try:
+                self._connection, self._channel, self._queue_name = \
+                    _initialize_connection_and_channel(self._conn_params, self._rmq_params)
+                self._channel.basic_publish(self._rmq_params.exchange.name, routing_key,
+                                            json.dumps(message, ensure_ascii=True), properties)
+
+                return True
+            except AMQPConnectionError as exc:  # pylint: disable=broad-exception-caught
+                logger.error('Publish message problem: [%s] %s', type(exc), str(exc))
+                return False
