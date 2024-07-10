@@ -34,11 +34,11 @@ RUN conda config --set solver classic && \
     flask==2.3.2 \
     gunicorn==22.0.0 \
     python-logging-rabbitmq==2.0.0 \
-    stdlib==1.22.4 \
     && conda clean -y --all
 
 # Get the latest package updates to keep security vulnerabilities down
 RUN apk update && apk upgrade
+RUN conda update stdlib
 
 # Install idsse common python code
 WORKDIR /python/idsse_common
