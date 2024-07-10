@@ -24,7 +24,7 @@ RUN pip3 install --no-cache \
     python-dateutil==2.9.0 \
     jsonschema==4.19.0 \
     pycouchdb==1.14.2 \
-    gunicorn==21.2.0 \
+    gunicorn==22.0.0 \
     geojson==3.1.0 \
     python-logging-rabbitmq==2.3.0 \
     flask-cors==4.0.0

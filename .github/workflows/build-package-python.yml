@@ -69,6 +69,7 @@ jobs:
         ignore-unfixed: true
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
+        scanners: 'vuln'
 
         # this requires public repo / additional config
         #format: 'sarif'
