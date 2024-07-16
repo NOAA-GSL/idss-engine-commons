@@ -14,10 +14,12 @@
 
 from time import sleep
 from collections.abc import Callable
+from concurrent.futures import Future
+from copy import deepcopy
 from typing import Any, NamedTuple, Self
 from unittest.mock import Mock
 
-from pytest import fixture, raises, MonkeyPatch
+from pytest import fail, fixture, raises, MonkeyPatch
 
 from pika.spec import Basic
 from idsse.common.publish_confirm import PublishConfirm
@@ -216,20 +218,29 @@ def test_on_channel_closed(publish_confirm: PublishConfirm, context: MockPika):
     assert publish_confirm._connection.is_closed
 
 
-def test_start_with_callback(publish_confirm: PublishConfirm):
-    example_message = {'callback_executed': True}
-
-    def test_callback():
-        assert publish_confirm._channel.is_open
-        success = publish_confirm.publish_message(message=example_message)
-        assert success
-
+def test_start_with_future(publish_confirm: PublishConfirm):
+    is_channel_ready = Future()
     assert publish_confirm._channel is None
-    publish_confirm._start(test_callback)
+    publish_confirm._start(is_channel_ready)
+    assert is_channel_ready.result(timeout=5)
 
-    sleep(.1)  # ensure that our test's callback has time to run and send its message
-    assert publish_confirm._records.message_number == 1
-    assert publish_confirm._records.deliveries[1] == example_message
+
+def test_start_future_raises_exception(publish_confirm: PublishConfirm, context: MockPika):
+    # set up mock to fail RabbitMQ exchange declare step
+    publish_confirm._connection = context.SelectConnection(None, Mock(), Mock(), Mock())
+    original_channel_class = context.Channel
+    mock_channel = deepcopy(context.Channel)
+    mock_channel.exchange_declare = Mock(
+        side_effect=ValueError('Precondition failed: exchange did not match')
+    )
+    context.Channel = mock_channel
+
+    is_channel_ready = Future()
+    publish_confirm._start(is_ready=is_channel_ready)
+    exc = is_channel_ready.exception()
+    assert isinstance(exc, ValueError) and 'Precondition failed' in str(exc.args[0])
+
+    context.Channel = original_channel_class  # teardown hacky test mock
 
 
 def test_start_without_callback_sleeps(publish_confirm: PublishConfirm, monkeypatch: MonkeyPatch):
@@ -258,6 +269,7 @@ def test_wait_for_channel_returns_when_ready(monkeypatch: MonkeyPatch, context: 
     assert pub_conf._channel is None
     pub_conf._wait_for_channel_to_be_ready()
     assert pub_conf._channel is not None and pub_conf._channel.is_open
+
 
 def test_calling_start_twice_raises_error(monkeypatch: MonkeyPatch, context: MockPika):
     monkeypatch.setattr('idsse.common.publish_confirm.SelectConnection', context.SelectConnection)

@@ -178,7 +178,7 @@ class PublishConfirm:
             # Finish closing
             self._connection.ioloop.start()
 
-    def _start(self, on_ready: Future | None = None):
+    def _start(self, is_ready: Future | None = None):
         """
         Start a thread to handle PublishConfirm operations
 
@@ -189,8 +189,8 @@ class PublishConfirm:
                 if some issue is encountered in that process. Defaults to None.
         """
         logger.debug('Starting thread with callback')
-        if on_ready is not None:
-            self._is_ready_future = on_ready  # to be invoked after all pika setup is done
+        if is_ready is not None:
+            self._is_ready_future = is_ready  # to be invoked after all pika setup is done
         self._thread.start()
 
     def _create_connection(self):
@@ -236,7 +236,7 @@ class PublishConfirm:
         is_ready_future = Future()
 
         logger.info('calling _start() with callback')
-        self._start(on_ready=is_ready_future)
+        self._start(is_ready=is_ready_future)
 
         logger.info('waiting for is_ready flag to be set')
         try:
@@ -314,8 +314,8 @@ class PublishConfirm:
             self._channel.exchange_declare(exchange=exch_name,
                                        exchange_type=exch_type,
                                        callback=cb)
-        except Exception as exc:  # pylint: disable=broad-exception-caught
-            logger.warning('RabbitMQ failed to declare exchange: [%s] %s', type(exc), str(exc))
+        except ValueError as exc:
+            logger.warning('RabbitMQ failed to declare exchange: (%s) %s', type(exc), str(exc))
             if self._is_ready_future:
                 self._is_ready_future.set_exception(exc)  # notify caller that we could not connect
 
