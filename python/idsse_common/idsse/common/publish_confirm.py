@@ -17,10 +17,10 @@ import logging
 import logging.config
 import json
 import time
-from collections.abc import Callable
+from concurrent.futures import Future
 from dataclasses import dataclass, field
 from random import randint
-from threading import Thread, Event
+from threading import Thread
 from typing import NamedTuple, cast
 
 from pika import SelectConnection, BasicProperties
@@ -87,7 +87,7 @@ class PublishConfirm:
         self._rmq_params = PublishConfirmParams(conn, exchange, queue)
 
         self._records = PublishConfirmRecords()  # data class to track message activity
-        self._on_ready_callback: Callable[[], None] | None = None
+        self._is_ready_future: Future | None = None
 
     def publish_message(self,
                         message: dict,
@@ -110,10 +110,12 @@ class PublishConfirm:
         Raises:
             RuntimeError: if channel is uninitialized (start() not completed yet) or is closed
         """
-        self._wait_for_channel_to_be_ready()
-        logger.info('DEBUG: channel is ready to publish message')
+        is_channel_ready = self._wait_for_channel_to_be_ready()
+        if not is_channel_ready:
+            logger.error('RabbitMQ channel not established for some reason. Cannnot publish')
+            return False
 
-        # We expect a JSON message format, do a check here...
+        logger.debug('DEBUG: channel is ready to publish message')
         try:
             properties = BasicProperties(content_type='application/json',
                                          content_encoding='utf-8',
@@ -132,22 +134,33 @@ class PublishConfirm:
             return True
 
         except Exception as e:  # pylint: disable=broad-exception-caught
-            logger.error('Publish message problem : %s', str(e))
+            logger.error('Publish message problem : (%s) %s', type(e), str(e))
             return False
 
-    def start(self):
-        """Start thread to connect to RabbitMQ queue and prepare to publish messages, invoking
-        callback when setup complete.
+    def start(self, is_ready: Future | None = None):
+        """
+        Start thread to handle PublicConfirm operations, such as connect to RabbitMQ, declare
+        a queue and enable delivery confirmation. If not None, ```is_ready``` will be resolved
+        to True when setup is complete and messages can be published.
 
+        Args:
+            is_ready (Future | None): optional Python Future that will be resolved once
+                PublishConfirm connection & channel are ready to publish messages, or raise an
+                exception if some issue is encountered on setup. Default is None
         Raises:
             RuntimeError: if PublishConfirm thread is already running
         """
-        logger.debug('Starting thread')
+        logger.info('Starting thread with callback %s. is_alive? %s, self._channel: %s',
+                    is_ready, self._thread.is_alive(), self._channel)
+
+        if is_ready is not None:
+            self._is_ready_future = is_ready  # to be invoked after all pika setup is done
 
         # not possible to start Thread when it's already running
         if self._thread.is_alive() or (self._connection is not None and self._connection.is_open):
             raise RuntimeError('PublishConfirm thread already running, cannot be started')
-        self._start()
+
+        self._thread.start()
 
     def stop(self):
         """Stop the example by closing the channel and connection. We
@@ -162,6 +175,8 @@ class PublishConfirm:
         self._close_connection()
         self._stopping = False  # done stopping
 
+
+
     def _run(self):
         """Run a new thread: get a new RMQ connection, and start looping until stop() is called"""
         self._connection = self._create_connection()
@@ -174,20 +189,6 @@ class PublishConfirm:
         if self._connection is not None and not self._connection.is_closed:
             # Finish closing
             self._connection.ioloop.start()
-
-    def _start(self, callback: Callable[[], None] | None = None):
-        """
-        Start a thread to handle PublishConfirm operations
-
-        Args:
-            callback (Callable[[], None] | None): callback function to be invoked
-                once instance is ready to publish messages (all RabbitMQ connection and channel
-                are set up, delivery confirmation is enabled, etc.). Default to None.
-        """
-        logger.debug('Starting thread with callback')
-        if callback is not None:
-            self._on_ready_callback = callback  # to be invoked after all pika setup is done
-        self._thread.start()
 
     def _create_connection(self):
         """This method connects to RabbitMQ, returning the connection handle.
@@ -203,29 +204,48 @@ class PublishConfirm:
             on_open_error_callback=self._on_connection_open_error,
             on_close_callback=self._on_connection_closed)
 
-    def _wait_for_channel_to_be_ready(self) -> None:
+    def _wait_for_channel_to_be_ready(self, timeout: float | None = 6) -> bool:
         """If connection or channel are not open, start the PublishConfirm to do needed
-        RabbitMQ setup. This method will not return until channel is confirmed ready for use"""
+        RabbitMQ setup. This method will not return until channel is confirmed ready for use,
+        or timeout is exceeded.
+
+        Args:
+            timeout (optional, float): Duration of time, in seconds, to wait for RabbitMQ
+                connection, channel, exchange and queue to be setup and ready to send messages.
+                If timeout is None, thread will wait indefinitely. Default is 6 seconds.
+
+        Returns:
+            bool: True if channel is ready. False if timed out waiting for RabbitMQ to connect
+        """
 
         # validate that PublishConfirm thread has been set up and connected to RabbitMQ
-        logger.info('DEBUG _wait_for_channel_to_be_ready state')
-        logger.info(self._connection)
-        logger.info(self._channel)
-        logger.info('----------------------')
-        if not (self._connection and self._connection.is_open
-                and self._channel and self._channel.is_open):
-            logger.info('Channel is not ready to publish, calling _start() now')
+        logger.debug('DEBUG _wait_for_channel_to_be_ready state')
+        logger.debug(self._connection)
+        logger.debug(self._channel)
+        logger.debug('----------------------')
 
-            # pass callback to flip is_ready flag, and block until flag changes
-            is_ready = Event()
+        if (self._connection and self._connection.is_open
+            and self._channel and self._channel.is_open):
+            return True  # connection and channel already open, no setup needed
 
-            logger.info('calling _start() with callback')
-            self._start(callback=is_ready.set)
+        logger.info('Channel is not ready to publish, calling start() now')
+        # pass callback to flip is_ready flag, and block until flag changes
+        is_ready_future = Future()
 
-            logger.info('waiting for is_ready flag to be set')
-            is_ready.wait()
+        logger.debug('calling start() with callback')
+        self.start(is_ready=is_ready_future)
 
+        logger.info('waiting for is_ready flag to be set')
+        try:
+            is_ready_future.result(timeout=timeout)
             logger.info('Connection and channel setup complete, ready to publish message')
+            return True
+        except TimeoutError:
+            logger.error('Timed out waiting for RabbitMQ connection, channel, or exchange')
+            return False
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            logger.error('RabbitMQ rejected connection for some reason: %s', str(exc))
+            return False
 
     def _on_connection_open(self, connection: SelectConnection):
         """This method is called by pika once the connection to RabbitMQ has been established.
@@ -287,9 +307,14 @@ class PublishConfirm:
         # Note: using functools.partial is not required, it is demonstrating
         # how arbitrary data can be passed to the callback when it is called
         cb = functools.partial(self._on_exchange_declareok, userdata=exch_name)
-        self._channel.exchange_declare(exchange=exch_name,
+        try:
+            self._channel.exchange_declare(exchange=exch_name,
                                        exchange_type=exch_type,
                                        callback=cb)
+        except ValueError as exc:
+            logger.warning('RabbitMQ failed to declare exchange: (%s) %s', type(exc), str(exc))
+            if self._is_ready_future:
+                self._is_ready_future.set_exception(exc)  # notify caller that we could not connect
 
     def _on_channel_closed(self, channel: Channel, reason: Exception):
         """Invoked by pika when RabbitMQ unexpectedly closes the channel.
@@ -365,8 +390,8 @@ class PublishConfirm:
             self._channel.confirm_delivery(self._on_delivery_confirmation)
 
         # notify up that channel can now be published to
-        if self._on_ready_callback:
-            self._on_ready_callback()
+        if self._is_ready_future:
+            self._is_ready_future.set_result(True)
 
         # self.schedule_next_message()
 
