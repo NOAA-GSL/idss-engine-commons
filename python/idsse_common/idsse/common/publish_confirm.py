@@ -183,10 +183,10 @@ class PublishConfirm:
         Start a thread to handle PublishConfirm operations
 
         Args:
-            on_ready (Future | None): optional Python Future that will be resolved
-                once instance is ready to publish messages (all RabbitMQ connection and channel
-                are set up, delivery confirmation is enabled, etc.), or raise an exception
-                if some issue is encountered in that process. Defaults to None.
+            is_ready (Future | None): optional Python Future that will be resolved once
+                PublishConfirm is ready to publish messages (all RabbitMQ connection and channel
+                are set up, exchange/queue declared, delivery confirmation is enabled, etc.),
+                or raise an exception if some issue is encountered in that process. Default is None
         """
         logger.debug('Starting thread with callback')
         if is_ready is not None:

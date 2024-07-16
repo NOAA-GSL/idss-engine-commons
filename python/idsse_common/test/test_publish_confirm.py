@@ -19,7 +19,7 @@ from copy import deepcopy
 from typing import Any, NamedTuple, Self
 from unittest.mock import Mock
 
-from pytest import fail, fixture, raises, MonkeyPatch
+from pytest import fixture, raises, MonkeyPatch
 
 from pika.spec import Basic
 from idsse.common.publish_confirm import PublishConfirm
