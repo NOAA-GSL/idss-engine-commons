@@ -110,13 +110,12 @@ class PublishConfirm:
         Raises:
             RuntimeError: if channel is uninitialized (start() not completed yet) or is closed
         """
-        is_ready = self._wait_for_channel_to_be_ready()
-        if not is_ready:
+        is_channel_ready = self._wait_for_channel_to_be_ready()
+        if not is_channel_ready:
             logger.error('RabbitMQ channel not established for some reason. Cannnot publish')
             return False
 
-        logger.info('DEBUG: channel is ready to publish message')
-
+        logger.debug('DEBUG: channel is ready to publish message')
         try:
             properties = BasicProperties(content_type='application/json',
                                          content_encoding='utf-8',
@@ -138,19 +137,30 @@ class PublishConfirm:
             logger.error('Publish message problem : (%s) %s', type(e), str(e))
             return False
 
-    def start(self):
-        """Start thread to connect to RabbitMQ queue and prepare to publish messages, invoking
-        callback when setup complete.
+    def start(self, is_ready: Future | None = None):
+        """
+        Start thread to handle PublicConfirm operations, such as connect to RabbitMQ, declare
+        a queue and enable delivery confirmation. If not None, ```is_ready``` will be resolved
+        to True when setup is complete and messages can be published.
 
+        Args:
+            is_ready (Future | None): optional Python Future that will be resolved once
+                PublishConfirm connection & channel are ready to publish messages, or raise an
+                exception if some issue is encountered on setup. Default is None
         Raises:
             RuntimeError: if PublishConfirm thread is already running
         """
-        logger.debug('Starting thread')
+        logger.info('Starting thread with callback %s. is_alive? %s, self._channel: %s',
+                    is_ready, self._thread.is_alive(), self._channel)
+
+        if is_ready is not None:
+            self._is_ready_future = is_ready  # to be invoked after all pika setup is done
 
         # not possible to start Thread when it's already running
         if self._thread.is_alive() or (self._connection is not None and self._connection.is_open):
             raise RuntimeError('PublishConfirm thread already running, cannot be started')
-        self._start()
+
+        self._thread.start()
 
     def stop(self):
         """Stop the example by closing the channel and connection. We
@@ -165,6 +175,8 @@ class PublishConfirm:
         self._close_connection()
         self._stopping = False  # done stopping
 
+
+
     def _run(self):
         """Run a new thread: get a new RMQ connection, and start looping until stop() is called"""
         self._connection = self._create_connection()
@@ -177,21 +189,6 @@ class PublishConfirm:
         if self._connection is not None and not self._connection.is_closed:
             # Finish closing
             self._connection.ioloop.start()
-
-    def _start(self, is_ready: Future | None = None):
-        """
-        Start a thread to handle PublishConfirm operations
-
-        Args:
-            is_ready (Future | None): optional Python Future that will be resolved once
-                PublishConfirm is ready to publish messages (all RabbitMQ connection and channel
-                are set up, exchange/queue declared, delivery confirmation is enabled, etc.),
-                or raise an exception if some issue is encountered in that process. Default is None
-        """
-        logger.debug('Starting thread with callback')
-        if is_ready is not None:
-            self._is_ready_future = is_ready  # to be invoked after all pika setup is done
-        self._thread.start()
 
     def _create_connection(self):
         """This method connects to RabbitMQ, returning the connection handle.
@@ -222,21 +219,21 @@ class PublishConfirm:
         """
 
         # validate that PublishConfirm thread has been set up and connected to RabbitMQ
-        logger.info('DEBUG _wait_for_channel_to_be_ready state')
-        logger.info(self._connection)
-        logger.info(self._channel)
-        logger.info('----------------------')
+        logger.debug('DEBUG _wait_for_channel_to_be_ready state')
+        logger.debug(self._connection)
+        logger.debug(self._channel)
+        logger.debug('----------------------')
+
         if (self._connection and self._connection.is_open
             and self._channel and self._channel.is_open):
-            return True  # channel is already ready, nothing to do
+            return True  # connection and channel already open, no setup needed
 
-        logger.info('Channel is not ready to publish, calling _start() now')
-
+        logger.info('Channel is not ready to publish, calling start() now')
         # pass callback to flip is_ready flag, and block until flag changes
         is_ready_future = Future()
 
-        logger.info('calling _start() with callback')
-        self._start(is_ready=is_ready_future)
+        logger.debug('calling start() with callback')
+        self.start(is_ready=is_ready_future)
 
         logger.info('waiting for is_ready flag to be set')
         try:

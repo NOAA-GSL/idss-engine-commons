@@ -179,6 +179,19 @@ def test_delivery_confirmation_handles_nack(publish_confirm: PublishConfirm, con
     assert publish_confirm._records.acked == 0
 
 
+def test_wait_for_channel_to_be_ready_timeout(publish_confirm: PublishConfirm, context: MockPika):
+    # start() doesn't call its callback in time (at all), so timeout should expire
+    publish_confirm.start = Mock(side_effect=lambda is_ready: None)
+
+    # run wait_for_channel which should timeout waiting for Future to resolve
+    channel_is_ready = publish_confirm._wait_for_channel_to_be_ready(timeout=0.3)
+    assert not channel_is_ready
+    publish_confirm.start.assert_called_once()
+
+    # teardown by undoing our hacky mock
+    publish_confirm.start = PublishConfirm.start
+
+
 def test_publish_message_success_without_calling_start(monkeypatch: MonkeyPatch, context: MockPika):
     monkeypatch.setattr('idsse.common.publish_confirm.SelectConnection', context.SelectConnection)
     pub_conf = PublishConfirm(conn=EXAMPLE_CONN, exchange=EXAMPLE_EXCH, queue=EXAMPLE_QUEUE)
@@ -207,6 +220,9 @@ def test_publish_message_failure_rmq_error(publish_confirm: PublishConfirm, cont
     assert publish_confirm._records.message_number == 0
     assert len(publish_confirm._records.deliveries) == 0
 
+    # teardown our ad-hoc mocking of PublishConfirm instance
+    publish_confirm.start = PublishConfirm.start
+
 
 def test_on_channel_closed(publish_confirm: PublishConfirm, context: MockPika):
     publish_confirm._connection = context.SelectConnection(None, Mock(), Mock(), Mock())
@@ -221,13 +237,20 @@ def test_on_channel_closed(publish_confirm: PublishConfirm, context: MockPika):
 def test_start_with_future(publish_confirm: PublishConfirm):
     is_channel_ready = Future()
     assert publish_confirm._channel is None
-    publish_confirm._start(is_channel_ready)
+
+    # run test
+    publish_confirm.start(is_channel_ready)
     assert is_channel_ready.result(timeout=5)
 
+    # teardown
+    publish_confirm.stop()
 
-def test_start_future_raises_exception(publish_confirm: PublishConfirm, context: MockPika):
+
+def test_start_future_raises_exception(monkeypatch: MonkeyPatch, context: MockPika):
     # set up mock to fail RabbitMQ exchange declare step
-    publish_confirm._connection = context.SelectConnection(None, Mock(), Mock(), Mock())
+    monkeypatch.setattr('idsse.common.publish_confirm.SelectConnection', context.SelectConnection)
+    pub_conf = PublishConfirm(conn=EXAMPLE_CONN, exchange=EXAMPLE_EXCH, queue=EXAMPLE_QUEUE)
+
     original_channel_class = context.Channel
     mock_channel = deepcopy(context.Channel)
     mock_channel.exchange_declare = Mock(
@@ -235,12 +258,14 @@ def test_start_future_raises_exception(publish_confirm: PublishConfirm, context:
     )
     context.Channel = mock_channel
 
+    # run test
     is_channel_ready = Future()
-    publish_confirm._start(is_ready=is_channel_ready)
+    pub_conf.start(is_ready=is_channel_ready)
     exc = is_channel_ready.exception()
     assert isinstance(exc, ValueError) and 'Precondition failed' in str(exc.args[0])
 
-    context.Channel = original_channel_class  # teardown hacky test mock
+    # teardown hacky test mock
+    context.Channel = original_channel_class
 
 
 def test_start_without_callback_sleeps(publish_confirm: PublishConfirm, monkeypatch: MonkeyPatch):
