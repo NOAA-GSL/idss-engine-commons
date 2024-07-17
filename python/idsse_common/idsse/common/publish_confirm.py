@@ -90,7 +90,7 @@ class PublishConfirm:
         self._records = PublishConfirmRecords()  # data class to track message activity
         self._is_ready_future: Future | None = None
 
-        self._init_thread()
+        self._create_thread()
 
     def publish_message(self,
                         message: dict,
@@ -135,7 +135,7 @@ class PublishConfirm:
             logger.error('Publish message problem, restarting thread to re-attempt: (%s) %s',
                          type(exc), str(exc))
 
-            self._init_thread()  # create new Thread, abandoning old one
+            self._create_thread()  # create new Thread, abandoning old one
             self.start()
 
             try:
@@ -220,7 +220,7 @@ class PublishConfirm:
             self._connection.ioloop.start()
         logger.info('Thread %s finished stopping', self._thread.name)
 
-    def _init_thread(self):
+    def _create_thread(self):
         """
         Create new python Thread for this PublishConfirm, allowing any pre-existing Thread to stop
         """

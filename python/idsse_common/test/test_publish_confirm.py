@@ -12,16 +12,16 @@
 # pylint: disable=missing-function-docstring,redefined-outer-name,invalid-name,protected-access
 # pylint: disable=too-few-public-methods,unused-argument
 
-from copy import deepcopy
 from collections.abc import Callable
 from concurrent.futures import Future
 from time import sleep
-from typing import Any, NamedTuple, Self
-from unittest.mock import Mock
+from typing import NamedTuple
+from unittest.mock import Mock, PropertyMock
 
 from pytest import fixture, raises, MonkeyPatch
 
-from pika.spec import Basic
+from pika import SelectConnection
+from pika.spec import Basic, Channel
 from idsse.common.publish_confirm import PublishConfirm
 from idsse.common.rabbitmq_utils import Conn, Exch, Queue
 
@@ -35,124 +35,106 @@ class Method(NamedTuple):
     method: Basic.Ack | Basic.Nack
 
 
-class MockPika:
-    """
-    Mock classes to imitate pika functionality, callbacks, etc.
-
-    Note that classes here are reduced functionality by far; only properties/methods/interfaces
-    that exist here are the ones used by PublishConfirm (at the time tests were written)
-    """
-    def __init__(self):
-        self.delivery_tag = 0  # pseudo-global to track messages we have "sent" to our mock server
-
-    class Channel:
-        """mock of pika.channel.Channel"""
-        def __init__(self):
-            self._context = MockPika()
-            self.channel_number = 0
-            self.is_open = True
-            self.is_closed = False
-
-        def __int__(self):
-            """Return int representation of channel"""
-            return self.channel_number
-
-        def add_on_close_callback(self, callback):
-            pass
-
-        def exchange_declare(self, exchange, exchange_type, callback: Callable[[Any, str], None]):
-            callback('userdata')
-
-        # pylint: disable=too-many-arguments
-        def queue_declare(
-            self, queue, durable, arguments, exclusive, auto_delete, callback: Callable[[Any], None]
-        ):
-            callback(None)
-
-        def queue_bind(self, queue, exchange, routing_key, callback: Callable[[Any], None]):
-            callback(None)  # connection expected, but PublishConfirm doesn't actually use it
-
-        def confirm_delivery(self, callback: Callable[[Method], None]):
-            """
-            Args:
-                callback (Callable[[Method], None])
-            """
-            # may need to make this mockable in the future to pass Nack or customize delivery_tag
-            method = Method(Basic.Ack(delivery_tag=self._context.delivery_tag))
-            self._context.delivery_tag += 1  # MockPika needs to track this message ID as "sent"
-
-            callback(method)  # send new Ack message back to PublishConfirm
-
-        def basic_publish(self, exchange: str, key: str, body: str, properties):
-            self._context.delivery_tag += 1
-
-        def close(self):
-            self.is_open = False
-            self.is_closed = True
-
-
-    class IOLoop:
-        """mock of pika.SelectConnection.ioloop"""
-        def __init__(
-            self,
-            connection,
-            on_open: Callable[[Any], Any],
-            on_close: Callable[[Any, str], Any]
-        ):
-            self._connection = connection
-            self.on_open = on_open
-            self.on_close = on_close
-
-        def start(self):
-            self.on_open(self._connection)
-
-        def stop(self):
-            self.on_close(self._connection, 'some_reason')
-
-        def call_later(self):
-            pass
-
-
-    class SelectConnection:
-        """mock of pika.SelectConnection"""
-        def __init__(self,
-                     parameters,
-                     on_open_callback: Callable[[Any], Self],
-                     on_open_error_callback,
-                     on_close_callback: Callable[[Any, str], Self]):
-            self.is_open = True
-            self.is_closed = False
-            self._context = MockPika()
-
-            self.ioloop = self._context.IOLoop(self, on_open_callback, on_close_callback)
-
-        def channel(self, on_open_callback: Callable[[Any], None]):
-            """
-            Args:
-                on_open_callback (Callable[[MockPika.Channel], None])
-            """
-            on_open_callback(self._context.Channel())
-
-        def close(self):
-            self.is_open = False
-            self.is_closed = True
-
-
 # fixtures
 @fixture
-def context() -> MockPika:
-    """Create an instance of our mocked pika library. delivery_tag initialized to 0"""
-    return MockPika()
+def channel_state() -> dict:
+    """
+    Track the simulated state of our mock Channel, so it can be initialized with
+    default values, read/written anywhere in a given test, and reset after each test finishes
+    """
+    return {
+        'is_open': False,
+        'delivery_tag': 0,  # track messages that have been mock "sent" over our channel
+    }
 
 
 @fixture
-def mock_connection(monkeypatch: MonkeyPatch, context: MockPika) -> MockPika.SelectConnection:
-    monkeypatch.setattr('idsse.common.publish_confirm.SelectConnection', context.SelectConnection)
-    return context.SelectConnection
+def mock_channel(channel_state: dict) -> Mock:
+    # set up complex pytest Mock object to emulate Channel
+    mock_obj = Mock(name='MockChannel', spec=Channel)
+    channel = mock_obj.return_value
+    channel.__int__= Mock(return_value=0)
+
+    channel.is_open = PropertyMock(side_effect=lambda: channel_state['is_open'])
+    channel.is_closed = PropertyMock(side_effect=lambda: not channel_state['is_open'])
+    channel.exchange_declare.side_effect = (
+        lambda exchange, exchange_type, callback: callback('userdata')
+    )
+    channel.queue_declare.side_effect = (
+        lambda queue, durable, arguments, exclusive, auto_delete, callback: callback(None)
+    )
+    channel.queue_bind.side_effect = (
+        lambda queue, exchange, routing_key, callback: callback(None)
+    )
+
+    def mock_confirm_delivery(callback):
+        method = Method(Basic.Ack(channel_state['delivery_tag']))
+        channel_state['delivery_tag'] += 1 # our Mock needs to track this message ID as "sent"
+        callback(method)  # send new Ack message back to PublishConfirm
+    channel.confirm_delivery.side_effect = mock_confirm_delivery
+
+    def mock_basic_publish(exchange, key, body, properties):
+        channel_state['delivery_tag'] += 1
+    channel.basic_publish.side_effect = mock_basic_publish
+
+    def mock_close():
+        channel_state['is_open'] = False
+    channel.close.side_effect = mock_close
+
+    def mock_init(on_open_callback):
+        channel_state['is_open'] = True
+        on_open_callback(channel)
+    mock_obj.side_effect = mock_init
+
+    return mock_obj
 
 
 @fixture
-def publish_confirm(mock_connection) -> PublishConfirm:
+def conn_state() -> dict:
+    """
+    Track the simulated state of our mock Connection, so it can be initialized with
+    default values, read/written anywhere in a given test, and reset after each test finishes
+    """
+    return {
+        'is_open': False,
+        # save Connection's open/close callbacks when Connection is initialized, to be invoked
+        # when PublishConfirm.start/stop is called. These defaults should never run;
+        # should be overwritten with real callbacks inside PublishConfirm._create_connection()
+        'on_open': lambda: RuntimeError('on_open_callback not passed to SelectConnection()'),
+        'on_close': lambda: RuntimeError('on_open_callback not passed to SelectConnection()'),
+    }
+
+
+@fixture
+def mock_connection(monkeypatch: MonkeyPatch, mock_channel: Mock, conn_state: dict) -> Mock:
+    mock_obj = Mock(name="MockConnection", spec=SelectConnection)
+
+    connection = mock_obj.return_value
+    connection.is_open = PropertyMock(side_effect=lambda: conn_state['is_open'])
+    connection.channel = mock_channel
+
+    # pylint: disable=unnecessary-lambda
+    connection.ioloop.start.side_effect = lambda: conn_state['on_open']()
+    connection.ioloop.stop.side_effect = lambda: conn_state['on_close']()
+
+    def mock_close():
+        conn_state['is_open'] = False
+    connection.close.side_effect = mock_close
+
+    def mock_init(parameters, on_open_callback, on_open_error_callback, on_close_callback):
+        conn_state['is_open'] = True
+        conn_state['on_open'] = lambda: on_open_callback(connection)
+        conn_state['on_close'] = lambda: on_close_callback(connection, 'Closed by test')
+
+        return connection
+    mock_obj.side_effect = mock_init
+
+    monkeypatch.setattr('idsse.common.publish_confirm.SelectConnection', mock_obj)
+    return mock_obj
+
+
+@fixture
+def publish_confirm(mock_connection: Mock) -> PublishConfirm:
     return PublishConfirm(conn=EXAMPLE_CONN, exchange=EXAMPLE_EXCH, queue=EXAMPLE_QUEUE)
 
 
@@ -170,21 +152,23 @@ def test_publish_confirm_start_and_stop(publish_confirm: PublishConfirm):
     assert publish_confirm._channel.is_closed
 
 
-def test_delivery_confirmation_handles_nack(publish_confirm: PublishConfirm, context: MockPika):
-    def mock_confirm_delivery(self: context.Channel, callback: Callable[[Method], None]):
-        method = Method(Basic.Nack(delivery_tag=context.delivery_tag))
-        self._context.delivery_tag += 1
+def test_delivery_confirmation_handles_nack(
+    publish_confirm: PublishConfirm, mock_connection: Mock, channel_state: dict
+):
+    def mock_confirm_delivery(callback: Callable[[Method], None]):
+        method = Method(Basic.Nack(channel_state['delivery_tag']))
+        channel_state['delivery_tag'] += 1
         callback(method)
 
     publish_confirm._records.deliveries[0] = 'Confirm.Select'
-    context.Channel.confirm_delivery = mock_confirm_delivery
+    mock_connection.return_value.channel.return_value.confirm_delivery = mock_confirm_delivery
 
     publish_confirm.start()
     assert publish_confirm._records.nacked == 1
     assert publish_confirm._records.acked == 0
 
 
-def test_wait_for_channel_to_be_ready_timeout(publish_confirm: PublishConfirm, context: MockPika):
+def test_wait_for_channel_to_be_ready_timeout(publish_confirm: PublishConfirm):
     # start() doesn't call its callback in time (at all), so timeout should expire
     publish_confirm.start = Mock(side_effect=lambda is_ready: None)
 
@@ -197,7 +181,7 @@ def test_wait_for_channel_to_be_ready_timeout(publish_confirm: PublishConfirm, c
     publish_confirm.start = PublishConfirm.start
 
 
-def test_publish_message_success_without_calling_start(mock_connection):
+def test_publish_message_success_without_calling_start(mock_connection: Mock):
     pub_conf = PublishConfirm(conn=EXAMPLE_CONN, exchange=EXAMPLE_EXCH, queue=EXAMPLE_QUEUE)
     example_message = {'data': [123]}
 
@@ -211,14 +195,11 @@ def test_publish_message_success_without_calling_start(mock_connection):
     assert pub_conf._records.deliveries[1] == example_message
 
 
-def test_publish_message_failure_rmq_error(publish_confirm: PublishConfirm, context: MockPika):
+def test_publish_message_failure_rmq_error(publish_confirm: PublishConfirm, mock_connection: Mock):
     message_data = {'data': 123}
-
-    publish_confirm._connection = context.SelectConnection(None, Mock(), Mock(), Mock())
-    mock_channel = context.Channel()
-    mock_channel.basic_publish = Mock(side_effect=[RuntimeError('ACCESS_REFUSED'),
-                                                   RuntimeError('ACCESS_REFUSED')])
-    publish_confirm._channel = mock_channel
+    mock_connection.return_value.channel.return_value.basic_publish = Mock(
+        side_effect=[RuntimeError('ACCESS_REFUSED'), RuntimeError('ACCESS_REFUSED')]
+    )
 
     # return immediately without doing any Thread starting
     # we do this to simplify test results, because multithreading muddies the waters for mocks
@@ -239,37 +220,31 @@ def test_publish_message_failure_rmq_error(publish_confirm: PublishConfirm, cont
     publish_confirm.stop()
 
 
-def test_publish_failure_restarts_thread(publish_confirm: PublishConfirm, context: MockPika):
+def test_publish_failure_restarts_thread(publish_confirm: PublishConfirm, mock_connection: Mock):
     message_data = {'data': 123}
 
-    publish_confirm._connection = context.SelectConnection(None, Mock(), Mock(), Mock())
-    # set up weird Mock for Channel; new Thread will call connection() and channel() internally
-    original_channel_mock = context.Channel
-    temp_channel_mock = deepcopy(original_channel_mock)
-
     # fail the first publish, succeed without incident on the second
-    temp_channel_mock.basic_publish = Mock(side_effect=[RuntimeError('ACCESS_REFUSED'), None])
-    context.Channel = temp_channel_mock
+    mock_connection.return_value.channel.return_value.basic_publish = Mock(
+        side_effect=[RuntimeError('ACCESS_REFUSED'), None]
+    )
 
     initial_thread_name = publish_confirm._thread.name
-    success = publish_confirm.publish_message(message_data)
+    success = publish_confirm.publish_message(message_data)  # TODO: raises RuntimeError, but why??
     assert success
     assert publish_confirm._thread.name != initial_thread_name  # should have new Thread
 
-    # teardown
-    context.Channel = original_channel_mock
-    publish_confirm.start = PublishConfirm.start
 
+def test_on_channel_closed(publish_confirm: PublishConfirm, mock_connection: Mock):
+    publish_confirm.start()
+    assert publish_confirm._channel.is_open
 
-def test_on_channel_closed(publish_confirm: PublishConfirm, context: MockPika):
-    publish_confirm._connection = context.SelectConnection(None, Mock(), Mock(), Mock())
-    print('test_on_channel_closed: context.Channel:', context.Channel)
-    publish_confirm._channel = context.Channel()
-    publish_confirm._channel.close()
+    channel = mock_connection.return_value.channel.return_value
+    publish_confirm._on_channel_closed(channel, 'ChannelClosedByClient')
 
-    publish_confirm._on_channel_closed(context.Channel(), 'ChannelClosedByClient')
     assert publish_confirm._channel is None
     assert publish_confirm._connection.is_closed
+
+    publish_confirm.stop()  # teardown
 
 
 def test_start_with_future(publish_confirm: PublishConfirm):
@@ -278,20 +253,18 @@ def test_start_with_future(publish_confirm: PublishConfirm):
 
     # run test
     publish_confirm.start(is_channel_ready)
-    assert is_channel_ready.result(timeout=5)
+    assert is_channel_ready.result(timeout=2)
 
     # teardown
     publish_confirm.stop()
 
 
-def test_exchange_failure_raises_exception(mock_connection, context: MockPika):
+def test_exchange_failure_raises_exception(monkeypatch: MonkeyPatch, mock_connection: Mock):
     # set up mock Channel that will fail on RabbitMQ exchange declare step
-    original_channel_class = context.Channel
-    mock_channel = deepcopy(context.Channel)
-    mock_channel.exchange_declare = Mock(
+    mock_connection.return_value.channel.return_value.exchange_declare = Mock(
         side_effect=ValueError('Precondition failed: exchange did not match')
     )
-    context.Channel = mock_channel
+
     pub_conf = PublishConfirm(conn=EXAMPLE_CONN, exchange=EXAMPLE_EXCH, queue=EXAMPLE_QUEUE)
 
     # run test
@@ -299,9 +272,6 @@ def test_exchange_failure_raises_exception(mock_connection, context: MockPika):
     pub_conf.start(is_ready=is_channel_ready)
     exc = is_channel_ready.exception()
     assert isinstance(exc, ValueError) and 'Precondition failed' in str(exc.args[0])
-
-    # teardown hacky test mock
-    context.Channel = original_channel_class
 
 
 def test_start_without_callback_sleeps(publish_confirm: PublishConfirm, monkeypatch: MonkeyPatch):
@@ -324,16 +294,15 @@ def test_start_without_callback_sleeps(publish_confirm: PublishConfirm, monkeypa
 
 
 def test_wait_for_channel_returns_when_ready(publish_confirm: PublishConfirm):
-    publish_confirm._connection = None  # context.SelectConnection(None, Mock(), Mock(), Mock())
+    publish_confirm._connection = None
     publish_confirm._channel = None
 
     is_ready = publish_confirm._wait_for_channel_to_be_ready()
-    print('is_ready: %s', publish_confirm._is_ready_future.result(timeout=0.2))
     assert is_ready
     assert publish_confirm._channel is not None and publish_confirm._channel.is_open
 
 
-def test_calling_start_twice_raises_error(mock_connection):
+def test_calling_start_twice_raises_error(mock_connection: Mock):
     pub_conf = PublishConfirm(conn=EXAMPLE_CONN, exchange=EXAMPLE_EXCH, queue=EXAMPLE_QUEUE)
 
     pub_conf.start()
