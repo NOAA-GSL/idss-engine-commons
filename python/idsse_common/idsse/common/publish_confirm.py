@@ -65,6 +65,7 @@ class PublishConfirm:
     be closed, which usually are tied to permission related issues or
     socket timeouts.
     """
+    # pylint: disable=too-many-instance-attributes
 
     def __init__(self, conn: Conn, exchange: Exch, queue: Queue):
         """Setup the example publisher object, passing in the RabbitMqUtils we will use to
