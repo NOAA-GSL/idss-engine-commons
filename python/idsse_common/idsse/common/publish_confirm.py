@@ -20,7 +20,6 @@ import time
 from concurrent.futures import Future
 from dataclasses import dataclass, field
 from itertools import count
-from random import randint
 from threading import Thread
 from typing import NamedTuple, cast
 
@@ -135,8 +134,11 @@ class PublishConfirm:
             logger.error('Publish message problem, restarting thread to re-attempt: (%s) %s',
                          type(exc), str(exc))
 
-            self._create_thread()  # create new Thread, abandoning old one
-            self.start()
+            # create new Thread, abandoning old one (it will shut itself down)
+            self._create_thread()
+            if not self._wait_for_channel_to_be_ready():
+                logger.error('Second attempt to connect to RabbitMQ failed. Cannnot publish')
+                return False
 
             try:
                 self._channel.basic_publish(self._rmq_params.exchange.name,
@@ -190,7 +192,7 @@ class PublishConfirm:
         Starting the IOLoop again will allow the publisher to cleanly
         disconnect from RabbitMQ.
         """
-        logger.info('Stopping')
+        logger.info('Stopping Thread %s', self._thread and self._thread.name)
         self._stopping = True
         self._close_connection()
         self._stopping = False  # done stopping
@@ -226,6 +228,7 @@ class PublishConfirm:
         """
         if self._thread is not None:
             self.stop()  # halt previously existing Thread to be sure it exits eventually
+        self._records = PublishConfirmRecords()  # reset delivery_tag and such
 
         self._thread = Thread(name=f'PublishConfirm-{self._next_thread_id()}',
                               daemon=True,

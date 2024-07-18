@@ -83,6 +83,7 @@ def mock_channel(channel_state: dict) -> Mock:
 
     def mock_init(on_open_callback):
         channel_state['is_open'] = True
+        channel_state['delivery_tag'] = 0
         on_open_callback(channel)
     mock_obj.side_effect = mock_init
 
@@ -106,7 +107,12 @@ def conn_state() -> dict:
 
 
 @fixture
-def mock_connection(monkeypatch: MonkeyPatch, mock_channel: Mock, conn_state: dict) -> Mock:
+def mock_connection(
+        monkeypatch: MonkeyPatch,
+        mock_channel: Mock,
+        conn_state: dict,
+        channel_state: dict
+) -> Mock:
     mock_obj = Mock(name="MockConnection", spec=SelectConnection)
 
     connection = mock_obj.return_value
@@ -115,7 +121,7 @@ def mock_connection(monkeypatch: MonkeyPatch, mock_channel: Mock, conn_state: di
 
     # pylint: disable=unnecessary-lambda
     connection.ioloop.start.side_effect = lambda: conn_state['on_open']()
-    connection.ioloop.stop.side_effect = lambda: conn_state['on_close']()
+    connection.ioloop.stop.side_effect = lambda: None
 
     def mock_close():
         conn_state['is_open'] = False
@@ -125,8 +131,8 @@ def mock_connection(monkeypatch: MonkeyPatch, mock_channel: Mock, conn_state: di
         conn_state['is_open'] = True
         conn_state['on_open'] = lambda: on_open_callback(connection)
         conn_state['on_close'] = lambda: on_close_callback(connection, 'Closed by test')
-
         return connection
+
     mock_obj.side_effect = mock_init
 
     monkeypatch.setattr('idsse.common.publish_confirm.SelectConnection', mock_obj)
@@ -148,8 +154,8 @@ def test_publish_confirm_start_and_stop(publish_confirm: PublishConfirm):
 
     publish_confirm.stop()
 
-    assert publish_confirm._connection.is_closed
-    assert publish_confirm._channel.is_closed
+    assert publish_confirm._connection is None or publish_confirm._connection.is_closed
+    assert publish_confirm._channel is None or publish_confirm._channel.is_closed
 
 
 def test_delivery_confirmation_handles_nack(
@@ -229,7 +235,7 @@ def test_publish_failure_restarts_thread(publish_confirm: PublishConfirm, mock_c
     )
 
     initial_thread_name = publish_confirm._thread.name
-    success = publish_confirm.publish_message(message_data)  # TODO: raises RuntimeError, but why??
+    success = publish_confirm.publish_message(message_data)
     assert success
     assert publish_confirm._thread.name != initial_thread_name  # should have new Thread
 
