@@ -21,6 +21,7 @@ from unittest.mock import Mock, PropertyMock
 from pytest import fixture, raises, MonkeyPatch
 
 from pika import SelectConnection
+from pika.exceptions import AMQPConnectionError
 from pika.spec import Basic, Channel
 from idsse.common.publish_confirm import PublishConfirm
 from idsse.common.rabbitmq_utils import Conn, Exch, Queue
@@ -204,15 +205,8 @@ def test_publish_message_success_without_calling_start(mock_connection: Mock):
 def test_publish_message_failure_rmq_error(publish_confirm: PublishConfirm, mock_connection: Mock):
     message_data = {'data': 123}
     mock_connection.return_value.channel.return_value.basic_publish = Mock(
-        side_effect=[RuntimeError('ACCESS_REFUSED'), RuntimeError('ACCESS_REFUSED')]
+        side_effect=AMQPConnectionError('ACCESS_REFUSED')
     )
-
-    # return immediately without doing any Thread starting
-    # we do this to simplify test results, because multithreading muddies the waters for mocks
-    def mock_start(is_ready: Future | None = None):
-        if is_ready is not None:
-            is_ready.set_result(True)
-    publish_confirm.start = mock_start
 
     success = publish_confirm.publish_message(message_data)
 
@@ -231,12 +225,13 @@ def test_publish_failure_restarts_thread(publish_confirm: PublishConfirm, mock_c
 
     # fail the first publish, succeed without incident on the second
     mock_connection.return_value.channel.return_value.basic_publish = Mock(
-        side_effect=[RuntimeError('ACCESS_REFUSED'), None]
+        side_effect=[AMQPConnectionError('ACCESS_REFUSED'), None]
     )
 
     initial_thread_name = publish_confirm._thread.name
     success = publish_confirm.publish_message(message_data)
     assert success
+    assert mock_connection.return_value.channel.return_value.basic_publish.call_count == 2
     assert publish_confirm._thread.name != initial_thread_name  # should have new Thread
 
 

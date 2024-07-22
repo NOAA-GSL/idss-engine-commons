@@ -25,7 +25,7 @@ from typing import NamedTuple, cast
 
 from pika import SelectConnection, BasicProperties
 from pika.channel import Channel
-# from pika.exceptions import AMQPConnectionError, AMQPChannelError
+from pika.exceptions import AMQPConnectionError, AMQPChannelError
 from pika.frame import Method
 from pika.spec import Basic
 
@@ -130,15 +130,15 @@ class PublishConfirm:
                                         routing_key,
                                         json.dumps(message, ensure_ascii=True),
                                         properties)
-        except Exception as exc:  # pylint: disable=broad-exception-caught
+        except (AMQPChannelError, AMQPConnectionError) as exc:
             # something wrong with RabbitMQ connection; destroy and recreate the daemon Thread
-            logger.error('Publish message problem, restarting thread to re-attempt: (%s) %s',
+            logger.warning('Publish message problem, restarting thread to re-attempt: (%s) %s',
                          type(exc), str(exc))
 
             # create new Thread, abandoning old one (it will shut itself down)
             self._create_thread()
             if not self._wait_for_channel_to_be_ready():
-                logger.error('Second attempt to connect to RabbitMQ failed. Cannnot publish')
+                logger.warning('Second attempt to connect to RabbitMQ failed. Cannnot publish')
                 return False
 
             try:
@@ -146,7 +146,7 @@ class PublishConfirm:
                                             routing_key,
                                             json.dumps(message, ensure_ascii=True),
                                             properties)
-            except Exception as retry_exc:  # pylint: disable=broad-exception-caught
+            except (AMQPChannelError, AMQPConnectionError) as retry_exc:
                 logger.error('Second attempt to publish message failed: (%s) %s',
                              type(retry_exc), str(retry_exc))
                 return False
@@ -180,7 +180,7 @@ class PublishConfirm:
             self._is_ready_future = is_ready  # to be invoked after all pika setup is done
 
         # not possible to start Thread when it's already running
-        if self._is_running() or self._is_connected:
+        if self._is_running() or self._is_connected():
             raise RuntimeError('PublishConfirm thread already running, cannot be started')
 
         self._thread.start()
@@ -198,7 +198,6 @@ class PublishConfirm:
         self._close_connection()
         self._stopping = False  # done stopping
 
-    @property
     def _is_connected(self) -> bool:
         """True if RabbitMQ Connection and Channel exist and are open"""
         return (self._connection is not None and self._connection.is_open
@@ -269,7 +268,7 @@ class PublishConfirm:
         logger.debug(self._channel)
         logger.debug('----------------------')
 
-        if self._is_connected:
+        if self._is_connected():
             return True  # connection and channel already open, no setup needed
 
         logger.info('Channel is not ready to publish, calling start() now')
