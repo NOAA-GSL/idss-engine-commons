@@ -87,7 +87,7 @@ def test_aws_ls_without_prepend_path(aws_utils: AwsUtils, mock_exec_cmd):
     mock_exec_cmd.assert_called_once()
 
 
-def test_aws_ls_retries_with_s3_command_line(aws_utils: AwsUtils, monkeypatch: MonkeyPatch):
+def test_aws_ls_retries_with_s3(aws_utils: AwsUtils, monkeypatch: MonkeyPatch):
     # fails first call, succeeds second call
     mock_exec_cmd_failure = Mock(
         side_effect=[FileNotFoundError, EXAMPLE_FILES])
@@ -99,7 +99,7 @@ def test_aws_ls_retries_with_s3_command_line(aws_utils: AwsUtils, monkeypatch: M
     assert mock_exec_cmd_failure.call_count == 2
 
 
-def test_aws_ls_returns_empty_array_on_error(aws_utils: AwsUtils, monkeypatch: MonkeyPatch):
+def test_aws_ls_on_error(aws_utils: AwsUtils, monkeypatch: MonkeyPatch):
     mock_exec_cmd_failure = Mock(side_effect=PermissionError('No permissions'))
     monkeypatch.setattr('idsse.common.aws_utils.exec_cmd',
                         mock_exec_cmd_failure)
@@ -165,9 +165,7 @@ def test_get_issues_with_same_start_stop(aws_utils: AwsUtils, mock_exec_cmd):
     assert result[0] == EXAMPLE_ISSUE
 
 
-def test_get_issues_latest_issue_from_today_if_no_args_passed(aws_utils: AwsUtils,
-                                                              mock_exec_cmd):
-
+def test_get_issues_latest_issue_default_today(aws_utils: AwsUtils, mock_exec_cmd):
     result = aws_utils.get_issues()
     # with current mocks returned issue (latest issue) will always be "now" with
     # truncated minute, second, and microsecond
