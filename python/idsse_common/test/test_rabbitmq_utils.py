@@ -121,18 +121,18 @@ def test_connection_params_works(monkeypatch: MonkeyPatch, mock_connection: Mock
 
 
 
-def test_private_exchange_sets_ttl(monkeypatch: MonkeyPatch, mock_connection: Mock):
+def test_private_queue_sets_ttl(monkeypatch: MonkeyPatch, mock_connection: Mock):
     mock_blocking_connection = Mock(return_value=mock_connection)
     monkeypatch.setattr(
         'idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection
     )
-    example_exchange = Exch('_my_exchange', 'topic', True)
+    example_queue = Queue('_my_private_queue', 'route_key', True, False, True)
 
     # run method
     mock_callback_function = Mock()
     _connection, _channel = subscribe_to_queue(
         CONN,
-        RabbitMqParams(exchange=example_exchange, queue=RMQ_PARAMS.queue),
+        RabbitMqParams(RMQ_PARAMS.exchange, example_queue),
         mock_callback_function)
 
     # assert correct (mocked) pika calls were made
@@ -141,11 +141,11 @@ def test_private_exchange_sets_ttl(monkeypatch: MonkeyPatch, mock_connection: Mo
 
     # assert queue was declared with message time-to-live of 10 seconds
     _channel.queue_declare.assert_called_once_with(
-        queue=RMQ_PARAMS.queue.name,
-        exclusive=RMQ_PARAMS.queue.exclusive,
-        durable=RMQ_PARAMS.queue.durable,
-        auto_delete=RMQ_PARAMS.queue.auto_delete,
-        arguments=None
+        queue=example_queue.name,
+        exclusive=example_queue.exclusive,
+        durable=example_queue.durable,
+        auto_delete=example_queue.auto_delete,
+        arguments={'x-message-ttl': 10000}
     )
 
 
