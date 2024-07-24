@@ -223,6 +223,11 @@ class PublisherSync:
 
         self._channel.confirm_delivery()  # enable delivery confirmations from RabbitMQ broker
 
+    def stop(self):
+        """Cleanly close ("stop") any open RabbitMQ connection and channel. This has the same
+        functionality as close(), it's just to match the interface of ```PublishConfirm```"""
+        self.close()
+
     def close(self):
         """Cleanly close any open RabbitMQ connection and channel"""
         def _close_connection():

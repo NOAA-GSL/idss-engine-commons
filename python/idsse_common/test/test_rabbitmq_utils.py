@@ -154,7 +154,8 @@ def test_passing_channel_does_not_create_new(mock_connection: Mock, mock_channel
     new_channel.basic_consume.assert_called_once()
     assert new_channel == mock_channel
 
-def test_direct_reply_does_not_try_to_declare_queue(
+
+def test_direct_reply_does_not_declare_queue(
     monkeypatch: MonkeyPatch, mock_connection: Mock
 ):
     params = RabbitMqParams(
@@ -174,7 +175,7 @@ def test_direct_reply_does_not_try_to_declare_queue(
     new_channel.queue_bind.assert_not_called()
     new_channel.basic_consume.assert_called_once()
 
-def test_default_exchange_does_not_try_to_declare_exchange(
+def test_default_exchange_does_not_declare_exchange(
     monkeypatch: MonkeyPatch, mock_connection: Mock
 ):
     params = RabbitMqParams(
@@ -212,6 +213,6 @@ def test_simple_publisher(monkeypatch: MonkeyPatch, mock_connection: Mock):
     assert result
     _channel.return_value.basic_publish.assert_called_once()
 
-    publisher.close()
+    publisher.stop()
     _channel.return_value.close.assert_called_once()
     mock_blocking_connection.return_value.close.assert_called_once()
