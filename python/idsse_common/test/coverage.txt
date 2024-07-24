@@ -34,7 +34,7 @@ idsse/common/json_message.py         24      1    96%
 idsse/common/log_util.py             41      3    93%
 idsse/common/path_builder.py        128     10    92%
 idsse/common/publish_confirm.py     196     21    89%
-idsse/common/rabbitmq_utils.py       95      8    92%
+idsse/common/rabbitmq_utils.py       97      8    92%
 idsse/common/sci/__init__.py          0      0   100%
 idsse/common/sci/geo_image.py       236     17    93%
 idsse/common/sci/grid_proj.py        95      1    99%
@@ -44,6 +44,6 @@ idsse/common/sci/vectaster.py       190     17    91%
 idsse/common/utils.py               122     10    92%
 idsse/common/validate_schema.py      40      0   100%
 -----------------------------------------------------
-TOTAL                              1380     98    93%
+TOTAL                              1382     98    93%
 
-============================= 222 passed in 6.23s ==============================
+============================= 222 passed in 6.30s ==============================
