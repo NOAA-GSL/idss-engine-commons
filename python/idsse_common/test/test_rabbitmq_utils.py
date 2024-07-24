@@ -94,7 +94,7 @@ def test_connection_params_works(monkeypatch: MonkeyPatch, mock_connection: Mock
     _channel.exchange_declare.assert_called_once_with(
         exchange=RMQ_PARAMS.exchange.name,
         exchange_type=RMQ_PARAMS.exchange.type,
-        durable=RMQ_PARAMS.exchange.durable
+        durable=RMQ_PARAMS.exchange.durable,
     )
 
     # assert queue was declared and bound
@@ -102,7 +102,8 @@ def test_connection_params_works(monkeypatch: MonkeyPatch, mock_connection: Mock
         queue=RMQ_PARAMS.queue.name,
         exclusive=RMQ_PARAMS.queue.exclusive,
         durable=RMQ_PARAMS.queue.durable,
-        auto_delete=RMQ_PARAMS.queue.auto_delete
+        auto_delete=RMQ_PARAMS.queue.auto_delete,
+        arguments=None
     )
 
     _channel.queue_bind.assert_called_once_with(
@@ -116,6 +117,35 @@ def test_connection_params_works(monkeypatch: MonkeyPatch, mock_connection: Mock
         queue=RMQ_PARAMS.queue.name,
         on_message_callback=mock_callback_function,
         auto_ack=False
+    )
+
+
+
+def test_private_exchange_sets_ttl(monkeypatch: MonkeyPatch, mock_connection: Mock):
+    mock_blocking_connection = Mock(return_value=mock_connection)
+    monkeypatch.setattr(
+        'idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection
+    )
+    example_exchange = Exch('_my_exchange', 'topic', True)
+
+    # run method
+    mock_callback_function = Mock()
+    _connection, _channel = subscribe_to_queue(
+        CONN,
+        RabbitMqParams(exchange=example_exchange, queue=RMQ_PARAMS.queue),
+        mock_callback_function)
+
+    # assert correct (mocked) pika calls were made
+    mock_blocking_connection.assert_called_once()
+    _channel.basic_consume.assert_called_once()
+
+    # assert queue was declared with message time-to-live of 10 seconds
+    _channel.queue_declare.assert_called_once_with(
+        queue=RMQ_PARAMS.queue.name,
+        exclusive=RMQ_PARAMS.queue.exclusive,
+        durable=RMQ_PARAMS.queue.durable,
+        auto_delete=RMQ_PARAMS.queue.auto_delete,
+        arguments=None
     )
 
 
@@ -174,6 +204,7 @@ def test_direct_reply_does_not_declare_queue(
     new_channel.queue_declare.assert_not_called()
     new_channel.queue_bind.assert_not_called()
     new_channel.basic_consume.assert_called_once()
+
 
 def test_default_exchange_does_not_declare_exchange(
     monkeypatch: MonkeyPatch, mock_connection: Mock
