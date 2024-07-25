@@ -101,11 +101,15 @@ def _initialize_exchange_and_queue(
     if queue.name.startswith('amq.rabbitmq.'):
         return queue.name
 
+    # If we have a 'private' queue, i.e. one used to support message publishing, not consumed
+    # Set message time-to-live (TTL) to 10 seconds
+    arguments = {'x-message-ttl': 10 * 1000} if queue.name.startswith('_') else None
     frame: Method = channel.queue_declare(
         queue=queue.name,
         exclusive=queue.exclusive,
         durable=queue.durable,
-        auto_delete=queue.auto_delete
+        auto_delete=queue.auto_delete,
+        arguments=arguments
     )
 
     # Bind queue to exchange with routing_key. May need to support multiple keys in the future
@@ -211,6 +215,7 @@ class PublisherSync:
         conn_params: Conn,
         rmq_params: RabbitMqParams,
         channel: Channel | None = None,
+
     ) -> tuple[BlockingConnection, Channel]:
         # save params
         self._conn_params = conn_params
