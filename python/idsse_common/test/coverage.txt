@@ -1,12 +1,12 @@
 ============================= test session starts ==============================
-platform linux -- Python 3.11.9, pytest-8.3.1, pluggy-1.5.0
+platform linux -- Python 3.11.9, pytest-8.3.2, pluggy-1.5.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
 plugins: cov-4.1.0
-collected 222 items
+collected 223 items
 
 test/sci/test_geo_image.py ......................                        [  9%]
 test/sci/test_grid_proj.py .......................                       [ 20%]
-test/sci/test_netcdf_io.py ....                                          [ 22%]
+test/sci/test_netcdf_io.py ....                                          [ 21%]
 test/sci/test_vectaster.py ...............                               [ 28%]
 test/test_aws_utils.py ..................                                [ 36%]
 test/test_config.py ............                                         [ 42%]
@@ -14,7 +14,7 @@ test/test_json_message.py ...........                                    [ 47%]
 test/test_log_util.py .....                                              [ 49%]
 test/test_path_builder.py ......................                         [ 59%]
 test/test_publish_confirm.py ............                                [ 64%]
-test/test_rabbitmq_utils.py .......                                      [ 68%]
+test/test_rabbitmq_utils.py ........                                     [ 68%]
 test/test_utils.py ...........................                           [ 80%]
 test/test_validate_criteria_schema.py ......                             [ 82%]
 test/test_validate_das_schema.py ...............                         [ 89%]
@@ -34,7 +34,7 @@ idsse/common/json_message.py         24      1    96%
 idsse/common/log_util.py             41      3    93%
 idsse/common/path_builder.py        128     10    92%
 idsse/common/publish_confirm.py     196     21    89%
-idsse/common/rabbitmq_utils.py       97      8    92%
+idsse/common/rabbitmq_utils.py       98      8    92%
 idsse/common/sci/__init__.py          0      0   100%
 idsse/common/sci/geo_image.py       236     17    93%
 idsse/common/sci/grid_proj.py        95      1    99%
@@ -44,6 +44,6 @@ idsse/common/sci/vectaster.py       190     17    91%
 idsse/common/utils.py               122     10    92%
 idsse/common/validate_schema.py      40      0   100%
 -----------------------------------------------------
-TOTAL                              1382     98    93%
+TOTAL                              1383     98    93%
 
-============================= 222 passed in 6.30s ==============================
+============================= 223 passed in 5.80s ==============================
