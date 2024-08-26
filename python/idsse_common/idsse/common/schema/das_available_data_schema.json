@@ -1,4 +1,6 @@
 {
     "description": "Mechanism for making a request about what data is available",
-    "allOf": [{"$ref": "available_data.json#/AvailableData"}]
+    "allOf": [
+        {"$ref": "available_data.json#/AvailableData"}
+    ]
 }
