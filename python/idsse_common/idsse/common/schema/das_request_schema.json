@@ -1,0 +1,15 @@
+{
+    "description": "Mechanism for making a DAS request, either an available or data request",
+    "oneOf": [
+        {
+            "allOf": [
+                {"$ref": "info_request.json#/InfoRequest"}
+            ]
+        },
+        {
+            "allOf": [
+                {"$ref": "data_request.json#/DataRequest"}
+            ]
+        }
+    ]
+}

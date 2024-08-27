@@ -1,6 +1,6 @@
 {
     "description": "Mechanism for making a DAS data request",
     "allOf": [
-        {"$ref": "source.json#/Source"}
+        {"$ref": "data_request.json#/DataRequest"}
     ]
 }
