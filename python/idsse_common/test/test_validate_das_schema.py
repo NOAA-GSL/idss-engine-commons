@@ -20,7 +20,7 @@ from idsse.common.validate_schema import get_validator
 
 
 @fixture
-def das_info_request() -> Validator:
+def info_request_validator() -> Validator:
     schema_name = 'das_info_request_schema'
     return get_validator(schema_name)
 
@@ -95,19 +95,19 @@ def das_data_message() -> dict:
 
 
 # tests
-def test_validate_das_issue_request(das_info_request: Validator):
+def test_validate_das_issue_request(info_request_validator: Validator):
     message = {'sourceType': 'issue',
                'sourceObj': {'product': 'NBM.AWS.GRIB',
                              'region': 'PUERTO_RICO',
                              'field': 'TEMP',
                              }}
     try:
-        das_info_request.validate(message)
+        info_request_validator.validate(message)
     except ValidationError as exc:
         assert False, f'Validate message raised an exception {exc}'
 
 
-def test_validate_das_bad_issue_request(das_info_request: Validator):
+def test_validate_das_bad_issue_request(info_request_validator: Validator):
     # message is missing 'region'
     message = {'sourceType': 'field',
                'sourceObj': {'product': 'NBM.AWS.GRIB',
@@ -115,10 +115,10 @@ def test_validate_das_bad_issue_request(das_info_request: Validator):
                              'valid': '2022-01-02T15:00:00.000Z'
                              }}
     with raises(ValidationError):
-        das_info_request.validate(message)
+        info_request_validator.validate(message)
 
 
-def test_validate_das_valid_request(das_info_request: Validator):
+def test_validate_das_valid_request(info_request_validator: Validator):
     message = {'sourceType': 'valid',
                'sourceObj': {'product': 'NBM.AWS.GRIB',
                              'region': 'PUERTO_RICO',
@@ -126,12 +126,12 @@ def test_validate_das_valid_request(das_info_request: Validator):
                              'issue': '2022-01-02T12:00:00.000Z'
                              }}
     try:
-        das_info_request.validate(message)
+        info_request_validator.validate(message)
     except ValidationError as exc:
         assert False, f'Validate message raised an exception {exc}'
 
 
-def test_validate_das_bad_valid_request(das_info_request: Validator):
+def test_validate_das_bad_valid_request(info_request_validator: Validator):
     # message is missing 'field'
     message = {'sourceType': 'valid',
                'sourceObj': {'product': 'NBM.AWS.GRIB',
@@ -139,10 +139,10 @@ def test_validate_das_bad_valid_request(das_info_request: Validator):
                              'issue': '2022-01-02T12:00:00.000Z'
                              }}
     with raises(ValidationError):
-        das_info_request.validate(message)
+        info_request_validator.validate(message)
 
 
-def test_validate_das_lead_request(das_info_request: Validator):
+def test_validate_das_lead_request(info_request_validator: Validator):
     message = {'sourceType': 'lead',
                'sourceObj': {'product': 'NBM.AWS.GRIB',
                              'region': 'PUERTO_RICO',
@@ -150,12 +150,12 @@ def test_validate_das_lead_request(das_info_request: Validator):
                              'issue': '2022-01-02T12:00:00.000Z'
                              }}
     try:
-        das_info_request.validate(message)
+        info_request_validator.validate(message)
     except ValidationError as exc:
         assert False, f'Validate message raised an exception {exc}'
 
 
-def test_validate_das_bad_lead_request(das_info_request: Validator):
+def test_validate_das_bad_lead_request(info_request_validator: Validator):
     # message is missing 'product'
     message = {'sourceType': 'valid',
                'sourceObj': {'region': 'PUERTO_RICO',
@@ -163,10 +163,10 @@ def test_validate_das_bad_lead_request(das_info_request: Validator):
                              'issue': '2022-01-02T12:00:00.000Z'
                              }}
     with raises(ValidationError):
-        das_info_request.validate(message)
+        info_request_validator.validate(message)
 
 
-def test_validate_das_field_request(das_info_request: Validator):
+def test_validate_das_field_request(info_request_validator: Validator):
     message = {'sourceType': 'field',
                'sourceObj': {'product': 'NBM.AWS.GRIB',
                              'region': 'PUERTO_RICO',
@@ -175,12 +175,12 @@ def test_validate_das_field_request(das_info_request: Validator):
                              'valid': '2022-01-02T15:00:00.000Z'
                              }}
     try:
-        das_info_request.validate(message)
+        info_request_validator.validate(message)
     except ValidationError as exc:
         assert False, f'Validate message raised an exception {exc}'
 
 
-def test_validate_das_bad_field_request(das_info_request: Validator):
+def test_validate_das_bad_field_request(info_request_validator: Validator):
     # message is missing 'issue'
     message = {'sourceType': 'field',
                'sourceObj': {'product': 'NBM.AWS.GRIB',
@@ -189,7 +189,7 @@ def test_validate_das_bad_field_request(das_info_request: Validator):
                              'valid': '2022-01-02T15:00:00.000Z'
                              }}
     with raises(ValidationError):
-        das_info_request.validate(message)
+        info_request_validator.validate(message)
 
 
 def test_validate_das_data_request(data_request_validator: Validator):
