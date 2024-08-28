@@ -48,7 +48,7 @@
         "properties": {
             "request": {
                 "allOf": [
-                    {"$ref": "source.json#/Source"}
+                    {"$ref": "data_request.json#/DataRequest"}
                 ]
             },
             "corrId": {"$ref": "corr_id.json#/CorrId"}

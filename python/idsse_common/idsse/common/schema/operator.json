@@ -9,11 +9,11 @@
             "sourceObj": {
                 "type": "object",
                 "properties": {
-                    "source": {"$ref": "source.json#/Source"},
+                    "source": {"$ref": "data_request.json#/DataRequest"},
                     "sources":{
                         "type": "array",
                         "minItems": 2,
-                        "items": {"$ref": "source.json#/Source"}
+                        "items": {"$ref": "data_request.json#/DataRequest"}
                     }
                 },
                 "oneOf": [

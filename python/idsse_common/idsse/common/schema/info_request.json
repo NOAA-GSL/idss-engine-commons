@@ -1,5 +1,5 @@
 {
-    "AvailableIssue": {
+    "IssueRequest": {
         "description": "Mechanism for making a request regarding what issue is available",
         "type": "object",
         "properties": {
@@ -30,7 +30,7 @@
         ]
     }, 
 
-    "AvailableValidLead": {
+    "ValidLeadRequest": {
         "description": "Mechanism for making a request regarding what valid (or lead) is available",
         "type": "object",
         "properties": {
@@ -58,7 +58,7 @@
         ]
     }, 
 
-    "AvailableField": {
+    "FieldRequest": {
         "description": "Mechanism for making a request if a field is available",
         "type": "object",
         "properties": {
@@ -71,13 +71,13 @@
         ]
     }, 
 
-    "AvailableData": {
+    "InfoRequest": {
         "description": "Mechanism for making a request about what data is available",
         "type": "object",
         "oneOf": [
-            {"$ref": "#/AvailableIssue"},
-            {"$ref": "#/AvailableValidLead"},
-            {"$ref": "#/AvailableField"}
+            {"$ref": "#/IssueRequest"},
+            {"$ref": "#/ValidLeadRequest"},
+            {"$ref": "#/FieldRequest"}
         ]  
     }
 }
