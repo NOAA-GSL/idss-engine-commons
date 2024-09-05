@@ -121,7 +121,7 @@ class PublishConfirm:
 
         is_channel_ready = self._wait_for_channel_to_be_ready()
         if not is_channel_ready:
-            logger.error('RabbitMQ channel not established for some reason. Cannnot publish')
+            logger.error('RabbitMQ channel not established for some reason. Cannot publish')
             return False
 
         logger.debug('DEBUG: channel is ready to publish message')
@@ -133,7 +133,7 @@ class PublishConfirm:
         except (AMQPChannelError, AMQPConnectionError) as exc:
             # something wrong with RabbitMQ connection; destroy and recreate the daemon Thread
             logger.warning('Publish message problem, restarting thread to re-attempt: (%s) %s',
-                         type(exc), str(exc))
+                           type(exc), str(exc))
 
             # create new Thread, abandoning old one (it will shut itself down)
             self._create_thread()
@@ -344,7 +344,7 @@ class PublishConfirm:
         self._channel.add_on_close_callback(self._on_channel_closed)
 
         # Declare exchange on our new channel
-        exch_name, exch_type, exch_durable = self._rmq_params.exchange  # pylint: disable=unused-variable
+        exch_name, exch_type, _ = self._rmq_params.exchange  # pylint: disable=unused-variable
         logger.debug('Declaring exchange %s', exch_name)
 
         # Note: using functools.partial is not required, it is demonstrating
@@ -352,8 +352,8 @@ class PublishConfirm:
         cb = functools.partial(self._on_exchange_declareok, userdata=exch_name)
         try:
             self._channel.exchange_declare(exchange=exch_name,
-                                       exchange_type=exch_type,
-                                       callback=cb)
+                                           exchange_type=exch_type,
+                                           callback=cb)
         except ValueError as exc:
             logger.warning('RabbitMQ failed to declare exchange: (%s) %s', type(exc), str(exc))
             if self._is_ready_future:

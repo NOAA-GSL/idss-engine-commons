@@ -21,7 +21,7 @@ from pika import BasicProperties, ConnectionParameters, PlainCredentials
 from pika.adapters import BlockingConnection
 from pika.adapters.blocking_connection import BlockingChannel
 from pika.channel import Channel
-from pika.exceptions import AMQPConnectionError
+from pika.exceptions import AMQPConnectionError, ChannelClosed
 from pika.frame import Method
 from pika.spec import Basic
 
@@ -196,6 +196,53 @@ def subscribe_to_queue(
     _channel.basic_consume(queue=queue_name, on_message_callback=on_message_callback,
                            auto_ack=auto_ack)
     return _connection, _channel
+
+
+def threadsafe_call(connection, channel, *partial_functions):
+    """This function provides a thread safe way to call pika functions (or functions that call
+    pika functions) from a thread other than the main. The need for this utility is practice of
+    executing function/method and separate thread to avoid blocking the rabbitMQ heartbeat
+    messages send by pika from the main thread.
+
+    Note: that `channel` must be the same pika channel instance via which
+    the message being ACKed was retrieved (AMQP protocol constraint).
+
+    Examples:
+        # Simple ack a message
+        threadsafe_call(self.connection, self.channel,
+                        partial(self.channel.basic_ack,
+                                delivery_tag=delivery_tag))
+
+        # RPC response followed and nack without requeueing
+        response = {'Error': 'Invalid request'}
+        threadsafe_call(self.connection, self.channel,
+                        partial(self.channel.basic_publish,
+                                exchange='',
+                                routing_key=response_props.reply_to,
+                                properties=response_props,
+                                body=json.dumps(response)),
+                        partial(channel.basic_nack,
+                                delivery_tag=delivery_tag,
+                                requeue=False))
+
+        # Publishing message via the PublishConfirm utility
+        threadsafe_call(self.connection, self.pub_conf.channel,
+                        partial(self.pub_conf.publish_message,
+                                message=message))
+    Args:
+        connection (BlockingConnection): RabbitMQ connection.
+        channel (BlockingChannel): RabbitMQ channel.
+        partial_functions (Callable): One or more callable function (typically created via
+        functools.partial)
+    """
+    def call_if_channel_is_open():
+        if channel.is_open:
+            for func in partial_functions:
+                func()
+        else:
+            logger.error('Channel closed before callback could be run')
+            raise ChannelClosed('Channel closed')
+    connection.add_callback_threadsafe(call_if_channel_is_open)
 
 
 class PublisherSync:
