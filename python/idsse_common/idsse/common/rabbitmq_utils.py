@@ -21,7 +21,7 @@ from pika import BasicProperties, ConnectionParameters, PlainCredentials
 from pika.adapters import BlockingConnection
 from pika.adapters.blocking_connection import BlockingChannel
 from pika.channel import Channel
-from pika.exceptions import AMQPConnectionError, ChannelClosed
+from pika.exceptions import AMQPConnectionError
 from pika.frame import Method
 from pika.spec import Basic
 
@@ -241,7 +241,7 @@ def threadsafe_call(connection, channel, *partial_functions):
                 func()
         else:
             logger.error('Channel closed before callback could be run')
-            raise ChannelClosed('Channel closed')
+            raise ConnectionError('RabbitMQ Channel is closed')
     connection.add_callback_threadsafe(call_if_channel_is_open)
 
 
