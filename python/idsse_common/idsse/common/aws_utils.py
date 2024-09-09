@@ -88,9 +88,9 @@ class AwsUtils():
             bool: Returns True if copy is successful
         """
         try:
-            commands = ['s5cmd', '--no-sign-request',  'cp']
             logger.debug('First attempt with s5cmd, concurrency: %d, chunk_size: %s',
                          concurrency, chunk_size)
+            commands = ['s5cmd', '--no-sign-request',  'cp']
 
             # if concurrency and/or chunk_size options were provided, append to s5cmd before paths
             if concurrency:
