@@ -65,19 +65,31 @@ class AwsUtils():
             return [os.path.join(path, filename.split(' ')[-1]) for filename in commands_result]
         return [filename.split(' ')[-1] for filename in commands_result]
 
-    def aws_cp(self, path: str, dest: str) -> bool:
-        """Execute an 'cp' on the AWS s3 bucket specified by path, dest
+    def aws_cp(self,
+               path: str,
+               dest: str,
+               concurrency: int  = 5,
+               chunk_size: int = 50) -> bool:
+        """Execute an 'cp' on the AWS s3 bucket specified by path, dest. Attempts to use
+        [s5cmd](https://github.com/peak/s5cmd) to copy the file from S3 with parallelization,
+        but falls back to (slower) aws-cli if s5cmd is not installed or throws an error.
 
         Args:
             path (str): Relative or Absolute path to the object to be copied
             dest (str): The destination location
+            concurrency (optional, int): Number of parallel threads for s5cmd to use to copy
+                the file down from AWS (may be helpful to tweak for large files). Default is 5.
+            chunk_size (optional, int): Size of chunks (in MB) for s5cmd to split up the source AWS
+                S3 file so it can download quicker with more threads. Default is 50 MB.
 
         Returns:
             bool: Returns True if copy is successful
         """
         try:
-            logger.debug('First attempt with s5cmd')
-            commands = ['s5cmd', '--no-sign-request',  'cp', path, dest]
+            logger.debug('First attempt with s5cmd, concurrency: %d, chunk_size: %s',
+                         concurrency, chunk_size)
+            commands = ['s5cmd', '--no-sign-request',  'cp', '--concurrency', concurrency,
+                        '--part_size', chunk_size, path, dest]
             exec_cmd(commands)
             return True
         except FileNotFoundError:
