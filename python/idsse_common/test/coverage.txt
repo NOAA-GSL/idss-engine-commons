@@ -28,7 +28,7 @@ test/test_validate_new_data_schema.py .........                          [100%]
 Name                              Stmts   Miss  Cover
 -----------------------------------------------------
 idsse/common/__init__.py              0      0   100%
-idsse/common/aws_utils.py            86      5    94%
+idsse/common/aws_utils.py            91      7    92%
 idsse/common/config.py               69      5    93%
 idsse/common/json_message.py         24      1    96%
 idsse/common/log_util.py             41      3    93%
@@ -44,6 +44,6 @@ idsse/common/sci/vectaster.py       190     17    91%
 idsse/common/utils.py               122     10    92%
 idsse/common/validate_schema.py      40      0   100%
 -----------------------------------------------------
-TOTAL                              1391    105    92%
+TOTAL                              1396    107    92%
 
-============================= 223 passed in 6.23s ==============================
+============================= 223 passed in 6.44s ==============================
