@@ -94,9 +94,9 @@ class AwsUtils():
 
             # if concurrency and/or chunk_size options were provided, append to s5cmd before paths
             if concurrency:
-                commands += ['--concurrency', concurrency]
+                commands += ['--concurrency', str(concurrency)]
             if chunk_size:
-                commands += ['--part_size', chunk_size]
+                commands += ['--part_size', str(chunk_size)]
             commands += [path, dest]  # finish the command list with the src and destination
 
             exec_cmd(commands)
