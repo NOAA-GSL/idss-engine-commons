@@ -96,7 +96,7 @@ class AwsUtils():
             if concurrency:
                 commands += ['--concurrency', str(concurrency)]
             if chunk_size:
-                commands += ['--part_size', str(chunk_size)]
+                commands += ['--part-size', str(chunk_size)]
             commands += [path, dest]  # finish the command list with the src and destination
 
             exec_cmd(commands)
