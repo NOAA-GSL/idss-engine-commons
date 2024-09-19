@@ -1,5 +1,5 @@
 ============================= test session starts ==============================
-platform linux -- Python 3.11.9, pytest-8.3.2, pluggy-1.5.0
+platform linux -- Python 3.11.10, pytest-8.3.3, pluggy-1.5.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
 plugins: cov-4.1.0
 collected 223 items
@@ -24,7 +24,7 @@ test/test_validate_new_data_schema.py .........                          [100%]
 
 - generated xml file: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/pytest.xml -
 
----------- coverage: platform linux, python 3.11.9-final-0 -----------
+---------- coverage: platform linux, python 3.11.10-final-0 ----------
 Name                              Stmts   Miss  Cover
 -----------------------------------------------------
 idsse/common/__init__.py              0      0   100%
@@ -46,4 +46,4 @@ idsse/common/validate_schema.py      40      0   100%
 -----------------------------------------------------
 TOTAL                              1396    107    92%
 
-============================= 223 passed in 6.44s ==============================
+============================= 223 passed in 5.80s ==============================
