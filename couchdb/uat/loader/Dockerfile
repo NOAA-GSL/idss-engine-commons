@@ -8,9 +8,13 @@ COPY ./couchdb/uat/loader/couchdb.json couchdb.json
 COPY ./couchdb/uat/loader/CouchEventPortfolioDB.py CouchEventPortfolioDB.py
 COPY ./couchdb/uat/loader/Load.py Load.py
 
-COPY ./couchdb/uat/loader/EventPort_IDSSe_11111111-beec-467b-a0e6-9d215b715b97_20221223-120000.json /data/EventPort_IDSSe_11111111-beec-467b-a0e6-9d215b715b97_20221223-120000.json
+# Albany
+#COPY ./couchdb/uat/loader/EventPort_IDSSe_11111111-beec-467b-a0e6-9d215b715b97_20221223-120000.json /data/EventPort_IDSSe_11111111-beec-467b-a0e6-9d215b715b97_20221223-120000.json
+# Binghamton
 #COPY ./couchdb/uat/loader/EventPort_IDSSe_22222222-beec-467b-a0e6-9d215b715b97_20221223-120000.json /data/EventPort_IDSSe_22222222-beec-467b-a0e6-9d215b715b97_20221223-120000.json
-#COPY ./couchdb/uat/loader/EventPort_IDSSe_33333333-beec-467b-a0e6-9d215b715b97_20221223-120000.json /data/EventPort_IDSSe_33333333-beec-467b-a0e6-9d215b715b97_20221223-120000.json
+# Syracuse
+COPY ./couchdb/uat/loader/EventPort_IDSSe_33333333-beec-467b-a0e6-9d215b715b97_20221223-120000.json /data/EventPort_IDSSe_33333333-beec-467b-a0e6-9d215b715b97_20221223-120000.json
+
 #COPY ./couchdb/uat/loader/EventPort_IDSSe_aabbccdd-ab87-4808-bd51-a8597e58410d_20240707-120000.json /data/EventPort_IDSSe_aabbccdd-ab87-4808-bd51-a8597e58410d_20240707-120000.json
 
 #COPY ./couchdb/uat/loader/world_cup_ep_1_day.json /data/world_cup_ep_1_day.json
