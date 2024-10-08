@@ -1,0 +1,11 @@
+{
+    "description": "Heartbeat message, broadcasted at regular intervals",
+    "type": "object",
+    "properties": {
+        "lastHeartbeatDt": {"$ref": "timing.json#/TimeString"}
+    },
+    "additionalProperties": false,
+    "required": [
+        "lastHeartbeatDt"
+    ]
+}
