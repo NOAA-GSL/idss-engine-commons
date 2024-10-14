@@ -13,9 +13,7 @@
 
 from enum import IntEnum
 from typing import NamedTuple
-
 import numpy
-
 
 class PackType(IntEnum):
     """Enumerated type used to indicate if data is packed into a byte or short (16 bit)"""
@@ -37,6 +35,23 @@ class PackData(NamedTuple):
     offset: float
     data: list | numpy.ndarray
 
+def get_min_max(data: list | numpy.ndarray) -> (float, float):
+    """Get the minimum and maximum from the numpy array or list. Testing showed (on a mac)
+    that numpy was faster...
+
+    Args:
+        data (list | numpy.ndarray): Input data, either in list form
+                                        (e.g. list[list[float]] for 2D) or as a numpy array
+    Raises:
+        TypeError: If the arguments for the call to the function are invalid
+    Returns:
+        (float, float): The minimum, maximum from the supplied argument
+    """
+    if isinstance(data, list):
+        arr = numpy.array(data).ravel(order='K')
+        return numpy.min(arr), numpy.max(arr)
+    data.ravel(order='K')
+    return numpy.min(data), numpy.max(data)
 
 def get_pack_info(
         min_value: float,
@@ -250,14 +265,10 @@ def _pack_list_to_list_in_place(
         scale: float,
         offset: float
 ) -> list:
-    if isinstance(data[0], list):
-        for array in data:
-            _pack_list_to_list_in_place(array, scale, offset)
-    else:
-        for idx in range(len(data)):  # pylint: disable=consider-using-enumerate
-            data[idx] = int((data[idx]-offset)/scale)
+    # Convert list into numpy array (it creates a copy)
+    np_data = numpy.array(data, dtype=float)
+    data = _pack_np_array_to_list(np_data, scale, offset)
     return data
-
 
 # core packing code specific to packing a list(s) with forced copying
 def _pack_list_to_list_copy(
@@ -265,9 +276,8 @@ def _pack_list_to_list_copy(
         scale: float,
         offset: float
 ) -> list:
-    if isinstance(data[0], list):
-        return [_pack_list_to_list_copy(array, scale, offset) for array in data]
-    return [int((v-offset)/scale) for v in data]
+    np_data = numpy.array(data, dtype=float)
+    return _pack_np_array_to_list(np_data, scale, offset)
 
 
 # core packing code specific to packing numpy array to a list, in place not possible
@@ -276,9 +286,21 @@ def _pack_np_array_to_list(
         scale: float,
         offset: float
 ) -> list:
-    if data.ndim != 1:
-        return [_pack_np_array_to_list(array, scale, offset) for array in data]
-    return [int((v-offset)/scale) for v in data]
+    np_data = numpy.copy(data)
+    np_data -= offset
+    np_data /= scale
+    # Return the truncated array and a int list.
+    return (numpy.trunc(np_data).astype(int)).tolist()
+
+# core packing code using diplib package (sometimes slower than the original so not used but here
+# for an option.
+def _diplib_pack(data: numpy.array,
+                 scale: float,
+                 offset: float) -> numpy.array:
+    dip_data = dip.Image(data)
+    dip_data -= offset
+    dip_data /= scale
+    return np.trunc(dip_data)
 
 
 # private lookup for the max value possible for bit packing type

@@ -40,7 +40,6 @@ def test_get_pack_info_with_pack_type():
 def test_pack_list_to_list():
     data = [[10, 50, 100, 200, 500], [30, 150, 300, 400, 600]]
     result = pack_to_list(data, in_place=False)
-
     expected = [[0, 4443, 9996, 21104, 54427], [2221, 15550, 32212, 43319, 65535]]
     numpy.testing.assert_array_equal(result.data, expected)
     assert data[0][0] != result.data[0][0]
@@ -49,7 +48,6 @@ def test_pack_list_to_list():
 def test_pack_to_list():
     data = numpy.array([[.01, .05, .1, .2, .5], [.03, .15, .3, .4, .6]])
     result = pack_to_list(data, in_place=False)
-
     expected = [[0, 4443, 9996, 21104, 54427], [2221, 15550, 32212, 43319, 65535]]
     numpy.testing.assert_array_equal(result.data, expected)
     assert data[0][0] != result.data[0][0]
@@ -58,7 +56,6 @@ def test_pack_to_list():
 def test_pack_numpy():
     data = numpy.array([[-1, -.5, 0, .5, 1], [-1, -.25, 0, .25, 1]])
     result = pack_numpy_to_numpy(data, in_place=False)
-
     expected = numpy.array([[0, 16383, 32767, 49151, 65535],
                             [0, 24575, 32767, 40959, 65535]])
     numpy.testing.assert_array_equal(result.data, expected)
@@ -70,14 +67,13 @@ def test_pack_numpy_in_place():
     result = pack_numpy_to_numpy(data, in_place=True)
     expected = numpy.array([[0.,  8191., 16383., 24575., 32767.],
                             [0., 16383., 32767., 49151., 65535.]])
-    numpy.testing.assert_array_equal(result.data, expected)
+    numpy.testing.assert_array_equal(data, result.data, expected)
     assert data[0, 0] == result.data[0, 0]
 
 
 def test_pack_numpy_to_list():
     data = numpy.array([[-1, -.5, 0, .5, 1], [-1, -.25, 0, .25, 1]])
     result = pack_numpy_to_list(data, decimals=2)
-
     expected = [[0, 50, 100, 150, 200],
                 [0, 75, 100, 125, 200]]
     assert isinstance(result.data, list)
