@@ -29,6 +29,17 @@ jobs:
         run: |
           echo "PYTHONPATH=python/idsse_common/idsse/common" >> $GITHUB_ENV
 
+      - name: Checkout idss-engine-commons
+        uses: actions/checkout@v2
+        with:
+          repository: NOAA-GSL/idss-engine-commons
+          ref: main
+          path: commons/
+
+      - name: Install IDSSE python commons
+        working-directory: commons/python/idsse_common
+        run: python setup.py install
+
       - name: Test with pytest
         working-directory: python/idsse_common
         # run Pytest, exiting nonzero if pytest throws errors (otherwise "| tee" obfuscates)
