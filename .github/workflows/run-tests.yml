@@ -28,9 +28,9 @@ jobs:
       - name: Set PYTHONPATH for pytest
         run: |
           echo "PYTHONPATH=python/idsse_common/idsse/common" >> $GITHUB_ENV
-
+          echo "Current Branch: ${{ github.ref }}"
       - name: Checkout idss-engine-commons
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
         with:
           repository: NOAA-GSL/idss-engine-commons
           ref: main
