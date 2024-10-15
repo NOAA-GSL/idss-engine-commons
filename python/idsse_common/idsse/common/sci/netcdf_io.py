@@ -56,7 +56,7 @@ def read_netcdf_global_attrs(filepath: str) -> dict:
     return _read_attrs(Dataset(filepath))
 
 
-def read_netcdf(filepath: str, use_h5_lib = False) -> tuple[dict, np.ndarray]:
+def read_netcdf(filepath: str, use_h5_lib: bool = False) -> tuple[dict, np.ndarray]:
     """Reads DAS Netcdf file.
 
     Args:
@@ -81,7 +81,10 @@ def read_netcdf(filepath: str, use_h5_lib = False) -> tuple[dict, np.ndarray]:
         return global_attrs, grid
 
 
-def write_netcdf(attrs: dict, grid: np.ndarray, filepath: str, use_h5_lib = False) -> str:
+def write_netcdf(attrs: dict,
+                 grid: np.ndarray,
+                 filepath: str,
+                 use_h5_lib: bool = False) -> str:
     """Store data and attributes to a Netcdf4 file
 
     Args:
