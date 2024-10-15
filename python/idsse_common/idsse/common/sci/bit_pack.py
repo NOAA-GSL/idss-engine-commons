@@ -294,13 +294,13 @@ def _pack_np_array_to_list(
 
 # core packing code using diplib package (sometimes slower than the original so not used but here
 # for an option.
-def _diplib_pack(data: numpy.array,
-                 scale: float,
-                 offset: float) -> numpy.array:
-    dip_data = dip.Image(data)
-    dip_data -= offset
-    dip_data /= scale
-    return np.trunc(dip_data)
+#def _diplib_pack(data: numpy.array,
+#                 scale: float,
+#                 offset: float) -> numpy.array:
+#    dip_data = dip.Image(data)
+#    dip_data -= offset
+#    dip_data /= scale
+#    return numpy.trunc(dip_data)
 
 
 # private lookup for the max value possible for bit packing type
