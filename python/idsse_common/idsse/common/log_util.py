@@ -156,7 +156,7 @@ def get_default_log_config(level: str,
         'loggers': {
             '': {
                 'level': level,
-                'handlers': ['default'], # , 'rabbit']
+                'handlers': ['default'],   # , 'rabbit']
             },
         }
     }
