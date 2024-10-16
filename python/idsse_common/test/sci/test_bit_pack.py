@@ -23,12 +23,12 @@ from idsse.common.sci.bit_pack import (get_pack_info,
                                        PackInfo,
                                        PackType)
 def test_get_min_max():
-    l = [-1.0, 0.0, 1.0, 2.0]
+    example = [-1.0, 0.0, 1.0, 2.0]
     expected = (-1.0, 2.0)
-    res = get_min_max(l)
+    res = get_min_max(example)
     assert res == expected
-    a = numpy.array(l)
-    res = get_min_max(a)
+    example = numpy.array(example)
+    res = get_min_max(example)
     assert res == expected
 
 
