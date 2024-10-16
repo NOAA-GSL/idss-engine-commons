@@ -16,11 +16,20 @@ import numpy
 import pytest
 
 from idsse.common.sci.bit_pack import (get_pack_info,
+                                       get_min_max,
                                        pack_numpy_to_numpy,
                                        pack_numpy_to_list,
                                        pack_to_list,
                                        PackInfo,
                                        PackType)
+def test_get_min_max():
+    l = [-1.0, 0.0, 1.0, 2.0]
+    expected = (-1.0, 2.0)
+    res = get_min_max(l)
+    assert res == expected
+    a = numpy.array(l)
+    res = get_min_max(a)
+    assert res == expected
 
 
 def test_get_pack_info_with_decimals():
@@ -35,7 +44,27 @@ def test_get_pack_info_with_pack_type():
     assert result.type == expected.type
     assert result.scale == pytest.approx(expected.scale)
     assert result.offset == expected.offset
+    # Check for exceptions...
+    with pytest.raises(ValueError):
+        result = get_pack_info(-1, 1)
+    with pytest.raises(ValueError):
+        result = get_pack_info(-1, 1, decimals=2, pack_type=PackType.SHORT)
 
+def test_pack_to_list():
+    data = [[10, 50, 100, 200, 500], [30, 150, 300, 400, 600]]
+    result = pack_to_list(data, in_place=False)
+    expected = [[0, 4443, 9996, 21104, 54427], [2221, 15550, 32212, 43319, 65535]]
+    numpy.testing.assert_array_equal(result.data, expected)
+    assert data[0][0] != result.data[0][0]
+
+    data = numpy.array(data, dtype=float)
+    result = pack_to_list(data, in_place=False)
+    expected = [[0, 4443, 9996, 21104, 54427], [2221, 15550, 32212, 43319, 65535]]
+    numpy.testing.assert_array_equal(result.data, expected)
+    assert data[0][0] != result.data[0][0]
+
+    with pytest.raises(KeyError):
+        result = pack_to_list((-1,1))
 
 def test_pack_list_to_list():
     data = [[10, 50, 100, 200, 500], [30, 150, 300, 400, 600]]
@@ -43,15 +72,10 @@ def test_pack_list_to_list():
     expected = [[0, 4443, 9996, 21104, 54427], [2221, 15550, 32212, 43319, 65535]]
     numpy.testing.assert_array_equal(result.data, expected)
     assert data[0][0] != result.data[0][0]
+    result = pack_to_list(data, in_place=True)
 
-
-def test_pack_to_list():
-    data = numpy.array([[.01, .05, .1, .2, .5], [.03, .15, .3, .4, .6]])
-    result = pack_to_list(data, in_place=False)
-    expected = [[0, 4443, 9996, 21104, 54427], [2221, 15550, 32212, 43319, 65535]]
-    numpy.testing.assert_array_equal(result.data, expected)
-    assert data[0][0] != result.data[0][0]
-
+    with pytest.raises(KeyError):
+        result = pack_to_list((-1,1))
 
 def test_pack_numpy():
     data = numpy.array([[-1, -.5, 0, .5, 1], [-1, -.25, 0, .25, 1]])
@@ -60,6 +84,12 @@ def test_pack_numpy():
                             [0, 24575, 32767, 40959, 65535]])
     numpy.testing.assert_array_equal(result.data, expected)
     assert data[0, 0] != result.data[0, 0]
+
+    with pytest.raises(ValueError):
+        result = pack_numpy_to_numpy(numpy.array([0,1,2], dtype=int), in_place=True)
+
+    with pytest.raises(ValueError):
+        result = pack_numpy_to_numpy((-1,1))
 
 
 def test_pack_numpy_in_place():
