@@ -16,6 +16,10 @@ if __name__ == '__main__':
 
             db = CouchEventPortfolioDB.CouchEventPortfolioDB(data)
 
+            logging.info('Purge the database before loading new event portfolios...')
+            db.purge_portfolios()
+            logging.info('Database purged successfully')
+
             # Get each of the JSON files from the given data directory and load into the database
             for fn in sorted(Path(datadir).glob("*.json"), reverse=True):
                 if os.path.isfile(fn):
