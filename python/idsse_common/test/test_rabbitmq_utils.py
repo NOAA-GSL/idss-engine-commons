@@ -16,7 +16,6 @@ from typing import NamedTuple
 from unittest.mock import Mock
 
 from pytest import fixture, raises, MonkeyPatch
-from pika import BlockingConnection
 from pika.adapters import blocking_connection
 
 from idsse.common.rabbitmq_utils import (
