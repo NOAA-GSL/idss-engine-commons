@@ -24,7 +24,7 @@ from pika import BasicProperties, ConnectionParameters, PlainCredentials
 from pika.adapters import BlockingConnection
 from pika.channel import Channel
 from pika.exceptions import UnroutableError
-from pika.frame import Method
+from pika.frame import Basic, Method
 
 logger = logging.getLogger(__name__)
 
@@ -87,122 +87,123 @@ class RabbitMqParamsAndCallback(NamedTuple):
     callback: Callable
 
 
-# def _initialize_exchange_and_queue(
-#     channel: BlockingChannel,
-#     params: RabbitMqParams
-# ) -> str:
-#     """Declare and bind RabbitMQ exchange and queue using the provided channel.
+def _initialize_exchange_and_queue(
+    channel: Channel,
+    params: RabbitMqParams
+) -> str:
+    """Declare and bind RabbitMQ exchange and queue using the provided channel.
 
-#     Returns:
-#         str: the name of the newly-initialized queue.
-#     """
-#     exch, queue = params
-#     logger.info('Subscribing to exchange: %s', exch.name)
+    Returns:
+        str: the name of the newly-initialized queue.
+    """
+    exch, queue = params
+    logger.info('Subscribing to exchange: %s', exch.name)
 
-#     # Do not try to declare the default exchange. It already exists
-#     if exch.name != '':
-#         channel.exchange_declare(exchange=exch.name,
-#                                  exchange_type=exch.type,
-#                                  durable=exch.durable)
+    # Do not try to declare the default exchange. It already exists
+    if exch.name != '':
+        channel.exchange_declare(exchange=exch.name,
+                                 exchange_type=exch.type,
+                                 durable=exch.durable)
 
-#     # Do not try to declare or bind built-in queues. They are pseudo-queues that already exist
-#     if queue.name.startswith('amq.rabbitmq.'):
-#         return queue.name
+    # Do not try to declare or bind built-in queues. They are pseudo-queues that already exist
+    if queue.name.startswith('amq.rabbitmq.'):
+        return queue.name
 
-#     # If we have a 'private' queue, i.e. one used to support message publishing, not consumed
-#     # Set message time-to-live (TTL) to 10 seconds
-#     arguments = {'x-message-ttl': 10 * 1000} if queue.name.startswith('_') else None
-#     frame: Method = channel.queue_declare(
-#         queue=queue.name,
-#         exclusive=queue.exclusive,
-#         durable=queue.durable,
-#         auto_delete=queue.auto_delete,
-#         arguments=arguments
-#     )
+    # If we have a 'private' queue, i.e. one used to support message publishing, not consumed
+    # Set message time-to-live (TTL) to 10 seconds
+    arguments = {'x-message-ttl': 10 * 1000} if queue.name.startswith('_') else None
+    frame: Method = channel.queue_declare(
+        queue=queue.name,
+        exclusive=queue.exclusive,
+        durable=queue.durable,
+        auto_delete=queue.auto_delete,
+        arguments=arguments
+    )
 
-#     # Bind queue to exchange with routing_key. May need to support multiple keys in the future
-#     if exch.name != '':
-#         logger.info('    binding key %s to queue: %s', queue.route_key, queue.name)
-#         channel.queue_bind(queue.name, exch.name, queue.route_key)
-#     return frame.method.queue
+    # Bind queue to exchange with routing_key. May need to support multiple keys in the future
+    if exch.name != '':
+        logger.info('    binding key %s to queue: %s', queue.route_key, queue.name)
+        channel.queue_bind(queue.name, exch.name, queue.route_key)
+    return frame.method.queue
 
 
-# def _initialize_connection_and_channel(
-#     connection: Conn | BlockingConnection,
-#     params: RabbitMqParams,
-#     channel: BlockingChannel | Channel | None = None,
-# ) -> tuple[BlockingConnection, Channel, str]:
-#     """Establish (or reuse) RabbitMQ connection, and declare exchange and queue on new Channel"""
-#     if isinstance(connection, Conn):
-#         # Use connection as parameters to establish new connection
-#         _connection = connection.to_connection()
-#         logger.info('Established new RabbitMQ connection to %s on port %i',
-#                     connection.host, connection.port)
-#     elif isinstance(connection, BlockingConnection):
-#         # Or existing open connection was provided, so use that
-#         _connection = connection
-#     else:
-#         # connection of unsupported type passed
-#         raise ValueError(
-#             (f'Cannot use or create new RabbitMQ connection using type {type(connection)}. '
-#              'Should be one of: [Conn, pika.BlockingConnection]')
-#         )
+def _initialize_connection_and_channel(
+    connection: Conn | BlockingConnection,
+    params: RabbitMqParams,
+    channel: Channel | Channel | None = None,
+) -> tuple[BlockingConnection, Channel, str]:
+    """Establish (or reuse) RabbitMQ connection, and declare exchange and queue on new Channel"""
+    if isinstance(connection, Conn):
+        # Use connection as parameters to establish new connection
+        _connection = connection.to_connection()
+        logger.info('Established new RabbitMQ connection to %s on port %i',
+                    connection.host, connection.port)
+    elif isinstance(connection, BlockingConnection):
+        # Or existing open connection was provided, so use that
+        _connection = connection
+    else:
+        # connection of unsupported type passed
+        raise ValueError(
+            (f'Cannot use or create new RabbitMQ connection using type {type(connection)}. '
+             'Should be one of: [Conn, pika.BlockingConnection]')
+        )
 
-#     if channel is None:
-#         logger.info('Creating new RabbitMQ channel')
-#         _channel = _connection.channel()
-#     else:
-#         _channel = channel
+    if channel is None:
+        logger.info('Creating new RabbitMQ channel')
+        _channel = _connection.channel()
+    else:
+        _channel = channel
 
-#     queue_name = _initialize_exchange_and_queue(_channel, params)
+    queue_name = _initialize_exchange_and_queue(_channel, params)
 
-#     return _connection, _channel, queue_name
+    return _connection, _channel, queue_name
 
-# def subscribe_to_queue(
-#     connection: Conn | BlockingConnection,
-#     rmq_params: RabbitMqParams,
-#     on_message_callback: Callable[
-#         [BlockingChannel, Basic.Deliver, BasicProperties, bytes], None],
-#     channel: BlockingChannel | None = None
-# ) -> tuple[BlockingConnection, BlockingChannel]:
-#     """
-#     Function that handles setup of consumer of RabbitMQ queue messages, declaring the exchange and
-#     queue if needed, and invoking the provided callback when a message is received.
 
-#     If an existing BlockingConnection or BlockingChannel are passed, they are used to
-#     set up the subscription, but by default a new connection and channel will be established and
-#     returned, which the caller can immediately begin doing RabbitMQ operations with.
+def subscribe_to_queue(
+    connection: Conn | BlockingConnection,
+    rmq_params: RabbitMqParams,
+    on_message_callback: Callable[
+        [Channel, Basic.Deliver, BasicProperties, bytes], None],
+    channel: Channel | None = None
+) -> tuple[BlockingConnection, Channel]:
+    """
+    Function that handles setup of consumer of RabbitMQ queue messages, declaring the exchange and
+    queue if needed, and invoking the provided callback when a message is received.
 
-#     For example: start a blocking consume of messages with channel.start_consuming(), or
-#     close gracefully with connection.close()
+    If an existing BlockingConnection or BlockingChannel are passed, they are used to
+    set up the subscription, but by default a new connection and channel will be established and
+    returned, which the caller can immediately begin doing RabbitMQ operations with.
 
-#     Args:
-#         connection (Conn | BlockingConnection): connection parameters to establish new
-#             RabbitMQ connection, or existing RabbitMQ connection to reuse for this consumer.
-#         rmq_params (RabbitMqParams): parameters for the RabbitMQ exchange and queue from which to
-#             consume messages.
-#         on_message_callback (Callable[
-#             [BlockingChannel, Basic.Deliver, BasicProperties, bytes], None]):
-#             function to handle messages that are received over the subscribed exchange and queue.
-#         channel (BlockingChannel | None): optional existing (open) RabbitMQ channel to reuse.
-#             Default is to create unique channel for this consumer.
+    For example: start a blocking consume of messages with channel.start_consuming(), or
+    close gracefully with connection.close()
 
-#     Returns:
-#         tuple[BlockingConnection, BlockingChannel]: the connection and channel, which are now open
-#             and subscribed to the provided queue.
-#     """
-#     _connection, _channel, queue_name = _initialize_connection_and_channel(
-#         connection, rmq_params, channel
-#     )
+    Args:
+        connection (Conn | BlockingConnection): connection parameters to establish new
+            RabbitMQ connection, or existing RabbitMQ connection to reuse for this consumer.
+        rmq_params (RabbitMqParams): parameters for the RabbitMQ exchange and queue from which to
+            consume messages.
+        on_message_callback (Callable[
+            [BlockingChannel, Basic.Deliver, BasicProperties, bytes], None]):
+            function to handle messages that are received over the subscribed exchange and queue.
+        channel (BlockingChannel | None): optional existing (open) RabbitMQ channel to reuse.
+            Default is to create unique channel for this consumer.
 
-#     # begin consuming messages
-#     auto_ack = queue_name == DIRECT_REPLY_QUEUE
-#     logger.info('Consuming messages from queue %s with auto_ack: %s', queue_name, auto_ack)
+    Returns:
+        tuple[BlockingConnection, BlockingChannel]: the connection and channel, which are now open
+            and subscribed to the provided queue.
+    """
+    _connection, _channel, queue_name = _initialize_connection_and_channel(
+        connection, rmq_params, channel
+    )
 
-#     _channel.basic_qos(prefetch_count=1)
-#     _channel.basic_consume(queue=queue_name, on_message_callback=on_message_callback,
-#                            auto_ack=auto_ack)
-#     return _connection, _channel
+    # begin consuming messages
+    auto_ack = queue_name == DIRECT_REPLY_QUEUE
+    logger.info('Consuming messages from queue %s with auto_ack: %s', queue_name, auto_ack)
+
+    _channel.basic_qos(prefetch_count=1)
+    _channel.basic_consume(queue=queue_name, on_message_callback=on_message_callback,
+                           auto_ack=auto_ack)
+    return _connection, _channel
 
 
 def _setup_exch_and_queue(channel: Channel, exch: Exch, queue: Queue):
