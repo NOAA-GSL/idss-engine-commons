@@ -36,7 +36,7 @@
     ],
     "conditions": [
         {
-            "name": "I-87, Albany-Nyack, Icy Roads",
+            "name": "NYSDOT I-87 NYC-Albany Road Treatment",
             "severity": "MODERATE",
             "combined": "A AND B",
             "partsUsed": [
