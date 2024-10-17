@@ -295,6 +295,21 @@ def threadsafe_call(channel: Channel, *functions: Callable):
     channel.connection.add_callback_threadsafe(call_if_channel_is_open)
 
 
+def threadsafe_nack(channel: Channel, delivery_tag: int, message: str, requeue: bool = False):
+    """
+    This is just a convenance function that nacks a message via threadsafe_call
+
+    Args:
+        channel (BlockingChannel): RabbitMQ channel.
+        delivery_tag (int): Delivery tag to be used when nacking.
+        message (str): The consumed message as a string
+        requeue (bool, optional): Indication if the message should be re-queued. Defaults to False.
+    """
+    threadsafe_call(channel,
+                    lambda: channel.basic_nack(delivery_tag, requeue=requeue),
+                    lambda: logger.debug('Message has been nacked:\n%s', message))
+
+
 class Consumer(Thread):
     """
     RabbitMQ consumer, runs in own thread to not block heartbeat. A thread pool
