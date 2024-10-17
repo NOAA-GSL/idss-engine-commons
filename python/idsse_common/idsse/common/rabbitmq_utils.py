@@ -306,7 +306,7 @@ class Consumer(Thread):
     def __init__(
         self,
         conn_params: ConnectionParameters,
-        rmq_params_and_callbacks: list[RabbitMqParamsAndCallback],
+        rmq_params_and_callbacks: RabbitMqParamsAndCallback | list[RabbitMqParamsAndCallback],
         num_message_handlers: int,
         *args,
         **kwargs,
@@ -315,8 +315,10 @@ class Consumer(Thread):
         self.daemon = True
         self._tpx = ThreadPoolExecutor(max_workers=num_message_handlers)
         self._conn_params = conn_params
-        self._rmq_params_and_callbacks = rmq_params_and_callbacks
-
+        if isinstance(rmq_params_and_callbacks, list):
+            self._rmq_params_and_callbacks = rmq_params_and_callbacks
+        else:
+            self._rmq_params_and_callbacks = [rmq_params_and_callbacks]
         self.connection = BlockingConnection(parameters=self._conn_params)
         self.channel = self.connection.channel()
 
