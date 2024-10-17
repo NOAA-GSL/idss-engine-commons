@@ -89,17 +89,17 @@
     ],
     "tags": {
         "values": [
-            "I-87, Albany-Nyack, Icy Roads"
+            "NYSDOT I-87 NYC-Albany Road Treatment"
         ],
         "keyValues": {
-            "name": "I-87, Albany-Nyack, Icy Roads",
+            "name": "NYSDOT I-87 NYC-Albany Road Treatment",
             "nwsOffice": "ALY"
         }
     },
     "riskResults": [
         {
             "evaluatedAt": "2023-02-21T15:31:39.000Z",
-            "conditionKey": "I-87, Albany-Nyack, Icy Roads",
+            "conditionKey": "NYSDOT I-87 NYC-Albany Road Treatment",
             "productKey": "NBM",
             "locationKey": "Single Location",
             "dataSummary": [
@@ -120,7 +120,7 @@
                     ],
                     "data": [
                         {
-                            "name": "I-87, Albany-Nyack, Icy Roads",
+                            "name": "NYSDOT I-87 NYC-Albany Road Treatment",
                             "type": "condition",
                             "singleValue": [-0.8666666746139526, -0.7333333492279053, -0.5333333611488342, -0.4000000059604645, -0.3333333432674408, 0.0070947217755019665, 0.2357022762298584, 0.2357022762298584, 0.1885618269443512, -1, -1, -1],
                             "geoDist": [
@@ -688,7 +688,7 @@
             ],
             "metaData": [
                 {
-                    "name": "I-87, Albany-Nyack, Icy Roads",
+                    "name": "NYSDOT I-87 NYC-Albany Road Treatment",
                     "type": "condition",
                     "proximalThresh": -0.5,
                     "states": [
