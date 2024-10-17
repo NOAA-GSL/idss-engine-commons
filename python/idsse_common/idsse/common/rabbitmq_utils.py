@@ -24,7 +24,8 @@ from pika import BasicProperties, ConnectionParameters, PlainCredentials
 from pika.adapters import BlockingConnection
 from pika.channel import Channel
 from pika.exceptions import UnroutableError
-from pika.frame import Basic, Method
+from pika.frame import Method
+from pika.spec import Basic
 
 logger = logging.getLogger(__name__)
 
@@ -128,25 +129,20 @@ def _initialize_exchange_and_queue(
 
 
 def _initialize_connection_and_channel(
-    connection: Conn | BlockingConnection,
+    connection: Conn,
     params: RabbitMqParams,
     channel: Channel | Channel | None = None,
 ) -> tuple[BlockingConnection, Channel, str]:
-    """Establish (or reuse) RabbitMQ connection, and declare exchange and queue on new Channel"""
-    if isinstance(connection, Conn):
-        # Use connection as parameters to establish new connection
-        _connection = connection.to_connection()
-        logger.info('Established new RabbitMQ connection to %s on port %i',
-                    connection.host, connection.port)
-    elif isinstance(connection, BlockingConnection):
-        # Or existing open connection was provided, so use that
-        _connection = connection
-    else:
+    if not isinstance(connection, Conn):
         # connection of unsupported type passed
         raise ValueError(
             (f'Cannot use or create new RabbitMQ connection using type {type(connection)}. '
-             'Should be one of: [Conn, pika.BlockingConnection]')
+             'Should a Conn (a dict with connection parameters)')
         )
+    """Establish RabbitMQ connection, and declare exchange and queue on new Channel"""
+    _connection = BlockingConnection(parameters=connection)
+    logger.info('Established new RabbitMQ connection to %s on port %i',
+                connection.host, connection.port)
 
     if channel is None:
         logger.info('Creating new RabbitMQ channel')
