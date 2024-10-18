@@ -295,19 +295,50 @@ def threadsafe_call(channel: Channel, *functions: Callable):
     channel.connection.add_callback_threadsafe(call_if_channel_is_open)
 
 
-def threadsafe_nack(channel: Channel, delivery_tag: int, message: str, requeue: bool = False):
+def threadsafe_ack(
+        channel: Channel,
+        delivery_tag: int,
+        extra_func: Callable = None,
+):
+    """
+    This is just a convenance function that acks a message via threadsafe_call
+
+    Args:
+        channel (BlockingChannel): RabbitMQ channel.
+        delivery_tag (int): Delivery tag to be used when nacking.
+        extra_func (Callable): Any extra function that you would like to be called after the nack.
+                               Typical use case would we to send a log via a lambda
+                               (e.g. extra_func = lambda: logger.debug('Message has been nacked')).
+    """
+    if extra_func:
+        threadsafe_call(channel, lambda: channel.basic_ack(delivery_tag), extra_func)
+    else:
+        threadsafe_call(channel, lambda: channel.basic_ack(delivery_tag))
+
+
+def threadsafe_nack(
+        channel: Channel,
+        delivery_tag: int,
+        requeue: bool = False,
+        extra_func: Callable = None,
+):
     """
     This is just a convenance function that nacks a message via threadsafe_call
 
     Args:
         channel (BlockingChannel): RabbitMQ channel.
         delivery_tag (int): Delivery tag to be used when nacking.
-        message (str): The consumed message as a string
         requeue (bool, optional): Indication if the message should be re-queued. Defaults to False.
+        extra_func (Callable): Any extra function that you would like to be called after the nack.
+                               Typical use case would we to send a log via a lambda
+                               (e.g. extra_func = lambda: logger.debug('Message has been nacked')).
     """
-    threadsafe_call(channel,
-                    lambda: channel.basic_nack(delivery_tag, requeue=requeue),
-                    lambda: logger.debug('Message has been nacked:\n%s', message))
+    if extra_func:
+        threadsafe_call(channel,
+                        lambda: channel.basic_nack(delivery_tag, requeue=requeue),
+                        extra_func)
+    else:
+        threadsafe_call(channel, lambda: channel.basic_nack(delivery_tag, requeue=requeue))
 
 
 class Consumer(Thread):
