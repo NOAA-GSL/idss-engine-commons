@@ -22,6 +22,8 @@ from idsse.common.sci.bit_pack import (get_pack_info,
                                        pack_to_list,
                                        PackInfo,
                                        PackType)
+
+
 def test_get_min_max():
     example = [-1.0, 0.0, 1.0, 2.0]
     expected = (-1.0, 2.0)
@@ -65,7 +67,7 @@ def test_pack_to_list():
     assert data[0][0] != result.data[0][0]
 
     with pytest.raises(KeyError):
-        result = pack_to_list((-1,1))
+        result = pack_to_list((-1, 1))
 
 
 def test_pack_list_to_list():
@@ -92,7 +94,7 @@ def test_pack_numpy():
         result = pack_numpy_to_numpy(numpy.array([0, 1, 2], dtype=int), in_place=True)
 
     with pytest.raises(ValueError):
-        result = pack_numpy_to_numpy((-1,1))
+        result = pack_numpy_to_numpy((-1, 1))
 
 
 def test_pack_numpy_in_place():
