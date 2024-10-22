@@ -15,6 +15,7 @@ from enum import IntEnum
 from typing import NamedTuple
 import numpy
 
+
 class PackType(IntEnum):
     """Enumerated type used to indicate if data is packed into a byte or short (16 bit)"""
     BYTE = 8
@@ -35,7 +36,8 @@ class PackData(NamedTuple):
     offset: float
     data: list | numpy.ndarray
 
-def get_min_max(data: list | numpy.ndarray) -> (float, float):
+
+def get_min_max(data: list | numpy.ndarray) -> tuple[float, float]:
     """Get the minimum and maximum from the numpy array or list. Testing showed (on a mac)
     that numpy was faster...
 
@@ -45,13 +47,14 @@ def get_min_max(data: list | numpy.ndarray) -> (float, float):
     Raises:
         TypeError: If the arguments for the call to the function are invalid
     Returns:
-        (float, float): The minimum, maximum from the supplied argument
+        tuple[float, float]: The minimum, maximum from the supplied argument
     """
     if isinstance(data, list):
         arr = numpy.array(data).ravel(order='K')
         return numpy.min(arr), numpy.max(arr)
     data.ravel(order='K')
     return numpy.min(data), numpy.max(data)
+
 
 def get_pack_info(
         min_value: float,
@@ -170,6 +173,7 @@ def pack_numpy_to_numpy(
         data = data-offset
 
     data /= scale
+    data += 0.5  # for non-negative values adding .5 before truncation is equivalent to round
     return PackData(pack_type, scale, offset, numpy.trunc(data, out=data))
 
 
@@ -270,6 +274,7 @@ def _pack_list_to_list_in_place(
     data = _pack_np_array_to_list(np_data, scale, offset)
     return data
 
+
 # core packing code specific to packing a list(s) with forced copying
 def _pack_list_to_list_copy(
         data: list,
@@ -289,12 +294,14 @@ def _pack_np_array_to_list(
     np_data = numpy.copy(data)
     np_data -= offset
     np_data /= scale
+    # for non-negative values, adding 0.5 before truncation is equivalent to rounding
+    np_data += 0.5
     # Return the truncated array and a int list.
     return (numpy.trunc(np_data).astype(int)).tolist()
 
 # core packing code using diplib package (sometimes slower than the original so not used but here
 # for an option.
-#def _diplib_pack(data: numpy.array,
+# def _diplib_pack(data: numpy.array,
 #                 scale: float,
 #                 offset: float) -> numpy.array:
 #    dip_data = dip.Image(data)
