@@ -454,7 +454,7 @@ class Publisher(Thread):
         while self._is_running:
             self.connection.process_data_events(time_limit=1)
 
-    def publish(self, message: bytes, properties: BasicProperties = None):
+    def publish(self, message: bytes, properties: BasicProperties = None, route_key: str = None):
         """
         Publish a message to this pre configured exchange. The actual publication
         is asynchronous and this method only schedules it to be done.
@@ -462,10 +462,15 @@ class Publisher(Thread):
         Args:
             message (bytes): The message to be published
             properties (BasicProperties): The props to be attached to message when published
+            route_key (str): Optional route key, overriding key provided during initialization
         """
-        threadsafe_call(self.channel, lambda: self._publish(message, properties, [False]))
+        threadsafe_call(self.channel,
+                        lambda: self._publish(message, properties, route_key, [False]))
 
-    def blocking_publish(self, message: bytes, properties: BasicProperties = None) -> bool:
+    def blocking_publish(self,
+                         message: bytes,
+                         properties: BasicProperties = None,
+                         route_key: str = None) -> bool:
         """
         Blocking publish. Works by waiting for the completion of an asynchronous
         publication.
@@ -473,6 +478,7 @@ class Publisher(Thread):
         Args:
             message (bytes): The message to be published
             properties (BasicProperties): The props to be attached to message when published
+            route_key (str): Optional route key, overriding key provided during initialization
 
         Returns:
             bool: Returns True if no errors ocurred during publication. If this
@@ -483,6 +489,7 @@ class Publisher(Thread):
         done_event = Event()
         threadsafe_call(self.channel, lambda: self._publish(message,
                                                             properties,
+                                                            route_key,
                                                             success_flag,
                                                             done_event))
         done_event.wait()
@@ -503,7 +510,8 @@ class Publisher(Thread):
             self,
             message: bytes,
             properties: BasicProperties,
-            success_flag: list[bool],
+            route_key: str = None,
+            success_flag: list[bool] = None,
             done_event: Event = None
     ):
         """
@@ -517,14 +525,16 @@ class Publisher(Thread):
                            complete in a different thread. This can be used to wait for the
                            completion via 'done_event.wait()' following calling this function.
         """
-        success_flag[0] = False
+        if success_flag:
+            success_flag[0] = False
         try:
             self.channel.basic_publish(self._exch.name,
                                        self._exch.route_key,
                                        body=message,
                                        properties=properties,
                                        mandatory=self._exch.mandatory)
-            success_flag[0] = True
+            if success_flag:
+                success_flag[0] = True
             print('\n message published\n')
             if self._queue and self._queue.name.startswith('_'):
                 try:
