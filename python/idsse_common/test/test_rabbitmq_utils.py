@@ -16,17 +16,16 @@ from typing import NamedTuple
 from unittest.mock import Mock
 
 from pytest import fixture, raises, MonkeyPatch
-from pika import BlockingConnection
 from pika.adapters import blocking_connection
 
 from idsse.common.rabbitmq_utils import (
-    Conn, Exch, Queue, RabbitMqParams, PublisherSync, subscribe_to_queue
+    Conn, Exch, Queue, Publisher, RabbitMqParams, subscribe_to_queue
 )
 
 # Example data objects
 CONN = Conn('localhost', '/', port=5672, username='user', password='password')
 RMQ_PARAMS = RabbitMqParams(
-    Exch('ims_data', 'topic', True),
+    Exch('ims_data', 'topic'),
     Queue('ims_data', '', True, False, True)
 )
 
@@ -85,7 +84,7 @@ def test_connection_params_works(monkeypatch: MonkeyPatch, mock_connection: Mock
 
     # assert correct (mocked) pika calls were made
     mock_blocking_connection.assert_called_once()
-    _connection.channel.assert_called_once()
+    _connection.channel.assert_called_once()  # pylint: disable=no-member
 
     _channel.basic_qos.assert_called_once()
     _channel.basic_consume.assert_called_once()
@@ -120,7 +119,6 @@ def test_connection_params_works(monkeypatch: MonkeyPatch, mock_connection: Mock
     )
 
 
-
 def test_private_queue_sets_ttl(monkeypatch: MonkeyPatch, mock_connection: Mock):
     mock_blocking_connection = Mock(return_value=mock_connection)
     monkeypatch.setattr(
@@ -149,11 +147,15 @@ def test_private_queue_sets_ttl(monkeypatch: MonkeyPatch, mock_connection: Mock)
     )
 
 
-def test_passing_connection_does_not_create_new(mock_connection):
-    mock_connection.__class__ = BlockingConnection  # set mock type to pika.BlockingConnection
+def test_passing_connection_does_not_create_new(mock_connection, monkeypatch):
     mock_callback_function = Mock(name='on_message_callback')
+    mock_blocking_connection = Mock(return_value=mock_connection)
+    monkeypatch.setattr(
+        'idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection
+    )
+
     new_connection, new_channel = subscribe_to_queue(
-        mock_connection, RMQ_PARAMS, mock_callback_function
+        CONN, RMQ_PARAMS, mock_callback_function
     )
 
     mock_connection.assert_not_called()
@@ -170,19 +172,6 @@ def test_passing_unsupported_connection_type_fails():
     with raises(ValueError) as exc:
         subscribe_to_queue('bad connection', RMQ_PARAMS, Mock(name='on_message_callback'))
     assert exc is not None
-
-
-def test_passing_channel_does_not_create_new(mock_connection: Mock, mock_channel: Mock):
-    mock_callback_func = Mock()
-    mock_connection.__class__ = BlockingConnection  # make mock look like real BlockingConnection
-
-    _, new_channel = subscribe_to_queue(
-        mock_connection, RMQ_PARAMS, mock_callback_func, channel=mock_channel
-    )
-
-    mock_connection.channel.assert_not_called()
-    new_channel.basic_consume.assert_called_once()
-    assert new_channel == mock_channel
 
 
 def test_direct_reply_does_not_declare_queue(
@@ -227,23 +216,24 @@ def test_default_exchange_does_not_declare_exchange(
 
 
 def test_simple_publisher(monkeypatch: MonkeyPatch, mock_connection: Mock):
-    # add mock to get Connnection callback to invoke immediately
+    # add mock to get Connection callback to invoke immediately
     mock_connection.add_callback_threadsafe = Mock(side_effect=lambda callback: callback())
     mock_blocking_connection = Mock(return_value=mock_connection)
     monkeypatch.setattr(
         'idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection
     )
 
-    publisher = PublisherSync(CONN, RMQ_PARAMS)
+    mock_threadsafe = Mock()
+    monkeypatch.setattr('idsse.common.rabbitmq_utils.threadsafe_call', mock_threadsafe)
+
+    publisher = Publisher(CONN, RMQ_PARAMS.exchange)
     mock_blocking_connection.assert_called_once()
     _channel = mock_blocking_connection.return_value.channel
     _channel.assert_called_once()
-    assert publisher._connection == mock_connection
+    assert publisher.connection == mock_connection
 
-    result = publisher.publish_message({'data': 123})
-    assert result
-    _channel.return_value.basic_publish.assert_called_once()
+    publisher.publish({'data': 123})
+    assert 'Publisher.publish' in str(mock_threadsafe.call_args[0][1])
 
     publisher.stop()
-    _channel.return_value.close.assert_called_once()
-    mock_blocking_connection.return_value.close.assert_called_once()
+    assert 'MockChannel.close' in str(mock_threadsafe.call_args[0][1])
