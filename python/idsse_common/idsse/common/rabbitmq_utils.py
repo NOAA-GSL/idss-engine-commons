@@ -133,13 +133,14 @@ def _initialize_connection_and_channel(
     params: RabbitMqParams,
     channel: Channel | Channel | None = None,
 ) -> tuple[BlockingConnection, Channel, str]:
+    """Establish RabbitMQ connection, and declare exchange and queue on new Channel"""
     if not isinstance(connection, Conn):
         # connection of unsupported type passed
         raise ValueError(
             (f'Cannot use or create new RabbitMQ connection using type {type(connection)}. '
              'Should a Conn (a dict with connection parameters)')
         )
-    """Establish RabbitMQ connection, and declare exchange and queue on new Channel"""
+
     _connection = BlockingConnection(parameters=connection)
     logger.info('Established new RabbitMQ connection to %s on port %i',
                 connection.host, connection.port)

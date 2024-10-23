@@ -84,7 +84,7 @@ def test_connection_params_works(monkeypatch: MonkeyPatch, mock_connection: Mock
 
     # assert correct (mocked) pika calls were made
     mock_blocking_connection.assert_called_once()
-    _connection.channel.assert_called_once()
+    _connection.channel.assert_called_once()  # pylint: disable=no-member
 
     _channel.basic_qos.assert_called_once()
     _channel.basic_consume.assert_called_once()
