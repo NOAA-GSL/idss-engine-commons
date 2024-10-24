@@ -536,7 +536,6 @@ class Publisher(Thread):
                                        mandatory=self._exch.mandatory)
             if success_flag:
                 success_flag[0] = True
-            print('\n message published\n')
             if self._queue and self._queue.name.startswith('_'):
                 try:
                     self.channel.queue_purge(queue=self._queue.name)
