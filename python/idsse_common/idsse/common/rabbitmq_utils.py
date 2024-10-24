@@ -506,7 +506,7 @@ class Publisher(Thread):
                             self.channel.close,
                             self.connection.close)
 
-    # pylint: disable=too-many-arguments,too-many-positional-arguments,unused-argument
+    # pylint: disable=too-many-arguments,unused-argument
     def _publish(
             self,
             message: bytes,
