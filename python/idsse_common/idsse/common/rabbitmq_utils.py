@@ -138,10 +138,10 @@ def _initialize_connection_and_channel(
         # connection of unsupported type passed
         raise ValueError(
             (f'Cannot use or create new RabbitMQ connection using type {type(connection)}. '
-             'Should a Conn (a dict with connection parameters)')
+             'Should be type Conn (a dict with connection parameters)')
         )
 
-    _connection = BlockingConnection(parameters=connection)
+    _connection = BlockingConnection(connection.connection_parameters)
     logger.info('Established new RabbitMQ connection to %s on port %i',
                 connection.host, connection.port)
 
@@ -352,7 +352,7 @@ class Consumer(Thread):
     """
     def __init__(
         self,
-        conn_params: ConnectionParameters,
+        conn_params: Conn,
         rmq_params_and_callbacks: RabbitMqParamsAndCallback | list[RabbitMqParamsAndCallback],
         num_message_handlers: int,
         *args,
@@ -366,7 +366,7 @@ class Consumer(Thread):
             self._rmq_params_and_callbacks = rmq_params_and_callbacks
         else:
             self._rmq_params_and_callbacks = [rmq_params_and_callbacks]
-        self.connection = BlockingConnection(parameters=self._conn_params)
+        self.connection = BlockingConnection(self._conn_params.connection_parameters)
         self.channel = self.connection.channel()
 
         self._consumer_tags = []
@@ -420,7 +420,7 @@ class Publisher(Thread):
     """
     def __init__(
         self,
-        conn_params: ConnectionParameters,
+        conn_params: Conn,
         exch_params: Exch,
         *args,
         **kwargs,
@@ -431,7 +431,7 @@ class Publisher(Thread):
         self._exch = exch_params
         self._queue = None
 
-        self.connection = BlockingConnection(conn_params)
+        self.connection = BlockingConnection(conn_params.connection_parameters)
         self.channel = self.connection.channel()
 
         # if delivery is mandatory there must be a queue attach to the exchange
