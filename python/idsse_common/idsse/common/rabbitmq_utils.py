@@ -59,8 +59,8 @@ class Exch(NamedTuple):
     type: str
     route_key: str = ''
     durable: bool = True
-    delivery_conf: bool | None = None
-    mandatory: bool | None = None
+    delivery_conf: bool | None = False
+    mandatory: bool | None = False
 
 
 class Queue(NamedTuple):
@@ -529,8 +529,11 @@ class Publisher(Thread):
         if success_flag:
             success_flag[0] = False
         try:
+            if route_key is None:
+                route_key = self._exch.route_key
+
             self.channel.basic_publish(self._exch.name,
-                                       self._exch.route_key,
+                                       routing_key=route_key,
                                        body=message,
                                        properties=properties,
                                        mandatory=self._exch.mandatory)
