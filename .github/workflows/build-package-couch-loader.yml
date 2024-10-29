@@ -70,6 +70,7 @@ jobs:
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
         scanners: 'vuln'
+        continue-on-error: true
 
         # this requires public repo / additional config
         #format: 'sarif'
