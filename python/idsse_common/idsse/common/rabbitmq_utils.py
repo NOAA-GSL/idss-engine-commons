@@ -530,9 +530,6 @@ class Publisher(Thread):
         if success_flag:
             success_flag[0] = False
         try:
-            if route_key is None:
-                route_key = self._exch.route_key
-
             self.channel.basic_publish(self._exch.name,
                                        route_key if route_key else self._exch.route_key,
                                        body=message,
