@@ -5,7 +5,7 @@
         "properties": {
             "originator": {
                 "type": "string",
-                "enum": ["IDSSe", "IMS"]
+                "enum": ["IDSSe", "IMS", "Core UI"]
             },
             "uuid": {
                 "type": "string",
