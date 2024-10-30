@@ -70,7 +70,7 @@ class Queue(NamedTuple):
     durable: bool
     exclusive: bool
     auto_delete: bool
-    type: str = 'classic'
+    arguments: dict = {'x-queue-type': 'classic'}
 
 
 class RabbitMqParams(NamedTuple):
@@ -112,13 +112,14 @@ def _initialize_exchange_and_queue(
 
     # If we have a 'private' queue, i.e. one used to support message publishing, not consumed
     # Set message time-to-live (TTL) to 10 seconds
-    arguments = {'x-message-ttl': 10 * 1000} if queue.name.startswith('_') else None
+    if queue.name.startswith('_'):
+        queue.arguments['x-message-ttl'] = 10 * 1000
     frame: Method = channel.queue_declare(
         queue=queue.name,
         exclusive=queue.exclusive,
         durable=queue.durable,
         auto_delete=queue.auto_delete,
-        arguments=arguments
+        arguments=queue.arguments
     )
 
     # Bind queue to exchange with routing_key. May need to support multiple keys in the future
@@ -215,7 +216,7 @@ def _setup_exch_and_queue(channel: Channel, exch: Exch, queue: Queue):
         exclusive=queue.exclusive,
         durable=queue.durable,
         auto_delete=queue.auto_delete,
-        arguments={'x-queue-type': queue.type}
+        arguments=queue.arguments
     )
     queue_name = result.method.queue
     logger.debug('Declared queue: %s', queue_name)
@@ -440,7 +441,9 @@ class Publisher(Thread):
                                 route_key=self._exch.route_key,
                                 durable=False,
                                 exclusive=True,
-                                auto_delete=False)
+                                auto_delete=False,
+                                arguments={'x-queue-type': 'classic',
+                                           'x-message-ttl': 10 * 1000})
 
             _setup_exch_and_queue(self.channel, self._exch, self._queue)
         else:
