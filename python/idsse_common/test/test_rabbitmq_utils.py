@@ -25,8 +25,8 @@ from idsse.common.rabbitmq_utils import (
 # Example data objects
 CONN = Conn('localhost', '/', port=5672, username='user', password='password')
 RMQ_PARAMS = RabbitMqParams(
-    Exch('ims_data', 'topic'),
-    Queue('ims_data', '', True, False, True)
+    Exch('test_criteria_exch', 'topic'),
+    Queue('test_criteria_queue', '', True, False, True)
 )
 
 
@@ -106,8 +106,8 @@ def test_connection_params_works(monkeypatch: MonkeyPatch, mock_connection: Mock
     )
 
     _channel.queue_bind.assert_called_once_with(
-        RMQ_PARAMS.exchange.name,
         RMQ_PARAMS.queue.name,
+        RMQ_PARAMS.exchange.name,
         RMQ_PARAMS.queue.route_key
     )
 
@@ -178,7 +178,7 @@ def test_direct_reply_does_not_declare_queue(
     monkeypatch: MonkeyPatch, mock_connection: Mock
 ):
     params = RabbitMqParams(
-        Exch('ims_data', 'topic'),
+        Exch('test_criteria_exch', 'topic'),
         Queue('amq.rabbitmq.reply-to', '', True, False, True)
     )
 
