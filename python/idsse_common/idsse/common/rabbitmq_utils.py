@@ -206,7 +206,7 @@ def subscribe_to_queue(
 
 def _setup_exch_and_queue(channel: Channel, exch: Exch, queue: Queue):
     """Setup an exchange and queue and bind them with the queue's route key(s)"""
-    if queue.type == 'quorum' and queue.auto_delete:
+    if queue.arguments['x-queue-type'] == 'quorum' and queue.auto_delete:
         raise ValueError('Quorum queues can not be configured to auto delete')
 
     _setup_exch(channel, exch)
