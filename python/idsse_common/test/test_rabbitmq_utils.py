@@ -102,7 +102,7 @@ def test_connection_params_works(monkeypatch: MonkeyPatch, mock_connection: Mock
         exclusive=RMQ_PARAMS.queue.exclusive,
         durable=RMQ_PARAMS.queue.durable,
         auto_delete=RMQ_PARAMS.queue.auto_delete,
-        arguments=None
+        arguments={'x-queue-type': 'classic'}
     )
 
     _channel.queue_bind.assert_called_once_with(
@@ -143,7 +143,7 @@ def test_private_queue_sets_ttl(monkeypatch: MonkeyPatch, mock_connection: Mock)
         exclusive=example_queue.exclusive,
         durable=example_queue.durable,
         auto_delete=example_queue.auto_delete,
-        arguments={'x-message-ttl': 10000}
+        arguments={'x-message-ttl': 10000, 'x-queue-type': 'classic'}
     )
 
 
