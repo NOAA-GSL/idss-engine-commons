@@ -119,8 +119,7 @@ def _initialize_exchange_and_queue(
         exclusive=queue.exclusive,
         durable=queue.durable,
         auto_delete=queue.auto_delete,
-        # arguments=queue.arguments
-        arguments=None
+        arguments=queue.arguments
     )
 
     # Bind queue to exchange with routing_key. May need to support multiple keys in the future
@@ -218,8 +217,7 @@ def _setup_exch_and_queue(channel: Channel, exch: Exch, queue: Queue):
         exclusive=queue.exclusive,
         durable=queue.durable,
         auto_delete=queue.auto_delete,
-        # arguments=queue.arguments
-        arguments=None
+        arguments=queue.arguments
     )
     queue_name = result.method.queue
     logger.debug('Declared queue: %s', queue_name)
