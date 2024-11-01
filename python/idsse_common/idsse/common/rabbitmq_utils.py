@@ -350,7 +350,7 @@ def _set_context(context):
         var.set(value)
 
 
-class Consumer(Thread):  # pylint disable=too-many-instance-attributes
+class Consumer(Thread):
     """
     RabbitMQ consumer, runs in own thread to not block heartbeat. A thread pool
     is used to not so much to parallelize the execution but rather to manage the
@@ -358,6 +358,10 @@ class Consumer(Thread):  # pylint disable=too-many-instance-attributes
     shutdown.  The start() and stop() methods should be called from the same
     thread as the one used to create the instance.
     """
+
+    # pylint: disable=too-many-instance-attributes
+    # Eight is reasonable in this case.
+
     def __init__(
         self,
         conn_params: Conn,
