@@ -452,7 +452,8 @@ class Publisher(Thread):
                                 durable=False,
                                 exclusive=True,
                                 auto_delete=False,
-                                arguments={'x-message-ttl': 10 * 1000})
+                                arguments={'x-queue-type': 'classic',
+                                           'x-message-ttl': 10 * 1000})
 
             _setup_exch_and_queue(self.channel, self._exch, self._queue)
         else:
