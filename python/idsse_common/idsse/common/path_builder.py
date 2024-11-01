@@ -307,8 +307,6 @@ class PathBuilder:
 
         if issue and lead:
             return issue + lead
-        if issue:
-            return issue
 
         return None
 
