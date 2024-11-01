@@ -94,7 +94,7 @@ def test_http_cp_succeeds(http_utils: HttpUtils, httpserver: HTTPServer):
     url = '/data/'+EXAMPLE_PROD_DIR+'/temp.grib2.gz'
     httpserver.expect_request(url).respond_with_data(bytes([0,1,2]), status=200,
                                                      content_type="application/octet-stream")
-    path = f'{EXAMPLE_URL}{EXAMPLE_PROD_DIR}temp.grib2.gz'
+    path = f'{EXAMPLE_URL}{EXAMPLE_PROD_DIR}/temp.grib2.gz'
     dest = '/tmp/temp.grib2.gz'
 
     copy_success = http_utils.http_cp(path, dest)
