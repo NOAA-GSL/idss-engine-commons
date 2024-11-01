@@ -10,6 +10,7 @@
 #
 # ----------------------------------------------------------------------------------
 # pylint: disable=missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
+# pylint: disable=missing-class-docstring
 
 import contextvars
 import logging
