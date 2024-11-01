@@ -11,8 +11,11 @@
 # ----------------------------------------------------------------------------------
 # pylint: disable=missing-function-docstring,redefined-outer-name,invalid-name,unused-argument
 
+import contextvars
 import logging
 import logging.config
+import threading
+import time
 from datetime import datetime, UTC
 from uuid import uuid4 as uuid
 
@@ -77,12 +80,11 @@ def test_get_default_log_config_with_corr_id(capsys):
 
     logger.debug(msg=EXAMPLE_LOG_MESSAGE)
     stdout = capsys.readouterr().out  # capture std output from test run
-
     # should not be logging DEBUG if default log config handled level correctly
     assert stdout == ''
+
     logger.info(msg=EXAMPLE_LOG_MESSAGE)
     stdout = capsys.readouterr().out
-
     assert EXAMPLE_LOG_MESSAGE in stdout
     assert corr_id in stdout
 
@@ -94,3 +96,46 @@ def test_get_default_log_config_no_corr_id(capsys):
     logger.debug('hello world')
     stdout = capsys.readouterr().out
     assert corr_id not in stdout
+
+
+def test_getting_logs_from_threaded_func(capsys):
+    logging.config.dictConfig(get_default_log_config('INFO', True))
+    set_corr_id_context_var(EXAMPLE_ORIGINATOR, key=EXAMPLE_UUID)
+
+    def worker():
+        logger = logging.getLogger(__name__)
+        logger.info(EXAMPLE_LOG_MESSAGE)
+
+    # Create and start the thread
+    thread = threading.Thread(target=contextvars.copy_context().run, args=(worker,))
+    thread.start()
+
+    time.sleep(.1)
+    stdout = capsys.readouterr().out
+    assert EXAMPLE_LOG_MESSAGE in stdout
+
+
+def test_getting_logs_from_thread_class(capsys):
+    logging.config.dictConfig(get_default_log_config('INFO', True))
+    set_corr_id_context_var(EXAMPLE_ORIGINATOR, key=EXAMPLE_UUID)
+
+    def set_context(context):
+        for var, value in context.items():
+            var.set(value)
+
+    class MyThread(threading.Thread):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.context = contextvars.copy_context()
+
+        def run(self):
+            set_context(self.context)
+            logger = logging.getLogger(f'{__name__}::{self.__class__.__name__}')
+            logger.info(EXAMPLE_LOG_MESSAGE)
+
+    thread = MyThread()
+    thread.start()
+    thread.join()
+
+    stdout = capsys.readouterr().out
+    assert EXAMPLE_LOG_MESSAGE in stdout
