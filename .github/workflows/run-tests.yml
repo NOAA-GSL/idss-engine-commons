@@ -39,6 +39,17 @@ jobs:
         working-directory: commons/python/idsse_common
         run: pip install .
 
+      - name: Checkout idsse-testing
+        uses: actions/checkout@v2
+        with:
+          repository: NOAA-GSL/idsse-testing
+          ref: main
+          path: testing/
+
+      - name: Install IDSSE python testing
+        working-directory: testing/python
+        run: pip install .
+
       - name: Test with pytest
         working-directory: python/idsse_common
         # run Pytest, exiting nonzero if pytest throws errors (otherwise "| tee" obfuscates)
