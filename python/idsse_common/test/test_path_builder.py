@@ -73,8 +73,11 @@ def test_path_fmt(local_path_builder: PathBuilder):
 EXAMPLE_ISSUE = datetime(1970, 10, 3, 12, tzinfo=UTC)  # a.k.a. issued at
 EXAMPLE_VALID = datetime(1970, 10, 3, 14, tzinfo=UTC)  # a.k.a. valid until
 EXAMPLE_LEAD = TimeDelta(EXAMPLE_VALID - EXAMPLE_ISSUE)  # a.k.a. duration of time that issue lasts
+EXAMPLE_MRMS_ISSUE = datetime(2024, 10, 30, 20, 56, 40, tzinfo=UTC)  # a.k.a. issued at
 
-EXAMPLE_FULL_PATH = '~/blend.19701003/12/core/blend.t12z.core.f002.co.grib2.idx'
+EXAMPLE_NBM_FULL_PATH = '~/blend.19701003/12/core/blend.t12z.core.f002.co.grib2.idx'
+EXAMPLE_MRMS_FULL_PATH = 'http://127.0.0.1:5000/data/3DRefl/MergedReflectivityQC_00.50/MRMS_MergedReflectivityQC_00.50_20241030-205640.grib2.gz'
+EXAMPLE_BAD_FULL_PATH = 'http://127.0.0.1:5000/data/3DRefl/MergedReflectivityQC_00.50/MRMS_MergedReflectivityQC_00.50_latest.grib2.gz'
 
 
 @pytest.fixture
@@ -84,6 +87,14 @@ def path_builder() -> PathBuilder:
     )
     file_base_pattern = 'blend.t{issue.hour:02d}z.core.f{lead.hour:03d}.co'
     return PathBuilder('~', subdirectory_pattern, file_base_pattern, 'grib2.idx')
+
+@pytest.fixture
+def mrms_path_builder() -> PathBuilder:
+    base_directory = 'http://127.0.0.1:5000/data/'
+    subdirectory_pattern = '3DRefl/MergedReflectivityQC_00.50/'
+    file_base_pattern = ('MRMS_MergedReflectivityQC_00.50_{issue.year:04d}{issue.month:02d}{issue.day:02d}'
+                         '-{issue.hour:02d}{issue.minute:02d}{issue.second:02d}')
+    return PathBuilder(base_directory, subdirectory_pattern, file_base_pattern, 'grib2.gz')
 
 
 def test_build_dir_gets_issue_valid_and_lead(path_builder: PathBuilder):
@@ -107,7 +118,7 @@ def test_build_path(path_builder: PathBuilder):
 
 
 def test_parse_dir(path_builder: PathBuilder):
-    result_dict = path_builder.parse_dir(EXAMPLE_FULL_PATH)
+    result_dict = path_builder.parse_dir(EXAMPLE_NBM_FULL_PATH)
 
     assert result_dict.keys() != []
     assert result_dict['issue.year'] == 1970
@@ -115,19 +126,26 @@ def test_parse_dir(path_builder: PathBuilder):
 
 
 def test_parse_filename(path_builder: PathBuilder):
-    result_dict = path_builder.parse_filename(EXAMPLE_FULL_PATH)
+    result_dict = path_builder.parse_filename(EXAMPLE_NBM_FULL_PATH)
     assert result_dict.keys() != []
     assert result_dict['lead.hour'] == 2
 
 
 def test_get_issue(path_builder: PathBuilder):
-    actual_issue: datetime = path_builder.get_issue(EXAMPLE_FULL_PATH)
+    actual_issue: datetime = path_builder.get_issue(EXAMPLE_NBM_FULL_PATH)
     assert actual_issue == EXAMPLE_ISSUE
+def test_get_issue_fail(path_builder: PathBuilder):
+    actual_issue: datetime = path_builder.get_issue(EXAMPLE_BAD_FULL_PATH)
+    assert actual_issue == None
+
+def test_get_issue_mrms(mrms_path_builder: PathBuilder):
+    actual_issue: datetime = mrms_path_builder.get_issue(EXAMPLE_MRMS_FULL_PATH)
+    assert actual_issue == EXAMPLE_MRMS_ISSUE
 
 
 def test_get_valid_from_issue_and_lead(path_builder: PathBuilder):
     # verify valid timestamp gets successfully constructed based on issue & lead embedded into path
-    result_valid: datetime = path_builder.get_valid(EXAMPLE_FULL_PATH)
+    result_valid: datetime = path_builder.get_valid(EXAMPLE_NBM_FULL_PATH)
     assert result_valid is not None
     assert result_valid == EXAMPLE_VALID
 
@@ -141,7 +159,7 @@ def test_get_valid_returns_none_when_issue_or_lead_failed(path_builder: PathBuil
 
 # static methods
 def test_get_issue_from_time_args(path_builder: PathBuilder):
-    parsed_dict = path_builder.parse_path(EXAMPLE_FULL_PATH)
+    parsed_dict = path_builder.parse_path(EXAMPLE_NBM_FULL_PATH)
     issue_result = PathBuilder.get_issue_from_time_args(parsed_args=parsed_dict)
 
     assert issue_result == EXAMPLE_ISSUE
@@ -169,13 +187,13 @@ def test_get_valid_returns_none_if_args_empty():
 
 
 def test_get_valid_from_time_args_calculates_based_on_lead(path_builder: PathBuilder):
-    parsed_dict = path_builder.parse_path(EXAMPLE_FULL_PATH)
+    parsed_dict = path_builder.parse_path(EXAMPLE_NBM_FULL_PATH)
     result_valid: datetime = PathBuilder.get_valid_from_time_args(parsed_args=parsed_dict)
     assert result_valid == EXAMPLE_VALID
 
 
 def test_get_lead_from_time_args(path_builder: PathBuilder):
-    parsed_dict = path_builder.parse_path(EXAMPLE_FULL_PATH)
+    parsed_dict = path_builder.parse_path(EXAMPLE_NBM_FULL_PATH)
     lead_result: timedelta = PathBuilder.get_lead_from_time_args(parsed_dict)
     assert lead_result.seconds == EXAMPLE_LEAD.minute * 60
 
