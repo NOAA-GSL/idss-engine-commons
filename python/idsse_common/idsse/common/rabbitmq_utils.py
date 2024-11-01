@@ -70,7 +70,7 @@ class Queue(NamedTuple):
     durable: bool
     exclusive: bool
     auto_delete: bool
-    arguments: dict = {'x-queue-type': 'classic'}
+    arguments: dict = {}
 
 
 class RabbitMqParams(NamedTuple):
