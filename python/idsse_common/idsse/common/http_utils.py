@@ -70,8 +70,8 @@ class HttpUtils:
                     if not filename.endswith('/'):  # Exclude directories
                         files.append(filename)
 
-        except requests.exceptions.RequestException as e:
-            logger.warning('Unable to query supplied URL: %s', str(e))
+        except requests.exceptions.RequestException as exp:
+            logger.warning('Unable to query supplied URL: %s', str(exp))
             return []
         if prepend_path:
             return [os.path.join(url, filename) for filename in files]
