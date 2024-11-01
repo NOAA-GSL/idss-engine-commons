@@ -10,7 +10,7 @@
 #     Mackenzie Grimes (2)
 #
 # ------------------------------------------------------------------------------
-# pylint: disable=too-few-public-methods
+# pylint: disable=too-few-public-methods,missing-class-docstring
 
 import logging
 import time

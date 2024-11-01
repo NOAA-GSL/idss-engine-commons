@@ -365,7 +365,7 @@ class Consumer(Thread):
         num_message_handlers: int,
         *args,
         **kwargs,
-    ):
+    ):  # pylint disable=too-many-instance-attributes
         super().__init__(*args, **kwargs)
         self.context = contextvars.copy_context()
         self.daemon = True
