@@ -14,17 +14,18 @@
 import logging
 import fnmatch
 import os
-import requests
-import re
 import shutil
 from collections.abc import Sequence
 from datetime import datetime, timedelta, UTC
 
+import requests
+
 from .path_builder import PathBuilder
-from .utils import TimeDelta, datetime_gen, exec_cmd
+from .utils import TimeDelta, datetime_gen
 
 logger = logging.getLogger(__name__)
 
+# pylint: disable=duplicate-code, broad-exception-caught
 
 class HttpUtils:
     """http Utility Class - Used by DAS for file downloads"""
@@ -60,7 +61,7 @@ class HttpUtils:
         """
         try:
             files = []
-            response = requests.get(url)
+            response = requests.get(url, timeout=5)
             response.raise_for_status()  # Raise an exception for bad status codes
 
             for line in response.text.splitlines():
@@ -87,16 +88,16 @@ class HttpUtils:
             bool: Returns True if copy is successful
         """
         try:
-            with requests.get(os.path.join(url), stream=True) as response:
+            with requests.get(os.path.join(url), timeout=5, stream=True) as response:
                 # Check if the request was successful
                 if response.status_code == 200:
                     # Open a file in binary write mode
                     with open(dest, "wb") as file:
                         shutil.copyfileobj(response.raw, file)
                     return True
-                else:
-                    logger.debug('copy fail: request status code:', response.status_code)
-                    return False
+
+                logger.debug('copy fail: request status code: %s', response.status_code)
+                return False
         except Exception:
             return False
 

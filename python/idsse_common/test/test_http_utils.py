@@ -12,15 +12,13 @@
 # pylint: disable=missing-function-docstring,redefined-outer-name,pointless-statement
 # pylint: disable=invalid-name,unused-argument
 
-from collections.abc import Iterable, Sequence
 from datetime import datetime, timedelta, UTC
-from unittest.mock import Mock
 
-from pytest import fixture, MonkeyPatch
+from pytest import fixture
 from pytest_httpserver import HTTPServer
 
 from idsse.common.http_utils import HttpUtils
-from idsse.testing.utils.resources import get_resource_from_file, get_package_path
+from idsse.testing.utils.resources import get_resource_from_file
 
 
 EXAMPLE_ISSUE = datetime(2024, 10, 30, 20, 54, 38, tzinfo=UTC)
@@ -35,6 +33,7 @@ EXAMPLE_FILES = ['MRMS_MergedReflectivityQC_00.50.latest.grib2.gz',
 EXAMPLE_RETURN = get_resource_from_file('idsse.testing.idsse_common',
                                         'mrms_response.html')
 
+# pylint: disable=duplicate-code, line-too-long
 
 
 # fixtures
@@ -42,9 +41,6 @@ EXAMPLE_RETURN = get_resource_from_file('idsse.testing.idsse_common',
 def httpserver_listen_address():
     return "127.0.0.1", 5000
 
-@fixture
-def request_return_text(url: str) -> str:
-    return httpserver.expect_request(url).respond_with_data(EXAMPLE_RETURN, content_type="text/plain")
 @fixture
 def http_utils() -> HttpUtils:
     EXAMPLE_BASE_DIR = 'http://127.0.0.1:5000/data/'
@@ -98,8 +94,8 @@ def test_http_cp_succeeds(http_utils: HttpUtils, httpserver: HTTPServer):
     url = '/data/'+EXAMPLE_PROD_DIR+'/temp.grib2.gz'
     httpserver.expect_request(url).respond_with_data(bytes([0,1,2]), status=200,
                                                      content_type="application/octet-stream")
-    path = f'{EXAMPLE_URL}{EXAMPLE_PROD_DIR}/temp.grib2.gz'
-    dest = f'/tmp/temp.grib2.gz'
+    path = f'{EXAMPLE_URL}{EXAMPLE_PROD_DIR}temp.grib2.gz'
+    dest = '/tmp/temp.grib2.gz'
 
     copy_success = http_utils.http_cp(path, dest)
     assert copy_success
@@ -109,7 +105,7 @@ def test_http_cp_fails(http_utils: HttpUtils, httpserver: HTTPServer):
     httpserver.expect_request(url).respond_with_data(bytes([0, 1, 2]), status=404,
                                                      content_type="application/octet-stream")
     path = f'{EXAMPLE_URL}{EXAMPLE_PROD_DIR}/temp.grib2.gz'
-    dest = f'/tmp/temp.grib2.gz'
+    dest = '/tmp/temp.grib2.gz'
     copy_success = http_utils.http_cp(path, dest)
     assert not copy_success
 

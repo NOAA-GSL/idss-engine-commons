@@ -6,6 +6,7 @@
 #
 # Contributors:
 #     Mackenzie Grimes
+#     Paul Hamer
 #
 # --------------------------------------------------------------------------------
 # pylint: disable=missing-function-docstring,invalid-name,redefined-outer-name,protected-access
@@ -73,12 +74,15 @@ def test_path_fmt(local_path_builder: PathBuilder):
 EXAMPLE_ISSUE = datetime(1970, 10, 3, 12, tzinfo=UTC)  # a.k.a. issued at
 EXAMPLE_VALID = datetime(1970, 10, 3, 14, tzinfo=UTC)  # a.k.a. valid until
 EXAMPLE_LEAD = TimeDelta(EXAMPLE_VALID - EXAMPLE_ISSUE)  # a.k.a. duration of time that issue lasts
-EXAMPLE_MRMS_ISSUE = datetime(2024, 10, 30, 20, 56, 40, tzinfo=UTC)  # a.k.a. issued at
+EXAMPLE_MRMS_ISSUE = datetime(2024, 10, 30, 20, 56, 40, tzinfo=UTC)
 
 EXAMPLE_NBM_FULL_PATH = '~/blend.19701003/12/core/blend.t12z.core.f002.co.grib2.idx'
-EXAMPLE_MRMS_FULL_PATH = 'http://127.0.0.1:5000/data/3DRefl/MergedReflectivityQC_00.50/MRMS_MergedReflectivityQC_00.50_20241030-205640.grib2.gz'
-EXAMPLE_BAD_FULL_PATH = 'http://127.0.0.1:5000/data/3DRefl/MergedReflectivityQC_00.50/MRMS_MergedReflectivityQC_00.50_latest.grib2.gz'
+EXAMPLE_MRMS_FULL_PATH = 'http://127.0.0.1:5000/data/3DRefl/MergedReflectivityQC_00.50/'\
+                         'MRMS_MergedReflectivityQC_00.50_20241030-205640.grib2.gz'
+EXAMPLE_BAD_FULL_PATH = 'http://127.0.0.1:5000/data/3DRefl/MergedReflectivityQC_00.50/'\
+                        'MRMS_MergedReflectivityQC_00.50_latest.grib2.gz'
 
+# pylint: disable=duplicate-code, line-too-long
 
 @pytest.fixture
 def path_builder() -> PathBuilder:
@@ -92,8 +96,8 @@ def path_builder() -> PathBuilder:
 def mrms_path_builder() -> PathBuilder:
     base_directory = 'http://127.0.0.1:5000/data/'
     subdirectory_pattern = '3DRefl/MergedReflectivityQC_00.50/'
-    file_base_pattern = ('MRMS_MergedReflectivityQC_00.50_{issue.year:04d}{issue.month:02d}{issue.day:02d}'
-                         '-{issue.hour:02d}{issue.minute:02d}{issue.second:02d}')
+    file_base_pattern = 'MRMS_MergedReflectivityQC_00.50_{issue.year:04d}{issue.month:02d}{issue.day:02d}'\
+                        '-{issue.hour:02d}{issue.minute:02d}{issue.second:02d}'
     return PathBuilder(base_directory, subdirectory_pattern, file_base_pattern, 'grib2.gz')
 
 
@@ -136,7 +140,7 @@ def test_get_issue(path_builder: PathBuilder):
     assert actual_issue == EXAMPLE_ISSUE
 def test_get_issue_fail(path_builder: PathBuilder):
     actual_issue: datetime = path_builder.get_issue(EXAMPLE_BAD_FULL_PATH)
-    assert actual_issue == None
+    assert actual_issue is None
 
 def test_get_issue_mrms(mrms_path_builder: PathBuilder):
     actual_issue: datetime = mrms_path_builder.get_issue(EXAMPLE_MRMS_FULL_PATH)
