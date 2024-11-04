@@ -6,7 +6,6 @@
 # Copyright (c) 2023 Regents of the University of Colorado. All rights reserved. (2)
 #
 # Contributors:
-#     Geary J Layne (2)
 #     Paul Hamer (1)
 #
 # -------------------------------------------------------------------------------
