@@ -11,6 +11,7 @@
 #
 # ----------------------------------------------------------------------------------
 
+import contextvars
 import logging
 import logging.config
 import uuid
@@ -344,6 +345,11 @@ def threadsafe_nack(
         threadsafe_call(channel, lambda: channel.basic_nack(delivery_tag, requeue=requeue))
 
 
+def _set_context(context):
+    for var, value in context.items():
+        var.set(value)
+
+
 class Consumer(Thread):
     """
     RabbitMQ consumer, runs in own thread to not block heartbeat. A thread pool
@@ -352,6 +358,10 @@ class Consumer(Thread):
     shutdown.  The start() and stop() methods should be called from the same
     thread as the one used to create the instance.
     """
+
+    # pylint: disable=too-many-instance-attributes
+    # Eight is reasonable in this case.
+
     def __init__(
         self,
         conn_params: Conn,
@@ -361,6 +371,7 @@ class Consumer(Thread):
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
+        self.context = contextvars.copy_context()
         self.daemon = True
         self._tpx = ThreadPoolExecutor(max_workers=num_message_handlers)
         self._conn_params = conn_params
@@ -382,6 +393,7 @@ class Consumer(Thread):
         self.channel.basic_qos(prefetch_count=1)
 
     def run(self):
+        _set_context(self.context)
         logger.info('Start Consuming...  (to stop press CTRL+C)')
         self.channel.start_consuming()
 
@@ -428,6 +440,7 @@ class Publisher(Thread):
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
+        self.context = contextvars.copy_context()
         self.daemon = True
         self._is_running = True
         self._exch = exch_params
@@ -454,6 +467,7 @@ class Publisher(Thread):
             self.channel.confirm_delivery()
 
     def run(self):
+        _set_context(self.context)
         logger.info('Starting publisher')
         while self._is_running:
             if self.connection and self.connection.is_open:
