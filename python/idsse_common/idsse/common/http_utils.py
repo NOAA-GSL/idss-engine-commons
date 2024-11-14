@@ -97,7 +97,7 @@ class HttpUtils:
 
                 logger.debug('copy fail: request status code: %s', response.status_code)
                 return False
-        except Exception:
+        except Exception:  # pylint: disable=broad-exception-caught
             return False
 
     def check_for(self, issue: datetime, valid: datetime) -> tuple[datetime, str] | None:
