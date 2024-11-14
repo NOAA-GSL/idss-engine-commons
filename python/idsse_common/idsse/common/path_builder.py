@@ -361,9 +361,9 @@ class PathBuilder:
         for i, _dir in enumerate(dirs):
             res = re.search(r'{.*}', _dir)
             if res:
-                # pylint: disable=broad-exception-caught
                 try :
                     parse_args(res.group(), vals[i][res.span()[0]:], time_args)
-                except Exception:
+                except Exception:  # pylint: disable=broad-exception-caught
+
                     pass
         return time_args
