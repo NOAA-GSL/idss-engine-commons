@@ -10,8 +10,8 @@
 #
 # -------------------------------------------------------------------------------
 
-import logging
 import fnmatch
+import logging
 import os
 import shutil
 from collections.abc import Sequence
