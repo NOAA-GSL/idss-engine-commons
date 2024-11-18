@@ -437,6 +437,7 @@ class Publisher(Thread):
         conn_params: Conn,
         exch_params: Exch,
         *args,
+        channel: Channel | None = None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -446,8 +447,28 @@ class Publisher(Thread):
         self._exch = exch_params
         self._queue = None
 
-        self.connection = BlockingConnection(conn_params.connection_parameters)
-        self.channel = self.connection.channel()
+        # establish RabbitMQ connection/channel and initialize exchange (or reuse provided channel)
+        self.setup(channel if channel is not None else conn_params)
+
+    def setup(self, channel_args: Conn | Channel):
+        """
+        Method that initializes the RabbitMQ connection, channel, exchange, and queue to be used
+        to publish messages in a threadsafe way.
+        Can be overridden to customize how Publisher establishes these RMQ resources.
+
+        Args:
+            rmq_args (Conn | None)
+        """
+        if isinstance(channel_args, Channel):
+            # reuse the existing RabbitMQ Connection and Channel passed to setup()
+            self.connection = channel_args.connection
+            self.channel = channel_args
+        elif isinstance(channel_args, Conn):
+            # create new RabbitMQ Connection and Channel using the provided params
+            self.connection = BlockingConnection(channel_args.connection_parameters)
+            self.channel = self.connection.channel()
+        else:
+            raise ValueError('Publisher expects RabbitMQ params (Conn) or existing Channel to run setup')
 
         # if delivery is mandatory there must be a queue attach to the exchange
         if self._exch.mandatory:
@@ -457,7 +478,7 @@ class Publisher(Thread):
                                 exclusive=True,
                                 auto_delete=False,
                                 arguments={'x-queue-type': 'classic',
-                                           'x-message-ttl': 10 * 1000})
+                                            'x-message-ttl': 10 * 1000})
 
             _setup_exch_and_queue(self.channel, self._exch, self._queue)
         else:

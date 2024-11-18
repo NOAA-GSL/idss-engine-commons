@@ -17,6 +17,7 @@ from unittest.mock import Mock
 
 from pytest import fixture, raises, MonkeyPatch
 from pika.adapters import blocking_connection
+from pika.channel import Channel
 
 from idsse.common.rabbitmq_utils import (
     Conn, Exch, Queue, Publisher, RabbitMqParams, subscribe_to_queue
@@ -154,9 +155,7 @@ def test_passing_connection_does_not_create_new(mock_connection, monkeypatch):
         'idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection
     )
 
-    new_connection, new_channel = subscribe_to_queue(
-        CONN, RMQ_PARAMS, mock_callback_function
-    )
+    new_connection, new_channel = subscribe_to_queue(CONN, RMQ_PARAMS, mock_callback_function)
 
     mock_connection.assert_not_called()
     assert new_connection == mock_connection
@@ -237,3 +236,17 @@ def test_simple_publisher(monkeypatch: MonkeyPatch, mock_connection: Mock):
 
     publisher.stop()
     assert 'MockChannel.close' in str(mock_threadsafe.call_args[0][1])
+
+
+def test_simple_publisher_existing_channel(
+    monkeypatch: MonkeyPatch, mock_connection: Mock, mock_channel: Mock
+):
+    mock_blocking_connection = Mock(return_value=mock_connection)
+    monkeypatch.setattr('idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection)
+    mock_channel.__class__ = Channel  # make mock look like real pika.Channel
+
+    publisher = Publisher(CONN, RMQ_PARAMS.exchange, channel=mock_channel)
+
+    mock_blocking_connection.assert_not_called()  # should not have created new Connection/Channel
+    assert publisher.channel == mock_channel
+    assert publisher.connection == mock_channel.connection

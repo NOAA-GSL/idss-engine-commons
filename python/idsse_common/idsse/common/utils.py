@@ -117,7 +117,6 @@ def exec_cmd(commands: Sequence[str], timeout: int | None = None) -> Sequence[st
 
 def to_iso(date_time: datetime) -> str:
     """Format a datetime instance to an ISO string"""
-    logger.debug('Datetime (%s) to iso', datetime)
     return (f'{date_time.strftime("%Y-%m-%dT%H:%M")}:'
             f'{(date_time.second + date_time.microsecond / 1e6):06.3f}'
             'Z' if date_time.tzname() in [None, str(timezone.utc)]
@@ -126,7 +125,6 @@ def to_iso(date_time: datetime) -> str:
 
 def to_compact(date_time: datetime) -> str:
     """Format a datetime instance to a compact string"""
-    logger.debug('Datetime (%s) to compact -- %s', datetime, __name__)
     return date_time.strftime('%Y%m%d%H%M%S')
 
 
