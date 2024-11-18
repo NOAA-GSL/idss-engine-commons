@@ -454,19 +454,23 @@ class Publisher(Thread):
         """
         Method that initializes the RabbitMQ connection, channel, exchange, and queue to be used
         to publish messages in a threadsafe way.
-        Can be overridden to customize how Publisher establishes these RMQ resources.
+
+        Automatically called when a new Publisher() is instantiated. Can be overridden by child
+        classes to customize how Publisher establishes these RMQ resources.
 
         Args:
-            rmq_args (Conn | None)
+            channel_args (Conn | pika.channel.Channel): either connection parameters (Conn)
+                to establish a new RabbitMQ connection and channel, or an existing, pre-connected
+                pika Channel. Raises ValueError if channel_args is not one of these types.
         """
-        if isinstance(channel_args, Channel):
-            # reuse the existing RabbitMQ Connection and Channel passed to setup()
-            self.connection = channel_args.connection
-            self.channel = channel_args
-        elif isinstance(channel_args, Conn):
+        if isinstance(channel_args, Conn):
             # create new RabbitMQ Connection and Channel using the provided params
             self.connection = BlockingConnection(channel_args.connection_parameters)
             self.channel = self.connection.channel()
+        elif isinstance(channel_args, Channel):
+            # reuse the existing RabbitMQ Connection and Channel passed to setup()
+            self.connection = channel_args.connection
+            self.channel = channel_args
         else:
             raise ValueError('Publisher expects RabbitMQ params (Conn) or existing Channel to run setup')
 
