@@ -458,7 +458,8 @@ class Publisher(Thread):
             self.connection = conn_params.connection
             self.channel = conn_params
         else:
-            raise ValueError('Publisher expects RabbitMQ params (Conn) or existing Channel to run setup')
+            raise ValueError('RabbitMQ params (Conn) or existing Channel required to create' +
+                              f'Publisher thread. Unexpected type: {type(conn_params)}')
 
         # if delivery is mandatory there must be a queue attach to the exchange
         if self._exch.mandatory:
