@@ -359,10 +359,6 @@ class Consumer(Thread):
     shutdown.  The start() and stop() methods should be called from the same
     thread as the one used to create the instance.
     """
-
-    # pylint: disable=too-many-instance-attributes
-    # Eight is reasonable in this case.
-
     def __init__(
         self,
         conn_params: Conn,
@@ -375,16 +371,17 @@ class Consumer(Thread):
         self.context = contextvars.copy_context()
         self.daemon = True
         self._tpx = ThreadPoolExecutor(max_workers=num_message_handlers)
-        self._conn_params = conn_params
-        if isinstance(rmq_params_and_callbacks, list):
-            self._rmq_params_and_callbacks = rmq_params_and_callbacks
-        else:
-            self._rmq_params_and_callbacks = [rmq_params_and_callbacks]
-        self.connection = BlockingConnection(self._conn_params.connection_parameters)
+
+        self.connection = BlockingConnection(conn_params.connection_parameters)
         self.channel = self.connection.channel()
 
+        if isinstance(rmq_params_and_callbacks, list):
+            _rmq_params_and_callbacks = rmq_params_and_callbacks
+        else:
+            _rmq_params_and_callbacks = [rmq_params_and_callbacks]
+
         self._consumer_tags = []
-        for (exch, queue), func in self._rmq_params_and_callbacks:
+        for (exch, queue), func in _rmq_params_and_callbacks:
             _setup_exch_and_queue(self.channel, exch, queue)
             self._consumer_tags.append(
                 self.channel.basic_consume(queue.name,
@@ -440,6 +437,12 @@ class Publisher(Thread):
         *args,
         **kwargs,
     ):
+        """
+        Args:
+            conn_params (Conn | Channel): either a RabbitMQ Conn with parameters to create a new
+                RabbitMQ connection, or an already-connected RabbitMQ Channel to be reused.
+            exch_params (Exch): params for what RabbitMQ exchange to publish messages to.
+        """
         super().__init__(*args, **kwargs)
         self.context = contextvars.copy_context()
         self.daemon = True
@@ -456,7 +459,8 @@ class Publisher(Thread):
             self.connection = conn_params.connection
             self.channel = conn_params
         else:
-            raise ValueError('Publisher expects RabbitMQ params (Conn) or existing Channel to run setup')
+            raise ValueError('RabbitMQ params (Conn) or existing Channel required to create' +
+                              f'Publisher thread. Unexpected type: {type(conn_params)}')
 
         # if delivery is mandatory there must be a queue attach to the exchange
         if self._exch.mandatory:
