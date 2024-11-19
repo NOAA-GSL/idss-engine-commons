@@ -15,7 +15,8 @@ import contextvars
 import logging
 import logging.config
 import uuid
-from concurrent.futures import ThreadPoolExecutor
+
+from concurrent.futures import Future, ThreadPoolExecutor
 from collections.abc import Callable
 from functools import partial
 from threading import Event, Thread
@@ -434,10 +435,9 @@ class Publisher(Thread):
     """
     def __init__(
         self,
-        conn_params: Conn,
+        conn_params: Conn | Channel,
         exch_params: Exch,
         *args,
-        channel: Channel | None = None,
         **kwargs,
     ):
         super().__init__(*args, **kwargs)
@@ -447,30 +447,14 @@ class Publisher(Thread):
         self._exch = exch_params
         self._queue = None
 
-        # establish RabbitMQ connection/channel and initialize exchange (or reuse provided channel)
-        self.setup(channel if channel is not None else conn_params)
-
-    def setup(self, channel_args: Conn | Channel):
-        """
-        Method that initializes the RabbitMQ connection, channel, exchange, and queue to be used
-        to publish messages in a threadsafe way.
-
-        Automatically called when a new Publisher() is instantiated. Can be overridden by child
-        classes to customize how Publisher establishes these RMQ resources.
-
-        Args:
-            channel_args (Conn | pika.channel.Channel): either connection parameters (Conn)
-                to establish a new RabbitMQ connection and channel, or an existing, pre-connected
-                pika Channel. Raises ValueError if channel_args is not one of these types.
-        """
-        if isinstance(channel_args, Conn):
+        if isinstance(conn_params, Conn):
             # create new RabbitMQ Connection and Channel using the provided params
-            self.connection = BlockingConnection(channel_args.connection_parameters)
+            self.connection = BlockingConnection(conn_params.connection_parameters)
             self.channel = self.connection.channel()
-        elif isinstance(channel_args, Channel):
-            # reuse the existing RabbitMQ Connection and Channel passed to setup()
-            self.connection = channel_args.connection
-            self.channel = channel_args
+        elif isinstance(conn_params, Channel):
+            # reuse the existing RabbitMQ Channel (and its connection) passed to Publisher()
+            self.connection = conn_params.connection
+            self.channel = conn_params
         else:
             raise ValueError('Publisher expects RabbitMQ params (Conn) or existing Channel to run setup')
 
@@ -482,7 +466,7 @@ class Publisher(Thread):
                                 exclusive=True,
                                 auto_delete=False,
                                 arguments={'x-queue-type': 'classic',
-                                            'x-message-ttl': 10 * 1000})
+                                           'x-message-ttl': 10 * 1000})
 
             _setup_exch_and_queue(self.channel, self._exch, self._queue)
         else:
@@ -593,3 +577,161 @@ class Publisher(Thread):
         finally:
             if done_event:
                 done_event.set()
+
+
+class Rpc:
+    """
+    RabbitMQ RPC (remote procedure call) client, runs in own thread to not block heartbeat.
+    The start() and stop() methods should be called from the same thread that created the instance.
+
+    This RPC class can be used to send "requests" (outbound messages) over RabbitMQ and block until
+    a "response" (inbound message) comes back from the receiving app. All consuming and producing is
+    of different queues and matching up requests with responses is abstracted away.
+
+    Example usage:
+
+        my_client = RpcClient(...insert params here...)
+
+        response = my_client.send_message('{"some": "json"}')  # blocks while waiting for response
+
+        logger.info(f'Response from external service: {response}')
+
+    Args:
+        conn_params (Conn): parameters to connect to RabbitMQ server
+        publish_params (Exch): parameters of RMQ Exchange where messages should be sent
+        consume_params (RabbitMqParams): parameters of RMQ Exchange/Queue to receive responses over
+            from the external RabbitMQ service
+        timeout (float  | None): optional timeout to give up on receiving each response.
+            Default is None, meaning wait indefinitely for response from external service
+    """
+    def __init__(self, conn_params: Conn, exch: Exch, timeout: float | None = None):
+        #  consume_params: RabbitMqParams,  # TODO: is this ok to be hard-coded?
+        # self._consume_params = consume_params
+        self._publish_params = exch
+        self._timeout = timeout
+
+        # worklist to track corr_ids sent to remote service, and associated response when it arrives
+        self._pending_requests: dict[str, Future] = {}
+
+        # Start long-running thread to consume any messages from response queue
+        self._consumer = Consumer(
+            conn_params,
+            RabbitMqParamsAndCallback(RabbitMqParams(
+                Exch('', 'direct'),
+                Queue(DIRECT_REPLY_QUEUE, '', True, False, False)
+            ), self._response_callback),
+            num_message_handlers=2
+        )
+        # Publisher relies on Consumer to reuse RabbitMQ channel (required by Direct Reply-To)
+        self._publisher = Publisher(conn_params, exch, channel=self._consumer.channel)
+        # self._publisher.channel.basic_consume(DIRECT_REPLY_QUEUE, self._response_callback, False, False)
+
+    @property
+    def is_open(self) -> bool:
+        """Returns True if RabbitMQ connection (Publisher) is open and ready to send messages"""
+        # TODO: will this work?
+        return self._consumer.is_alive() and self._publisher.is_alive()
+
+    def send_request(self, request_body: str | bytes) -> str | None:
+        """Send message to remote RabbitMQ service using thread-safe RPC. Will block until response
+        is received back, or timeout occurs.
+
+        Returns:
+            Json | None: The response JSON, or None on timeout or error handling response
+        """
+        if not self.is_open:
+            logger.debug('RPC thread not yet initialized. Setting up now')
+            self.start()
+
+        # block until thread has connected channel
+        # TODO: this sleep is not threadsafe, not gonna fly
+        # while not self.is_open:
+        #     from time import sleep
+        #     sleep(0.01)
+
+        # generate unique ID to associate our request to data service's response
+        request_id = str(uuid.uuid4())
+
+        # send request to data service, providing the queue where it should respond
+        properties = BasicProperties(
+            content_type='application/json',
+            correlation_id=request_id,
+            reply_to=DIRECT_REPLY_QUEUE,   # reply_to=self._consume_params.queue.name,
+        )
+
+        # add future to dict where callback can retrieve it and set result
+        request_future = Future()
+        self._pending_requests[request_id] = request_future
+
+        # TODO: Direct-reply messages must be published and consumed by the same connection &
+        # channel (which are unique per Thread)
+        logger.debug('Publishing request message to data service with body: %s', request_body)
+        self._publisher.blocking_publish(request_body,
+                                         properties=properties,
+                                         route_key=self._publish_params.route_key)
+
+        try:
+            # block until callback runs (we'll know when the future's result has been changed)
+            return request_future.result(timeout=self._timeout)
+        except TimeoutError:
+            logger.warning('Timed out waiting for data service response. correlation_id: %s',
+                           request_id)
+            return None
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            logger.warning('Unexpected response from data service: %s', str(exc))
+            return None
+
+    def start(self):
+        """Start dedicated threads to asynchronously send and receive RPC messages using a new
+        RabbitMQ connection and channel. Note: this method can be called externally, but it is
+        not required to use the client. It will automatically call this internally as needed."""
+        if not self.is_open:
+            logger.debug('Starting RPC threads to send and consume messages')
+            self._consumer.start()
+            self._publisher.start()
+
+    def stop(self):
+        """Unsubscribe to data service response queue and cleanup thread"""
+        logger.debug('Shutting down RPC threads')
+        if not self.is_open:
+            logger.debug('RPC threads not running, nothing to cleanup')
+            return
+
+        # tell Consumer & Publisher to cleanup RabbitMQ resources; wait for their threads to terminate
+        self._consumer.stop()
+        self._publisher.stop()
+        self._consumer.join()
+        self._publisher.join()
+
+    def _response_callback(self,
+                           channel: Channel,
+                           method: Basic.Deliver,
+                           properties: BasicProperties,
+                           body: bytes):
+        """Handle RabbitMQ message emitted to response queue."""
+        logger.info('Received response message with routing_key: %s, content_type: %s, size: %i',
+                    method.routing_key, properties.content_type, len(body))
+        logger.debug('Received message: %s', str(body))
+
+        is_direct_reply = str(method.routing_key).startswith(DIRECT_REPLY_QUEUE)
+
+        # remove future from pending list. we will update result shortly
+        request_future = self._pending_requests.pop(properties.correlation_id)
+
+        # TODO: should RPC only work for JSON messages? IDSSe services expect it, but will that ever change?
+        # require message to be json before attempting to parse
+        if properties.content_type != 'application/json':
+            logger.warning('Received unsupported message type: %s', properties.content_type)
+
+            # messages sent through RabbitMQ Direct reply-to are auto acked, don't attempt to nack
+            if not is_direct_reply:
+                channel.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+
+            return request_future.set_exception(TypeError('Response was not application/json'))
+
+        # messages sent through RabbitMQ Direct reply-to are auto acked
+        if not is_direct_reply:
+            channel.basic_ack(delivery_tag=method.delivery_tag)
+
+        # update future with response body to communicate it across to main thread
+        return request_future.set_result(body)
