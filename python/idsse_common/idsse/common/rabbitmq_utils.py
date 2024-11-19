@@ -358,10 +358,6 @@ class Consumer(Thread):
     shutdown.  The start() and stop() methods should be called from the same
     thread as the one used to create the instance.
     """
-
-    # pylint: disable=too-many-instance-attributes
-    # Eight is reasonable in this case.
-
     def __init__(
         self,
         conn_params: Conn,
@@ -374,16 +370,17 @@ class Consumer(Thread):
         self.context = contextvars.copy_context()
         self.daemon = True
         self._tpx = ThreadPoolExecutor(max_workers=num_message_handlers)
-        self._conn_params = conn_params
-        if isinstance(rmq_params_and_callbacks, list):
-            self._rmq_params_and_callbacks = rmq_params_and_callbacks
-        else:
-            self._rmq_params_and_callbacks = [rmq_params_and_callbacks]
-        self.connection = BlockingConnection(self._conn_params.connection_parameters)
+
+        self.connection = BlockingConnection(conn_params.connection_parameters)
         self.channel = self.connection.channel()
 
+        if isinstance(rmq_params_and_callbacks, list):
+            _rmq_params_and_callbacks = rmq_params_and_callbacks
+        else:
+            _rmq_params_and_callbacks = [rmq_params_and_callbacks]
+
         self._consumer_tags = []
-        for (exch, queue), func in self._rmq_params_and_callbacks:
+        for (exch, queue), func in _rmq_params_and_callbacks:
             _setup_exch_and_queue(self.channel, exch, queue)
             self._consumer_tags.append(
                 self.channel.basic_consume(queue.name,
@@ -434,12 +431,17 @@ class Publisher(Thread):
     """
     def __init__(
         self,
-        conn_params: Conn,
+        conn_params: Conn | Channel,
         exch_params: Exch,
         *args,
-        channel: Channel | None = None,
         **kwargs,
     ):
+        """
+        Args:
+            conn_params (Conn | Channel): either a RabbitMQ Conn with parameters to create a new
+                RabbitMQ connection, or an already-connected RabbitMQ Channel to be reused.
+            exch_params (Exch): params for what RabbitMQ exchange to publish messages to.
+        """
         super().__init__(*args, **kwargs)
         self.context = contextvars.copy_context()
         self.daemon = True
@@ -447,30 +449,14 @@ class Publisher(Thread):
         self._exch = exch_params
         self._queue = None
 
-        # establish RabbitMQ connection/channel and initialize exchange (or reuse provided channel)
-        self.setup(channel if channel is not None else conn_params)
-
-    def setup(self, channel_args: Conn | Channel):
-        """
-        Method that initializes the RabbitMQ connection, channel, exchange, and queue to be used
-        to publish messages in a threadsafe way.
-
-        Automatically called when a new Publisher() is instantiated. Can be overridden by child
-        classes to customize how Publisher establishes these RMQ resources.
-
-        Args:
-            channel_args (Conn | pika.channel.Channel): either connection parameters (Conn)
-                to establish a new RabbitMQ connection and channel, or an existing, pre-connected
-                pika Channel. Raises ValueError if channel_args is not one of these types.
-        """
-        if isinstance(channel_args, Conn):
+        if isinstance(conn_params, Conn):
             # create new RabbitMQ Connection and Channel using the provided params
-            self.connection = BlockingConnection(channel_args.connection_parameters)
+            self.connection = BlockingConnection(conn_params.connection_parameters)
             self.channel = self.connection.channel()
-        elif isinstance(channel_args, Channel):
-            # reuse the existing RabbitMQ Connection and Channel passed to setup()
-            self.connection = channel_args.connection
-            self.channel = channel_args
+        elif isinstance(conn_params, Channel):
+            # reuse the existing RabbitMQ Channel (and its connection) passed to Publisher()
+            self.connection = conn_params.connection
+            self.channel = conn_params
         else:
             raise ValueError('Publisher expects RabbitMQ params (Conn) or existing Channel to run setup')
 

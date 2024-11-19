@@ -245,7 +245,7 @@ def test_simple_publisher_existing_channel(
     monkeypatch.setattr('idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection)
     mock_channel.__class__ = Channel  # make mock look like real pika.Channel
 
-    publisher = Publisher(CONN, RMQ_PARAMS.exchange, channel=mock_channel)
+    publisher = Publisher(mock_channel, RMQ_PARAMS.exchange)
 
     mock_blocking_connection.assert_not_called()  # should not have created new Connection/Channel
     assert publisher.channel == mock_channel
