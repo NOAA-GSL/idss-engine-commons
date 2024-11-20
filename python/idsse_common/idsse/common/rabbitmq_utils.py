@@ -369,7 +369,7 @@ class Consumer(Thread):
     """
     def __init__(
         self,
-        conn_params: Conn | BlockingChannel | Channel,
+        conn_params: Conn,
         rmq_params_and_callbacks: RabbitMqParamsAndCallback | list[RabbitMqParamsAndCallback],
         *args,
         num_message_handlers: int = 2,
@@ -377,8 +377,7 @@ class Consumer(Thread):
     ):
         """
         Args:
-            conn_params (Conn | BlockingChannel | Channel): either a RabbitMQ Conn with parameters
-                to create a new RabbitMQ connection, or an already-connected RabbitMQ Channel to reuse.
+            conn_params (Conn): parameters to create a new RabbitMQ connection
             rmq_params_and_callbacks (RabbitMqParamsAndCallback | list[RabbitMqParamsAndCallback]):
                 1 or more Exch/Queue tuples, and a function to invoke when messages arrive on the
                 listed queue.
@@ -390,16 +389,8 @@ class Consumer(Thread):
         self.daemon = True
         self._tpx = ThreadPoolExecutor(max_workers=num_message_handlers)
 
-        # self.connection = BlockingConnection(conn_params.connection_parameters)
-        # self.channel = self.connection.channel()
-        if isinstance(conn_params, Conn):
-            # create new RabbitMQ Connection and Channel using the provided params
-            self.connection = BlockingConnection(conn_params.connection_parameters)
-            self.channel = self.connection.channel()
-        elif isinstance(conn_params, (BlockingChannel, Channel)):
-            # reuse the existing RabbitMQ BlockingChannel (and its connection) passed to Publisher
-            self.connection = conn_params.connection
-            self.channel = conn_params
+        self.connection = BlockingConnection(conn_params.connection_parameters)
+        self.channel = self.connection.channel()
 
         if isinstance(rmq_params_and_callbacks, list):
             _rmq_params_and_callbacks = rmq_params_and_callbacks
@@ -660,8 +651,8 @@ class Rpc:
             ), self._response_callback),
             num_message_handlers=2
         )
-        # Publisher relies on Consumer to reuse RabbitMQ channel (required by Direct Reply-To)
         self._publisher = Publisher(self._consumer.channel, exch)
+        # Publisher relies on Consumer to reuse RabbitMQ channel (required by Direct Reply-To)
         # self._publisher.channel.basic_consume(DIRECT_REPLY_QUEUE, self._response_callback, False, False)
 
     @property
