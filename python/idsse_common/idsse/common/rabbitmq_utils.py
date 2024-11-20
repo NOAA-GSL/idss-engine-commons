@@ -24,6 +24,7 @@ from typing import NamedTuple
 
 from pika import BasicProperties, ConnectionParameters, PlainCredentials
 from pika.adapters import BlockingConnection
+from pika.adapters.blocking_connection import BlockingChannel
 from pika.channel import Channel
 from pika.exceptions import UnroutableError
 from pika.frame import Method
@@ -91,7 +92,7 @@ class RabbitMqParamsAndCallback(NamedTuple):
 
 
 def _initialize_exchange_and_queue(
-    channel: Channel,
+    channel: BlockingChannel | Channel,
     params: RabbitMqParams
 ) -> str:
     """Declare and bind RabbitMQ exchange and queue using the provided channel.
@@ -134,8 +135,8 @@ def _initialize_exchange_and_queue(
 def _initialize_connection_and_channel(
     connection: Conn,
     params: RabbitMqParams,
-    channel: Channel | Channel | None = None,
-) -> tuple[BlockingConnection, Channel, str]:
+    channel: BlockingChannel | Channel | None = None,
+) -> tuple[BlockingConnection, BlockingChannel, str]:
     """Establish RabbitMQ connection, and declare exchange and queue on new Channel"""
     if not isinstance(connection, Conn):
         # connection of unsupported type passed
@@ -164,8 +165,8 @@ def subscribe_to_queue(
     rmq_params: RabbitMqParams,
     on_message_callback: Callable[
         [Channel, Basic.Deliver, BasicProperties, bytes], None],
-    channel: Channel | None = None
-) -> tuple[BlockingConnection, Channel]:
+    channel: BlockingChannel | Channel | None = None
+) -> tuple[BlockingConnection, BlockingChannel]:
     """
     Function that handles setup of consumer of RabbitMQ queue messages, declaring the exchange and
     queue if needed, and invoking the provided callback when a message is received.
@@ -185,8 +186,8 @@ def subscribe_to_queue(
         on_message_callback (Callable[
             [BlockingChannel, Basic.Deliver, BasicProperties, bytes], None]):
             function to handle messages that are received over the subscribed exchange and queue.
-        channel (BlockingChannel | None): optional existing (open) RabbitMQ channel to reuse.
-            Default is to create unique channel for this consumer.
+        channel (BlockingChannel | Channel | None): optional existing (open) RabbitMQ channel to
+            reuse. Default is to create unique channel for this consumer.
 
     Returns:
         tuple[BlockingConnection, BlockingChannel]: the connection and channel, which are now open
@@ -206,45 +207,52 @@ def subscribe_to_queue(
     return _connection, _channel
 
 
-def _setup_exch_and_queue(channel: Channel, exch: Exch, queue: Queue):
+def _setup_exch_and_queue(channel: BlockingChannel | Channel, exch: Exch, queue: Queue):
     """Setup an exchange and queue and bind them with the queue's route key(s)"""
     if queue.arguments and 'x-queue-type' in queue.arguments and \
        queue.arguments['x-queue-type'] == 'quorum' and queue.auto_delete:
         raise ValueError('Quorum queues can not be configured to auto delete')
 
-    _setup_exch(channel, exch)
+    if exch.name != '': # if using default exchange, skip declaring (not allowed by RMQ)
+        _setup_exch(channel, exch)
 
-    result: Method = channel.queue_declare(
-        queue=queue.name,
-        exclusive=queue.exclusive,
-        durable=queue.durable,
-        auto_delete=queue.auto_delete,
-        arguments=queue.arguments
-    )
-    queue_name = result.method.queue
-    logger.debug('Declared queue: %s', queue_name)
+    if queue.name == DIRECT_REPLY_QUEUE:
+        queue_name = queue.name
+        logger.debug('Using Direct Reply-to queue, skipping declare')
 
-    if isinstance(queue.route_key, list):
-        for route_key in queue.route_key:
+    else:
+        result: Method = channel.queue_declare(
+            queue=queue.name,
+            exclusive=queue.exclusive,
+            durable=queue.durable,
+            auto_delete=queue.auto_delete,
+            arguments=queue.arguments
+        )
+        queue_name = result.method.queue
+        logger.debug('Declared queue: %s', queue_name)
+
+    if exch.name != '': # if using default exchange, skip binding queues (not allowed by RMQ)
+        if isinstance(queue.route_key, list):
+            for route_key in queue.route_key:
+                channel.queue_bind(
+                    queue_name,
+                    exchange=exch.name,
+                    routing_key=route_key
+                )
+                logger.debug('Bound queue(%s) to exchange(%s) with route_key(%s)',
+                             queue_name, exch.name, route_key)
+        else:
             channel.queue_bind(
                 queue_name,
                 exchange=exch.name,
-                routing_key=route_key
+                routing_key=queue.route_key
             )
             logger.debug('Bound queue(%s) to exchange(%s) with route_key(%s)',
-                         queue_name, exch.name, route_key)
-    else:
-        channel.queue_bind(
-            queue_name,
-            exchange=exch.name,
-            routing_key=queue.route_key
-        )
-        logger.debug('Bound queue(%s) to exchange(%s) with route_key(%s)',
-                     queue_name, exch.name, queue.route_key)
+                         queue_name, exch.name, queue.route_key)
 
 
-def _setup_exch(channel: Channel, exch: Exch):
-    """Setup and exchange"""
+def _setup_exch(channel: BlockingChannel | Channel, exch: Exch):
+    """Setup an exchange"""
     channel.exchange_declare(
         exchange=exch.name,
         exchange_type=exch.type,
@@ -253,7 +261,7 @@ def _setup_exch(channel: Channel, exch: Exch):
     logger.debug('Declared exchange: %s', exch.name)
 
 
-def threadsafe_call(channel: Channel, *functions: Callable):
+def threadsafe_call(channel: BlockingChannel | Channel, *functions: Callable):
     """
     This function provides a thread safe way to call pika functions (or functions that call
     pika functions) from a thread other than the main. The need for this utility is practice of
@@ -286,7 +294,7 @@ def threadsafe_call(channel: Channel, *functions: Callable):
                         partial(self.pub_conf.publish_message,
                                 message=message))
     Args:
-        channel (BlockingChannel): RabbitMQ channel.
+        channel (BlockingChannel | Channel): RabbitMQ channel.
         functions (Callable): One or more callable function, typically created via
                                 functools.partial or lambda, but can be function without args
     """
@@ -301,7 +309,7 @@ def threadsafe_call(channel: Channel, *functions: Callable):
 
 
 def threadsafe_ack(
-        channel: Channel,
+        channel: BlockingChannel | Channel,
         delivery_tag: int,
         extra_func: Callable = None,
 ):
@@ -309,7 +317,7 @@ def threadsafe_ack(
     This is just a convenance function that acks a message via threadsafe_call
 
     Args:
-        channel (BlockingChannel): RabbitMQ channel.
+        channel (BlockingChannel | Channel): RabbitMQ channel.
         delivery_tag (int): Delivery tag to be used when nacking.
         extra_func (Callable): Any extra function that you would like to be called after the nack.
                                Typical use case would we to send a log via a lambda
@@ -322,7 +330,7 @@ def threadsafe_ack(
 
 
 def threadsafe_nack(
-        channel: Channel,
+        channel: BlockingChannel | Channel,
         delivery_tag: int,
         extra_func: Callable = None,
         requeue: bool = False,
@@ -331,7 +339,7 @@ def threadsafe_nack(
     This is just a convenance function that nacks a message via threadsafe_call
 
     Args:
-        channel (BlockingChannel): RabbitMQ channel.
+        channel (BlockingChannel | Channel): RabbitMQ channel.
         delivery_tag (int): Delivery tag to be used when nacking.
         extra_func (Callable): Any extra function that you would like to be called after the nack.
                                Typical use case would we to send a log via a lambda
@@ -361,19 +369,37 @@ class Consumer(Thread):
     """
     def __init__(
         self,
-        conn_params: Conn,
+        conn_params: Conn | BlockingChannel | Channel,
         rmq_params_and_callbacks: RabbitMqParamsAndCallback | list[RabbitMqParamsAndCallback],
-        num_message_handlers: int,
         *args,
+        num_message_handlers: int = 2,
         **kwargs,
     ):
-        super().__init__(*args, **kwargs)
+        """
+        Args:
+            conn_params (Conn | BlockingChannel | Channel): either a RabbitMQ Conn with parameters
+                to create a new RabbitMQ connection, or an already-connected RabbitMQ Channel to reuse.
+            rmq_params_and_callbacks (RabbitMqParamsAndCallback | list[RabbitMqParamsAndCallback]):
+                1 or more Exch/Queue tuples, and a function to invoke when messages arrive on the
+                listed queue.
+            num_message_handlers (optional, int): The max thread pool size for workers to handle
+                message callbacks concurrently. Default is 2.
+        """
+        super().__init__(*args, **kwargs, name='Consumer')
         self.context = contextvars.copy_context()
         self.daemon = True
         self._tpx = ThreadPoolExecutor(max_workers=num_message_handlers)
 
-        self.connection = BlockingConnection(conn_params.connection_parameters)
-        self.channel = self.connection.channel()
+        # self.connection = BlockingConnection(conn_params.connection_parameters)
+        # self.channel = self.connection.channel()
+        if isinstance(conn_params, Conn):
+            # create new RabbitMQ Connection and Channel using the provided params
+            self.connection = BlockingConnection(conn_params.connection_parameters)
+            self.channel = self.connection.channel()
+        elif isinstance(conn_params, (BlockingChannel, Channel)):
+            # reuse the existing RabbitMQ BlockingChannel (and its connection) passed to Publisher
+            self.connection = conn_params.connection
+            self.channel = conn_params
 
         if isinstance(rmq_params_and_callbacks, list):
             _rmq_params_and_callbacks = rmq_params_and_callbacks
@@ -385,7 +411,9 @@ class Consumer(Thread):
             _setup_exch_and_queue(self.channel, exch, queue)
             self._consumer_tags.append(
                 self.channel.basic_consume(queue.name,
-                                           partial(self._on_message, func=func))
+                                           partial(self._on_message, func=func),
+                                           # RMQ requires auto_ack=True to consume from Direct Reply-to
+                                           auto_ack=queue.name == DIRECT_REPLY_QUEUE)
             )
 
         self.channel.basic_qos(prefetch_count=1)
@@ -432,18 +460,18 @@ class Publisher(Thread):
     """
     def __init__(
         self,
-        conn_params: Conn | Channel,
+        conn_params: Conn | BlockingChannel | Channel,
         exch_params: Exch,
         *args,
         **kwargs,
     ):
         """
         Args:
-            conn_params (Conn | Channel): either a RabbitMQ Conn with parameters to create a new
-                RabbitMQ connection, or an already-connected RabbitMQ Channel to be reused.
+            conn_params (Conn | BlockingChannel | Channel): either a RabbitMQ Conn with parameters
+                to create a new RabbitMQ connection, or an already-connected RabbitMQ Channel to reuse.
             exch_params (Exch): params for what RabbitMQ exchange to publish messages to.
         """
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs, name='Publisher')
         self.context = contextvars.copy_context()
         self.daemon = True
         self._is_running = True
@@ -454,13 +482,13 @@ class Publisher(Thread):
             # create new RabbitMQ Connection and Channel using the provided params
             self.connection = BlockingConnection(conn_params.connection_parameters)
             self.channel = self.connection.channel()
-        elif isinstance(conn_params, Channel):
-            # reuse the existing RabbitMQ Channel (and its connection) passed to Publisher()
+        elif isinstance(conn_params, (BlockingChannel, Channel)):
+            # reuse the existing RabbitMQ BlockingChannel (and its connection) passed to Publisher
             self.connection = conn_params.connection
             self.channel = conn_params
         else:
-            raise ValueError('RabbitMQ params (Conn) or existing Channel required to create' +
-                              f'Publisher thread. Unexpected type: {type(conn_params)}')
+            raise ValueError('RabbitMQ params (Conn) or existing BlockingChannel required to ' +
+                             f'create Publisher thread. Unexpected type: {type(conn_params)}')
 
         # if delivery is mandatory there must be a queue attach to the exchange
         if self._exch.mandatory:
@@ -473,7 +501,7 @@ class Publisher(Thread):
                                            'x-message-ttl': 10 * 1000})
 
             _setup_exch_and_queue(self.channel, self._exch, self._queue)
-        else:
+        elif self._exch.name != '': # if using default exchange, skip declaring (not allowed by RMQ)
             _setup_exch(self.channel, self._exch)
 
         if self._exch.delivery_conf:
@@ -583,14 +611,24 @@ class Publisher(Thread):
                 done_event.set()
 
 
+class RpcResponse(NamedTuple):
+    """RabbitMQ response that came back from the recipient client of an RPC request."""
+    body: str
+    properties: BasicProperties
+
+
 class Rpc:
     """
     RabbitMQ RPC (remote procedure call) client, runs in own thread to not block heartbeat.
     The start() and stop() methods should be called from the same thread that created the instance.
 
     This RPC class can be used to send "requests" (outbound messages) over RabbitMQ and block until
-    a "response" (inbound message) comes back from the receiving app. All consuming and producing is
-    of different queues and matching up requests with responses is abstracted away.
+    a "response" (inbound message) comes back from the receiving app. All producing to/consuming of
+    different queues, and associating requests with their responses, is abstracted away.
+
+    Note that RPC by RabbitMQ convention uses the built-in Direct Reply-To queue to field the
+    responses messages, rather than creating its own queue. Directing responses to a custom queue
+    is not yet supported by Rpc.
 
     Example usage:
 
@@ -602,15 +640,11 @@ class Rpc:
 
     Args:
         conn_params (Conn): parameters to connect to RabbitMQ server
-        publish_params (Exch): parameters of RMQ Exchange where messages should be sent
-        consume_params (RabbitMqParams): parameters of RMQ Exchange/Queue to receive responses over
-            from the external RabbitMQ service
+        exch (Exch): parameters of RMQ Exchange where messages should be sent
         timeout (float  | None): optional timeout to give up on receiving each response.
             Default is None, meaning wait indefinitely for response from external service
     """
     def __init__(self, conn_params: Conn, exch: Exch, timeout: float | None = None):
-        #  consume_params: RabbitMqParams,  # TODO: is this ok to be hard-coded?
-        # self._consume_params = consume_params
         self._publish_params = exch
         self._timeout = timeout
 
@@ -627,7 +661,7 @@ class Rpc:
             num_message_handlers=2
         )
         # Publisher relies on Consumer to reuse RabbitMQ channel (required by Direct Reply-To)
-        self._publisher = Publisher(conn_params, exch, channel=self._consumer.channel)
+        self._publisher = Publisher(self._consumer.channel, exch)
         # self._publisher.channel.basic_consume(DIRECT_REPLY_QUEUE, self._response_callback, False, False)
 
     @property
@@ -636,7 +670,7 @@ class Rpc:
         # TODO: will this work?
         return self._consumer.is_alive() and self._publisher.is_alive()
 
-    def send_request(self, request_body: str | bytes) -> str | None:
+    def send_request(self, request_body: str | bytes) -> RpcResponse | None:
         """Send message to remote RabbitMQ service using thread-safe RPC. Will block until response
         is received back, or timeout occurs.
 
@@ -648,20 +682,17 @@ class Rpc:
             self.start()
 
         # block until thread has connected channel
-        # TODO: this sleep is not threadsafe, not gonna fly
         # while not self.is_open:
         #     from time import sleep
-        #     sleep(0.01)
+        #     sleep(0.01)  # TODO: this sleep is not threadsafe, not gonna fly
 
         # generate unique ID to associate our request to data service's response
         request_id = str(uuid.uuid4())
 
         # send request to data service, providing the queue where it should respond
-        properties = BasicProperties(
-            content_type='application/json',
-            correlation_id=request_id,
-            reply_to=DIRECT_REPLY_QUEUE,   # reply_to=self._consume_params.queue.name,
-        )
+        properties = BasicProperties(content_type='application/json',
+                                     correlation_id=request_id,
+                                     reply_to=DIRECT_REPLY_QUEUE,)
 
         # add future to dict where callback can retrieve it and set result
         request_future = Future()
@@ -678,11 +709,11 @@ class Rpc:
             # block until callback runs (we'll know when the future's result has been changed)
             return request_future.result(timeout=self._timeout)
         except TimeoutError:
-            logger.warning('Timed out waiting for data service response. correlation_id: %s',
+            logger.warning('Timed out waiting for service response. correlation_id: %s',
                            request_id)
             return None
         except Exception as exc:  # pylint: disable=broad-exception-caught
-            logger.warning('Unexpected response from data service: %s', str(exc))
+            logger.warning('Unexpected response from recipient service: %s', str(exc))
             return None
 
     def start(self):
@@ -724,18 +755,18 @@ class Rpc:
 
         # TODO: should RPC only work for JSON messages? IDSSe services expect it, but will that ever change?
         # require message to be json before attempting to parse
-        if properties.content_type != 'application/json':
-            logger.warning('Received unsupported message type: %s', properties.content_type)
+        # if properties.content_type != 'application/json':
+        #     logger.warning('Received unsupported message type: %s', properties.content_type)
 
-            # messages sent through RabbitMQ Direct reply-to are auto acked, don't attempt to nack
-            if not is_direct_reply:
-                channel.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+        #     # messages sent through RabbitMQ Direct reply-to are auto acked, don't attempt to nack
+        #     if not is_direct_reply:
+        #         channel.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
 
-            return request_future.set_exception(TypeError('Response was not application/json'))
+        #     return request_future.set_exception(TypeError('Response was not application/json'))
 
         # messages sent through RabbitMQ Direct reply-to are auto acked
         if not is_direct_reply:
             channel.basic_ack(delivery_tag=method.delivery_tag)
 
         # update future with response body to communicate it across to main thread
-        return request_future.set_result(body)
+        return request_future.set_result(RpcResponse(str(body, encoding='utf-8'), properties))
