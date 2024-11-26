@@ -28,7 +28,7 @@ corr_id_context_var: ContextVar[str] = ContextVar('correlation_id')
 
 def set_corr_id_context_var(
         originator: str,
-        key: uuid.UUID = uuid.uuid4(),
+        key: uuid.UUID = uuid.UUID('00000000-0000-0000-0000-000000000000'),
         issue_dt: str | datetime | None = None
 ) -> None:
     """
