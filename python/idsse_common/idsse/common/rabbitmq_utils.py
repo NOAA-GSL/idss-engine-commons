@@ -309,7 +309,7 @@ def threadsafe_call(channel: Channel, *functions: Callable):
         else:
             logger.error('Channel closed before callback could be run')
             raise ConnectionError('RabbitMQ Channel is closed')
-    channel.connection.add_callback_threadsafe(call_if_channel_is_open)
+    channel.connection.add_callback_threadsafe(call_if_channel_is_open)  # TODO: this isn't running immediately
 
 
 def threadsafe_ack(

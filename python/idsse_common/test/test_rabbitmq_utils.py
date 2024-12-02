@@ -12,12 +12,13 @@
 # pylint: disable=missing-function-docstring,missing-class-docstring,too-few-public-methods
 # pylint: disable=redefined-outer-name,unused-argument,protected-access,duplicate-code
 
+import json
 from typing import NamedTuple
 from unittest.mock import Mock
 from uuid import UUID
 
 from pytest import fixture, raises, MonkeyPatch
-from pika import BlockingConnection
+from pika import BasicProperties, BlockingConnection
 from pika.adapters.blocking_connection import BlockingChannel
 
 from idsse.common.rabbitmq_utils import (
@@ -68,10 +69,12 @@ def mock_connection(monkeypatch: MonkeyPatch, mock_channel: Mock) -> Mock:
 
 
 @fixture
-def mock_consumer(monkeypatch: MonkeyPatch) -> Mock:
+def mock_consumer(monkeypatch: MonkeyPatch, mock_connection: Mock, mock_channel: Mock) -> Mock:
     """Mock rabbitmq_utils.Consumer thread instance"""
     mock_obj = Mock(spec=Consumer, name='MockConsumer')
     mock_obj.return_value.is_alive = Mock(return_value=False)  # by default, thread not running
+    mock_obj.return_value.connection = mock_connection
+    mock_obj.return_value.channel = mock_channel
 
     monkeypatch.setattr('idsse.common.rabbitmq_utils.Consumer', mock_obj)
     return mock_obj
@@ -239,28 +242,6 @@ def test_simple_publisher(monkeypatch: MonkeyPatch, mock_connection: Mock):
     assert 'MockChannel.close' in str(mock_threadsafe.call_args[0][1])
 
 
-def test_simple_publisher_existing_channel(
-    monkeypatch: MonkeyPatch, mock_connection: Mock, mock_channel: Mock
-):
-    mock_blocking_connection = Mock(return_value=mock_connection)
-    monkeypatch.setattr('idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection)
-    mock_threadsafe = Mock()
-    monkeypatch.setattr('idsse.common.rabbitmq_utils.threadsafe_call', mock_threadsafe)
-
-    publisher = Publisher(CONN, RMQ_PARAMS.exchange)
-
-    mock_blocking_connection.assert_called_once()
-    _channel = mock_blocking_connection.return_value.channel
-    _channel.assert_called_once()
-    assert publisher.connection == mock_connection
-
-    publisher.publish({'data': 123})
-    assert 'Publisher.publish' in str(mock_threadsafe.call_args[0][1])
-
-    publisher.stop()
-    assert 'MockChannel.close' in str(mock_threadsafe.call_args[0][1])
-
-
 def test_rpc_opens_new_connection_and_channel(rpc_thread: Rpc, mock_consumer: Mock):
     assert not rpc_thread.is_open
     rpc_thread.start()
@@ -292,24 +273,39 @@ def test_stop_does_nothing_if_not_started(rpc_thread: Rpc, mock_consumer: Mock):
     mock_consumer.return_value.start.assert_not_called()
 
 
-# def test_send_request_works_without_calling_start(
-#     client: RpcClient, mock_channel: Mock, mock_conn: Mock
-# ):
-#     # build mock message from data service
-#     method = Method('', 123)
-#     props = BasicProperties(
-#         content_type='application/json',
-#         correlation_id=EXAMPLE_UUID)
-#     body = bytes(json.dumps(DATA_VALIDS_RESPONSE), encoding='utf-8')
+def test_send_request_works_without_calling_start(rpc_thread: Rpc,
+                                                  mock_channel: Mock,
+                                                  mock_connection: Mock,
+                                                  mock_consumer: Mock,
+                                                  monkeypatch: MonkeyPatch):
+    example_message = {'value': 'hello world'}
 
-#     # when client calls add_callback_threadsafe to publish message to data service, manually invoke
-#     # response callback with a faked message from data service, simulating RMQ call/response
-#     mock_conn.add_callback_threadsafe = Mock(side_effect=(
-#         lambda _: client._response_callback(mock_channel, method, props, body)
-#     ))
+    # when client calls _publish, manually invoke response callback with a faked message
+    # from external service, simulating RMQ call/response
+    # pylint: disable=too-many-arguments
+    def mock_threadsafe_publish(channel, exch, message_params, queue = None, success_flag = None,
+                                done_event = None):
+        # tell threads waiting for confirmation that message was published
+        success_flag[0] = True  # update pass-by-reference business
+        done_event.set()
 
-#     result = client.send_request(DATA_VALIDS_REQUEST)
-#     assert result == DATA_VALIDS_RESPONSE
+        # build mock message from imaginary external service
+        method = Method('', 123)
+        props = BasicProperties(content_type='application/json', correlation_id=EXAMPLE_UUID)
+        body = bytes(json.dumps(example_message), encoding='utf-8')
+
+        rpc_thread._response_callback(mock_channel, method, props, body)
+
+    mock_publish = Mock(side_effect=mock_threadsafe_publish)
+    monkeypatch.setattr('idsse.common.rabbitmq_utils._publish', mock_publish)
+
+    # hack pika add_callback_threadsafe to invoke immediately (hides complexity of threading)
+    rpc_thread.consumer.channel.connection.add_callback_threadsafe = Mock(
+        side_effect=lambda cb: cb()
+    )
+
+    result = rpc_thread.send_request(json.dumps({'fake': 'request message'}))
+    assert json.loads(result.body) == example_message
 
 
 # TODO: copied unit tests from RiskProcessor RpcClient; can re-purpose but behavior a bit different
