@@ -243,13 +243,22 @@ def test_simple_publisher_existing_channel(
 ):
     mock_blocking_connection = Mock(return_value=mock_connection)
     monkeypatch.setattr('idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection)
-    mock_channel.__class__ = Channel  # make mock look like real pika.Channel
+    mock_threadsafe = Mock()
+    monkeypatch.setattr('idsse.common.rabbitmq_utils.threadsafe_call', mock_threadsafe)
 
-    publisher = Publisher(mock_channel, RMQ_PARAMS.exchange)
+    publisher = Publisher(CONN, RMQ_PARAMS.exchange)
 
-    mock_blocking_connection.assert_not_called()  # should not have created new Connection/Channel
-    assert publisher.channel == mock_channel
-    assert publisher.connection == mock_channel.connection
+    mock_blocking_connection.assert_called_once()
+    _channel = mock_blocking_connection.return_value.channel
+    _channel.assert_called_once()
+    assert publisher.connection == mock_connection
+
+    publisher.publish({'data': 123})
+    assert 'Publisher.publish' in str(mock_threadsafe.call_args[0][1])
+
+    publisher.stop()
+    assert 'MockChannel.close' in str(mock_threadsafe.call_args[0][1])
+
 
 # TODO: copied unit tests from RiskProcessor RpcClient; can re-purpose but behavior a bit different
 # import json
