@@ -16,7 +16,7 @@ import logging
 import logging.config
 import uuid
 
-from concurrent.futures import Future, ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor
 from collections.abc import Callable
 from functools import partial
 from threading import Event, Thread
@@ -98,10 +98,7 @@ class PublishMessageParams(NamedTuple):
     route_key: str | None = None
 
 
-def _initialize_exchange_and_queue(
-    channel: BlockingChannel | Channel,
-    params: RabbitMqParams
-) -> str:
+def _initialize_exchange_and_queue(channel: Channel, params: RabbitMqParams) -> str:
     """Declare and bind RabbitMQ exchange and queue using the provided channel.
 
     Returns:
@@ -142,7 +139,7 @@ def _initialize_exchange_and_queue(
 def _initialize_connection_and_channel(
     connection: Conn,
     params: RabbitMqParams,
-    channel: BlockingChannel | Channel | None = None,
+    channel: Channel | None = None,
 ) -> tuple[BlockingConnection, BlockingChannel, str]:
     """Establish RabbitMQ connection, and declare exchange and queue on new Channel"""
     if not isinstance(connection, Conn):
@@ -172,7 +169,7 @@ def subscribe_to_queue(
     rmq_params: RabbitMqParams,
     on_message_callback: Callable[
         [Channel, Basic.Deliver, BasicProperties, bytes], None],
-    channel: BlockingChannel | Channel | None = None
+    channel: Channel | None = None
 ) -> tuple[BlockingConnection, BlockingChannel]:
     """
     Function that handles setup of consumer of RabbitMQ queue messages, declaring the exchange and
@@ -193,8 +190,8 @@ def subscribe_to_queue(
         on_message_callback (Callable[
             [BlockingChannel, Basic.Deliver, BasicProperties, bytes], None]):
             function to handle messages that are received over the subscribed exchange and queue.
-        channel (BlockingChannel | Channel | None): optional existing (open) RabbitMQ channel to
-            reuse. Default is to create unique channel for this consumer.
+        channel (Channel | None): optional existing (open) RabbitMQ channel to reuse. Default is
+            to create unique channel for this consumer.
 
     Returns:
         tuple[BlockingConnection, BlockingChannel]: the connection and channel, which are now open
@@ -214,7 +211,7 @@ def subscribe_to_queue(
     return _connection, _channel
 
 
-def _setup_exch_and_queue(channel: BlockingChannel | Channel, exch: Exch, queue: Queue):
+def _setup_exch_and_queue(channel: Channel, exch: Exch, queue: Queue):
     """Setup an exchange and queue and bind them with the queue's route key(s)"""
     if queue.arguments and 'x-queue-type' in queue.arguments and \
        queue.arguments['x-queue-type'] == 'quorum' and queue.auto_delete:
@@ -258,7 +255,7 @@ def _setup_exch_and_queue(channel: BlockingChannel | Channel, exch: Exch, queue:
                          queue_name, exch.name, queue.route_key)
 
 
-def _setup_exch(channel: BlockingChannel | Channel, exch: Exch):
+def _setup_exch(channel: Channel, exch: Exch):
     """Setup an exchange"""
     channel.exchange_declare(
         exchange=exch.name,
@@ -268,7 +265,7 @@ def _setup_exch(channel: BlockingChannel | Channel, exch: Exch):
     logger.debug('Declared exchange: %s', exch.name)
 
 
-def threadsafe_call(channel: BlockingChannel | Channel, *functions: Callable):
+def threadsafe_call(channel: Channel, *functions: Callable):
     """
     This function provides a thread safe way to call pika functions (or functions that call
     pika functions) from a thread other than the main. The need for this utility is practice of
@@ -301,7 +298,7 @@ def threadsafe_call(channel: BlockingChannel | Channel, *functions: Callable):
                         partial(self.pub_conf.publish_message,
                                 message=message))
     Args:
-        channel (BlockingChannel | Channel): RabbitMQ channel.
+        channel (Channel): RabbitMQ channel.
         functions (Callable): One or more callable function, typically created via
                                 functools.partial or lambda, but can be function without args
     """
@@ -316,7 +313,7 @@ def threadsafe_call(channel: BlockingChannel | Channel, *functions: Callable):
 
 
 def threadsafe_ack(
-        channel: BlockingChannel | Channel,
+        channel: Channel,
         delivery_tag: int,
         extra_func: Callable = None,
 ):
@@ -324,7 +321,7 @@ def threadsafe_ack(
     This is just a convenance function that acks a message via threadsafe_call
 
     Args:
-        channel (BlockingChannel | Channel): RabbitMQ channel.
+        channel (Channel): RabbitMQ channel.
         delivery_tag (int): Delivery tag to be used when nacking.
         extra_func (Callable): Any extra function that you would like to be called after the nack.
                                Typical use case would we to send a log via a lambda
@@ -337,7 +334,7 @@ def threadsafe_ack(
 
 
 def threadsafe_nack(
-        channel: BlockingChannel | Channel,
+        channel: Channel,
         delivery_tag: int,
         extra_func: Callable = None,
         requeue: bool = False,
@@ -346,7 +343,7 @@ def threadsafe_nack(
     This is just a convenance function that nacks a message via threadsafe_call
 
     Args:
-        channel (BlockingChannel | Channel): RabbitMQ channel.
+        channel (Channel): RabbitMQ channel.
         delivery_tag (int): Delivery tag to be used when nacking.
         extra_func (Callable): Any extra function that you would like to be called after the nack.
                                Typical use case would we to send a log via a lambda
@@ -361,52 +358,58 @@ def threadsafe_nack(
         threadsafe_call(channel, lambda: channel.basic_nack(delivery_tag, requeue=requeue))
 
 
+# pylint: disable=too-many-arguments
 def _publish(channel: BlockingChannel,
              exch: Exch,
              message_params: PublishMessageParams,
              queue: Queue | None = None,
-             future: Future | None = None):
+             success_flag: list[bool] = None,
+             done_event: Event = None):
     """
-    Threadsafe publish method to publish message to queue using channel.
+    Core method to publish to a given RabbitMQ exchange (threadsafe).
+    Success flag is passed by reference, and done event, if not None
+    can be used to block until message is actually publish, vs being scheduled to be.
 
-    Args:
-        channel (BlockingChannel): the pika channel to use to publish.
-        exch (Exch): parameters for the RabbitMQ exchange to publish message to.
-        message_params (PublishMessageParams): the message body to publish, plus properties
-            and (optional) route_key
-        queue (optional, Queue | None): parameters for RabbitMQ queue, if message is being
-            published to a "temporary"/"private" message queue. The published message will be
-            purged from this queue after its TTL expires.
-            Default is None (destination queue not private).
-        future (optional, Future | None): Future that caller can create and block/await on
-            (e.g. Future().result()). Result will be set to True if message published
-            successfully, or raise exception on unexpected error. Default is None
-            (result will not be communicated back to caller).
+    channel (BlockingChannel): the pika channel to use to publish.
+    exch (Exch): parameters for the RabbitMQ exchange to publish message to.
+    message_params (PublishMessageParams): the message body to publish, plus properties
+        and (optional) route_key.
+    queue (optional, Queue | None): parameters for RabbitMQ queue, if message is being
+        published to a "temporary"/"private" message queue. The published message will be
+        purged from this queue after its TTL expires.
+        Default is None (destination queue not private).
+    success_flag (list[bool]): This is effectively passing a boolean by reference. This
+                                will change the value of the first element it this list
+                                to indicate if the core publishing was successful.
+    done_event (Event): A Thread.Event that can be used to indicate when publishing is
+                        complete in a different thread. This can be used to wait for the
+                        completion via 'done_event.wait()' following calling this function.
     """
+    if success_flag:
+        success_flag[0] = False
     try:
         channel.basic_publish(
             exch.name,
             message_params.route_key if message_params.route_key else exch.route_key,
             body=message_params.message,
             properties=message_params.properties,
-            mandatory=exch.mandatory)
-
+            mandatory=exch.mandatory
+        )
+        if success_flag:
+            success_flag[0] = True
         if queue and queue.name.startswith('_'):
             try:
                 channel.queue_purge(queue.name)
             except ValueError as exc:
                 logger.warning('Exception when removing message from private queue: %s', exc)
-        if future:
-            future.set_result(True)  # inform caller that message sent successfully
     except UnroutableError:
         logger.warning('Message was not delivered')
-        if future:
-            future.set_result(False)
-    except Exception as exc:  # pylint: disable=broad-exception-caught
-        error_message = f'Message not published, cause: [{type(exc)}] {str(exc)}'
-        logger.warning(error_message)
-        if future:
-            future.set_exception(error_message)
+    except Exception as exc:
+        logger.warning('Message not published, cause: %s', exc)
+        raise exc
+    finally:
+        if done_event:
+            done_event.set()
 
 
 def _blocking_publish(
@@ -429,19 +432,19 @@ def _blocking_publish(
             purged from this queue after its TTL expires.
             Default is None (destination queue not private).
     Returns:
-        (bool) True if message published successfully.
+        (bool) True if message published successfully. If the provided queue is confirmed to
+            confirm delivery, will return False if failed to confirm.
     """
-    publish_future = Future()
-    threadsafe_call(
-        channel,
-        lambda: _publish(channel, exch, message_params, queue=queue, future=publish_future)
-    )
-
-    try:
-        # future will be resolved to True by self._publish if message sent
-        return publish_future.result()
-    except Exception:  # pylint: disable=broad-exception-caught
-        return False  # some unexpected error happened; message was not published
+    success_flag = [False]
+    done_event = Event()
+    threadsafe_call(channel, lambda: _publish(channel,
+                                              exch,
+                                              message_params,
+                                              queue,
+                                              success_flag,
+                                              done_event))
+    done_event.wait()
+    return success_flag[0]
 
 
 def _set_context(context):
@@ -479,13 +482,13 @@ class Consumer(Thread):
         self.daemon = True
         self._tpx = ThreadPoolExecutor(max_workers=num_message_handlers)
 
-        self.connection = BlockingConnection(conn_params.connection_parameters)
-        self.channel = self.connection.channel()
-
         if isinstance(rmq_params_and_callbacks, list):
             _rmq_params_and_callbacks = rmq_params_and_callbacks
         else:
             _rmq_params_and_callbacks = [rmq_params_and_callbacks]
+
+        self.connection = BlockingConnection(conn_params.connection_parameters)
+        self.channel = self.connection.channel()
 
         self._consumer_tags = []
         for (exch, queue), func in _rmq_params_and_callbacks:
@@ -603,7 +606,6 @@ class Publisher(Thread):
                              PublishMessageParams(message, properties, route_key),
                              self._queue)
         )
-        # lambda: self._publish(message, properties, route_key, [False]))
 
     def blocking_publish(self,
                          message: bytes,
@@ -625,7 +627,7 @@ class Publisher(Thread):
         """
         return _blocking_publish(self.channel,
                                  self._exch,
-                                 PublishMessageParams(message, properties,route_key),
+                                 PublishMessageParams(message, properties, route_key),
                                  self._queue)
 
     def stop(self):
@@ -638,149 +640,3 @@ class Publisher(Thread):
             threadsafe_call(self.channel,
                             self.channel.close,
                             self.connection.close)
-
-
-class RpcResponse(NamedTuple):
-    """RabbitMQ response that came back from the recipient client of an RPC request."""
-    body: str
-    properties: BasicProperties
-
-
-class Rpc:
-    """
-    RabbitMQ RPC (remote procedure call) client, runs in own thread to not block heartbeat.
-    The start() and stop() methods should be called from the same thread that created the instance.
-
-    This RPC class can be used to send "requests" (outbound messages) over RabbitMQ and block until
-    a "response" (inbound message) comes back from the receiving app. All producing to/consuming of
-    different queues, and associating requests with their responses, is abstracted away.
-
-    Note that RPC by RabbitMQ convention uses the built-in Direct Reply-To queue to field the
-    responses messages, rather than creating its own queue. Directing responses to a custom queue
-    is not yet supported by Rpc.
-
-    Example usage:
-
-        my_client = RpcClient(...insert params here...)
-
-        response = my_client.send_message('{"some": "json"}')  # blocks while waiting for response
-
-        logger.info(f'Response from external service: {response}')
-
-    Args:
-        conn_params (Conn): parameters to connect to RabbitMQ server
-        exch (Exch): parameters of RMQ Exchange where messages should be sent
-        timeout (float  | None): optional timeout to give up on receiving each response.
-            Default is None, meaning wait indefinitely for response from external RMQ service.
-    """
-    def __init__(self, conn_params: Conn, exch: Exch, timeout: float | None = None):
-        self._exch = exch
-        self._timeout = timeout
-        # only publish to built-in Direct Reply-to queue (recommended for RPC, less setup needed)
-        self._queue = Queue(DIRECT_REPLY_QUEUE, '', True, False, False)
-
-        # worklist to track corr_ids sent to remote service, and associated response when it arrives
-        self._pending_requests: dict[str, Future] = {}
-
-        # Start long-running thread to consume any messages from response queue
-        self._consumer = Consumer(
-            conn_params,
-            RabbitMqParamsAndCallback(
-                RabbitMqParams(Exch('', 'direct'), self._queue),
-                self._response_callback
-            )
-        )
-
-    @property
-    def is_open(self) -> bool:
-        """Returns True if RabbitMQ connection (Publisher) is open and ready to send messages"""
-        # TODO: will this work?
-        return self._consumer.is_alive() and self._consumer.channel.is_open
-
-    def send_request(self, request_body: str | bytes) -> RpcResponse | None:
-        """Send message to remote RabbitMQ service using thread-safe RPC. Will block until response
-        is received back, or timeout occurs.
-
-        Returns:
-            RpcResponse | None: The response message (body and properties), or None on request
-                timeout or error handling response.
-        """
-        if not self.is_open:
-            logger.debug('RPC thread not yet initialized. Setting up now')
-            self.start()
-
-        # block until thread has connected channel
-        # while not self.is_open:
-        #     from time import sleep
-        #     sleep(0.01)  # TODO: this sleep is not threadsafe, not gonna fly
-
-        # generate unique ID to associate our request to external service's response
-        request_id = str(uuid.uuid4())
-
-        # send request to external RMQ service, providing the queue where it should respond
-        properties = BasicProperties(content_type='application/json',
-                                     correlation_id=request_id,
-                                     reply_to=self._queue.name)
-
-        # add future to dict where callback can retrieve it and set result
-        request_future = Future()
-        self._pending_requests[request_id] = request_future
-
-        logger.debug('Publishing request message to external service with body: %s', request_body)
-        _blocking_publish(
-            self._consumer.channel,
-            self._exch,
-            PublishMessageParams(request_body, properties, route_key=self._exch.route_key),
-            self._queue
-        )
-
-        try:
-            # block until callback runs (we'll know when the future's result has been changed)
-            return request_future.result(timeout=self._timeout)
-        except TimeoutError:
-            logger.warning('Timed out waiting for response. correlation_id: %s', request_id)
-            return None
-        except Exception as exc:  # pylint: disable=broad-exception-caught
-            logger.warning('Unexpected response from external service: %s', str(exc))
-            return None
-
-    def start(self):
-        """Start dedicated threads to asynchronously send and receive RPC messages using a new
-        RabbitMQ connection and channel. Note: this method can be called externally, but it is
-        not required to use the client. It will automatically call this internally as needed."""
-        if not self.is_open:
-            logger.debug('Starting RPC threads to send and consume messages')
-            self._consumer.start()
-
-    def stop(self):
-        """Unsubscribe to Direct Reply-To queue and cleanup thread"""
-        logger.debug('Shutting down RPC threads')
-        if not self.is_open:
-            logger.debug('RPC threads not running, nothing to cleanup')
-            return
-
-        # tell Consumer cleanup RabbitMQ resources and wait for thread to terminate
-        self._consumer.stop()
-        self._consumer.join()
-
-    def _response_callback(
-            self,
-            channel: Channel,
-            method: Basic.Deliver,
-            properties: BasicProperties,
-            body: bytes
-    ):
-        """Handle RabbitMQ message emitted to response queue."""
-        logger.debug('Received response message with routing_key: %s, content_type: %s, message: %i',
-                    method.routing_key, properties.content_type, str(body, encoding='utf-8'))
-
-        # remove future from pending list. we will update result shortly
-        request_future = self._pending_requests.pop(properties.correlation_id)
-
-        # messages sent through RabbitMQ Direct reply-to are auto acked
-        is_direct_reply = str(method.routing_key).startswith(DIRECT_REPLY_QUEUE)
-        if not is_direct_reply:
-            channel.basic_ack(delivery_tag=method.delivery_tag)
-
-        # update future with response body to communicate it back up to main thread
-        return request_future.set_result(RpcResponse(str(body, encoding='utf-8'), properties))
