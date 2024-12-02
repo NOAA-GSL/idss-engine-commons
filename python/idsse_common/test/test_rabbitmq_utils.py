@@ -14,12 +14,14 @@
 
 from typing import NamedTuple
 from unittest.mock import Mock
+from uuid import UUID
 
 from pytest import fixture, raises, MonkeyPatch
-from pika.adapters import blocking_connection
+from pika import BlockingConnection
+from pika.adapters.blocking_connection import BlockingChannel
 
 from idsse.common.rabbitmq_utils import (
-    Conn, Exch, Queue, Publisher, RabbitMqParams, Rpc, subscribe_to_queue
+    Conn, Consumer, Exch, Queue, Publisher, RabbitMqParams, Rpc, subscribe_to_queue
 )
 
 # Example data objects
@@ -28,6 +30,7 @@ RMQ_PARAMS = RabbitMqParams(
     Exch('test_criteria_exch', 'topic'),
     Queue('test_criteria_queue', '', True, False, True)
 )
+EXAMPLE_UUID = 'b6591cc7-8b33-4cd3-aa22-408c83ac5e3c'
 
 
 class Method(NamedTuple):
@@ -50,38 +53,49 @@ def mock_channel() -> Mock:
     def mock_queue_declare(queue: str, **_kwargs) -> Method:
         return Frame(Method(queue=queue))  # create a usable (mock) Frame using queue name passed
 
-    mock_obj = Mock(spec=blocking_connection.BlockingChannel, name='MockChannel')
-    mock_obj.exchange_declare = Mock()
+    mock_obj = Mock(spec=BlockingChannel, name='MockChannel')
     mock_obj.queue_declare = Mock(side_effect=mock_queue_declare)
-    mock_obj.queue_bind = Mock()
-    mock_obj.basic_qos = Mock()
-    mock_obj.close = Mock()
-
+    mock_obj.is_open = True
     return mock_obj
 
 
 @fixture
 def mock_connection(monkeypatch: MonkeyPatch, mock_channel: Mock) -> Mock:
     """Mock pika.BlockingChannel object"""
-    mock_obj = Mock(name='MockConnection')
+    mock_obj = Mock(spec=BlockingConnection, name='MockConnection')
     mock_obj.channel = Mock(return_value=mock_channel)
-    mock_obj.add_callback_threadsafe = Mock()
-    mock_obj.close = Mock()
-
     return mock_obj
 
 
 @fixture
-def rpc_client(mock_subscribe: Mock, mock_uuid: Mock) -> Rpc:
-    return Rpc(CONN, RMQ_PARAMS.exchange, timeout=10)
+def mock_consumer(monkeypatch: MonkeyPatch) -> Mock:
+    """Mock rabbitmq_utils.Consumer thread instance"""
+    mock_obj = Mock(spec=Consumer, name='MockConsumer')
+    mock_obj.return_value.is_alive = Mock(return_value=False)  # by default, thread not running
+
+    monkeypatch.setattr('idsse.common.rabbitmq_utils.Consumer', mock_obj)
+    return mock_obj
+
+
+@fixture
+def mock_uuid(monkeypatch: MonkeyPatch) -> Mock:
+    """Always return our example UUID str when UUID() is called"""
+    mock_obj = Mock()
+    mock_obj.UUID = Mock(side_effect=lambda: UUID(EXAMPLE_UUID))
+    mock_obj.uuid4 = Mock(side_effect=lambda: EXAMPLE_UUID)
+    monkeypatch.setattr('idsse.common.rabbitmq_utils.uuid', mock_obj)
+    return mock_obj
+
+
+@fixture
+def rpc_thread(mock_consumer: Mock, mock_uuid: Mock) -> Rpc:
+    return Rpc(CONN, RMQ_PARAMS.exchange, timeout=5)
 
 
 # tests
 def test_connection_params_works(monkeypatch: MonkeyPatch, mock_connection: Mock):
     mock_blocking_connection = Mock(return_value=mock_connection)
-    monkeypatch.setattr(
-        'idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection
-    )
+    monkeypatch.setattr('idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection)
 
     # run method
     mock_callback_function = Mock()
@@ -126,9 +140,7 @@ def test_connection_params_works(monkeypatch: MonkeyPatch, mock_connection: Mock
 
 def test_private_queue_sets_ttl(monkeypatch: MonkeyPatch, mock_connection: Mock):
     mock_blocking_connection = Mock(return_value=mock_connection)
-    monkeypatch.setattr(
-        'idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection
-    )
+    monkeypatch.setattr('idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection)
     example_queue = Queue('_my_private_queue', 'route_key', True, False, True)
 
     # run method
@@ -152,12 +164,10 @@ def test_private_queue_sets_ttl(monkeypatch: MonkeyPatch, mock_connection: Mock)
     )
 
 
-def test_passing_connection_does_not_create_new(mock_connection, monkeypatch):
+def test_passing_connection_does_not_create_new(mock_connection: Mock, monkeypatch: MonkeyPatch):
     mock_callback_function = Mock(name='on_message_callback')
     mock_blocking_connection = Mock(return_value=mock_connection)
-    monkeypatch.setattr(
-        'idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection
-    )
+    monkeypatch.setattr('idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection)
 
     new_connection, new_channel = subscribe_to_queue(CONN, RMQ_PARAMS, mock_callback_function)
 
@@ -177,18 +187,12 @@ def test_passing_unsupported_connection_type_fails():
     assert exc is not None
 
 
-def test_direct_reply_does_not_declare_queue(
-    monkeypatch: MonkeyPatch, mock_connection: Mock
-):
-    params = RabbitMqParams(
-        Exch('test_criteria_exch', 'topic'),
-        Queue('amq.rabbitmq.reply-to', '', True, False, True)
-    )
+def test_direct_reply_does_not_declare_queue(monkeypatch: MonkeyPatch, mock_connection: Mock):
+    params = RabbitMqParams(Exch('test_criteria_exch', 'topic'),
+                            Queue('amq.rabbitmq.reply-to', '', True, False, True))
 
     mock_blocking_connection = Mock(return_value=mock_connection)
-    monkeypatch.setattr(
-        'idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection
-    )
+    monkeypatch.setattr('idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection)
 
     _, new_channel = subscribe_to_queue(CONN, params, Mock(name='mock_callback'))
 
@@ -198,18 +202,13 @@ def test_direct_reply_does_not_declare_queue(
     new_channel.basic_consume.assert_called_once()
 
 
-def test_default_exchange_does_not_declare_exchange(
-    monkeypatch: MonkeyPatch, mock_connection: Mock
-):
-    params = RabbitMqParams(
-        Exch('', 'topic'),
-        Queue('something', '', True, False, True)
-    )
+def test_default_exchange_does_not_declare_exchange(monkeypatch: MonkeyPatch,
+                                                    mock_connection: Mock):
+    params = RabbitMqParams(Exch('', 'topic'),
+                            Queue('something', '', True, False, True))
 
     mock_blocking_connection = Mock(return_value=mock_connection)
-    monkeypatch.setattr(
-        'idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection
-    )
+    monkeypatch.setattr('idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection)
 
     _, new_channel = subscribe_to_queue(CONN, params, Mock())
 
@@ -222,9 +221,7 @@ def test_simple_publisher(monkeypatch: MonkeyPatch, mock_connection: Mock):
     # add mock to get Connection callback to invoke immediately
     mock_connection.add_callback_threadsafe = Mock(side_effect=lambda callback: callback())
     mock_blocking_connection = Mock(return_value=mock_connection)
-    monkeypatch.setattr(
-        'idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection
-    )
+    monkeypatch.setattr('idsse.common.rabbitmq_utils.BlockingConnection', mock_blocking_connection)
 
     mock_threadsafe = Mock()
     monkeypatch.setattr('idsse.common.rabbitmq_utils.threadsafe_call', mock_threadsafe)
@@ -262,6 +259,57 @@ def test_simple_publisher_existing_channel(
 
     publisher.stop()
     assert 'MockChannel.close' in str(mock_threadsafe.call_args[0][1])
+
+
+def test_rpc_opens_new_connection_and_channel(rpc_thread: Rpc, mock_consumer: Mock):
+    assert not rpc_thread.is_open
+    rpc_thread.start()
+
+    mock_consumer.return_value.start.assert_called_once()
+    mock_consumer.return_value.is_alive = Mock(return_value=True)  # Consumer thread would be live
+
+    # stop Rpc client and confirm that Consumer thread was closed
+    rpc_thread.stop()
+    mock_consumer.return_value.is_alive = Mock(return_value=False)  # Consumer thread would be dead
+
+    assert not rpc_thread.is_open
+
+    mock_consumer.return_value.stop.assert_called_once()
+    mock_consumer.return_value.join.assert_called_once()
+
+
+def test_stop_does_nothing_if_not_started(rpc_thread: Rpc, mock_consumer: Mock):
+    # calling stop before starting does nothing
+    rpc_thread.stop()
+    mock_consumer.stop.assert_not_called()
+
+    rpc_thread.start()
+    mock_consumer.return_value.is_alive = Mock(return_value=True)  # Consumer thread would be live
+
+    # calling start when already running does nothing
+    mock_consumer.reset_mock()
+    rpc_thread.start()
+    mock_consumer.return_value.start.assert_not_called()
+
+
+# def test_send_request_works_without_calling_start(
+#     client: RpcClient, mock_channel: Mock, mock_conn: Mock
+# ):
+#     # build mock message from data service
+#     method = Method('', 123)
+#     props = BasicProperties(
+#         content_type='application/json',
+#         correlation_id=EXAMPLE_UUID)
+#     body = bytes(json.dumps(DATA_VALIDS_RESPONSE), encoding='utf-8')
+
+#     # when client calls add_callback_threadsafe to publish message to data service, manually invoke
+#     # response callback with a faked message from data service, simulating RMQ call/response
+#     mock_conn.add_callback_threadsafe = Mock(side_effect=(
+#         lambda _: client._response_callback(mock_channel, method, props, body)
+#     ))
+
+#     result = client.send_request(DATA_VALIDS_REQUEST)
+#     assert result == DATA_VALIDS_RESPONSE
 
 
 # TODO: copied unit tests from RiskProcessor RpcClient; can re-purpose but behavior a bit different
@@ -341,6 +389,7 @@ def test_simple_publisher_existing_channel(
 #     monkeypatch.setattr('src.rpc_client.subscribe_to_queue', mock_function)
 #     return mock_function
 
+# EXAMPLE_UUID = 'b6591cc7-8b33-4cd3-aa22-408c83ac5e3c'
 
 # @fixture
 # def mock_uuid(monkeypatch: MonkeyPatch):

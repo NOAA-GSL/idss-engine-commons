@@ -685,7 +685,7 @@ class Rpc:
         self._pending_requests: dict[str, Future] = {}
 
         # Start long-running thread to consume any messages from response queue
-        self._consumer = Consumer(
+        self.consumer = Consumer(
             conn_params,
             RabbitMqParamsAndCallback(RabbitMqParams(Exch('', 'direct'), self._queue),
                                       self._response_callback)
@@ -694,8 +694,7 @@ class Rpc:
     @property
     def is_open(self) -> bool:
         """Returns True if RabbitMQ connection (Publisher) is open and ready to send messages"""
-        # TODO: will this work?
-        return self._consumer.is_alive() and self._consumer.channel.is_open
+        return self.consumer.is_alive() and self.consumer.channel.is_open
 
     def send_request(self, request_body: str | bytes) -> RpcResponse | None:
         """Send message to remote RabbitMQ service using thread-safe RPC. Will block until response
@@ -722,7 +721,7 @@ class Rpc:
         self._pending_requests[request_id] = request_future
 
         logger.debug('Publishing request message to external service with body: %s', request_body)
-        _blocking_publish(self._consumer.channel,
+        _blocking_publish(self.consumer.channel,
                           self._exch,
                           PublishMessageParams(request_body, properties, self._exch.route_key),
                           self._queue)
@@ -742,8 +741,8 @@ class Rpc:
         RabbitMQ connection and channel. Note: this method can be called externally, but it is
         not required to use the client. It will automatically call this internally as needed."""
         if not self.is_open:
-            logger.debug('Starting RPC threads to send and consume messages')
-            self._consumer.start()
+            logger.debug('Starting RPC thread to send and consume messages')
+            self.consumer.start()
 
     def stop(self):
         """Unsubscribe to Direct Reply-To queue and cleanup thread"""
@@ -753,8 +752,8 @@ class Rpc:
             return
 
         # tell Consumer cleanup RabbitMQ resources and wait for thread to terminate
-        self._consumer.stop()
-        self._consumer.join()
+        self.consumer.stop()
+        self.consumer.join()
 
     def _response_callback(
             self,
