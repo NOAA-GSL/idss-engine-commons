@@ -15,6 +15,7 @@ import contextvars
 import logging
 import logging.config
 import uuid
+
 from concurrent.futures import ThreadPoolExecutor
 from collections.abc import Callable
 from functools import partial
@@ -23,6 +24,7 @@ from typing import NamedTuple
 
 from pika import BasicProperties, ConnectionParameters, PlainCredentials
 from pika.adapters import BlockingConnection
+from pika.adapters.blocking_connection import BlockingChannel
 from pika.channel import Channel
 from pika.exceptions import UnroutableError
 from pika.frame import Method
@@ -89,10 +91,14 @@ class RabbitMqParamsAndCallback(NamedTuple):
     callback: Callable
 
 
-def _initialize_exchange_and_queue(
-    channel: Channel,
-    params: RabbitMqParams
-) -> str:
+class PublishMessageParams(NamedTuple):
+    """Data class to hold a RabbitMQ message, its properties, and optional route_key"""
+    message: str
+    properties: BasicProperties
+    route_key: str | None = None
+
+
+def _initialize_exchange_and_queue(channel: Channel, params: RabbitMqParams) -> str:
     """Declare and bind RabbitMQ exchange and queue using the provided channel.
 
     Returns:
@@ -133,8 +139,8 @@ def _initialize_exchange_and_queue(
 def _initialize_connection_and_channel(
     connection: Conn,
     params: RabbitMqParams,
-    channel: Channel | Channel | None = None,
-) -> tuple[BlockingConnection, Channel, str]:
+    channel: Channel | None = None,
+) -> tuple[BlockingConnection, BlockingChannel, str]:
     """Establish RabbitMQ connection, and declare exchange and queue on new Channel"""
     if not isinstance(connection, Conn):
         # connection of unsupported type passed
@@ -164,7 +170,7 @@ def subscribe_to_queue(
     on_message_callback: Callable[
         [Channel, Basic.Deliver, BasicProperties, bytes], None],
     channel: Channel | None = None
-) -> tuple[BlockingConnection, Channel]:
+) -> tuple[BlockingConnection, BlockingChannel]:
     """
     Function that handles setup of consumer of RabbitMQ queue messages, declaring the exchange and
     queue if needed, and invoking the provided callback when a message is received.
@@ -184,8 +190,8 @@ def subscribe_to_queue(
         on_message_callback (Callable[
             [BlockingChannel, Basic.Deliver, BasicProperties, bytes], None]):
             function to handle messages that are received over the subscribed exchange and queue.
-        channel (BlockingChannel | None): optional existing (open) RabbitMQ channel to reuse.
-            Default is to create unique channel for this consumer.
+        channel (Channel | None): optional existing (open) RabbitMQ channel to reuse. Default is
+            to create unique channel for this consumer.
 
     Returns:
         tuple[BlockingConnection, BlockingChannel]: the connection and channel, which are now open
@@ -211,39 +217,46 @@ def _setup_exch_and_queue(channel: Channel, exch: Exch, queue: Queue):
        queue.arguments['x-queue-type'] == 'quorum' and queue.auto_delete:
         raise ValueError('Quorum queues can not be configured to auto delete')
 
-    _setup_exch(channel, exch)
+    if exch.name != '': # if using default exchange, skip declaring (not allowed by RMQ)
+        _setup_exch(channel, exch)
 
-    result: Method = channel.queue_declare(
-        queue=queue.name,
-        exclusive=queue.exclusive,
-        durable=queue.durable,
-        auto_delete=queue.auto_delete,
-        arguments=queue.arguments
-    )
-    queue_name = result.method.queue
-    logger.debug('Declared queue: %s', queue_name)
+    if queue.name == DIRECT_REPLY_QUEUE:
+        queue_name = queue.name
+        logger.debug('Using Direct Reply-to queue, skipping declare')
 
-    if isinstance(queue.route_key, list):
-        for route_key in queue.route_key:
+    else:
+        result: Method = channel.queue_declare(
+            queue=queue.name,
+            exclusive=queue.exclusive,
+            durable=queue.durable,
+            auto_delete=queue.auto_delete,
+            arguments=queue.arguments
+        )
+        queue_name = result.method.queue
+        logger.debug('Declared queue: %s', queue_name)
+
+    if exch.name != '': # if using default exchange, skip binding queues (not allowed by RMQ)
+        if isinstance(queue.route_key, list):
+            for route_key in queue.route_key:
+                channel.queue_bind(
+                    queue_name,
+                    exchange=exch.name,
+                    routing_key=route_key
+                )
+                logger.debug('Bound queue(%s) to exchange(%s) with route_key(%s)',
+                             queue_name, exch.name, route_key)
+        else:
             channel.queue_bind(
                 queue_name,
                 exchange=exch.name,
-                routing_key=route_key
+                routing_key=queue.route_key
             )
             logger.debug('Bound queue(%s) to exchange(%s) with route_key(%s)',
-                         queue_name, exch.name, route_key)
-    else:
-        channel.queue_bind(
-            queue_name,
-            exchange=exch.name,
-            routing_key=queue.route_key
-        )
-        logger.debug('Bound queue(%s) to exchange(%s) with route_key(%s)',
-                     queue_name, exch.name, queue.route_key)
+                         queue_name, exch.name, queue.route_key)
 
 
 def _setup_exch(channel: Channel, exch: Exch):
-    """Setup and exchange"""
+    """Setup an exchange"""
     channel.exchange_declare(
         exchange=exch.name,
         exchange_type=exch.type,
@@ -285,7 +298,7 @@ def threadsafe_call(channel: Channel, *functions: Callable):
                         partial(self.pub_conf.publish_message,
                                 message=message))
     Args:
-        channel (BlockingChannel): RabbitMQ channel.
+        channel (Channel): RabbitMQ channel.
         functions (Callable): One or more callable function, typically created via
                                 functools.partial or lambda, but can be function without args
     """
@@ -308,7 +321,7 @@ def threadsafe_ack(
     This is just a convenance function that acks a message via threadsafe_call
 
     Args:
-        channel (BlockingChannel): RabbitMQ channel.
+        channel (Channel): RabbitMQ channel.
         delivery_tag (int): Delivery tag to be used when nacking.
         extra_func (Callable): Any extra function that you would like to be called after the nack.
                                Typical use case would we to send a log via a lambda
@@ -330,7 +343,7 @@ def threadsafe_nack(
     This is just a convenance function that nacks a message via threadsafe_call
 
     Args:
-        channel (BlockingChannel): RabbitMQ channel.
+        channel (Channel): RabbitMQ channel.
         delivery_tag (int): Delivery tag to be used when nacking.
         extra_func (Callable): Any extra function that you would like to be called after the nack.
                                Typical use case would we to send a log via a lambda
@@ -343,6 +356,95 @@ def threadsafe_nack(
                         extra_func)
     else:
         threadsafe_call(channel, lambda: channel.basic_nack(delivery_tag, requeue=requeue))
+
+
+# pylint: disable=too-many-arguments
+def _publish(channel: BlockingChannel,
+             exch: Exch,
+             message_params: PublishMessageParams,
+             queue: Queue | None = None,
+             success_flag: list[bool] = None,
+             done_event: Event = None):
+    """
+    Core method to publish to a given RabbitMQ exchange (threadsafe).
+    Success flag is passed by reference, and done event, if not None
+    can be used to block until message is actually publish, vs being scheduled to be.
+
+    channel (BlockingChannel): the pika channel to use to publish.
+    exch (Exch): parameters for the RabbitMQ exchange to publish message to.
+    message_params (PublishMessageParams): the message body to publish, plus properties
+        and (optional) route_key.
+    queue (optional, Queue | None): parameters for RabbitMQ queue, if message is being
+        published to a "temporary"/"private" message queue. The published message will be
+        purged from this queue after its TTL expires.
+        Default is None (destination queue not private).
+    success_flag (list[bool]): This is effectively passing a boolean by reference. This
+                                will change the value of the first element it this list
+                                to indicate if the core publishing was successful.
+    done_event (Event): A Thread.Event that can be used to indicate when publishing is
+                        complete in a different thread. This can be used to wait for the
+                        completion via 'done_event.wait()' following calling this function.
+    """
+    if success_flag:
+        success_flag[0] = False
+    try:
+        channel.basic_publish(
+            exch.name,
+            message_params.route_key if message_params.route_key else exch.route_key,
+            body=message_params.message,
+            properties=message_params.properties,
+            mandatory=exch.mandatory
+        )
+        if success_flag:
+            success_flag[0] = True
+        if queue and queue.name.startswith('_'):
+            try:
+                channel.queue_purge(queue.name)
+            except ValueError as exc:
+                logger.warning('Exception when removing message from private queue: %s', exc)
+    except UnroutableError:
+        logger.warning('Message was not delivered')
+    except Exception as exc:
+        logger.warning('Message not published, cause: %s', exc)
+        raise exc
+    finally:
+        if done_event:
+            done_event.set()
+
+
+def _blocking_publish(
+        channel: BlockingChannel,
+        exch: Exch,
+        message_params: PublishMessageParams,
+        queue: Queue | None = None,
+) -> bool:
+    """
+    Threadsafe, blocking publish on the specified RabbitMQ exch via the provided channel.
+    Is thread-safe.
+
+    Args:
+        channel (BlockingChannel): the pika channel to use to publish.
+        exch (Exch): parameters for the RabbitMQ exchange to publish message to.
+        message_params (PublishMessageParams): the message body to publish, plus properties
+            and (optional) route_key
+        queue (optional, Queue | None): parameters for RabbitMQ queue, if message is being
+            published to a "temporary"/"private" message queue. The published message will be
+            purged from this queue after its TTL expires.
+            Default is None (destination queue not private).
+    Returns:
+        (bool) True if message published successfully. If the provided queue is confirmed to
+            confirm delivery, will return False if failed to confirm.
+    """
+    success_flag = [False]
+    done_event = Event()
+    threadsafe_call(channel, lambda: _publish(channel,
+                                              exch,
+                                              message_params,
+                                              queue,
+                                              success_flag,
+                                              done_event))
+    done_event.wait()
+    return success_flag[0]
 
 
 def _set_context(context):
@@ -358,36 +460,44 @@ class Consumer(Thread):
     shutdown.  The start() and stop() methods should be called from the same
     thread as the one used to create the instance.
     """
-
-    # pylint: disable=too-many-instance-attributes
-    # Eight is reasonable in this case.
-
     def __init__(
         self,
         conn_params: Conn,
         rmq_params_and_callbacks: RabbitMqParamsAndCallback | list[RabbitMqParamsAndCallback],
-        num_message_handlers: int,
         *args,
+        num_message_handlers: int = 2,
         **kwargs,
     ):
-        super().__init__(*args, **kwargs)
+        """
+        Args:
+            conn_params (Conn): parameters to create a new RabbitMQ connection
+            rmq_params_and_callbacks (RabbitMqParamsAndCallback | list[RabbitMqParamsAndCallback]):
+                1 or more Exch/Queue tuples, and a function to invoke when messages arrive on the
+                listed queue.
+            num_message_handlers (optional, int): The max thread pool size for workers to handle
+                message callbacks concurrently. Default is 2.
+        """
+        super().__init__(*args, **kwargs, name='Consumer')
         self.context = contextvars.copy_context()
         self.daemon = True
         self._tpx = ThreadPoolExecutor(max_workers=num_message_handlers)
-        self._conn_params = conn_params
+
         if isinstance(rmq_params_and_callbacks, list):
-            self._rmq_params_and_callbacks = rmq_params_and_callbacks
+            _rmq_params_and_callbacks = rmq_params_and_callbacks
         else:
-            self._rmq_params_and_callbacks = [rmq_params_and_callbacks]
-        self.connection = BlockingConnection(self._conn_params.connection_parameters)
+            _rmq_params_and_callbacks = [rmq_params_and_callbacks]
+
+        self.connection = BlockingConnection(conn_params.connection_parameters)
         self.channel = self.connection.channel()
 
         self._consumer_tags = []
-        for (exch, queue), func in self._rmq_params_and_callbacks:
+        for (exch, queue), func in _rmq_params_and_callbacks:
             _setup_exch_and_queue(self.channel, exch, queue)
             self._consumer_tags.append(
                 self.channel.basic_consume(queue.name,
-                                           partial(self._on_message, func=func))
+                                           partial(self._on_message, func=func),
+                                           # RMQ requires auto_ack=True to consume from Direct Reply-to
+                                           auto_ack=queue.name == DIRECT_REPLY_QUEUE)
             )
 
         self.channel.basic_qos(prefetch_count=1)
@@ -439,13 +549,19 @@ class Publisher(Thread):
         *args,
         **kwargs,
     ):
-        super().__init__(*args, **kwargs)
+        """
+        Args:
+            conn_params (Conn): RabbitMQ Conn parameters to create a new RabbitMQ connection
+            exch_params (Exch): params for what RabbitMQ exchange to publish messages to.
+        """
+        super().__init__(*args, **kwargs, name='Publisher')
         self.context = contextvars.copy_context()
         self.daemon = True
         self._is_running = True
         self._exch = exch_params
         self._queue = None
 
+        # create new RabbitMQ Connection and Channel using the provided params
         self.connection = BlockingConnection(conn_params.connection_parameters)
         self.channel = self.connection.channel()
 
@@ -460,7 +576,7 @@ class Publisher(Thread):
                                            'x-message-ttl': 10 * 1000})
 
             _setup_exch_and_queue(self.channel, self._exch, self._queue)
-        else:
+        elif self._exch.name != '': # if using default exchange, skip declaring (not allowed by RMQ)
             _setup_exch(self.channel, self._exch)
 
         if self._exch.delivery_conf:
@@ -483,8 +599,13 @@ class Publisher(Thread):
             properties (BasicProperties): The props to be attached to message when published
             route_key (str): Optional route key, overriding key provided during initialization
         """
-        threadsafe_call(self.channel,
-                        lambda: self._publish(message, properties, route_key, [False]))
+        threadsafe_call(
+            self.channel,
+            lambda: _publish(self.channel,
+                             self._exch,
+                             PublishMessageParams(message, properties, route_key),
+                             self._queue)
+        )
 
     def blocking_publish(self,
                          message: bytes,
@@ -504,15 +625,10 @@ class Publisher(Thread):
                   publisher is configured to confirm delivery will return False if
                   failed to confirm.
         """
-        success_flag = [False]
-        done_event = Event()
-        threadsafe_call(self.channel, lambda: self._publish(message,
-                                                            properties,
-                                                            route_key,
-                                                            success_flag,
-                                                            done_event))
-        done_event.wait()
-        return success_flag[0]
+        return _blocking_publish(self.channel,
+                                 self._exch,
+                                 PublishMessageParams(message, properties,route_key),
+                                 self._queue)
 
     def stop(self):
         """Cleanly end the running of a thread, free up resources"""
@@ -524,47 +640,3 @@ class Publisher(Thread):
             threadsafe_call(self.channel,
                             self.channel.close,
                             self.connection.close)
-
-    # pylint: disable=too-many-arguments,unused-argument
-    def _publish(
-            self,
-            message: bytes,
-            properties: BasicProperties,
-            route_key: str = None,
-            success_flag: list[bool] = None,
-            done_event: Event = None
-    ):
-        """
-        Core publish method. Success flag is passed by reference, and done event, if not None
-        can be used to block until message is actually publish, vs being scheduled to be.
-
-        success_flag (list[bool]): This is effectively passing a boolean by reference. This
-                                   will change the value of the first element it this list
-                                   to indicate if the core publishing was successful.
-        done_event (Event): A Thread.Event that can be used to indicate when publishing is
-                           complete in a different thread. This can be used to wait for the
-                           completion via 'done_event.wait()' following calling this function.
-        """
-        if success_flag:
-            success_flag[0] = False
-        try:
-            self.channel.basic_publish(self._exch.name,
-                                       route_key if route_key else self._exch.route_key,
-                                       body=message,
-                                       properties=properties,
-                                       mandatory=self._exch.mandatory)
-            if success_flag:
-                success_flag[0] = True
-            if self._queue and self._queue.name.startswith('_'):
-                try:
-                    self.channel.queue_purge(queue=self._queue.name)
-                except ValueError as exe:
-                    logger.warning('Exception when removing message from private queue: %s', exe)
-        except UnroutableError:
-            logger.warning('Message was not delivered')
-        except Exception as exe:
-            logger.warning('Message not published, cause: %s', exe)
-            raise exe
-        finally:
-            if done_event:
-                done_event.set()
