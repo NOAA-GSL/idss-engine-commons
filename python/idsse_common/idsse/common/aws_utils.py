@@ -14,7 +14,6 @@
 import logging
 import os
 from collections.abc import Sequence
-from datetime import datetime, timedelta, UTC
 
 from .utils import exec_cmd
 from .protocol_utils import ProtocolUtils

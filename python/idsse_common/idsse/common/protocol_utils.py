@@ -54,7 +54,7 @@ class ProtocolUtils(ABC):
         Returns:
             Sequence[str]: The results sent to stdout from executing a 'ls' on passed path
         """
-        pass
+
 
     def check_for(self, issue: datetime, valid: datetime) -> tuple[datetime, str] | None:
         """Checks if an object passed issue/valid exists

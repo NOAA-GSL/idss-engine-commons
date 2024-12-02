@@ -13,7 +13,6 @@ import logging
 import os
 import shutil
 from collections.abc import Sequence
-from datetime import datetime, timedelta, UTC
 
 import requests
 
