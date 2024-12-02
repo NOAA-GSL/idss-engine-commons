@@ -17,10 +17,9 @@ from unittest.mock import Mock
 
 from pytest import fixture, raises, MonkeyPatch
 from pika.adapters import blocking_connection
-from pika.channel import Channel
 
 from idsse.common.rabbitmq_utils import (
-    Conn, Exch, Queue, Publisher, RabbitMqParams, subscribe_to_queue
+    Conn, Exch, Queue, Publisher, RabbitMqParams, Rpc, subscribe_to_queue
 )
 
 # Example data objects
@@ -70,6 +69,11 @@ def mock_connection(monkeypatch: MonkeyPatch, mock_channel: Mock) -> Mock:
     mock_obj.close = Mock()
 
     return mock_obj
+
+
+@fixture
+def rpc_client(mock_subscribe: Mock, mock_uuid: Mock) -> Rpc:
+    return Rpc(CONN, RMQ_PARAMS.exchange, timeout=10)
 
 
 # tests
@@ -345,8 +349,8 @@ def test_simple_publisher_existing_channel(
 
 
 # @fixture
-# def client(mock_subscribe: Mock, mock_uuid: Mock) -> RpcClient:
-#     return RpcClient(RPC_PARAMS)
+# def client(mock_subscribe: Mock, mock_uuid: Mock) -> Rpc:
+#     return Rpc(CONN, RMQ_PARAMS.exchange, timeout=10)
 
 
 # # tests
