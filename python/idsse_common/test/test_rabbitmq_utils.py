@@ -75,6 +75,10 @@ def mock_consumer(monkeypatch: MonkeyPatch, mock_connection: Mock, mock_channel:
     mock_obj.return_value.is_alive = Mock(return_value=False)  # by default, thread not running
     mock_obj.return_value.connection = mock_connection
     mock_obj.return_value.channel = mock_channel
+    # hack pika add_callback_threadsafe to invoke immediately (hides complexity of threading)
+    mock_obj.return_value.channel.connection.add_callback_threadsafe = Mock(
+        side_effect=lambda cb: cb()
+    )
 
     monkeypatch.setattr('idsse.common.rabbitmq_utils.Consumer', mock_obj)
     return mock_obj
@@ -299,209 +303,48 @@ def test_send_request_works_without_calling_start(rpc_thread: Rpc,
     mock_publish = Mock(side_effect=mock_threadsafe_publish)
     monkeypatch.setattr('idsse.common.rabbitmq_utils._publish', mock_publish)
 
-    # hack pika add_callback_threadsafe to invoke immediately (hides complexity of threading)
-    rpc_thread.consumer.channel.connection.add_callback_threadsafe = Mock(
-        side_effect=lambda cb: cb()
-    )
-
     result = rpc_thread.send_request(json.dumps({'fake': 'request message'}))
     assert json.loads(result.body) == example_message
 
 
-# TODO: copied unit tests from RiskProcessor RpcClient; can re-purpose but behavior a bit different
-# import json
-# from concurrent.futures import Future
-# from time import sleep
-# from typing import NamedTuple
-# from unittest.mock import Mock
-# from uuid import UUID
+def test_send_request_times_out_if_no_response(mock_connection: Mock,
+                                               mock_consumer: Mock,
+                                               mock_uuid: Mock,
+                                               monkeypatch: MonkeyPatch):
+    # create client with same parameters, except a very short timeout
+    _thread = Rpc(CONN, RMQ_PARAMS.exchange, timeout=0.01)
 
-# from pytest import fixture, raises, MonkeyPatch
-# from pika.adapters.blocking_connection import BlockingConnection, BlockingChannel
-# from pika.spec import BasicProperties
+    # do nothing on message publish
+    # pylint: disable=too-many-arguments
+    def mock_threadsafe_publish(channel, exch, message_params, queue = None, success_flag = None,
+                                done_event = None):
+        # tell threads waiting for confirmation that message was published
+        success_flag[0] = True  # update pass-by-reference business
+        done_event.set()
 
-# from idsse.common.rabbitmq_utils import Conn, Exch, Queue, RabbitMqParams
-# from idsse.testing.utils.resources import get_resource_from_file
+    mock_publish = Mock(side_effect=mock_threadsafe_publish)
+    monkeypatch.setattr('idsse.common.rabbitmq_utils._publish', mock_publish)
 
-# from rabbitmq_utils import Rpc
-
-# # Example data objects
-# RPC_PARAMS = RpcClientParams(
-#     conn=Conn('localhost', '/', port=5672, username='user', password='password'),
-#     requests=RabbitMqParams(
-#         Exch('data_exch', 'topic'),
-#         Queue('data_request', '', True, False, True)
-#     ),
-#     responses=RabbitMqParams(
-#         Exch('', 'topic'),
-#         Queue('amq.rabbitmq.reply-to', '', True, False, True)
-#     ),
-#     timeout=5
-# )
-# EXAMPLE_UUID = 'b6591cc7-8b33-4cd3-aa22-408c83ac5e3c'
-
-# # load test data from json files
-# DATA_VALIDS_REQUEST: dict[str, any] = get_resource_from_file('idsse.testing.risk_processor',
-#                                                              'data_service_valids_request.json')
-# DATA_VALIDS_RESPONSE:dict[str, any] = get_resource_from_file('idsse.testing.risk_processor',
-#                                                              'data_service_valids_response.json')
-
-# class Method(NamedTuple):
-#     """mock of pika.spec.Basic.Deliver Method"""
-#     routing_key: str
-#     delivery_tag: int
+    result = _thread.send_request(json.dumps({'data': 123}))
+    assert EXAMPLE_UUID not in _thread._pending_requests  # request was cleaned up
+    assert result is None
 
 
-# # fixtures
-# @fixture
-# def mock_channel() -> Mock:
-#     """Mock pika.adapters.blocking_connection.BlockingChannel object"""
-#     mock_obj = Mock(spec=BlockingChannel, name='MockChannel')
-#     mock_obj.basic_publish = Mock()
-#     mock_obj.basic_ack = Mock()
-#     mock_obj.basic_nack = Mock()
-#     mock_obj.start_consuming = Mock()
-#     mock_obj.stop_consuming = Mock()
-#     mock_obj.close = Mock()
-#     mock_obj.is_open = True
-#     return mock_obj
+def test_send_requests_returns_none_on_error(rpc_thread: Rpc,
+                                             mock_connection: Mock,
+                                             monkeypatch: MonkeyPatch):
+    # pylint: disable=too-many-arguments
+    def mock_threadsafe_publish(channel, exch, message_params, queue = None, success_flag = None,
+                                done_event = None):
+        # tell threads waiting for confirmation that message was published
+        success_flag[0] = True
+        done_event.set()
+        # cause exception for pending request Future
+        rpc_thread._pending_requests[EXAMPLE_UUID].set_exception(RuntimeError('Something broke'))
 
+    mock_publish = Mock(side_effect=mock_threadsafe_publish)
+    monkeypatch.setattr('idsse.common.rabbitmq_utils._publish', mock_publish)
 
-# @fixture
-# def mock_conn(mock_channel: Mock) -> Mock:
-#     """Mock pika.BlockingChannel object"""
-#     mock_obj = Mock(spec=BlockingConnection, name='MockConnection')
-#     mock_obj.add_callback_threadsafe = Mock()
-#     mock_obj.channel = Mock(return_value=mock_channel)
-#     mock_obj.close = Mock()
-#     mock_obj.process_data_events = Mock()
-#     return mock_obj
-
-
-# @fixture
-# def mock_subscribe(monkeypatch: MonkeyPatch, mock_channel: Mock, mock_conn: Mock) -> Mock:
-#     mock_function = Mock()
-#     mock_function.return_value = (mock_conn, mock_channel)
-#     monkeypatch.setattr('src.rpc_client.subscribe_to_queue', mock_function)
-#     return mock_function
-
-# EXAMPLE_UUID = 'b6591cc7-8b33-4cd3-aa22-408c83ac5e3c'
-
-# @fixture
-# def mock_uuid(monkeypatch: MonkeyPatch):
-#     """Always return our example UUID str when UUID() is called"""
-#     monkeypatch.setattr('src.rpc_client.uuid', Mock(side_effect=lambda: UUID(EXAMPLE_UUID)))
-
-
-# @fixture
-# def client(mock_subscribe: Mock, mock_uuid: Mock) -> Rpc:
-#     return Rpc(CONN, RMQ_PARAMS.exchange, timeout=10)
-
-
-# # tests
-# def test_start_opens_new_connection_and_channel(
-#     client: RpcClient, mock_channel: Mock, mock_conn: Mock
-# ):
-#     assert not client.is_open
-#     assert client._connection is None and client._channel is None
-
-#     mock_conn.add_callback_threadsafe = Mock(side_effect=lambda callback: callback())
-#     mock_channel.is_open = True
-#     client.start()
-#     sleep(0.1)  # ensure thread is started before verifying it updated private state variables
-
-#     mock_channel.start_consuming.assert_called()
-#     assert client.is_open
-#     assert client._connection is not None
-#     assert client._channel is not None and client._channel.is_open
-
-#     # stop RpcClient and confirm that channel and connection were closed
-#     client.stop()
-#     mock_channel.is_open = False
-#     assert not client._channel.is_open
-#     assert not client.is_open
-
-#     sleep(0.1)  # ensure thread has time to close private resources (asynchronously)
-#     mock_channel.close.assert_called_once()
-#     mock_conn.close.assert_called_once()
-
-
-# def test_stop_does_nothing_if_not_started(client: RpcClient, mock_conn: Mock):
-#     client.stop()
-#     mock_conn.add_callback_threadsafe.assert_not_called()
-
-
-# def test_starting_twice_does_nothing(client: RpcClient, mock_subscribe: Mock, mock_channel: Mock):
-#     mock_channel.is_open = True
-#     client.start()
-#     # try:
-#     client.start()
-#     # except AssertionError:
-#     #     fail('Thread should not be attempted to start twice')
-
-#     sleep(0.1)  # ensure thread is started before verifying it made certain calls
-#     mock_subscribe.assert_called_once()
-#     mock_channel.start_consuming.assert_called_once()
-
-
-# def test_send_request_works_without_calling_start(
-#     client: RpcClient, mock_channel: Mock, mock_conn: Mock
-# ):
-#     # build mock message from data service
-#     method = Method('', 123)
-#     props = BasicProperties(
-#         content_type='application/json',
-#         correlation_id=EXAMPLE_UUID)
-#     body = bytes(json.dumps(DATA_VALIDS_RESPONSE), encoding='utf-8')
-
-#     # when client calls add_callback_threadsafe to publish message to data service, manually invoke
-#     # response callback with a faked message from data service, simulating RMQ call/response
-#     mock_conn.add_callback_threadsafe = Mock(side_effect=(
-#         lambda _: client._response_callback(mock_channel, method, props, body)
-#     ))
-
-#     result = client.send_request(DATA_VALIDS_REQUEST)
-#     assert result == DATA_VALIDS_RESPONSE
-
-
-# def test_send_request_times_out_if_no_response(client: RpcClient, mock_conn: Mock):
-#     # create client with same parameters, except a very short timeout
-#     _client = RpcClient(RpcClientParams(
-#         conn=RPC_PARAMS.conn,
-#         requests=RPC_PARAMS.requests,
-#         responses=RPC_PARAMS.responses,
-#         timeout=0.01
-#     ))
-#     mock_conn.add_callback_threadsafe = Mock()  # do nothing on message publish
-
-#     result = _client.send_request({'data': 123})
-#     assert EXAMPLE_UUID in _client._pending_requests  # message was recorded
-#     assert result is None
-
-
-# def test_send_requests_returns_none_on_error(client: RpcClient, mock_conn: Mock):
-#     mock_conn.add_callback_threadsafe = Mock(side_effect=(
-#         lambda _: client._pending_requests[EXAMPLE_UUID].set_exception(
-#             RuntimeError('Something broke')
-#     )))
-
-#     result = client.send_request({'data': 123})
-#     assert EXAMPLE_UUID in client._pending_requests  # message was recorded
-#     assert result is None
-
-
-# def test_response_callback_sets_future_exc_on_bad_message(client: RpcClient, mock_channel: Mock):
-#     # build mock message from data service
-#     method = Method('', 123)
-#     props = BasicProperties(content_type='text/html', correlation_id='abcd')
-#     body = bytes('{"data": 123}', encoding='utf-8')
-
-#     _future = Future()
-#     client._pending_requests[props.correlation_id] = _future
-#     client._response_callback(mock_channel, method, props, body)
-
-#     assert _future.done
-#     with raises(TypeError) as exc:
-#         _future.result()
-
-#     assert exc is not None and exc.type == TypeError
+    result = rpc_thread.send_request({'data': 123})
+    assert EXAMPLE_UUID not in rpc_thread._pending_requests  # request was cleaned up
+    assert result is None
