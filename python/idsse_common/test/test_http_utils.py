@@ -1,6 +1,6 @@
 """Test suite for http_utils.py"""
 # ----------------------------------------------------------------------------------
-# Created on Wed Jun 21 2023
+# Created on Tue Dec 3
 #
 # Copyright (c) 2023 Colorado State University. All rights reserved. (1)
 # Copyright (c) 2023 Regents of the University of Colorado. All rights reserved. (2)
@@ -17,6 +17,7 @@ from datetime import datetime, timedelta, UTC
 from pytest import fixture
 from pytest_httpserver import HTTPServer
 
+from idsse.common.protocol_utils import ProtocolUtils
 from idsse.common.http_utils import HttpUtils
 from idsse.testing.utils.resources import get_resource_from_file
 

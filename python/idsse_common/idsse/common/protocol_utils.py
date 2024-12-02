@@ -1,4 +1,4 @@
-"""Helper function for listing directories and retrieving s3 objects"""
+"""Base class for http and awc data access"""
 # -------------------------------------------------------------------------------
 # Created on Tue Dec 3 2024
 #
@@ -12,28 +12,22 @@
 import fnmatch
 import logging
 import os
-import shutil
+
 from collections.abc import Sequence
 from datetime import datetime, timedelta, UTC
 
-import requests
-
 from .path_builder import PathBuilder
 from .utils import TimeDelta, datetime_gen
-from .protocol_utils import ProtocolUtils
 
-logger = logging.getLogger(__name__)
+class ProtocolUtils():
+    """Base Class - interface for DAS data discovery"""
 
-# pylint: disable=duplicate-code, broad-exception-caught
-
-class HttpUtils(ProtocolUtils):
-    """http Utility Class - Used by DAS for file downloads"""
     def __init__(self,
                  basedir: str,
                  subdir: str,
                  file_base: str,
                  file_ext: str) -> None:
-        super().__init__(basedir, subdir, file_base, file_ext)
+        self.path_builder = PathBuilder(basedir, subdir, file_base, file_ext)
 
     def get_path(self, issue: datetime, valid: datetime) -> str:
         """Delegates to instant PathBuilder to get full path given issue and valid
@@ -45,71 +39,8 @@ class HttpUtils(ProtocolUtils):
         Returns:
             str: Absolute path to file or object
         """
-        return super().get_path(issue, valid)
-
-    def ls(self, path: str, prepend_path: bool = True) -> Sequence[str]:
-        """Execute a 'ls' on the AWS s3 bucket specified by path
-
-        Args:
-            path (str): s3 bucket
-            prepend_path (bool): Add to the filename
-
-        Returns:
-            Sequence[str]: The results sent to stdout from executing a 'ls' on passed path
-        """
-        return self.http_ls(path, prepend_path)
-
-
-    @staticmethod
-    def http_ls(url: str, prepend_path: bool = True) -> Sequence[str]:
-        """Execute a 'ls' on the http(s) server
-        Args:
-            url (str): URL
-            prepend_path (bool): Add URL+ to the filename
-        Returns:
-            Sequence[str]: The results from executing a request get on passed url
-        """
-        try:
-            files = []
-            response = requests.get(url, timeout=5)
-            response.raise_for_status()  # Raise an exception for bad status codes
-
-            for line in response.text.splitlines():
-                if 'href="' in line:
-                    filename = line.split('href="')[1].split('"')[0]
-                    if not filename.endswith('/'):  # Exclude directories
-                        files.append(filename)
-
-        except requests.exceptions.RequestException as exp:
-            logger.warning('Unable to query supplied URL: %s', str(exp))
-            return []
-        if prepend_path:
-            return [os.path.join(url, filename) for filename in files]
-        return files
-
-    @staticmethod
-    def http_cp(url: str, dest: str) -> bool:
-        """Execute http request download from URL to dest.
-
-        Args:
-            url (str): URL to the object to be copied
-            dest (str): The destination location
-        Returns:
-            bool: Returns True if copy is successful
-        """
-        try:
-            with requests.get(os.path.join(url), timeout=5, stream=True) as response:
-                # Check if the request was successful
-                if response.status_code == 200:
-                    # Open a file in binary write mode
-                    with open(dest, "wb") as file:
-                        shutil.copyfileobj(response.raw, file)
-                    return True
-
-                logger.debug('copy fail: request status code: %s', response.status_code)
-                return False
-        except Exception:  # pylint: disable=broad-exception-caught
-            return False
+        lead = TimeDelta(valid-issue)
+        return self.path_builder.build_path(issue=issue, valid=valid, lead=lead)
 
     def check_for(self, issue: datetime, valid: datetime) -> tuple[datetime, str] | None:
         """Checks if an object passed issue/valid exists
@@ -123,7 +54,19 @@ class HttpUtils(ProtocolUtils):
                                             location) and location (path) of an object, or None
                                             if object does not exist
         """
-        return super().check_for(issue, valid)
+        lead = TimeDelta(valid - issue)
+        file_path = self.get_path(issue, valid)
+        dir_path = os.path.dirname(file_path)
+        filenames = self.ls(dir_path, prepend_path=False)
+        filename = self.path_builder.build_filename(issue=issue, valid=valid, lead=lead)
+
+        for fname in filenames:
+            # Support wildcard matches - used for '?' as a single wildcard character in
+            # issue/valid time specs.
+            if fnmatch.fnmatch(os.path.basename(fname), filename):
+                return valid, os.path.join(dir_path, fname)
+        return None
+        pass
 
     def get_issues(self,
                    num_issues: int = 1,
@@ -142,7 +85,34 @@ class HttpUtils(ProtocolUtils):
         Returns:
             Sequence[datetime]: A sequence of issue date/times
         """
-        return super().get_issues(num_issues, issue_start, issue_end, time_delta)
+        zero_time_delta = timedelta(seconds=0)
+        if time_delta == zero_time_delta:
+            raise ValueError('Time delta must be non zero')
+
+        issues_set: set[datetime] = set()
+        if issue_start:
+            datetimes = datetime_gen(issue_end, time_delta, issue_start, num_issues)
+        else:
+            # check if time delta is positive, if so make negative
+            if time_delta > zero_time_delta:
+                time_delta = timedelta(seconds=-1.0 * time_delta.total_seconds())
+            datetimes = datetime_gen(issue_end, time_delta)
+        for issue_dt in datetimes:
+            if issue_start and issue_dt < issue_start:
+                break
+            try:
+                dir_path = self.path_builder.build_dir(issue=issue_dt)
+                issues = {self.path_builder.get_issue(file_path)
+                          for file_path in self.ls(dir_path)
+                          if file_path.endswith(self.path_builder.file_ext)}
+                issues_set.update(issues)
+                if num_issues and len(issues_set) >= num_issues:
+                    break
+            except PermissionError:
+                pass
+        if None in issues_set:
+            issues_set.remove(None)
+        return sorted(issues_set)[:num_issues]
 
     def get_valids(self,
                    issue: datetime,
@@ -162,4 +132,29 @@ class HttpUtils(ProtocolUtils):
                                             object's location) and the object's location (path).
                                             Empty Sequence if no valids found for given time range.
         """
-        return super().get_valids(issue, valid_start, valid_end)
+        if valid_start and valid_start == valid_end:
+            valids_and_filenames = self.check_for(issue, valid_start)
+            return [valids_and_filenames] if valids_and_filenames is not None else []
+
+        dir_path = self.path_builder.build_dir(issue=issue)
+        valid_and_file = [(self.path_builder.get_valid(file_path), file_path)
+                          for file_path in self.ls(dir_path)
+                          if file_path.endswith(self.path_builder.file_ext)]
+        valid_and_file = [(dt, path) for (dt, path) in valid_and_file if dt is not None]
+        # Remove any tuple that has "None" as the valid time
+        if valid_start:
+            if valid_end:
+                valid_and_file = [(valid, filename)
+                                  for valid, filename in valid_and_file
+                                  if valid_start <= valid <= valid_end]
+            else:
+                valid_and_file = [(valid, filename)
+                                  for valid, filename in valid_and_file
+                                  if valid >= valid_start]
+        elif valid_end:
+            valid_and_file = [(valid, filename)
+                              for valid, filename in valid_and_file
+                              if valid <= valid_end]
+
+        return valid_and_file
+
