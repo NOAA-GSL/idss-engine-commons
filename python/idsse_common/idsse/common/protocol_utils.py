@@ -10,16 +10,16 @@
 #
 # -------------------------------------------------------------------------------
 import fnmatch
-import logging
 import os
 
+from abc import abstractmethod, ABC
 from collections.abc import Sequence
 from datetime import datetime, timedelta, UTC
 
 from .path_builder import PathBuilder
 from .utils import TimeDelta, datetime_gen
 
-class ProtocolUtils():
+class ProtocolUtils(ABC):
     """Base Class - interface for DAS data discovery"""
 
     def __init__(self,
@@ -41,6 +41,19 @@ class ProtocolUtils():
         """
         lead = TimeDelta(valid-issue)
         return self.path_builder.build_path(issue=issue, valid=valid, lead=lead)
+
+    @abstractmethod
+    def ls(self, path: str, prepend_path: bool = True) -> Sequence[str]:
+        """Execute a 'ls' on the specified path
+
+        Args:
+            path (str): path
+            prepend_path (bool): Add to the filename
+
+        Returns:
+            Sequence[str]: The results sent to stdout from executing a 'ls' on passed path
+        """
+        pass
 
     def check_for(self, issue: datetime, valid: datetime) -> tuple[datetime, str] | None:
         """Checks if an object passed issue/valid exists
@@ -66,7 +79,6 @@ class ProtocolUtils():
             if fnmatch.fnmatch(os.path.basename(fname), filename):
                 return valid, os.path.join(dir_path, fname)
         return None
-        pass
 
     def get_issues(self,
                    num_issues: int = 1,
@@ -157,4 +169,3 @@ class ProtocolUtils():
                               if valid <= valid_end]
 
         return valid_and_file
-

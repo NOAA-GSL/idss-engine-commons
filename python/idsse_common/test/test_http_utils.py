@@ -17,7 +17,6 @@ from datetime import datetime, timedelta, UTC
 from pytest import fixture
 from pytest_httpserver import HTTPServer
 
-from idsse.common.protocol_utils import ProtocolUtils
 from idsse.common.http_utils import HttpUtils
 from idsse.testing.utils.resources import get_resource_from_file
 

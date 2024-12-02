@@ -9,7 +9,6 @@
 #     Paul Hamer (1)
 #
 # -------------------------------------------------------------------------------
-import fnmatch
 import logging
 import os
 import shutil
@@ -18,8 +17,6 @@ from datetime import datetime, timedelta, UTC
 
 import requests
 
-from .path_builder import PathBuilder
-from .utils import TimeDelta, datetime_gen
 from .protocol_utils import ProtocolUtils
 
 logger = logging.getLogger(__name__)
