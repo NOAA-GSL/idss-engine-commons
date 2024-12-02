@@ -42,6 +42,7 @@ class ProtocolUtils(ABC):
         lead = TimeDelta(valid-issue)
         return self.path_builder.build_path(issue=issue, valid=valid, lead=lead)
 
+    # pylint: disable=invalid-name
     @abstractmethod
     def ls(self, path: str, prepend_path: bool = True) -> Sequence[str]:
         """Execute a 'ls' on the specified path
