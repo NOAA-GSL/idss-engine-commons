@@ -731,9 +731,11 @@ class Rpc:
             return request_future.result(timeout=self._timeout)
         except TimeoutError:
             logger.warning('Timed out waiting for response. correlation_id: %s', request_id)
+            self._pending_requests.pop(request_id)  # stop tracking request Future
             return None
         except Exception as exc:  # pylint: disable=broad-exception-caught
             logger.warning('Unexpected response from external service: %s', str(exc))
+            self._pending_requests.pop(request_id)  # stop tracking request Future
             return None
 
     def start(self):
