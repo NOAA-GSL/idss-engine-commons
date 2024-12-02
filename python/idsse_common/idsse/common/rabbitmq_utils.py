@@ -627,7 +627,7 @@ class Publisher(Thread):
         """
         return _blocking_publish(self.channel,
                                  self._exch,
-                                 PublishMessageParams(message, properties,route_key),
+                                 PublishMessageParams(message, properties, route_key),
                                  self._queue)
 
     def stop(self):
