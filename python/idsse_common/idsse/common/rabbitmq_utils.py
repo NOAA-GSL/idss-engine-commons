@@ -490,7 +490,7 @@ class Consumer(Thread):
         self.connection = BlockingConnection(conn_params.connection_parameters)
         self.channel = self.connection.channel()
         self.channel.basic_qos(prefetch_count=1)
-        
+
         self._consumer_tags = []
         for (exch, queue), func in _rmq_params_and_callbacks:
             _setup_exch_and_queue(self.channel, exch, queue)
