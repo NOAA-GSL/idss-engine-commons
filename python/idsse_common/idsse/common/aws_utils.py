@@ -15,8 +15,8 @@ import logging
 import os
 from collections.abc import Sequence
 
-from .utils import exec_cmd
 from .protocol_utils import ProtocolUtils
+from .utils import exec_cmd
 
 logger = logging.getLogger(__name__)
 
