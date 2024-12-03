@@ -41,7 +41,8 @@ class ProtocolUtils(ABC):
         Returns:
             Sequence[str]: The results sent to stdout from executing a 'ls' on passed path
         """
-        
+
+
     def get_path(self, issue: datetime, valid: datetime) -> str:
         """Delegates to instant PathBuilder to get full path given issue and valid
 
