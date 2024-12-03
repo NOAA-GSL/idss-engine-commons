@@ -29,19 +29,6 @@ class ProtocolUtils(ABC):
                  file_ext: str) -> None:
         self.path_builder = PathBuilder(basedir, subdir, file_base, file_ext)
 
-    def get_path(self, issue: datetime, valid: datetime) -> str:
-        """Delegates to instant PathBuilder to get full path given issue and valid
-
-        Args:
-            issue (datetime): Issue date time
-            valid (datetime): Valid date time
-
-        Returns:
-            str: Absolute path to file or object
-        """
-        lead = TimeDelta(valid-issue)
-        return self.path_builder.build_path(issue=issue, valid=valid, lead=lead)
-
     # pylint: disable=invalid-name
     @abstractmethod
     def ls(self, path: str, prepend_path: bool = True) -> Sequence[str]:
@@ -54,6 +41,19 @@ class ProtocolUtils(ABC):
         Returns:
             Sequence[str]: The results sent to stdout from executing a 'ls' on passed path
         """
+        
+    def get_path(self, issue: datetime, valid: datetime) -> str:
+        """Delegates to instant PathBuilder to get full path given issue and valid
+
+        Args:
+            issue (datetime): Issue date time
+            valid (datetime): Valid date time
+
+        Returns:
+            str: Absolute path to file or object
+        """
+        lead = TimeDelta(valid-issue)
+        return self.path_builder.build_path(issue=issue, valid=valid, lead=lead)
 
 
     def check_for(self, issue: datetime, valid: datetime) -> tuple[datetime, str] | None:
