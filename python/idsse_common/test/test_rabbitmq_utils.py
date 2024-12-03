@@ -284,15 +284,10 @@ def test_send_request_works_without_calling_start(rpc_thread: Rpc,
                                                   monkeypatch: MonkeyPatch):
     example_message = {'value': 'hello world'}
 
-    # when client calls _publish, manually invoke response callback with a faked message
+    # when client calls _blocking_publish, manually invoke response callback with a faked message
     # from external service, simulating RMQ call/response
     # pylint: disable=too-many-arguments
-    def mock_threadsafe_publish(channel, exch, message_params, queue = None, success_flag = None,
-                                done_event = None):
-        # tell threads waiting for confirmation that message was published
-        success_flag[0] = True  # update pass-by-reference business
-        done_event.set()
-
+    def mock_blocking_publish(*_args, **_kwargs):
         # build mock message from imaginary external service
         method = Method('', 123)
         props = BasicProperties(content_type='application/json', correlation_id=EXAMPLE_UUID)
@@ -300,8 +295,8 @@ def test_send_request_works_without_calling_start(rpc_thread: Rpc,
 
         rpc_thread._response_callback(mock_channel, method, props, body)
 
-    mock_publish = Mock(side_effect=mock_threadsafe_publish)
-    monkeypatch.setattr('idsse.common.rabbitmq_utils._publish', mock_publish)
+    monkeypatch.setattr('idsse.common.rabbitmq_utils._blocking_publish',
+                        Mock(side_effect=mock_blocking_publish))
 
     result = rpc_thread.send_request(json.dumps({'fake': 'request message'}))
     assert json.loads(result.body) == example_message
@@ -315,15 +310,8 @@ def test_send_request_times_out_if_no_response(mock_connection: Mock,
     _thread = Rpc(CONN, RMQ_PARAMS.exchange, timeout=0.01)
 
     # do nothing on message publish
-    # pylint: disable=too-many-arguments
-    def mock_threadsafe_publish(channel, exch, message_params, queue = None, success_flag = None,
-                                done_event = None):
-        # tell threads waiting for confirmation that message was published
-        success_flag[0] = True  # update pass-by-reference business
-        done_event.set()
-
-    mock_publish = Mock(side_effect=mock_threadsafe_publish)
-    monkeypatch.setattr('idsse.common.rabbitmq_utils._publish', mock_publish)
+    monkeypatch.setattr('idsse.common.rabbitmq_utils._blocking_publish',
+                        Mock(side_effect=lambda *_args, **_kwargs: None))
 
     result = _thread.send_request(json.dumps({'data': 123}))
     assert EXAMPLE_UUID not in _thread._pending_requests  # request was cleaned up
@@ -334,16 +322,13 @@ def test_send_requests_returns_none_on_error(rpc_thread: Rpc,
                                              mock_connection: Mock,
                                              monkeypatch: MonkeyPatch):
     # pylint: disable=too-many-arguments
-    def mock_threadsafe_publish(channel, exch, message_params, queue = None, success_flag = None,
+    def mock_blocking_publish(channel, exch, message_params, queue = None, success_flag = None,
                                 done_event = None):
-        # tell threads waiting for confirmation that message was published
-        success_flag[0] = True
-        done_event.set()
         # cause exception for pending request Future
         rpc_thread._pending_requests[EXAMPLE_UUID].set_exception(RuntimeError('Something broke'))
 
-    mock_publish = Mock(side_effect=mock_threadsafe_publish)
-    monkeypatch.setattr('idsse.common.rabbitmq_utils._publish', mock_publish)
+    monkeypatch.setattr('idsse.common.rabbitmq_utils._blocking_publish',
+                        Mock(side_effect=mock_blocking_publish))
 
     result = rpc_thread.send_request({'data': 123})
     assert EXAMPLE_UUID not in rpc_thread._pending_requests  # request was cleaned up
