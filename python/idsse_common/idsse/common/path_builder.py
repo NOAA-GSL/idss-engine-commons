@@ -18,30 +18,49 @@ In this weather forecasting data context,
 
 import os
 import re
+from copy import deepcopy
 from datetime import datetime, timedelta, UTC
-from typing import Self
+from typing import Final, NamedTuple, Self
 
 from .utils import TimeDelta
 
 
+# The public class
 class PathBuilder:
     """Path Builder Class"""
+
+    ISSUE: Final[str] = 'issue'
+    VALID: Final[str] = 'valid'
+    LEAD: Final[str] = 'lead'
+    INT: Final[str] = 'd'
+    FLOAT: Final[str] = 'f'
+    STR: Final[str] = 's'
 
     def __init__(self,
                  basedir: str,
                  subdir: str,
                  file_base: str,
                  file_ext: str) -> None:
-        self._basedir = basedir
-        self._subdir = subdir
+
+        # store path format parts to private vars, they accessible via properties
+        self._base_dir = basedir
+        self._sub_dir = subdir
         self._file_base = file_base
         self._file_ext = file_ext
 
+        # create a dictionary to hold lookup info
+        self._lookup_dict = {}
+        self._update_lookup(self.path_fmt)
+
+        # these are used for caching the most recent previously parsed paths (for optimization)
+        self._last_parsed_path = None
+        self._parsed_args = None
+
     def __str__(self) -> str:
-        return f"'{self._basedir}','{self._subdir}','{self._file_base}','{self._file_ext}'"
+        return f"'{self._base_dir}','{self._sub_dir}','{self._file_base}','{self._file_ext}'"
 
     def __repr__(self) -> str:
-        return (f"PathBuilder(basedir='{self._basedir}', subdir='{self._subdir}', "
+        return (f"PathBuilder(basedir='{self._base_dir}', subdir='{self._sub_dir}', "
                 f"file_base='{self._file_base}', file_ext='{self._file_ext}')")
 
     @classmethod
@@ -77,47 +96,76 @@ class PathBuilder:
 
     @property
     def dir_fmt(self):
-        """Provides access to the directory format str"""
-        return os.path.join(self._basedir, self._subdir)
+        """Provides access to the directory format string"""
+        return os.path.join(self.base_dir, self.sub_dir)
 
     @property
     def filename_fmt(self):
-        """Provides access to the filename format str"""
-        if not self._file_ext or self._file_ext.startswith('.'):
-            return f'{self._file_base}{self._file_ext}'
-        return f'{self._file_base}.{self._file_ext}'
+        """Provides access to the filename format string"""
+        if not self.file_ext or self.file_ext.startswith('.'):
+            return f'{self.file_base}{self.file_ext}'
+        return f'{self.file_base}.{self.file_ext}'
+
+    @property
+    def path_fmt(self):
+        """Provides access to the path format string"""
+        return os.path.join(self.dir_fmt, self.filename_fmt)
 
     @property
     def base_dir(self):
-        """Provides access to the file base directory format str"""
-        return self._basedir
+        """Provides access to the file base directory format string"""
+        return self._base_dir
 
     @base_dir.setter
     def base_dir(self, basedir):
-        """Set the file extension format str"""
-        self._basedir = basedir
+        """Set the base directory format string"""
+        # update base directory format
+        self._base_dir = basedir
+        self._update_lookup(self.path_fmt)
+
+    @property
+    def sub_dir(self):
+        """Provides access to the file base directory format string"""
+        return self._sub_dir
+
+    @sub_dir.setter
+    def sub_dir(self, subdir):
+        """Set the sub directory format string"""
+        # update sub directory format
+        self._sub_dir = subdir
+        self._update_lookup(self.path_fmt)
+
+    @property
+    def file_base(self):
+        """Provides access to the file base format string"""
+        return self._file_base
+
+    @file_base.setter
+    def file_base(self, file_base):
+        """Set the file extension format string"""
+        # update file extension format
+        self._file_base = file_base
+        self._update_lookup(self.path_fmt)
 
     @property
     def file_ext(self):
-        """Provides access to the file extension format str"""
+        """Provides access to the file extension format string"""
         if self._file_ext:
             return self._file_ext
         return self._file_base[self._file_base.rindex('.'):]
 
     @file_ext.setter
     def file_ext(self, ext):
-        """Set the file extension format str"""
+        """Set the file extension format string"""
+        # update file extension format
         self._file_ext = ext
-
-    @property
-    def path_fmt(self):
-        """Provides access to the path format str"""
-        return os.path.join(self.dir_fmt, self.filename_fmt)
+        self._update_lookup(self.path_fmt)
 
     def build_dir(self,
                   issue: datetime | None = None,
                   valid: datetime | None = None,
-                  lead: timedelta | TimeDelta | None = None) -> str:
+                  lead: timedelta | TimeDelta | None = None,
+                  **kwargs) -> str:
         """Attempts to build the directory with provided arguments
 
         Args:
@@ -127,6 +175,7 @@ class PathBuilder:
                                         directory is dependant on it. . Defaults to None.
             lead (timedelta | TimeDelta | None, optional): Lead can be provided in addition
                                                           to issue or valid. Defaults to None.
+            **kwargs: Any additional key/word args (i.e. 'region'='co')
 
         Returns:
             str: Directory as a string
@@ -134,12 +183,13 @@ class PathBuilder:
         if issue is None:
             return None
         lead = self._ensure_lead(issue, valid, lead)
-        return self.dir_fmt.format(issue=issue, valid=valid, lead=lead)
+        return self.dir_fmt.format(issue=issue, valid=valid, lead=lead, **kwargs)
 
     def build_filename(self,
                        issue: datetime | None = None,
                        valid: datetime | None = None,
-                       lead: timedelta | TimeDelta | None = None) -> str:
+                       lead: timedelta | TimeDelta | None = None,
+                       **kwargs) -> str:
         """Attempts to build the filename with provided arguments
 
         Args:
@@ -149,17 +199,19 @@ class PathBuilder:
                                         filename is dependant on it. . Defaults to None.
             lead (timedelta | TimeDelta | None, optional): Lead can be provided in addition
                                                           to issue or valid. Defaults to None.
+            **kwargs: Any additional key/word args (i.e. 'region'='co')
 
         Returns:
             str: File name as a string
         """
         lead = self._ensure_lead(issue, valid, lead)
-        return self.filename_fmt.format(issue=issue, valid=valid, lead=lead)
+        return self.filename_fmt.format(issue=issue, valid=valid, lead=lead, **kwargs)
 
     def build_path(self,
                    issue: datetime | None = None,
                    valid: datetime | None = None,
-                   lead: timedelta | TimeDelta | None = None) -> str:
+                   lead: timedelta | TimeDelta | None = None,
+                   **kwargs: dict) -> str:
         """Attempts to build the path with provided arguments
 
         Args:
@@ -169,26 +221,27 @@ class PathBuilder:
                                         path is dependant on it. . Defaults to None.
             lead (timedelta | TimeDelta | None, optional): Lead can be provided in addition
                                                           to issue or valid. Defaults to None.
+            **kwargs: Any additional key/word args (i.e. 'region'='co')
 
         Returns:
             str: Path as a string
         """
         lead = self._ensure_lead(issue, valid, lead)
-        return self.path_fmt.format(issue=issue, valid=valid, lead=lead)
+        return self._apply_format(self.path_fmt, issue=issue, valid=valid, lead=lead, **kwargs)
 
-    def parse_dir(self, dir_: str) -> dict:
+    def parse_dir(self, dir_str: str) -> dict:
         """Extracts issue, valid, and/or lead information from the provided directory
 
         Args:
-            dir_ (str): A directory consistent with this PathBuilder
+            dir_str (str): A directory consistent with this PathBuilder
 
         Returns:
             dict: Lookup of all information identified and extracted
         """
-        return self._parse_times(dir_, self.dir_fmt)
+        return self._get_parsed_arg_parts(dir_str, self.dir_fmt)
 
     def parse_filename(self, filename: str) -> dict:
-        """Extracts issue, valid, and/or lead information from the provided filename
+        """Extracts issue, valid, lead, and any extras information from the provided filename
 
         Args:
             filename (str): A filename consistent with this PathBuilder
@@ -197,10 +250,11 @@ class PathBuilder:
             dict: Lookup of all information identified and extracted
         """
         filename = os.path.basename(filename)
-        return self._parse_times(filename, self.filename_fmt)
+        self._parse_path(filename, self.filename_fmt)
+        return deepcopy(self._parsed_args)
 
     def parse_path(self, path: str) -> dict:
-        """Extracts issue, valid, and/or lead information from the provided path
+        """Extracts issue, valid, lead, and any extra information from the provided path
 
         Args:
             path (str): A path consistent with this PathBuilder
@@ -208,7 +262,10 @@ class PathBuilder:
         Returns:
             dict: Lookup of all information identified and extracted
         """
-        return self._parse_times(path, self.path_fmt)
+        # do the core parsing
+        self._parse_path(path, self.path_fmt)
+        # return a copy to parsed_args
+        return deepcopy(self._parsed_args)
 
     def get_issue(self, path: str) -> datetime:
         """Retrieves the issue date/time from the provided path
@@ -219,8 +276,10 @@ class PathBuilder:
         Returns:
             datetime: After parsing the path, builds and returns the issue date/time
         """
-        time_args = self.parse_path(path)
-        return self.get_issue_from_time_args(time_args)
+        # do the core parsing
+        self._parse_path(path, self.path_fmt)
+        # return a the issue datetime, if determined
+        return self._parsed_args[self.ISSUE]
 
     def get_valid(self, path: str) -> datetime:
         """Retrieves the valid date/time from the provided path
@@ -231,13 +290,140 @@ class PathBuilder:
         Returns:
             datetime: After parsing the path, builds and returns the valid date/time
         """
-        time_args = self.parse_path(path)
-        return self.get_valid_from_time_args(time_args)
+        # do the core parsing
+        self._parse_path(path, self.path_fmt)
+        # return a the valid datetime, if determined
+        return self._parsed_args[self.VALID]
+
+    def _update_lookup(self, format_str: str) -> None:
+        """This method should be called whenever some part of the format has been changed.
+
+
+        Args:
+            format_str (str): The change format, either part of, or the complete combined, format
+
+        Raises:
+            ValueError: If the format is not descriptive enough. Formats must specify size and type.
+        """
+        # if a format is being updated any cache will be out of date
+        self._last_parsed_path = None
+
+        for fmt_str in os.path.normpath(format_str).split(os.sep):
+            remaining_fmt_str = fmt_str
+            lookup_info = []
+            cum_start = 0
+            while (re_match := re.search(r'\{(.*?)\}', remaining_fmt_str)):
+                arg_parts = re_match.group()[1:-1].split(':')
+                if len(arg_parts) != 2:
+                    raise ValueError('Format string must have explicit specification '
+                                     '(must include a ":")')
+                try:
+                    arg_size = int(re.search(r'^\d+', arg_parts[1]).group())
+                except Exception:
+                    raise ValueError('Format string must have explicit size '
+                                     '(must include a number after ":")')
+                arg_type = arg_parts[1][-1]
+                if arg_parts[1][-1] not in [self.INT, self.FLOAT, self.STR]:
+                    raise ValueError('Format string must have explicit type (must include one of '
+                                     f'["{self.INT}", "{self.FLOAT}", "{self.STR}"] after ":")')
+
+                arg_start = re_match.start() + cum_start
+                arg_end = cum_start = arg_start + arg_size
+                lookup_info.append(_LookupInfo(arg_parts[0], arg_start, arg_end, arg_type))
+                # update the format str to find the next argument
+                remaining_fmt_str = remaining_fmt_str[re_match.end():]
+
+            exp_len = (sum(end-start for _, start, end, _ in lookup_info) +
+                       len(re.sub(r'\{(.*?)\}', '', fmt_str)))
+
+            self._lookup_dict[fmt_str] = _FormatLookup(exp_len, lookup_info)
+
+    def _parse_path(self, path: str, format_str: str) -> None:
+        """Parse a path for any knowable variables given the provided format string.
+
+        Args:
+            path (str): The path string to be parsed
+            format_str (str): The format string that the path is assumed to correspond with
+        """
+        if path != self._last_parsed_path:
+            parsed_arg_parts = self._get_parsed_arg_parts(path, format_str)
+            issue_dt = self._get_issue_from_arg_parts(parsed_arg_parts)
+            valid_dt = self._get_valid_from_arg_parts(parsed_arg_parts)
+            # add the issue/valid/lead datetime and timedelta objects
+            if issue_dt:
+                parsed_arg_parts[self.ISSUE] = issue_dt
+            if valid_dt:
+                parsed_arg_parts[self.VALID] = valid_dt
+            if issue_dt and valid_dt:
+                parsed_arg_parts[self.LEAD] = TimeDelta(valid_dt - issue_dt)
+
+            # cache this path and the parsed_arg_parts for repeat requests
+            self._last_parsed_path = path
+            self._parsed_args = parsed_arg_parts
+
+    def _get_parsed_arg_parts(self, path: str, format_str: str) -> dict:
+        """Build a dictionary of knowable variable based on path and format string. This
+           dictionary can be used to create complete issue/valid datetimes and/or contain
+           extra variables.
+
+        Args:
+            path (str): The path string from which variables will be extracted
+            format_str (str): The format string used to identify where variables can be found
+
+        Raises:
+            ValueError: If the path string does not conform to the format string (not expected len)
+
+        Returns:
+            dict: Dictionary of variables
+        """
+        # Split path and format strings into lists of parts, either dir and/or filenames
+        fmt_parts = os.path.normpath(format_str).split(os.sep)
+        path_parts = os.path.normpath(path).split(os.sep)
+
+        parsed_arg_parts = {}
+        for path_part, fmt_part in zip(path_parts, fmt_parts):
+            expected_len, lookup_info = self._lookup_dict[fmt_part]
+            if len(path_part) != expected_len:
+                raise ValueError('Some part of the path is not expected length. Passed part '
+                                 f"'{path_part}' doesn't match format '{fmt_part}'")
+            for lookup in lookup_info:
+                match lookup.type:
+                    case self.INT:
+                        parsed_arg_parts[lookup.key] = int(path_part[lookup.start:lookup.end])
+                    case self.FLOAT:
+                        parsed_arg_parts[lookup.key] = float(path_part[lookup.start:lookup.end])
+                    case self.STR:
+                        parsed_arg_parts[lookup.key] = path_part[lookup.start:lookup.end]
+
+        return parsed_arg_parts
+
+    def _apply_format(self, format_str: str, **kwargs) -> str:
+        """Use the format string and any variables in the kwargs to build a path.
+
+        Args:
+            format_str (str): A format string, for part or a whole path
+
+        Raises:
+            ValueError: If the generated path part does not match expected length
+
+        Returns:
+            str: A string representation of a system path, combined with os specific separators
+        """
+        path_parts = []
+        for fmt_part in os.path.normpath(format_str).split(os.sep):
+            path_part = fmt_part.format_map(kwargs)
+            if len(path_part) == self._lookup_dict[fmt_part].total_len:
+                path_parts.append(path_part)
+            else:
+                raise ValueError('Arguments generate a path that violate '
+                                 f"at least part of the format, part '{fmt_part}'")
+
+        return os.path.join(*path_parts)
 
     @staticmethod
-    def get_issue_from_time_args(parsed_args: dict,
-                                 valid: datetime | None = None,
-                                 lead: timedelta | None = None) -> datetime:
+    def _get_issue_from_arg_parts(parsed_args: dict,
+                                  valid: datetime | None = None,
+                                  lead: timedelta | None = None) -> datetime:
         """Static method for creating an issue date/time from parsed arguments and optional inputs
 
         Args:
@@ -260,22 +446,18 @@ class PathBuilder:
                             parsed_args.get('issue.second', 0),
                             parsed_args.get('issue.microsecond', 0),
                             tzinfo=UTC)
-
         if lead is None and 'lead.hour' in parsed_args:
-            lead = PathBuilder.get_lead_from_time_args(parsed_args)
-
+            lead = PathBuilder._get_lead_from_time_args(parsed_args)
         if valid is None and 'valid.year' in parsed_args:
-            valid = PathBuilder.get_valid_from_time_args(parsed_args)
-
+            valid = PathBuilder._get_valid_from_arg_parts(parsed_args)
         if valid and lead:
             return valid - lead
-
         return None
 
     @staticmethod
-    def get_valid_from_time_args(parsed_args: dict,
-                                 issue: datetime | None = None,
-                                 lead: timedelta | None = None) -> datetime:
+    def _get_valid_from_arg_parts(parsed_args: dict,
+                                  issue: datetime | None = None,
+                                  lead: timedelta | None = None) -> datetime:
         """Static method for creating a valid date/time from parsed arguments and optional inputs
 
         Args:
@@ -298,20 +480,16 @@ class PathBuilder:
                             parsed_args.get('valid.second', 0),
                             parsed_args.get('valid.microsecond', 0),
                             tzinfo=UTC)
-
         if lead is None and 'lead.hour' in parsed_args:
-            lead = PathBuilder.get_lead_from_time_args(parsed_args)
-
+            lead = PathBuilder._get_lead_from_time_args(parsed_args)
         if issue is None and 'issue.year' in parsed_args:
-            issue = PathBuilder.get_issue_from_time_args(parsed_args)
-
+            issue = PathBuilder._get_issue_from_arg_parts(parsed_args)
         if issue and lead:
             return issue + lead
-
         return None
 
     @staticmethod
-    def get_lead_from_time_args(time_args: dict) -> timedelta:
+    def _get_lead_from_time_args(time_args: dict) -> timedelta:
         """Static method for creating a lead time from parsed arguments and optional inputs
 
         Args:
@@ -323,13 +501,22 @@ class PathBuilder:
         """
         if 'lead.hour' in time_args.keys():
             return timedelta(hours=time_args['lead.hour'])
-
         return None
 
     @staticmethod
-    def _ensure_lead(issue: datetime,
-                     valid: datetime,
-                     lead: timedelta | TimeDelta) -> TimeDelta:
+    def _ensure_lead(issue: datetime | None,
+                     valid: datetime | None,
+                     lead: timedelta | TimeDelta | None) -> TimeDelta:
+        """Make every attempt to ensure lead is known, by calculating or converting if needed.
+
+        Args:
+            issue (datetime | None): An issue datetime if known, else None
+            valid (datetime | None): A valid datetime if known, else None
+            lead (timedelta | TimeDelta | None): A lead if known, else None
+
+        Returns:
+            TimeDelta: _description_
+        """
         if lead:
             if isinstance(lead, timedelta):
                 return TimeDelta(lead)
@@ -338,29 +525,17 @@ class PathBuilder:
             return TimeDelta(valid-issue)
         return None
 
-    def _parse_times(self, string: str, format_str: str) -> dict:
-        def parse_args(key: str, value: str, result: dict):
-            for arg in key.split('{')[1:]:
-                var_name, var_size = arg.split(':')
-                var_type = var_size[2:3]
-                var_size = int(var_size[0:2])
-                match var_type:
-                    case 'd':
-                        result[var_name] = int(value[:var_size])
-                    case _:
-                        raise ValueError(f'Unknown format type: {var_type}')
-                key = key[var_size:]
-                # Check for additional characters following the end of the format element to reach
-                # next offset position for value...
-                value = value[var_size + len(arg.partition('}')[2]):]
 
-        # Update to more generically handle time formats...
-        dirs = os.path.normpath(format_str).split(os.sep)
-        vals = os.path.normpath(string).split(os.sep)
-        time_args = {}
-        for i, _dir in enumerate(dirs):
-            res = re.search(r'{.*}', _dir)
-            if res:
-                parse_args(res.group(), vals[i][res.span()[0]:], time_args)
+# Private utility classes
+class _LookupInfo(NamedTuple):
+    """Data class used to hold lookup info"""
+    key: str
+    start: int
+    end: int
+    type: str  # should be one of 'd', 'f', 's'
 
-        return time_args
+
+class _FormatLookup(NamedTuple):
+    """Data class used to hold format and lookup info"""
+    exp_len: int
+    lookups: list[_LookupInfo]

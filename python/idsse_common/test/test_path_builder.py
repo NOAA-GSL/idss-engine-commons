@@ -12,10 +12,44 @@
 # cspell:words pathbuilder
 
 from datetime import datetime, timedelta, UTC
-import pytest
+from pytest import fixture, raises
 
-from idsse.common.utils import TimeDelta
-from idsse.common.path_builder import PathBuilder
+from idsse.common.path_builder import TimeDelta, PathBuilder
+
+# properties
+EXAMPLE_BASE_DIR = './some/directory'
+EXAMPLE_SUB_DIR = 'another/directory'
+EXAMPLE_FILE = 'my_file'
+EXAMPLE_FILE_EXT = '.txt'
+
+EXAMPLE_ISSUE = datetime(1970, 10, 3, 12, tzinfo=UTC)  # a.k.a. issued at
+EXAMPLE_VALID = datetime(1970, 10, 3, 14, tzinfo=UTC)  # a.k.a. valid until
+EXAMPLE_LEAD = TimeDelta(EXAMPLE_VALID - EXAMPLE_ISSUE)  # a.k.a. duration of time that issue lasts
+EXAMPLE_FULL_PATH = '~/blend.19701003/12/core/blend.t12z.core.f002.co.grib2.idx'
+
+
+@fixture
+def local_path_builder() -> PathBuilder:
+    # create example Pa†hBuilder instance using test strings
+    return PathBuilder(EXAMPLE_BASE_DIR, EXAMPLE_SUB_DIR, EXAMPLE_FILE, EXAMPLE_FILE_EXT)
+
+
+@fixture
+def path_builder() -> PathBuilder:
+    subdirectory_pattern = (
+        'blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/{issue.hour:02d}/core/'
+    )
+    file_base_pattern = 'blend.t{issue.hour:02d}z.core.f{lead.hour:03d}.co'
+    return PathBuilder('~', subdirectory_pattern, file_base_pattern, 'grib2.idx')
+
+
+@fixture
+def path_builder_with_region() -> PathBuilder:
+    subdirectory_pattern = (
+        'blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/{issue.hour:02d}/core/'
+    )
+    file_base_pattern = 'blend.t{issue.hour:02d}z.core.f{lead.hour:03d}.{region:2s}'
+    return PathBuilder('~', subdirectory_pattern, file_base_pattern, 'grib2.idx')
 
 
 def test_from_dir_filename_creates_valid_pathbuilder():
@@ -38,19 +72,6 @@ def test_from_path_creates_valid_pathbuilder():
     assert path_builder._file_ext == ''
 
 
-# properties
-EXAMPLE_BASE_DIR = './some/directory'
-EXAMPLE_SUB_DIR = 'another/directory'
-EXAMPLE_FILE = 'my_file'
-EXAMPLE_FILE_EXT = '.txt'
-
-
-@pytest.fixture
-def local_path_builder() -> PathBuilder:
-    # create example Pa†hBuilder instance using test strings
-    return PathBuilder(EXAMPLE_BASE_DIR, EXAMPLE_SUB_DIR, EXAMPLE_FILE, EXAMPLE_FILE_EXT)
-
-
 def test_dir_fmt(local_path_builder: PathBuilder):
     assert local_path_builder.dir_fmt == f'{EXAMPLE_BASE_DIR}/{EXAMPLE_SUB_DIR}'
 
@@ -69,31 +90,45 @@ def test_path_fmt(local_path_builder: PathBuilder):
     )
 
 
-# methods
-EXAMPLE_ISSUE = datetime(1970, 10, 3, 12, tzinfo=UTC)  # a.k.a. issued at
-EXAMPLE_VALID = datetime(1970, 10, 3, 14, tzinfo=UTC)  # a.k.a. valid until
-EXAMPLE_LEAD = TimeDelta(EXAMPLE_VALID - EXAMPLE_ISSUE)  # a.k.a. duration of time that issue lasts
+def test_build_path_with_region(path_builder_with_region: PathBuilder):
+    region = 'co'
+    result = path_builder_with_region.build_path(issue=EXAMPLE_ISSUE,
+                                                 lead=EXAMPLE_LEAD,
+                                                 region=region)
+    print(result)
+    result_dict = path_builder_with_region.parse_path(result)
+    print(result_dict)
+    assert result_dict['issue'] == EXAMPLE_ISSUE
+    assert result_dict['lead'] == EXAMPLE_LEAD
+    assert result_dict['region'] == region
 
-EXAMPLE_FULL_PATH = '~/blend.19701003/12/core/blend.t12z.core.f002.co.grib2.idx'
+    # if region is more than 2 chars, ValueError will be raised
+    with raises(ValueError):
+        result = path_builder_with_region.build_path(issue=EXAMPLE_ISSUE,
+                                                     lead=EXAMPLE_LEAD,
+                                                     region='conus')
 
+    # if lead needs more than 3 chars to be represented, ValueError will be raised
+    with raises(ValueError):
+        result = path_builder_with_region.build_path(issue=EXAMPLE_ISSUE,
+                                                     lead=EXAMPLE_LEAD*1000,
+                                                     region='co')
 
-@pytest.fixture
-def path_builder() -> PathBuilder:
-    subdirectory_pattern = (
-        'blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/{issue.hour:02d}/core/'
-    )
-    file_base_pattern = 'blend.t{issue.hour:02d}z.core.f{lead.hour:03d}.co'
-    return PathBuilder('~', subdirectory_pattern, file_base_pattern, 'grib2.idx')
+    # if a required variable (region) is not provided, KeyError will be raised
+    with raises(KeyError):
+        result = path_builder_with_region.build_path(issue=EXAMPLE_ISSUE, lead=EXAMPLE_LEAD)
+
+    assert False
 
 
 def test_build_dir_gets_issue_valid_and_lead(path_builder: PathBuilder):
-    result_dict = path_builder.build_dir(issue=EXAMPLE_ISSUE)
-    assert result_dict == '~/blend.19701003/12/core/'
+    result = path_builder.build_dir(issue=EXAMPLE_ISSUE)
+    assert result == '~/blend.19701003/12/core/'
 
 
 def test_build_dir_fails_without_issue(path_builder: PathBuilder):
-    result_dict = path_builder.build_dir(issue=None)
-    assert result_dict is None
+    result = path_builder.build_dir(issue=None)
+    assert result is None
 
 
 def test_build_filename(path_builder: PathBuilder):
