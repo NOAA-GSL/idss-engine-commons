@@ -20,26 +20,13 @@ from .protocol_utils import ProtocolUtils
 
 logger = logging.getLogger(__name__)
 
-# pylint: disable=duplicate-code, broad-exception-caught
+# pylint: broad-exception-caught
 
 class HttpUtils(ProtocolUtils):
     """http Utility Class - Used by DAS for file downloads"""
 
-    def ls(self, path: str, prepend_path: bool = True) -> Sequence[str]:
-        """Execute a 'ls' on the AWS s3 bucket specified by path
 
-        Args:
-            path (str): s3 bucket
-            prepend_path (bool): Add to the filename
-
-        Returns:
-            Sequence[str]: The results sent to stdout from executing a 'ls' on passed path
-        """
-        return self.http_ls(path, prepend_path)
-
-
-    @staticmethod
-    def http_ls(url: str, prepend_path: bool = True) -> Sequence[str]:
+    def ls(self, url: str, prepend_path: bool = True) -> Sequence[str]:
         """Execute a 'ls' on the http(s) server
         Args:
             url (str): URL
@@ -55,6 +42,7 @@ class HttpUtils(ProtocolUtils):
             for line in response.text.splitlines():
                 if 'href="' in line:
                     filename = line.split('href="')[1].split('"')[0]
+
                     if not filename.endswith('/'):  # Exclude directories
                         files.append(filename)
 
@@ -65,8 +53,8 @@ class HttpUtils(ProtocolUtils):
             return [os.path.join(url, filename) for filename in files]
         return files
 
-    @staticmethod
-    def http_cp(url: str, dest: str) -> bool:
+
+    def cp(self, url: str, dest: str) -> bool:
         """Execute http request download from URL to dest.
 
         Args:

@@ -42,6 +42,17 @@ class ProtocolUtils(ABC):
             Sequence[str]: The results sent to stdout from executing a 'ls' on passed path
         """
 
+    @abstractmethod
+    def cp(self, url: str, dest: str) -> bool:
+        """Execute download from path to dest.
+
+        Args:
+            path (str): The object to be copied
+            dest (str): The destination location
+        Returns:
+            bool: Returns True if copy is successful
+        """
+
 
     def get_path(self, issue: datetime, valid: datetime) -> str:
         """Delegates to instant PathBuilder to get full path given issue and valid

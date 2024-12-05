@@ -34,19 +34,6 @@ class AwsUtils(ProtocolUtils):
         Returns:
             Sequence[str]: The results sent to stdout from executing a 'ls' on passed path
         """
-        return self.aws_ls(path, prepend_path)
-
-    @staticmethod
-    def aws_ls(path: str, prepend_path: bool = True) -> Sequence[str]:
-        """Execute a 'ls' on the AWS s3 bucket specified by path
-
-        Args:
-            path (str): s3 bucket
-            prepend_path (bool): Add to the filename
-
-        Returns:
-            Sequence[str]: The results sent to stdout from executing a 'ls' on passed path
-        """
         try:
             commands = ['s5cmd',  '--no-sign-request', 'ls', path]
             commands_result = exec_cmd(commands)
@@ -59,11 +46,7 @@ class AwsUtils(ProtocolUtils):
             return [os.path.join(path, filename.split(' ')[-1]) for filename in commands_result]
         return [filename.split(' ')[-1] for filename in commands_result]
 
-    @staticmethod
-    def aws_cp(path: str,
-               dest: str,
-               concurrency: int | None = None,
-               chunk_size: int | None = None) -> bool:
+    def cp(self, path: str, dest: str, concurrency: int | None = None, chunk_size: int | None = None) -> bool:
         """Execute a 'cp' on the AWS s3 bucket specified by path, dest. Attempts to use
         [s5cmd](https://github.com/peak/s5cmd) to copy the file from S3 with parallelization,
         but falls back to (slower) aws-cli if s5cmd is not installed or throws an error.
