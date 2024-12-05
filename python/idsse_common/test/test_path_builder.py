@@ -9,9 +9,8 @@
 #
 # --------------------------------------------------------------------------------
 # pylint: disable=missing-function-docstring,invalid-name,redefined-outer-name,protected-access
-# cspell:words pathbuilder
 
-from datetime import datetime, timedelta, UTC
+from datetime import datetime, UTC
 from pytest import fixture, raises
 
 from idsse.common.path_builder import TimeDelta, PathBuilder
@@ -52,24 +51,24 @@ def path_builder_with_region() -> PathBuilder:
     return PathBuilder('~', subdirectory_pattern, file_base_pattern, 'grib2.idx')
 
 
-def test_from_dir_filename_creates_valid_pathbuilder():
+def test_from_dir_filename_creates_valid_path_builder():
     directory = './test_directory'
     filename = 'some_file.txt'
     path_builder = PathBuilder.from_dir_filename(directory, filename)
 
     assert isinstance(path_builder, PathBuilder)
-    assert path_builder._basedir == directory
-    assert path_builder._file_ext == ''
+    assert path_builder.base_dir == directory
+    assert path_builder.file_ext == '.txt'
 
 
-def test_from_path_creates_valid_pathbuilder():
+def test_from_path_creates_valid_path_builder():
     base_dir = './test_directory'
-    path_builder = PathBuilder.from_path(f'{base_dir}/some_file.txt')
-
+    filename = 'some_file.txt'
+    path_builder = PathBuilder.from_path(f'{base_dir}/{filename}')
     assert isinstance(path_builder, PathBuilder)
-    assert path_builder._basedir == base_dir
-    assert path_builder._file_base == base_dir
-    assert path_builder._file_ext == ''
+    assert path_builder.base_dir == base_dir
+    assert path_builder.file_base == filename
+    assert path_builder.file_ext == '.txt'
 
 
 def test_dir_fmt(local_path_builder: PathBuilder):
@@ -90,37 +89,6 @@ def test_path_fmt(local_path_builder: PathBuilder):
     )
 
 
-def test_build_path_with_region(path_builder_with_region: PathBuilder):
-    region = 'co'
-    result = path_builder_with_region.build_path(issue=EXAMPLE_ISSUE,
-                                                 lead=EXAMPLE_LEAD,
-                                                 region=region)
-    print(result)
-    result_dict = path_builder_with_region.parse_path(result)
-    print(result_dict)
-    assert result_dict['issue'] == EXAMPLE_ISSUE
-    assert result_dict['lead'] == EXAMPLE_LEAD
-    assert result_dict['region'] == region
-
-    # if region is more than 2 chars, ValueError will be raised
-    with raises(ValueError):
-        result = path_builder_with_region.build_path(issue=EXAMPLE_ISSUE,
-                                                     lead=EXAMPLE_LEAD,
-                                                     region='conus')
-
-    # if lead needs more than 3 chars to be represented, ValueError will be raised
-    with raises(ValueError):
-        result = path_builder_with_region.build_path(issue=EXAMPLE_ISSUE,
-                                                     lead=EXAMPLE_LEAD*1000,
-                                                     region='co')
-
-    # if a required variable (region) is not provided, KeyError will be raised
-    with raises(KeyError):
-        result = path_builder_with_region.build_path(issue=EXAMPLE_ISSUE, lead=EXAMPLE_LEAD)
-
-    assert False
-
-
 def test_build_dir_gets_issue_valid_and_lead(path_builder: PathBuilder):
     result = path_builder.build_dir(issue=EXAMPLE_ISSUE)
     assert result == '~/blend.19701003/12/core/'
@@ -139,6 +107,38 @@ def test_build_filename(path_builder: PathBuilder):
 def test_build_path(path_builder: PathBuilder):
     result_filepath = path_builder.build_path(issue=EXAMPLE_ISSUE, valid=EXAMPLE_VALID)
     assert result_filepath == '~/blend.19701003/12/core/blend.t12z.core.f002.co.grib2.idx'
+
+
+def test_build_path_with_invalid_lead(path_builder: PathBuilder):
+    # if lead needs more than 3 chars to be represented, ValueError will be raised
+    with raises(ValueError):
+        path_builder.build_path(issue=EXAMPLE_ISSUE,
+                                lead=EXAMPLE_LEAD*1000)
+
+
+def test_build_path_with_region(path_builder_with_region: PathBuilder):
+    region = 'co'
+    result = path_builder_with_region.build_path(issue=EXAMPLE_ISSUE,
+                                                 lead=EXAMPLE_LEAD,
+                                                 region=region)
+    result_dict = path_builder_with_region.parse_path(result)
+    assert result_dict['issue'] == EXAMPLE_ISSUE
+    assert result_dict['lead'] == EXAMPLE_LEAD
+    assert result_dict['region'] == region
+
+
+def test_build_path_with_invalid_region(path_builder_with_region: PathBuilder):
+    # if region is more than 2 chars, ValueError will be raised
+    with raises(ValueError):
+        path_builder_with_region.build_path(issue=EXAMPLE_ISSUE,
+                                            lead=EXAMPLE_LEAD,
+                                            region='conus')
+
+
+def test_build_path_with_required_but_missing_region(path_builder_with_region: PathBuilder):
+    # if a required variable (region) is not provided, KeyError will be raised
+    with raises(KeyError):
+        path_builder_with_region.build_path(issue=EXAMPLE_ISSUE, lead=EXAMPLE_LEAD)
 
 
 def test_parse_dir(path_builder: PathBuilder):
@@ -172,57 +172,3 @@ def test_get_valid_returns_none_when_issue_or_lead_failed(path_builder: PathBuil
     result_valid = path_builder.get_valid(path_with_invalid_lead)
 
     assert result_valid is None
-
-
-# static methods
-def test_get_issue_from_time_args(path_builder: PathBuilder):
-    parsed_dict = path_builder.parse_path(EXAMPLE_FULL_PATH)
-    issue_result = PathBuilder.get_issue_from_time_args(parsed_args=parsed_dict)
-
-    assert issue_result == EXAMPLE_ISSUE
-
-
-def test_get_issue_returns_none_if_args_empty():
-    issue_result = PathBuilder.get_issue_from_time_args({})
-    assert issue_result is None
-
-
-def test_get_valid_from_time_args():
-    parsed_dict = {}
-    parsed_dict['valid.year'] = 1970
-    parsed_dict['valid.month'] = 10
-    parsed_dict['valid.day'] = 3
-    parsed_dict['valid.hour'] = 14
-
-    valid_result = PathBuilder.get_valid_from_time_args(parsed_dict)
-    assert valid_result == EXAMPLE_VALID
-
-
-def test_get_valid_returns_none_if_args_empty():
-    valid_result = PathBuilder.get_valid_from_time_args({})
-    assert valid_result is None
-
-
-def test_get_valid_from_time_args_calculates_based_on_lead(path_builder: PathBuilder):
-    parsed_dict = path_builder.parse_path(EXAMPLE_FULL_PATH)
-    result_valid: datetime = PathBuilder.get_valid_from_time_args(parsed_args=parsed_dict)
-    assert result_valid == EXAMPLE_VALID
-
-
-def test_get_lead_from_time_args(path_builder: PathBuilder):
-    parsed_dict = path_builder.parse_path(EXAMPLE_FULL_PATH)
-    lead_result: timedelta = PathBuilder.get_lead_from_time_args(parsed_dict)
-    assert lead_result.seconds == EXAMPLE_LEAD.minute * 60
-
-
-def test_calculate_issue_from_valid_and_lead():
-    parsed_dict = {
-        'valid.year': 1970,
-        'valid.month': 10,
-        'valid.day': 3,
-        'valid.hour': 14,
-        'lead.hour': 2
-    }
-
-    result_issue = PathBuilder.get_issue_from_time_args(parsed_args=parsed_dict)
-    assert result_issue == EXAMPLE_ISSUE

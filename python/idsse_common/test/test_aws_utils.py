@@ -180,8 +180,6 @@ def test_get_valids_all(aws_utils: AwsUtils, mock_exec_cmd):
     assert result[1] == (EXAMPLE_VALID + timedelta(hours=1), f'{EXAMPLE_DIR}{EXAMPLE_FILES[1]}')
     assert result[2] == (EXAMPLE_VALID + timedelta(hours=2), f'{EXAMPLE_DIR}{EXAMPLE_FILES[2]}')
 
-    assert False
-
 
 def test_get_valids_with_start_filter(aws_utils: AwsUtils, mock_exec_cmd):
     valid_start = EXAMPLE_VALID + timedelta(hours=1)

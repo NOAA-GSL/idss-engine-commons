@@ -92,7 +92,7 @@ class PathBuilder:
             Self: The newly created PathBuilder object
         """
         idx = path_fmt.rindex(os.path.sep)
-        return PathBuilder(path_fmt[:idx], '', path_fmt[:idx], '')
+        return PathBuilder(path_fmt[:idx], '', path_fmt[idx+1:], '')
 
     @property
     def dir_fmt(self):
@@ -267,40 +267,41 @@ class PathBuilder:
         # return a copy to parsed_args
         return deepcopy(self._parsed_args)
 
-    def get_issue(self, path: str) -> datetime:
+    def get_issue(self, path: str) -> datetime | None:
         """Retrieves the issue date/time from the provided path
 
         Args:
             path (str): A path consistent with this PathBuilder
 
         Returns:
-            datetime: After parsing the path, builds and returns the issue date/time
+            datetime | None: After parsing the path, builds and returns the issue date/time if
+                             possible else returns None if insufficient info is available to build
         """
         # do the core parsing
         self._parse_path(path, self.path_fmt)
         # return a the issue datetime, if determined
-        return self._parsed_args[self.ISSUE]
+        return self._parsed_args.get(self.ISSUE, None)
 
-    def get_valid(self, path: str) -> datetime:
+    def get_valid(self, path: str) -> datetime | None:
         """Retrieves the valid date/time from the provided path
 
         Args:
             path (str): A path consistent with this PathBuilder
 
         Returns:
-            datetime: After parsing the path, builds and returns the valid date/time
+            datetime | None: After parsing the path, builds and returns the valid date/time if
+                             possible else returns None if insufficient info is available to build
         """
         # do the core parsing
         self._parse_path(path, self.path_fmt)
         # return a the valid datetime, if determined
-        return self._parsed_args[self.VALID]
+        return self._parsed_args.get(self.VALID, None)
 
-    def _update_lookup(self, format_str: str) -> None:
+    def _update_lookup(self, fmt_str: str) -> None:
         """This method should be called whenever some part of the format has been changed.
 
-
         Args:
-            format_str (str): The change format, either part of, or the complete combined, format
+            fmt_str (str): The change format, either part of, or the complete combined, format
 
         Raises:
             ValueError: If the format is not descriptive enough. Formats must specify size and type.
@@ -308,11 +309,11 @@ class PathBuilder:
         # if a format is being updated any cache will be out of date
         self._last_parsed_path = None
 
-        for fmt_str in os.path.normpath(format_str).split(os.sep):
-            remaining_fmt_str = fmt_str
+        for fmt_part in os.path.normpath(fmt_str).split(os.sep):
+            remaining_fmt_part = fmt_part
             lookup_info = []
             cum_start = 0
-            while (re_match := re.search(r'\{(.*?)\}', remaining_fmt_str)):
+            while (re_match := re.search(r'\{(.*?)\}', remaining_fmt_part)):
                 arg_parts = re_match.group()[1:-1].split(':')
                 if len(arg_parts) != 2:
                     raise ValueError('Format string must have explicit specification '
@@ -331,22 +332,24 @@ class PathBuilder:
                 arg_end = cum_start = arg_start + arg_size
                 lookup_info.append(_LookupInfo(arg_parts[0], arg_start, arg_end, arg_type))
                 # update the format str to find the next argument
-                remaining_fmt_str = remaining_fmt_str[re_match.end():]
+                remaining_fmt_part = remaining_fmt_part[re_match.end():]
 
             exp_len = (sum(end-start for _, start, end, _ in lookup_info) +
-                       len(re.sub(r'\{(.*?)\}', '', fmt_str)))
+                       len(re.sub(r'\{(.*?)\}', '', fmt_part)))
 
-            self._lookup_dict[fmt_str] = _FormatLookup(exp_len, lookup_info)
+            self._lookup_dict[fmt_part] = _FormatLookup(exp_len, lookup_info)
+        # add default for empty string
+        self._lookup_dict[''] = _FormatLookup(0, [])
 
-    def _parse_path(self, path: str, format_str: str) -> None:
+    def _parse_path(self, path: str, fmt_str: str) -> None:
         """Parse a path for any knowable variables given the provided format string.
 
         Args:
             path (str): The path string to be parsed
-            format_str (str): The format string that the path is assumed to correspond with
+            fmt_str (str): The format string that the path is assumed to correspond with
         """
         if path != self._last_parsed_path:
-            parsed_arg_parts = self._get_parsed_arg_parts(path, format_str)
+            parsed_arg_parts = self._get_parsed_arg_parts(path, fmt_str)
             issue_dt = self._get_issue_from_arg_parts(parsed_arg_parts)
             valid_dt = self._get_valid_from_arg_parts(parsed_arg_parts)
             # add the issue/valid/lead datetime and timedelta objects
@@ -361,14 +364,14 @@ class PathBuilder:
             self._last_parsed_path = path
             self._parsed_args = parsed_arg_parts
 
-    def _get_parsed_arg_parts(self, path: str, format_str: str) -> dict:
+    def _get_parsed_arg_parts(self, path: str, fmt_str: str) -> dict:
         """Build a dictionary of knowable variable based on path and format string. This
            dictionary can be used to create complete issue/valid datetimes and/or contain
            extra variables.
 
         Args:
             path (str): The path string from which variables will be extracted
-            format_str (str): The format string used to identify where variables can be found
+            fmt_str (str): The format string used to identify where variables can be found
 
         Raises:
             ValueError: If the path string does not conform to the format string (not expected len)
@@ -377,7 +380,7 @@ class PathBuilder:
             dict: Dictionary of variables
         """
         # Split path and format strings into lists of parts, either dir and/or filenames
-        fmt_parts = os.path.normpath(format_str).split(os.sep)
+        fmt_parts = os.path.normpath(fmt_str).split(os.sep)
         path_parts = os.path.normpath(path).split(os.sep)
 
         parsed_arg_parts = {}
@@ -397,11 +400,11 @@ class PathBuilder:
 
         return parsed_arg_parts
 
-    def _apply_format(self, format_str: str, **kwargs) -> str:
+    def _apply_format(self, fmt_str: str, **kwargs) -> str:
         """Use the format string and any variables in the kwargs to build a path.
 
         Args:
-            format_str (str): A format string, for part or a whole path
+            fmt_str (str): A format string, for part or a whole path
 
         Raises:
             ValueError: If the generated path part does not match expected length
@@ -410,15 +413,16 @@ class PathBuilder:
             str: A string representation of a system path, combined with os specific separators
         """
         path_parts = []
-        for fmt_part in os.path.normpath(format_str).split(os.sep):
+        # we split the format string without normalizing to maintain user specified path
+        # struct such as a double separator (sometime this can be needed)
+        for fmt_part in fmt_str.split(os.sep):
             path_part = fmt_part.format_map(kwargs)
-            if len(path_part) == self._lookup_dict[fmt_part].total_len:
+            if len(path_part) == self._lookup_dict[fmt_part].exp_len:
                 path_parts.append(path_part)
             else:
                 raise ValueError('Arguments generate a path that violate '
                                  f"at least part of the format, part '{fmt_part}'")
-
-        return os.path.join(*path_parts)
+        return os.path.sep.join(path_parts)
 
     @staticmethod
     def _get_issue_from_arg_parts(parsed_args: dict,
