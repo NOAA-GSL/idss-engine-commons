@@ -10,7 +10,7 @@
 #
 # ----------------------------------------------------------------------------------
 # pylint: disable=missing-function-docstring,redefined-outer-name,pointless-statement
-# pylint: disable=invalid-name,unused-argument
+# pylint: disable=invalid-name,unused-argument,duplicate-code,line-too-long
 
 from datetime import datetime, timedelta, UTC
 
