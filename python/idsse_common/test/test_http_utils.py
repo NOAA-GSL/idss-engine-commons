@@ -65,45 +65,45 @@ def test_get_path(http_utils: HttpUtils):
     assert result_path == f'{EXAMPLE_URL}{EXAMPLE_PROD_DIR}MRMS_MergedReflectivityQC_00.50_20241030-205438.grib2.gz'
 
 
-def test_http_ls(http_utils: HttpUtils, httpserver: HTTPServer):
+def test_ls(http_utils: HttpUtils, httpserver: HTTPServer):
     httpserver.expect_request('/data/'+EXAMPLE_ENDPOINT).respond_with_data(EXAMPLE_RETURN,
                                                                            content_type="text/plain")
-    result = http_utils.http_ls(EXAMPLE_URL + EXAMPLE_ENDPOINT)
+    result = http_utils.ls(EXAMPLE_URL + EXAMPLE_ENDPOINT)
     assert len(result) == len(EXAMPLE_FILES)
     assert result[0] == f'{EXAMPLE_URL}{EXAMPLE_PROD_DIR}{EXAMPLE_FILES[0]}'
 
 
-def test_http_ls_without_prepend_path(http_utils: HttpUtils, httpserver: HTTPServer):
+def test_ls_without_prepend_path(http_utils: HttpUtils, httpserver: HTTPServer):
     httpserver.expect_request('/data/'+EXAMPLE_ENDPOINT).respond_with_data(EXAMPLE_RETURN,
                                                                            content_type="text/plain")
-    result = http_utils.http_ls(EXAMPLE_URL + EXAMPLE_ENDPOINT, prepend_path=False)
+    result = http_utils.ls(EXAMPLE_URL + EXAMPLE_ENDPOINT, prepend_path=False)
     assert len(result) == len(EXAMPLE_FILES)
     assert result[0] == EXAMPLE_FILES[0]
 
 
-def test_http_ls_on_error(http_utils: HttpUtils, httpserver: HTTPServer):
+def test_ls_on_error(http_utils: HttpUtils, httpserver: HTTPServer):
     httpserver.expect_request('/data/'+EXAMPLE_ENDPOINT).respond_with_data('', content_type="text/plain")
-    result = http_utils.http_ls(EXAMPLE_URL + EXAMPLE_ENDPOINT)
+    result = http_utils.ls(EXAMPLE_URL + EXAMPLE_ENDPOINT)
     assert result == []
 
 
-def test_http_cp_succeeds(http_utils: HttpUtils, httpserver: HTTPServer):
+def test_cp_succeeds(http_utils: HttpUtils, httpserver: HTTPServer):
     url = '/data/'+EXAMPLE_PROD_DIR+'/temp.grib2.gz'
     httpserver.expect_request(url).respond_with_data(bytes([0,1,2]), status=200,
                                                      content_type="application/octet-stream")
     path = f'{EXAMPLE_URL}{EXAMPLE_PROD_DIR}/temp.grib2.gz'
     dest = '/tmp/temp.grib2.gz'
 
-    copy_success = http_utils.http_cp(path, dest)
+    copy_success = http_utils.cp(path, dest)
     assert copy_success
 
-def test_http_cp_fails(http_utils: HttpUtils, httpserver: HTTPServer):
+def test_cp_fails(http_utils: HttpUtils, httpserver: HTTPServer):
     url = '/data/'+EXAMPLE_PROD_DIR+'/temp.grib2.gz'
     httpserver.expect_request(url).respond_with_data(bytes([0, 1, 2]), status=404,
                                                      content_type="application/octet-stream")
     path = f'{EXAMPLE_URL}{EXAMPLE_PROD_DIR}/temp.grib2.gz'
     dest = '/tmp/temp.grib2.gz'
-    copy_success = http_utils.http_cp(path, dest)
+    copy_success = http_utils.cp(path, dest)
     assert not copy_success
 
 
