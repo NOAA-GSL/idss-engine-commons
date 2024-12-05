@@ -20,7 +20,7 @@ from .protocol_utils import ProtocolUtils
 
 logger = logging.getLogger(__name__)
 
-# pylint: broad-exception-caught
+# pylint: disable=broad-exception-caught
 
 class HttpUtils(ProtocolUtils):
     """http Utility Class - Used by DAS for file downloads"""
@@ -55,16 +55,16 @@ class HttpUtils(ProtocolUtils):
 
 
     def cp(self, path: str, dest: str) -> bool:
-        """Execute http request download from URL to dest.
+        """Execute http request download from path to dest.
 
         Args:
-            path (str): URL to the object to be copied
+            path (str): Path to the object to be copied
             dest (str): The destination location
         Returns:
             bool: Returns True if copy is successful
         """
         try:
-            with requests.get(os.path.join(url), timeout=5, stream=True) as response:
+            with requests.get(os.path.join(path), timeout=5, stream=True) as response:
                 # Check if the request was successful
                 if response.status_code == 200:
                     # Open a file in binary write mode
