@@ -348,7 +348,6 @@ def threadsafe_nack(
 def _set_context(context):
     for var, value in context.items():
         var.set(value)
-        print(var, value, sep='\n\t')
 
 
 class Consumer(Thread):
