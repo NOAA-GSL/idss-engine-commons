@@ -127,9 +127,14 @@ class ProtocolUtils(ABC):
                 break
             try:
                 dir_path = self.path_builder.build_dir(issue=issue_dt)
-                issues = {self.path_builder.get_issue(file_path)
-                          for file_path in self.ls(dir_path)
-                          if file_path.endswith(self.path_builder.file_ext)}
+                files = self.ls(dir_path)
+                issues: set[datetime] = set()
+                for file_path in self.ls(dir_path):
+                    if file_path.endswith(self.path_builder.file_ext):
+                        try:
+                            issues.add(self.path_builder.get_issue(file_path))
+                        except ValueError: # Ignore invalid filepaths...
+                            pass
                 issues_set.update(issues)
                 if num_issues and len(issues_set) >= num_issues:
                     break
@@ -162,9 +167,13 @@ class ProtocolUtils(ABC):
             return [valids_and_filenames] if valids_and_filenames is not None else []
 
         dir_path = self.path_builder.build_dir(issue=issue)
-        valid_and_file = [(self.path_builder.get_valid(file_path), file_path)
-                          for file_path in self.ls(dir_path)
-                          if file_path.endswith(self.path_builder.file_ext)]
+        valid_and_file =[]
+        for file_path in self.ls(dir_path):
+            if file_path.endswith(self.path_builder.file_ext):
+                try:
+                    valid_and_file.append((self.path_builder.get_valid(file_path), file_path))
+                except ValueError: # Ignore invalid filepaths...
+                    pass
         valid_and_file = [(dt, path) for (dt, path) in valid_and_file if dt is not None]
         # Remove any tuple that has "None" as the valid time
         if valid_start:
