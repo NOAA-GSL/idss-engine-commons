@@ -43,7 +43,7 @@ class ProtocolUtils(ABC):
         """
 
     @abstractmethod
-    def cp(self, url: str, dest: str) -> bool:
+    def cp(self, path: str, dest: str) -> bool:
         """Execute download from path to dest.
 
         Args:

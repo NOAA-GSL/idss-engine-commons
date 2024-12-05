@@ -54,11 +54,11 @@ class HttpUtils(ProtocolUtils):
         return files
 
 
-    def cp(self, url: str, dest: str) -> bool:
+    def cp(self, path: str, dest: str) -> bool:
         """Execute http request download from URL to dest.
 
         Args:
-            url (str): URL to the object to be copied
+            path (str): URL to the object to be copied
             dest (str): The destination location
         Returns:
             bool: Returns True if copy is successful
