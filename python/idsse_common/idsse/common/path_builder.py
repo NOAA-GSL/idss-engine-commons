@@ -320,7 +320,8 @@ class PathBuilder:
                                      '(must include a ":")')
                 try:
                     arg_size = int(re.search(r'^\d+', arg_parts[1]).group())
-                except Exception:  # pylint: disable=raise-missing-from
+                except Exception:
+                    # pylint: disable=raise-missing-from
                     raise ValueError('Format string must have explicit size '
                                      '(must include a number after ":")')
                 arg_type = arg_parts[1][-1]
