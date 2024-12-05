@@ -149,8 +149,8 @@ class Consumer(Thread):
 
     def run(self):
         _set_context(self.context)
-        logger = logging.getLogger(f'{__name__}::{self.__class__.__name__}')
-        logger.info('Start Consuming...  (to stop press CTRL+C)')
+        _logger = logging.getLogger(f'{__name__}::{self.__class__.__name__}')
+        _logger.info('Start Consuming...  (to stop press CTRL+C)')
         self.channel.start_consuming()
 
     def stop(self):
@@ -230,8 +230,8 @@ class Publisher(Thread):
 
     def run(self):
         _set_context(self.context)
-        logger = logging.getLogger(f'{__name__}::{self.__class__.__name__}')
-        logger.info('Starting publisher')
+        _logger = logging.getLogger(f'{__name__}::{self.__class__.__name__}')
+        _logger.info('Starting publisher')
         while self._is_running:
             if self.connection and self.connection.is_open:
                 self.connection.process_data_events(time_limit=1)
