@@ -33,7 +33,6 @@ EXAMPLE_FILES = ['MRMS_MergedReflectivityQC_00.50.latest.grib2.gz',
 EXAMPLE_RETURN = get_resource_from_file('idsse.testing.idsse_common',
                                         'mrms_response.html')
 
-# pylint: disable=duplicate-code, line-too-long
 
 
 # fixtures
