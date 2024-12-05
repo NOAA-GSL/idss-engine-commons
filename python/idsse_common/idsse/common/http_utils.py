@@ -26,17 +26,17 @@ class HttpUtils(ProtocolUtils):
     """http Utility Class - Used by DAS for file downloads"""
 
 
-    def ls(self, url: str, prepend_path: bool = True) -> Sequence[str]:
+    def ls(self, path: str, prepend_path: bool = True) -> Sequence[str]:
         """Execute a 'ls' on the http(s) server
         Args:
-            url (str): URL
-            prepend_path (bool): Add URL+ to the filename
+            path (str): path
+            prepend_path (bool): Add path+ to the filename
         Returns:
-            Sequence[str]: The results from executing a request get on passed url
+            Sequence[str]: The results from executing a request get on passed path
         """
         try:
             files = []
-            response = requests.get(url, timeout=5)
+            response = requests.get(path, timeout=5)
             response.raise_for_status()  # Raise an exception for bad status codes
 
             for line in response.text.splitlines():
@@ -47,10 +47,10 @@ class HttpUtils(ProtocolUtils):
                         files.append(filename)
 
         except requests.exceptions.RequestException as exp:
-            logger.warning('Unable to query supplied URL: %s', str(exp))
+            logger.warning('Unable to query supplied Path : %s', str(exp))
             return []
         if prepend_path:
-            return [os.path.join(url, filename) for filename in files]
+            return [os.path.join(path, filename) for filename in files]
         return files
 
 
