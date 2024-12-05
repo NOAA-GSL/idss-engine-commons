@@ -127,7 +127,6 @@ class ProtocolUtils(ABC):
                 break
             try:
                 dir_path = self.path_builder.build_dir(issue=issue_dt)
-                files = self.ls(dir_path)
                 issues: set[datetime] = set()
                 for file_path in self.ls(dir_path):
                     if file_path.endswith(self.path_builder.file_ext):

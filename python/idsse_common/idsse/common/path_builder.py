@@ -25,6 +25,8 @@ from typing import Final, NamedTuple, Self
 from .utils import TimeDelta
 
 
+# pylint: disable=raise-missing-from
+
 # The public class
 class PathBuilder:
     """Path Builder Class"""
