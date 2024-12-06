@@ -149,7 +149,7 @@ class Consumer(Thread):
 
     def run(self):
         _set_context(self.context)
-        _logger.info('Start Consuming...  (to stop press CTRL+C)')
+        logger.info('Start Consuming...  (to stop press CTRL+C)')
         self.channel.start_consuming()
 
     def stop(self):
