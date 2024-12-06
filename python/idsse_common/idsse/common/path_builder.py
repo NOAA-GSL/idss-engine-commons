@@ -25,8 +25,6 @@ from typing import Final, NamedTuple, Self
 from .utils import TimeDelta
 
 
-# pylint: disable=raise-missing-from
-
 # The public class
 class PathBuilder:
     """Path Builder Class"""
@@ -323,6 +321,7 @@ class PathBuilder:
                 try:
                     arg_size = int(re.search(r'^\d+', arg_parts[1]).group())
                 except Exception:
+                    # pylint: disable=raise-missing-from
                     raise ValueError('Format string must have explicit size '
                                      '(must include a number after ":")')
                 arg_type = arg_parts[1][-1]
@@ -388,18 +387,22 @@ class PathBuilder:
         parsed_arg_parts = {}
         for path_part, fmt_part in zip(path_parts, fmt_parts):
             expected_len, lookup_info = self._lookup_dict[fmt_part]
-            if len(path_part) != expected_len:
-                raise ValueError('Some part of the path is not expected length. Passed part '
+            if (part_len := len(path_part)) != expected_len:
+                raise ValueError('Path is not expected length. Passed path part '
                                  f"'{path_part}' doesn't match format '{fmt_part}'")
             for lookup in lookup_info:
-                match lookup.type:
-                    case self.INT:
-                        parsed_arg_parts[lookup.key] = int(path_part[lookup.start:lookup.end])
-                    case self.FLOAT:
-                        parsed_arg_parts[lookup.key] = float(path_part[lookup.start:lookup.end])
-                    case self.STR:
-                        parsed_arg_parts[lookup.key] = path_part[lookup.start:lookup.end]
-
+                if not (0 <= lookup.start <= part_len and 0 <= lookup.end <= part_len):
+                    raise ValueError('Parse indices are out of range for path')
+                try:
+                    match lookup.type:
+                        case self.INT:
+                            parsed_arg_parts[lookup.key] = int(path_part[lookup.start:lookup.end])
+                        case self.FLOAT:
+                            parsed_arg_parts[lookup.key] = float(path_part[lookup.start:lookup.end])
+                        case self.STR:
+                            parsed_arg_parts[lookup.key] = path_part[lookup.start:lookup.end]
+                except ValueError as exc:
+                    raise ValueError('Unable to apply formatting') from exc
         return parsed_arg_parts
 
     def _apply_format(self, fmt_str: str, **kwargs) -> str:
