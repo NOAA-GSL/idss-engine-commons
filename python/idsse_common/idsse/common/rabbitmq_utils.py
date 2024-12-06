@@ -91,17 +91,11 @@ class RabbitMqParamsAndCallback(NamedTuple):
     callback: Callable
 
 
-class PublishMessageParams(NamedTuple):
-    """Data class to hold a RabbitMQ message, its properties, and optional route_key"""
-    message: str
-    properties: BasicProperties
-    route_key: str | None = None
-
-
-class RpcResponse(NamedTuple):
-    """RabbitMQ response that came back from the recipient client of an RPC request."""
+class RabbitMqMessage(NamedTuple):
+    """Data class to hold a RabbitMQ message body, properties, and optional route_key (if outbound)"""
     body: str
     properties: BasicProperties
+    route_key: str | None = None
 
 
 class Consumer(Thread):
@@ -254,7 +248,7 @@ class Publisher(Thread):
             self.channel,
             lambda: _publish(self.channel,
                              self._exch,
-                             PublishMessageParams(message, properties, route_key),
+                             RabbitMqMessage(message, properties, route_key),
                              self._queue)
         )
 
@@ -278,7 +272,7 @@ class Publisher(Thread):
         """
         return _blocking_publish(self.channel,
                                  self._exch,
-                                 PublishMessageParams(message, properties, route_key),
+                                 RabbitMqMessage(message, properties, route_key),
                                  self._queue)
 
     def stop(self):
@@ -342,12 +336,12 @@ class Rpc:
         """Returns True if RabbitMQ connection (Publisher) is open and ready to send messages"""
         return self.consumer.is_alive() and self.consumer.channel.is_open
 
-    def send_request(self, request_body: str | bytes) -> RpcResponse | None:
+    def send_request(self, request_body: str | bytes) -> RabbitMqMessage | None:
         """Send message to remote RabbitMQ service using thread-safe RPC. Will block until response
         is received back, or timeout occurs.
 
         Returns:
-            RpcResponse | None: The response message (body and properties), or None on request
+            RabbitMqMessage | None: The response message (body and properties), or None on request
                 timeout or error handling response.
         """
         if not self.is_open:
@@ -369,7 +363,7 @@ class Rpc:
         logger.debug('Publishing request message to external service with body: %s', request_body)
         _blocking_publish(self.consumer.channel,
                           self._exch,
-                          PublishMessageParams(request_body, properties, self._exch.route_key),
+                          RabbitMqMessage(request_body, properties, self._exch.route_key),
                           self._queue)
 
         try:
@@ -423,7 +417,7 @@ class Rpc:
             channel.basic_ack(delivery_tag=method.delivery_tag)
 
         # update future with response body to communicate it back up to main thread
-        return request_future.set_result(RpcResponse(str(body, encoding='utf-8'), properties))
+        return request_future.set_result(RabbitMqMessage(str(body, encoding='utf-8'), properties))
 
 
 def subscribe_to_queue(
@@ -691,7 +685,7 @@ def _setup_exch(channel: Channel, exch: Exch):
 # pylint: disable=too-many-arguments
 def _publish(channel: BlockingChannel,
              exch: Exch,
-             message_params: PublishMessageParams,
+             message_params: RabbitMqMessage,
              queue: Queue | None = None,
              success_flag: list[bool] = None,
              done_event: Event = None):
@@ -702,8 +696,8 @@ def _publish(channel: BlockingChannel,
 
     channel (BlockingChannel): the pika channel to use to publish.
     exch (Exch): parameters for the RabbitMQ exchange to publish message to.
-    message_params (PublishMessageParams): the message body to publish, plus properties
-        and (optional) route_key.
+    message_params (RabbitMqMessage): the message body to publish, plus properties and
+        (optional) route_key.
     queue (optional, Queue | None): parameters for RabbitMQ queue, if message is being
         published to a "temporary"/"private" message queue. The published message will be
         purged from this queue after its TTL expires.
@@ -721,7 +715,7 @@ def _publish(channel: BlockingChannel,
         channel.basic_publish(
             exch.name,
             message_params.route_key if message_params.route_key else exch.route_key,
-            body=message_params.message,
+            body=message_params.body,
             properties=message_params.properties,
             mandatory=exch.mandatory
         )
@@ -745,7 +739,7 @@ def _publish(channel: BlockingChannel,
 def _blocking_publish(
         channel: BlockingChannel,
         exch: Exch,
-        message_params: PublishMessageParams,
+        message_params: RabbitMqMessage,
         queue: Queue | None = None,
 ) -> bool:
     """
@@ -755,8 +749,8 @@ def _blocking_publish(
     Args:
         channel (BlockingChannel): the pika channel to use to publish.
         exch (Exch): parameters for the RabbitMQ exchange to publish message to.
-        message_params (PublishMessageParams): the message body to publish, plus properties
-            and (optional) route_key
+        message_params (RabbitMqMessage): the message body to publish, plus properties and
+            (optional) route_key
         queue (optional, Queue | None): parameters for RabbitMQ queue, if message is being
             published to a "temporary"/"private" message queue. The published message will be
             purged from this queue after its TTL expires.
