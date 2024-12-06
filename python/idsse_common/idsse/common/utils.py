@@ -31,26 +31,37 @@ class RoundingMethod(Enum):
 RoundingParam = str | RoundingMethod
 
 
-class TimeDelta:
-    """Wrapper class for datetime.timedelta to add helpful properties"""
-
-    def __init__(self, time_delta: timedelta) -> None:
-        self._td = time_delta
+class TimeDelta(timedelta):
+    """Extend class for datetime.timedelta to add helpful properties."""
+    def __new__(cls, *args, **kwargs):
+        if isinstance(args[0], timedelta):
+            return super().__new__(cls, seconds=args[0].total_seconds())
+        return super().__new__(cls, *args, **kwargs)
 
     @property
     def minute(self):
         """Property to get the number of minutes this instance represents"""
-        return int(self._td / timedelta(minutes=1))
+        return int(self / timedelta(minutes=1))
+
+    @property
+    def minutes(self):
+        """Property to get the number of minutes this instance represents"""
+        return self.minute
 
     @property
     def hour(self):
         """Property to get the number of hours this instance represents"""
-        return int(self._td / timedelta(hours=1))
+        return int(self / timedelta(hours=1))
+
+    @property
+    def hours(self):
+        """Property to get the number of hours this instance represents"""
+        return self.hour
 
     @property
     def day(self):
         """Property to get the number of days this instance represents"""
-        return self._td.days
+        return self.days
 
 
 class Map(dict):
@@ -199,6 +210,7 @@ def _round_away_from_zero(number: float) -> int:
 def _round_toward_zero(number: float) -> int:
     func = math.ceil if number < 0 else math.floor
     return func(number)
+
 
 def round_half_away(number: int | float, precision: int = 0) -> int | float:
     """

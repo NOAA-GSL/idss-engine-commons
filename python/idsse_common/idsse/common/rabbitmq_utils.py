@@ -92,7 +92,9 @@ class RabbitMqParamsAndCallback(NamedTuple):
 
 
 class RabbitMqMessage(NamedTuple):
-    """Data class to hold a RabbitMQ message body, properties, and optional route_key (if outbound)"""
+    """
+    Data class to hold a RabbitMQ message body, properties, and optional route_key (if outbound)
+    """
     body: str
     properties: BasicProperties
     route_key: str | None = None
@@ -143,13 +145,15 @@ class Consumer(Thread):
             self._consumer_tags.append(
                 self.channel.basic_consume(queue.name,
                                            partial(self._on_message, func=func),
-                                           # RMQ requires auto_ack=True to consume from Direct Reply-to
+                                           # RMQ requires auto_ack=True for Direct Reply-to
                                            auto_ack=queue.name == DIRECT_REPLY_QUEUE)
             )
 
     def run(self):
         _set_context(self.context)
-        logger.info('Start Consuming...  (to stop press CTRL+C)')
+        # create a local logger since this is run in a separate threat when start() is called
+        _logger = logging.getLogger(f'{__name__}::{self.__class__.__name__}')
+        _logger.info('Start Consuming...  (to stop press CTRL+C)')
         self.channel.start_consuming()
 
     def stop(self):
@@ -221,7 +225,7 @@ class Publisher(Thread):
                                            'x-message-ttl': 10 * 1000})
 
             _setup_exch_and_queue(self.channel, self._exch, self._queue)
-        elif self._exch.name != '': # if using default exchange, skip declaring (not allowed by RMQ)
+        elif self._exch.name != '':  # if using default exchange, skip declare (not allowed by RMQ)
             _setup_exch(self.channel, self._exch)
 
         if self._exch.delivery_conf:
@@ -229,7 +233,9 @@ class Publisher(Thread):
 
     def run(self):
         _set_context(self.context)
-        logger.info('Starting publisher')
+        # create a local logger since this is run in a separate threat when start() is called
+        _logger = logging.getLogger(f'{__name__}::{self.__class__.__name__}')
+        _logger.info('Starting publisher')
         while self._is_running:
             if self.connection and self.connection.is_open:
                 self.connection.process_data_events(time_limit=1)
@@ -405,8 +411,8 @@ class Rpc:
             body: bytes
     ):
         """Handle RabbitMQ message emitted to response queue."""
-        logger.debug('Received response message with routing_key: %s, content_type: %s, message: %i',
-                    method.routing_key, properties.content_type, str(body, encoding='utf-8'))
+        logger.debug('Received response with routing_key: %s, content_type: %s, message: %i',
+                     method.routing_key, properties.content_type, str(body, encoding='utf-8'))
 
         # remove future from pending list. we will update result shortly
         request_future = self._pending_requests.pop(properties.correlation_id)
@@ -560,8 +566,6 @@ def threadsafe_nack(
         threadsafe_call(channel, lambda: channel.basic_nack(delivery_tag, requeue=requeue))
 
 
-
-
 def _initialize_exchange_and_queue(channel: Channel, params: RabbitMqParams) -> str:
     """Declare and bind RabbitMQ exchange and queue using the provided channel.
 
@@ -634,7 +638,7 @@ def _setup_exch_and_queue(channel: Channel, exch: Exch, queue: Queue):
        queue.arguments['x-queue-type'] == 'quorum' and queue.auto_delete:
         raise ValueError('Quorum queues can not be configured to auto delete')
 
-    if exch.name != '': # if using default exchange, skip declaring (not allowed by RMQ)
+    if exch.name != '':  # if using default exchange, skip declaring (not allowed by RMQ)
         _setup_exch(channel, exch)
 
     if queue.name == DIRECT_REPLY_QUEUE:
@@ -652,7 +656,7 @@ def _setup_exch_and_queue(channel: Channel, exch: Exch, queue: Queue):
         queue_name = result.method.queue
         logger.debug('Declared queue: %s', queue_name)
 
-    if exch.name != '': # if using default exchange, skip binding queues (not allowed by RMQ)
+    if exch.name != '':  # if using default exchange, skip binding queues (not allowed by RMQ)
         if isinstance(queue.route_key, list):
             for route_key in queue.route_key:
                 channel.queue_bind(
@@ -750,7 +754,6 @@ def _blocking_publish(
         channel (BlockingChannel): the pika channel to use to publish.
         exch (Exch): parameters for the RabbitMQ exchange to publish message to.
         message_params (RabbitMqMessage): the message body to publish, plus properties and
-            (optional) route_key
         queue (optional, Queue | None): parameters for RabbitMQ queue, if message is being
             published to a "temporary"/"private" message queue. The published message will be
             purged from this queue after its TTL expires.
