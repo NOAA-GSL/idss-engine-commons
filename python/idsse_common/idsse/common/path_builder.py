@@ -387,18 +387,25 @@ class PathBuilder:
         parsed_arg_parts = {}
         for path_part, fmt_part in zip(path_parts, fmt_parts):
             expected_len, lookup_info = self._lookup_dict[fmt_part]
-            if len(path_part) != expected_len:
-                raise ValueError('Some part of the path is not expected length. Passed part '
+            if (part_len := len(path_part)) != expected_len:
+                raise ValueError('Path is not expected length. Passed path part '
                                  f"'{path_part}' doesn't match format '{fmt_part}'")
             for lookup in lookup_info:
-                match lookup.type:
-                    case self.INT:
-                        parsed_arg_parts[lookup.key] = int(path_part[lookup.start:lookup.end])
-                    case self.FLOAT:
-                        parsed_arg_parts[lookup.key] = float(path_part[lookup.start:lookup.end])
-                    case self.STR:
-                        parsed_arg_parts[lookup.key] = path_part[lookup.start:lookup.end]
-
+                if not (0 <= lookup.start <= part_len and 0 <= lookup.end <= part_len):
+                    raise ValueError('Parse indices are out of range for path')
+                try:
+                    match lookup.type:
+                        case self.INT:
+                            parsed_arg_parts[lookup.key] = int(path_part[lookup.start:lookup.end])
+                        case self.FLOAT:
+                            parsed_arg_parts[lookup.key] = float(path_part[lookup.start:lookup.end])
+                        case self.STR:
+                            parsed_arg_parts[lookup.key] = path_part[lookup.start:lookup.end]
+                except ValueError:
+                    arg_str = path_part[lookup.start:lookup.end]
+                    error_str = {self.INT: f"int('{arg_str}')",
+                                 self.FLOAT: f"float('{arg_str}')"}[lookup.type]
+                    raise ValueError(f'Unable to apply formatting: {error_str}')
         return parsed_arg_parts
 
     def _apply_format(self, fmt_str: str, **kwargs) -> str:

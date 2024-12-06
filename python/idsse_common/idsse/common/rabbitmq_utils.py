@@ -143,7 +143,7 @@ class Consumer(Thread):
             self._consumer_tags.append(
                 self.channel.basic_consume(queue.name,
                                            partial(self._on_message, func=func),
-                                           # RMQ requires auto_ack=True to consume from Direct Reply-to
+                                           # RMQ requires auto_ack=True for Direct Reply-to
                                            auto_ack=queue.name == DIRECT_REPLY_QUEUE)
             )
 
@@ -221,7 +221,7 @@ class Publisher(Thread):
                                            'x-message-ttl': 10 * 1000})
 
             _setup_exch_and_queue(self.channel, self._exch, self._queue)
-        elif self._exch.name != '': # if using default exchange, skip declaring (not allowed by RMQ)
+        elif self._exch.name != '':  # if using default exchange, skip declare (not allowed by RMQ)
             _setup_exch(self.channel, self._exch)
 
         if self._exch.delivery_conf:
@@ -560,8 +560,6 @@ def threadsafe_nack(
         threadsafe_call(channel, lambda: channel.basic_nack(delivery_tag, requeue=requeue))
 
 
-
-
 def _initialize_exchange_and_queue(channel: Channel, params: RabbitMqParams) -> str:
     """Declare and bind RabbitMQ exchange and queue using the provided channel.
 
@@ -634,7 +632,7 @@ def _setup_exch_and_queue(channel: Channel, exch: Exch, queue: Queue):
        queue.arguments['x-queue-type'] == 'quorum' and queue.auto_delete:
         raise ValueError('Quorum queues can not be configured to auto delete')
 
-    if exch.name != '': # if using default exchange, skip declaring (not allowed by RMQ)
+    if exch.name != '':  # if using default exchange, skip declaring (not allowed by RMQ)
         _setup_exch(channel, exch)
 
     if queue.name == DIRECT_REPLY_QUEUE:
@@ -652,7 +650,7 @@ def _setup_exch_and_queue(channel: Channel, exch: Exch, queue: Queue):
         queue_name = result.method.queue
         logger.debug('Declared queue: %s', queue_name)
 
-    if exch.name != '': # if using default exchange, skip binding queues (not allowed by RMQ)
+    if exch.name != '':  # if using default exchange, skip binding queues (not allowed by RMQ)
         if isinstance(queue.route_key, list):
             for route_key in queue.route_key:
                 channel.queue_bind(
