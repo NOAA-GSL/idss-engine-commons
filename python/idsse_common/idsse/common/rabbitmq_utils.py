@@ -92,7 +92,9 @@ class RabbitMqParamsAndCallback(NamedTuple):
 
 
 class RabbitMqMessage(NamedTuple):
-    """Data class to hold a RabbitMQ message body, properties, and optional route_key (if outbound)"""
+    """
+    Data class to hold a RabbitMQ message body, properties, and optional route_key (if outbound)
+    """
     body: str
     properties: BasicProperties
     route_key: str | None = None
@@ -149,8 +151,9 @@ class Consumer(Thread):
 
     def run(self):
         _set_context(self.context)
-        logger = logging.getLogger(f'{__name__}::{self.__class__.__name__}')
-        logger.info('Start Consuming...  (to stop press CTRL+C)')
+        # create a local logger since this is run in a separate threat when start() is called
+        _logger = logging.getLogger(f'{__name__}::{self.__class__.__name__}')
+        _logger.info('Start Consuming...  (to stop press CTRL+C)')
         self.channel.start_consuming()
 
     def stop(self):
@@ -230,8 +233,9 @@ class Publisher(Thread):
 
     def run(self):
         _set_context(self.context)
-        logger = logging.getLogger(f'{__name__}::{self.__class__.__name__}')
-        logger.info('Starting publisher')
+        # create a local logger since this is run in a separate threat when start() is called
+        _logger = logging.getLogger(f'{__name__}::{self.__class__.__name__}')
+        _logger.info('Starting publisher')
         while self._is_running:
             if self.connection and self.connection.is_open:
                 self.connection.process_data_events(time_limit=1)
@@ -407,8 +411,8 @@ class Rpc:
             body: bytes
     ):
         """Handle RabbitMQ message emitted to response queue."""
-        logger.debug('Received response message with routing_key: %s, content_type: %s, message: %i',
-                    method.routing_key, properties.content_type, str(body, encoding='utf-8'))
+        logger.debug('Received response with routing_key: %s, content_type: %s, message: %i',
+                     method.routing_key, properties.content_type, str(body, encoding='utf-8'))
 
         # remove future from pending list. we will update result shortly
         request_future = self._pending_requests.pop(properties.correlation_id)
@@ -750,7 +754,6 @@ def _blocking_publish(
         channel (BlockingChannel): the pika channel to use to publish.
         exch (Exch): parameters for the RabbitMQ exchange to publish message to.
         message_params (RabbitMqMessage): the message body to publish, plus properties and
-            (optional) route_key
         queue (optional, Queue | None): parameters for RabbitMQ queue, if message is being
             published to a "temporary"/"private" message queue. The published message will be
             purged from this queue after its TTL expires.

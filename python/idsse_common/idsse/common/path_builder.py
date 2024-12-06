@@ -401,11 +401,8 @@ class PathBuilder:
                             parsed_arg_parts[lookup.key] = float(path_part[lookup.start:lookup.end])
                         case self.STR:
                             parsed_arg_parts[lookup.key] = path_part[lookup.start:lookup.end]
-                except ValueError:
-                    arg_str = path_part[lookup.start:lookup.end]
-                    error_str = {self.INT: f"int('{arg_str}')",
-                                 self.FLOAT: f"float('{arg_str}')"}[lookup.type]
-                    raise ValueError(f'Unable to apply formatting: {error_str}')
+                except ValueError as exc:
+                    raise ValueError('Unable to apply formatting') from exc
         return parsed_arg_parts
 
     def _apply_format(self, fmt_str: str, **kwargs) -> str:
