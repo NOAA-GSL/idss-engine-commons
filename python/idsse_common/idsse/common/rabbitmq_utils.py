@@ -319,7 +319,7 @@ class Rpc:
         Args:
             conn_params (Conn): parameters to connect to RabbitMQ server
             exch (Exch): parameters of RMQ Exchange where messages should be sent
-            timeout (float  | None): optional timeout to give up on receiving each response.
+            timeout (float | None): optional timeout to give up on receiving each response.
                 Default is None, meaning wait indefinitely for response from external RMQ service.
         """
         self._exch = exch
