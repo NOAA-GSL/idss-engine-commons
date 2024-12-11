@@ -21,8 +21,8 @@ from idsse.common.http_utils import HttpUtils
 from idsse.testing.utils.resources import get_resource_from_file
 
 
-EXAMPLE_ISSUE = datetime(2024, 10, 30, 20, 54, 38, tzinfo=UTC)
-EXAMPLE_VALID = datetime(2024, 10, 30, 20, 54, 38, tzinfo=UTC)
+EXAMPLE_ISSUE = datetime(2024, 10, 30, 20, 56, 40, tzinfo=UTC)
+EXAMPLE_VALID = datetime(2024, 10, 30, 20, 56, 40, tzinfo=UTC)
 
 EXAMPLE_URL = 'http://127.0.0.1:5000/data/'
 EXAMPLE_ENDPOINT = '3DRefl/MergedReflectivityQC_00.50'
@@ -62,7 +62,7 @@ def http_utils_with_wild() -> HttpUtils:
 # test class methods
 def test_get_path(http_utils: HttpUtils):
     result_path = http_utils.get_path(EXAMPLE_ISSUE, EXAMPLE_VALID)
-    assert result_path == f'{EXAMPLE_URL}{EXAMPLE_PROD_DIR}MRMS_MergedReflectivityQC_00.50_20241030-205438.grib2.gz'
+    assert result_path == f'{EXAMPLE_URL}{EXAMPLE_PROD_DIR}MRMS_MergedReflectivityQC_00.50_20241030-205640.grib2.gz'
 
 
 def test_ls(http_utils: HttpUtils, httpserver: HTTPServer):
@@ -70,7 +70,7 @@ def test_ls(http_utils: HttpUtils, httpserver: HTTPServer):
                                                                            content_type="text/plain")
     result = http_utils.ls(EXAMPLE_URL + EXAMPLE_ENDPOINT)
     assert len(result) == len(EXAMPLE_FILES)
-    assert result[0] == f'{EXAMPLE_URL}{EXAMPLE_PROD_DIR}{EXAMPLE_FILES[0]}'
+    assert result[0] == f'{EXAMPLE_URL}{EXAMPLE_PROD_DIR}{EXAMPLE_FILES[-1]}'
 
 
 def test_ls_without_prepend_path(http_utils: HttpUtils, httpserver: HTTPServer):
@@ -78,7 +78,7 @@ def test_ls_without_prepend_path(http_utils: HttpUtils, httpserver: HTTPServer):
                                                                            content_type="text/plain")
     result = http_utils.ls(EXAMPLE_URL + EXAMPLE_ENDPOINT, prepend_path=False)
     assert len(result) == len(EXAMPLE_FILES)
-    assert result[0] == EXAMPLE_FILES[0]
+    assert result[0] == EXAMPLE_FILES[-1]
 
 
 def test_ls_on_error(http_utils: HttpUtils, httpserver: HTTPServer):
@@ -113,7 +113,7 @@ def test_check_for_succeeds(http_utils: HttpUtils, httpserver: HTTPServer):
 
     result = http_utils.check_for(EXAMPLE_ISSUE, EXAMPLE_VALID)
     assert result is not None
-    assert result == (EXAMPLE_VALID, f'{EXAMPLE_URL}{EXAMPLE_PROD_DIR}{EXAMPLE_FILES[1]}')
+    assert result == (EXAMPLE_VALID, f'{EXAMPLE_URL}{EXAMPLE_PROD_DIR}{EXAMPLE_FILES[-1]}')
 
 
 def test_check_for_does_not_find_valid(http_utils: HttpUtils, httpserver: HTTPServer):
