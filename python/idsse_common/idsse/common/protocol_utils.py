@@ -208,5 +208,4 @@ class ProtocolUtils(ABC):
                         break
                 except ValueError:  # Ignore invalid filepaths...
                     pass
-
         return  issues_set
