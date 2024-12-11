@@ -123,22 +123,11 @@ class ProtocolUtils(ABC):
                 time_delta = timedelta(seconds=-1.0 * time_delta.total_seconds())
             datetimes = datetime_gen(issue_end, time_delta)
         for issue_dt in datetimes:
-            print('get_issues issue_dt', issue_start, issue_dt)
-
             if issue_start and issue_dt < issue_start:
                 break
             try:
                 dir_path = self.path_builder.build_dir(issue=issue_dt)
-                issues: set[datetime] = set()
-                for file_path in self.ls(dir_path):
-                    if file_path.endswith(self.path_builder.file_ext):
-                        try:
-                            issues.add(self.path_builder.get_issue(file_path))
-                            if num_issues and len(issues) >= num_issues:
-                                break
-                        except ValueError: # Ignore invalid filepaths...
-                            pass
-                issues_set.update(issues)
+                issues_set.update(self._get_issues(dir_path), num_issues)
                 if num_issues and len(issues_set) >= num_issues:
                     break
             except PermissionError:
@@ -194,3 +183,30 @@ class ProtocolUtils(ABC):
                               if valid <= valid_end]
 
         return valid_and_file
+
+    def _get_issues(self,
+                    dir_path: str,
+                    num_issues: int = 1
+                    ) -> Sequence[datetime]:
+        """Get all objects consistent with the passed directory path and filter by valid range
+
+        Args:
+            dir_path (str): The directory path
+            num_issues (int): Maximum number of issue to return. Defaults to 1.
+
+        Returns:
+            Sequence[tuple[datetime, str]]: A sequence of tuples with valid date/time (indicated by
+                                            object's location) and the object's location (path).
+                                            Empty Sequence if no valids found for given time range.
+        """
+        issues_set: set[datetime] = set()
+        for file_path in self.ls(dir_path):
+            if file_path.endswith(self.path_builder.file_ext):
+                try:
+                    issues_set.add(self.path_builder.get_issue(file_path))
+                    if num_issues and len(issues_set) >= num_issues:
+                        break
+                except ValueError:  # Ignore invalid filepaths...
+                    pass
+
+        return  issues_set
