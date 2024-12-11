@@ -123,6 +123,8 @@ class ProtocolUtils(ABC):
                 time_delta = timedelta(seconds=-1.0 * time_delta.total_seconds())
             datetimes = datetime_gen(issue_end, time_delta)
         for issue_dt in datetimes:
+            print('get_issues issue_dt', issue_start, issue_dt)
+
             if issue_start and issue_dt < issue_start:
                 break
             try:
@@ -132,6 +134,8 @@ class ProtocolUtils(ABC):
                     if file_path.endswith(self.path_builder.file_ext):
                         try:
                             issues.add(self.path_builder.get_issue(file_path))
+                            if num_issues and len(issues) >= num_issues:
+                                break
                         except ValueError: # Ignore invalid filepaths...
                             pass
                 issues_set.update(issues)

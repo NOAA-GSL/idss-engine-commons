@@ -43,12 +43,14 @@ class HttpUtils(ProtocolUtils):
                 if 'href="' in line:
                     filename = line.split('href="')[1].split('"')[0]
 
-                    if not filename.endswith('/'):  # Exclude directories
+                    # Exclude directories and file without expected suffix
+                    if not filename.endswith('/') and filename.endswith(self.path_builder.file_ext):
                         files.append(filename)
 
         except requests.exceptions.RequestException as exp:
             logger.warning('Unable to query supplied Path : %s', str(exp))
             return []
+        files = sorted(files, reverse=True)
         if prepend_path:
             return [os.path.join(path, filename) for filename in files]
         return files
