@@ -127,7 +127,7 @@ class ProtocolUtils(ABC):
                 break
             try:
                 dir_path = self.path_builder.build_dir(issue=issue_dt)
-                issues_set.update(self._get_issues(dir_path), num_issues)
+                issues_set.update(self._get_issues(dir_path, num_issues))
                 if num_issues and len(issues_set) >= num_issues:
                     break
             except PermissionError:
@@ -187,7 +187,7 @@ class ProtocolUtils(ABC):
     def _get_issues(self,
                     dir_path: str,
                     num_issues: int = 1
-                    ) -> Sequence[datetime]:
+                    ) -> set[datetime]:
         """Get all objects consistent with the passed directory path and filter by valid range
 
         Args:
