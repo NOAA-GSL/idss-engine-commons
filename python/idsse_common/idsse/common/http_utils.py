@@ -55,7 +55,7 @@ class HttpUtils(ProtocolUtils):
             return [os.path.join(path, filename) for filename in files]
         return files
 
-
+    # pylint: disable=unused-argument
     def cp(self, path: str, dest: str, concurrency: int | None = None, chunk_size: int | None = None) -> bool:
         """Execute http request download from path to dest.
 
