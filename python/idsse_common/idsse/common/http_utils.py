@@ -56,12 +56,14 @@ class HttpUtils(ProtocolUtils):
         return files
 
 
-    def cp(self, path: str, dest: str) -> bool:
+    def cp(self, path: str, dest: str, concurrency: int | None = None, chunk_size: int | None = None) -> bool:
         """Execute http request download from path to dest.
 
         Args:
             path (str): Path to the object to be copied
             dest (str): The destination location
+            concurrency (optional, int): Number of parallel threads - ignored
+            chunk_size (optional, int): Size of chunks (in MB) - ignored
         Returns:
             bool: Returns True if copy is successful
         """
