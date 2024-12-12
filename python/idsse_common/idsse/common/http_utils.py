@@ -20,8 +20,6 @@ from .protocol_utils import ProtocolUtils
 
 logger = logging.getLogger(__name__)
 
-# pylint: disable=broad-exception-caught
-
 class HttpUtils(ProtocolUtils):
     """http Utility Class - Used by DAS for file downloads"""
 
