@@ -163,7 +163,8 @@ class ProtocolUtils(ABC):
         for file_path in self.ls(dir_path):
             if file_path.endswith(self.path_builder.file_ext):
                 try:
-                    valid_and_file.append((self.path_builder.get_valid(file_path), file_path))
+                    if issue == self.path_builder.get_issue(file_path):
+                        valid_and_file.append((self.path_builder.get_valid(file_path), file_path))
                 except ValueError: # Ignore invalid filepaths...
                     pass
         valid_and_file = [(dt, path) for (dt, path) in valid_and_file if dt is not None]

@@ -30,8 +30,15 @@ EXAMPLE_PROD_DIR = '3DRefl/MergedReflectivityQC_00.50/'
 EXAMPLE_FILES = ['MRMS_MergedReflectivityQC_00.50.latest.grib2.gz',
                  'MRMS_MergedReflectivityQC_00.50_20241030-205438.grib2.gz',
                  'MRMS_MergedReflectivityQC_00.50_20241030-205640.grib2.gz']
+
+EXAMPLE_VALID_FILES = ['MRMS_MergedReflectivityQC_00.50.latest.grib2.gz',
+                       'MRMS_MergedReflectivityQC_00.50_20241030-205438_20241030-205438.grib2.gz',
+                       'MRMS_MergedReflectivityQC_00.50_20241030-205640_20241030-205640.grib2.gz']
+
 EXAMPLE_RETURN = get_resource_from_file('idsse.testing.idsse_common',
                                         'mrms_response.html')
+EXAMPLE_VALID_RETURN = get_resource_from_file('idsse.testing.idsse_common',
+                                              'mrms_valid_response.html')
 
 # fixtures
 @fixture(scope="session")
@@ -42,8 +49,22 @@ def httpserver_listen_address():
 def http_utils() -> HttpUtils:
     EXAMPLE_BASE_DIR = 'http://127.0.0.1:5000/data/'
     EXAMPLE_SUB_DIR = '3DRefl/MergedReflectivityQC_00.50/'
-    EXAMPLE_FILE_BASE = ('MRMS_MergedReflectivityQC_00.50_{issue.year:04d}{issue.month:02d}{issue.day:02d}'
+    EXAMPLE_FILE_BASE = ('MRMS_MergedReflectivityQC_00.50_'
+                         '{issue.year:04d}{issue.month:02d}{issue.day:02d}'
                          '-{issue.hour:02d}{issue.minute:02d}{issue.second:02d}')
+    EXAMPLE_FILE_EXT = '.grib2.gz'
+
+    return HttpUtils(EXAMPLE_BASE_DIR, EXAMPLE_SUB_DIR, EXAMPLE_FILE_BASE, EXAMPLE_FILE_EXT)
+
+@fixture
+def http_utils_with_valid() -> HttpUtils:
+    EXAMPLE_BASE_DIR = 'http://127.0.0.1:5000/data/'
+    EXAMPLE_SUB_DIR = '3DRefl/MergedReflectivityQC_00.50/'
+    EXAMPLE_FILE_BASE = ('MRMS_MergedReflectivityQC_00.50_'
+                         '{issue.year:04d}{issue.month:02d}{issue.day:02d}'
+                         '-{issue.hour:02d}{issue.minute:02d}{issue.second:02d}_'
+                         '{valid.year:04d}{valid.month:02d}{valid.day:02d}'
+                         '-{valid.hour:02d}{valid.minute:02d}{valid.second:02d}')
     EXAMPLE_FILE_EXT = '.grib2.gz'
 
     return HttpUtils(EXAMPLE_BASE_DIR, EXAMPLE_SUB_DIR, EXAMPLE_FILE_BASE, EXAMPLE_FILE_EXT)
@@ -140,11 +161,17 @@ def test_get_issues_with_same_start_stop(http_utils: HttpUtils, httpserver: HTTP
     assert len(result) == 1
     assert result[0] == EXAMPLE_ISSUE
 
-def test_get_valids_all(http_utils: HttpUtils, httpserver: HTTPServer):
+def test_get_valids(http_utils: HttpUtils, httpserver: HTTPServer):
     url = '/data/'+EXAMPLE_ENDPOINT+'/'
     httpserver.expect_request(url).respond_with_data(EXAMPLE_RETURN, content_type="text/plain")
     result = http_utils.get_valids(EXAMPLE_ISSUE)
     assert len(result) == 0
+
+def test_get_valids_all(http_utils_with_valid: HttpUtils, httpserver: HTTPServer):
+    url = '/data/'+EXAMPLE_ENDPOINT+'/'
+    httpserver.expect_request(url).respond_with_data(EXAMPLE_VALID_RETURN, content_type="text/plain")
+    result = http_utils_with_valid.get_valids(EXAMPLE_ISSUE)
+    assert len(result) == 1
 
 
 def test_get_valids_with_wildcards(http_utils_with_wild: HttpUtils, httpserver: HTTPServer):
