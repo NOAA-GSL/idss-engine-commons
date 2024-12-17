@@ -66,15 +66,19 @@ class HttpUtils(ProtocolUtils):
             bool: Returns True if copy is successful
         """
         try:
-            with requests.get(os.path.join(path), timeout=5, stream=True) as response:
+            with requests.get(path, timeout=5, stream=True) as response:
                 # Check if the request was successful
                 if response.status_code == 200:
+                    # Check that we have a directory to write to...
+                    if not os.path.exists(os.path.dirname(dest)):
+                        os.makedirs(os.path.dirname(dest))
                     # Open a file in binary write mode
                     with open(dest, "wb") as file:
                         shutil.copyfileobj(response.raw, file)
                     return True
 
-                logger.debug('copy fail: request status code: %s', response.status_code)
+                logger.info('copy fail: request status code: %s', response.status_code)
                 return False
-        except Exception:  # pylint: disable=broad-exception-caught
+        except Exception as e:  # pylint: disable=broad-exception-caught
+            logger.error('copy fail: exception %s', str(e))
             return False

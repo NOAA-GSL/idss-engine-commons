@@ -201,7 +201,7 @@ class ProtocolUtils(ABC):
                                             Empty Sequence if no valids found for given time range.
         """
         issues_set: set[datetime] = set()
-        for file_path in self.ls(dir_path):
+        for file_path in sorted(self.ls(dir_path), reverse=True):
             if file_path.endswith(self.path_builder.file_ext):
                 try:
                     issues_set.add(self.path_builder.get_issue(file_path))
