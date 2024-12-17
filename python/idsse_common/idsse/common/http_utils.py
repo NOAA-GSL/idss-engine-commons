@@ -79,6 +79,6 @@ class HttpUtils(ProtocolUtils):
 
                 logger.info('copy fail: request status code: %s', response.status_code)
                 return False
-        except Exception as e:  # pylint: disable=broad-exception-caught
+        except Exception as e:  # pylint: disable=broad-exception-caught, invalid-name
             logger.error('copy fail: exception %s', str(e))
             return False
