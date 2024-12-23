@@ -348,4 +348,3 @@ def test_send_requests_returns_none_on_error(rpc_thread: Rpc,
     result = rpc_thread.send_request({'data': 123})
     assert EXAMPLE_UUID not in rpc_thread._pending_requests  # request was cleaned up
     assert result is None
-
