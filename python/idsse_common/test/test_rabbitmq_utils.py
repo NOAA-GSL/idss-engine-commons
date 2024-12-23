@@ -336,7 +336,7 @@ def test_send_request_times_out_if_no_response(mock_connection: Mock,
 def test_send_requests_returns_none_on_error(rpc_thread: Rpc,
                                              mock_connection: Mock,
                                              monkeypatch: MonkeyPatch):
-    # pylint: disable=too-many-arguments, not-used
+    # pylint: disable=too-many-arguments
     def mock_blocking_publish(channel, exch, message_params, queue = None, success_flag = None,
                                 done_event = None):
         # cause exception for pending request Future
