@@ -13,16 +13,18 @@
 # pylint: disable=redefined-outer-name,unused-argument,protected-access,duplicate-code
 
 import json
+import unittest
 from typing import NamedTuple
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock, patch, call
 from uuid import UUID
 
 from pytest import fixture, raises, MonkeyPatch
 from pika import BasicProperties, BlockingConnection
 from pika.adapters.blocking_connection import BlockingChannel
 
+import idsse.common.rabbitmq_utils
 from idsse.common.rabbitmq_utils import (
-    Conn, Consumer, Exch, Queue, Publisher, RabbitMqParams, Rpc, subscribe_to_queue
+    Conn, Consumer, Exch, Queue, Publisher, RabbitMqParams, RabbitMqMessage, Rpc, subscribe_to_queue
 )
 
 # Example data objects
@@ -53,12 +55,14 @@ def mock_channel() -> Mock:
     """Mock pika.adapters.blocking_connection.BlockingChannel object"""
     def mock_queue_declare(queue: str, **_kwargs) -> Method:
         return Frame(Method(queue=queue))  # create a usable (mock) Frame using queue name passed
+    def mock_exch_declare(exchange: str, **_kwargs) -> Method:
+        return Frame(Method(exchange=exchange))  # create a usable (mock) Frame using queue name passed
 
     mock_obj = Mock(spec=BlockingChannel, name='MockChannel')
+    mock_obj.exchange_declare = Mock(side_effect=mock_exch_declare)
     mock_obj.queue_declare = Mock(side_effect=mock_queue_declare)
     mock_obj.is_open = True
     return mock_obj
-
 
 @fixture
 def mock_connection(monkeypatch: MonkeyPatch, mock_channel: Mock) -> Mock:
@@ -81,6 +85,17 @@ def mock_consumer(monkeypatch: MonkeyPatch, mock_connection: Mock, mock_channel:
     )
 
     monkeypatch.setattr('idsse.common.rabbitmq_utils.Consumer', mock_obj)
+    return mock_obj
+
+@fixture
+def mock_publisher(monkeypatch: MonkeyPatch, mock_connection: Mock, mock_channel: Mock) -> Mock:
+    """Mock rabbitmq_utils.Consumer thread instance"""
+    mock_obj = Mock(spec=Publisher, name='MockPublisher')
+    mock_obj.return_value.is_alive = Mock(return_value=False)  # by default, thread not running
+    mock_obj.return_value.connection = mock_connection
+    mock_obj.return_value.channel = mock_channel
+
+    monkeypatch.setattr('idsse.common.rabbitmq_utils.Publisher', mock_obj)
     return mock_obj
 
 
@@ -333,3 +348,36 @@ def test_send_requests_returns_none_on_error(rpc_thread: Rpc,
     result = rpc_thread.send_request({'data': 123})
     assert EXAMPLE_UUID not in rpc_thread._pending_requests  # request was cleaned up
     assert result is None
+
+@fixture
+def rabbitmq_conn_params():
+    return Conn(host="localhost", v_host="/", port=5672, username="guest", password="guest")
+
+def test_consumer_initialization(rabbitmq_conn_params, mock_connection, mock_channel):
+    mock_callback = MagicMock()
+    params_and_callbacks = [
+        ((RMQ_PARAMS.exchange, RMQ_PARAMS.queue), mock_callback)
+    ]
+
+    consumer = Consumer(rabbitmq_conn_params, params_and_callbacks)
+
+    # Assert connection and channel are created
+    assert consumer.connection is not None
+    assert consumer.channel is not None
+    assert consumer._consumer_tags is not None
+
+
+def test_consumer_stop(rabbitmq_conn_params, mock_connection, mock_channel):
+    mock_callback = MagicMock()
+    params_and_callbacks = [
+        ((RMQ_PARAMS.exchange, RMQ_PARAMS.queue), mock_callback)
+    ]
+
+    consumer = Consumer(rabbitmq_conn_params, params_and_callbacks)
+    consumer.stop()
+
+    # Verify connection close is called
+    #mock_channel = mock_connection.return_value.channel.return_value
+    mock_connection_instance = mock_connection.return_value
+    mock_channel.close.assert_called_once()
+
