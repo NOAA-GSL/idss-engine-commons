@@ -10,10 +10,9 @@
 #
 # ------------------------------------------------------------------------------
 # pylint: disable=missing-function-docstring,missing-class-docstring,too-few-public-methods
-# pylint: disable=redefined-outer-name,unused-argument,protected-access,duplicate-code
+# pylint: disable=redefined-outer-name,unused-argument,protected-access,duplicate-code,unused-import
 
 import json
-import unittest
 from typing import NamedTuple
 from unittest.mock import MagicMock, Mock, patch, call
 from uuid import UUID
@@ -337,7 +336,7 @@ def test_send_request_times_out_if_no_response(mock_connection: Mock,
 def test_send_requests_returns_none_on_error(rpc_thread: Rpc,
                                              mock_connection: Mock,
                                              monkeypatch: MonkeyPatch):
-    # pylint: disable=too-many-arguments, not_used
+    # pylint: disable=too-many-arguments, not-used
     def mock_blocking_publish(channel, exch, message_params, queue = None, success_flag = None,
                                 done_event = None):
         # cause exception for pending request Future
@@ -377,14 +376,8 @@ def test_consumer_stop(rabbitmq_conn_params, mock_connection, mock_channel):
     consumer = Consumer(rabbitmq_conn_params, params_and_callbacks)
     consumer.stop()
 
-    # Verify connection close is called
-    mock_channel = mock_connection.return_value.channel.return_value
-    mock_connection_instance = mock_connection.return_value
-    #mock_connection_instance.close.assert_called_once()
-
-
-def test_publisher_initialization(rabbitmq_conn_params, mock_connection, mock_channel):
-
+def test_publisher_initialization(rabbitmq_conn_params, mock_channel):
+    # pylint: disable=broad-exception-raised
     # Set exchange to mandatory and test for UUID added to exchange name
     exch = Exch('test_criteria_exch', 'topic', mandatory=True, delivery_conf=True)
     pub1 = Publisher(rabbitmq_conn_params, exch)
@@ -402,8 +395,3 @@ def test_publisher_initialization(rabbitmq_conn_params, mock_connection, mock_ch
     assert pub2._queue is None
     if pub1.channel.confirm_delivery():
         raise Exception('confirm delivery switched on!')
-
-
-def test_publish(rabbitmq_conn_params, mock_connection, mock_channel):
-
-    print()
