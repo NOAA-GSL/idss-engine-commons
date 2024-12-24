@@ -13,6 +13,7 @@
 # pylint: disable=redefined-outer-name,unused-argument,protected-access,duplicate-code,unused-import
 
 import json
+from threading import Event
 from typing import NamedTuple
 from unittest.mock import MagicMock, Mock, patch, call
 from uuid import UUID
@@ -348,3 +349,113 @@ def test_send_requests_returns_none_on_error(rpc_thread: Rpc,
     result = rpc_thread.send_request({'data': 123})
     assert EXAMPLE_UUID not in rpc_thread._pending_requests  # request was cleaned up
     assert result is None
+
+
+@fixture
+def mock_message():
+    return MagicMock(name='RabbitMqMessage', spec=dict)
+
+@fixture
+def mock_queue():
+    return MagicMock(name='Queue', spec=dict)
+
+def test_publish_success(mock_channel, mock_queue):
+    # Arrange
+    exch = Exch(name='test', type='topic', mandatory=True)
+    RabbitMqMessage.route_key = None
+    success_flag = [False]
+    done_event = Event()
+
+    # Act
+    from idsse.common.rabbitmq_utils import _publish
+    _publish(
+        mock_channel,
+        exch,
+        RabbitMqMessage,
+        queue=mock_queue,
+        success_flag=success_flag,
+        done_event=done_event,
+    )
+
+    # Assert
+    mock_channel.basic_publish.assert_called_once_with(
+        exch.name,
+        RabbitMqMessage.route_key or exch.route_key,
+        body=RabbitMqMessage.body,
+        properties=RabbitMqMessage.properties,
+        mandatory=exch.mandatory,
+    )
+    assert success_flag[0] is True
+    assert done_event.is_set()
+
+
+def test_publish_failure(mock_channel):
+    # Arrange
+    mock_channel.basic_publish.side_effect = Exception("Publish error")
+    success_flag = [False]
+    done_event = Event()
+    exch = Exch(name='test', type='topic', route_key='test.route', mandatory=True)
+
+    # Act & Assert
+    from idsse.common.rabbitmq_utils import _publish
+    with raises(Exception, match="Publish error"):
+        _publish(
+            mock_channel,
+            exch,
+            RabbitMqMessage,
+            success_flag=success_flag,
+            done_event=done_event,
+        )
+
+    assert success_flag[0] is False
+    assert done_event.is_set()
+
+
+def test_publish_with_private_queue(mock_channel, mock_queue):
+    # Arrange
+    mock_queue.name = "_private_queue"
+    mock_queue.auto_delete = True
+    success_flag = [False]
+    done_event = Event()
+    exch = Exch(name='test', type='topic', route_key='test.route', mandatory=False)
+    msg = RabbitMqMessage(body={'data': 123}, route_key='', properties=None)
+
+    # Act
+    from idsse.common.rabbitmq_utils import _publish
+    _publish(
+        mock_channel,
+        exch,
+        msg,
+        queue=mock_queue,
+        success_flag=success_flag,
+        done_event=done_event,
+    )
+
+    # Assert
+    assert success_flag[0] is True
+    assert done_event.is_set()
+
+
+def test_publish_unroutable_error(mock_channel, mock_message):
+    # Arrange
+    from pika.exceptions import UnroutableError
+
+    mock_channel.basic_publish.side_effect = UnroutableError(mock_message)
+    success_flag = [False]
+    done_event = Event()
+    exch = Exch(name='test', type='topic', route_key='test.route')
+    msg = RabbitMqMessage(body={'data': 123}, route_key='', properties=None)
+
+    # Act
+    from idsse.common.rabbitmq_utils import _publish
+    _publish(
+        mock_channel,
+        exch,
+        msg,
+        success_flag=success_flag,
+        done_event=done_event,
+    )
+
+    # Assert
+    assert success_flag[0] is False
+    assert done_event.is_set()
