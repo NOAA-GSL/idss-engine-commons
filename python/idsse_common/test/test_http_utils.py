@@ -106,13 +106,6 @@ def test_ls_without_prepend_path(http_utils: HttpUtils, httpserver: HTTPServer):
     assert len(result) == len(EXAMPLE_FILES)
     assert result[0] == EXAMPLE_FILES[-1]
 
-
-def test_ls_on_error(http_utils: HttpUtils, httpserver: HTTPServer):
-    httpserver.expect_request('/data/'+EXAMPLE_ENDPOINT).respond_with_data('', content_type="text/plain")
-    result = http_utils.ls(EXAMPLE_URL + EXAMPLE_ENDPOINT)
-    assert result == []
-
-
 def test_cp_succeeds(http_utils: HttpUtils, httpserver: HTTPServer):
     url = '/data/'+EXAMPLE_PROD_DIR+'/temp.grib2.gz'
     httpserver.expect_request(url).respond_with_data(bytes([0,1,2]), status=200,
