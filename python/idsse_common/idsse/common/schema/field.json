@@ -2,7 +2,16 @@
     "FieldName": {
         "description": "Identifier for a known field",
         "type": "string",
-        "enum": ["TEMP", "WINDSPEED"]
+        "enum": [
+          "TEMP",
+          "WINDSPEED",
+          "WINDGUST",
+          "DEWPOINT",
+          "RH",
+          "RAIN1HR",
+          "SNOW1HR",
+          "ICE1HR"
+        ]
     },
 
     "FieldList": {
