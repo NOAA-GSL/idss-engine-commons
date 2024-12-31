@@ -171,7 +171,7 @@ class GeoImage():
         return GeoImage(proj, rgb_array, scale)
 
     @classmethod
-    def from_data_grid(  # pylint: disable=too-many-arguments
+    def from_data_grid(  # pylint: disable=too-many-arguments,too-many-positional-arguments
         cls,
         proj: GridProj,
         data_array: np.ndarray,
@@ -257,7 +257,7 @@ class GeoImage():
             i, j = self.proj.map_geo_to_pixel(i, j)
         self.rgb_array[int(i*self.scale), int(j*self.scale)] = color
 
-    def draw_line_seg(  # pylint: disable=too-many-arguments
+    def draw_line_seg(  # pylint: disable=too-many-arguments,too-many-positional-arguments
             self,
             i_1: float, j_1: float,
             i_2: float, j_2: float,

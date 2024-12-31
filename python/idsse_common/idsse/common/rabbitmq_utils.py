@@ -177,7 +177,7 @@ class Consumer(Thread):
                             self.channel.close,
                             self.connection.close)
 
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments,too-many-positional-arguments
     def _on_message(self, channel, method, properties, body, func):
         """This is the callback wrapper, the core callback is passed as func"""
         try:
@@ -686,7 +686,7 @@ def _setup_exch(channel: Channel, exch: Exch):
     logger.debug('Declared exchange: %s', exch.name)
 
 
-# pylint: disable=too-many-arguments
+# pylint: disable=too-many-arguments,too-many-positional-arguments
 def _publish(channel: BlockingChannel,
              exch: Exch,
              message_params: RabbitMqMessage,

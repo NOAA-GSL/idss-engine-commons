@@ -9,23 +9,25 @@
 #     Mackenzie Grimes (2)
 #
 # ------------------------------------------------------------------------------
-# pylint: disable=missing-function-docstring,missing-class-docstring,too-few-public-methods
+# pylint: disable=missing-function-docstring,missing-class-docstring,too-few-public-methods,too-many-positional-arguments
 # pylint: disable=redefined-outer-name,unused-argument,protected-access,duplicate-code,unused-import
 
 import json
 from threading import Event
 from typing import NamedTuple
-from unittest.mock import MagicMock, Mock, patch, call
+from unittest.mock import MagicMock, Mock, patch, call, ANY
 from uuid import UUID
 
 from pytest import fixture, raises, MonkeyPatch
 from pika import BasicProperties, BlockingConnection
 from pika.adapters.blocking_connection import BlockingChannel
+from pika.exceptions import UnroutableError
 
 import idsse.common.rabbitmq_utils
 from idsse.common.rabbitmq_utils import (
-    Conn, Consumer, Exch, Queue, Publisher, RabbitMqParams, RabbitMqMessage,
-    Rpc, subscribe_to_queue, _publish, _blocking_publish, _set_context
+    Conn, Consumer, Exch, Queue, Publisher, RabbitMqParams, RabbitMqParamsAndCallback,
+    RabbitMqMessage, Rpc, subscribe_to_queue, _publish, _blocking_publish, _set_context,
+    _setup_exch_and_queue, threadsafe_call, threadsafe_ack, threadsafe_nack
 )
 
 # Example data objects
@@ -57,7 +59,7 @@ def mock_channel() -> Mock:
     def mock_queue_declare(queue: str, **_kwargs) -> Method:
         return Frame(Method(queue=queue))  # create a usable (mock) Frame using queue name passed
     def mock_exch_declare(exchange: str, **_kwargs) -> Method:
-        return Frame(Method(exchange=exchange))  # create a usable (mock) Frame using queue name passed
+        return Frame(Method(exchange=exchange))
 
     mock_obj = Mock(spec=BlockingChannel, name='MockChannel')
     mock_obj.exchange_declare = Mock(side_effect=mock_exch_declare)
@@ -87,18 +89,6 @@ def mock_consumer(monkeypatch: MonkeyPatch, mock_connection: Mock, mock_channel:
 
     monkeypatch.setattr('idsse.common.rabbitmq_utils.Consumer', mock_obj)
     return mock_obj
-
-@fixture
-def mock_publisher(monkeypatch: MonkeyPatch, mock_connection: Mock, mock_channel: Mock) -> Mock:
-    """Mock rabbitmq_utils.Consumer thread instance"""
-    mock_obj = Mock(spec=Publisher, name='MockPublisher')
-    mock_obj.return_value.is_alive = Mock(return_value=False)  # by default, thread not running
-    mock_obj.return_value.connection = mock_connection
-    mock_obj.return_value.channel = mock_channel
-
-    monkeypatch.setattr('idsse.common.rabbitmq_utils.Publisher', mock_obj)
-    return mock_obj
-
 
 @fixture
 def mock_uuid(monkeypatch: MonkeyPatch) -> Mock:
@@ -351,6 +341,71 @@ def test_send_requests_returns_none_on_error(rpc_thread: Rpc,
     assert result is None
 
 
+
+@fixture
+def mock_conn_params():
+    return Conn(
+        host='localhost',
+        v_host='/',
+        port=5672,
+        username='guest',
+        password='guest'
+    )
+
+
+@fixture
+def mock_rmq_params_and_callback():
+    exchange = Exch(name="test_exchange", type="direct")
+    queue = Queue(name="test_queue",
+                  route_key="test_key",
+                  durable=True,
+                  exclusive=False,
+                  auto_delete=False)
+    params = RabbitMqParams(exchange=exchange, queue=queue)
+    callback = MagicMock()
+    return RabbitMqParamsAndCallback(params=params, callback=callback)
+
+
+
+@patch('idsse.common.rabbitmq_utils.BlockingConnection')
+@patch('idsse.common.rabbitmq_utils.ThreadPoolExecutor')
+def test_consumer_initialization(mock_executor, mock_blocking_connection, mock_conn_params,
+                                 mock_rmq_params_and_callback, mock_channel):
+    mock_blocking_connection.return_value.channel.return_value = mock_channel
+    Consumer(conn_params=mock_conn_params, rmq_params_and_callbacks=mock_rmq_params_and_callback)
+    mock_blocking_connection.assert_called_once_with(mock_conn_params.connection_parameters)
+    mock_channel.basic_qos.assert_called_once_with(prefetch_count=1)
+
+
+@patch('idsse.common.rabbitmq_utils.BlockingConnection')
+@patch('idsse.common.rabbitmq_utils.ThreadPoolExecutor')
+def test_consumer_start(mock_executor, mock_blocking_connection, mock_conn_params,
+                        mock_rmq_params_and_callback, mock_channel):
+    mock_blocking_connection.return_value.channel.return_value = mock_channel
+    consumer = Consumer(conn_params=mock_conn_params,
+                        rmq_params_and_callbacks=mock_rmq_params_and_callback)
+    with patch.object(consumer.channel, 'start_consuming') as start_consuming:
+        consumer.run()
+        start_consuming.assert_called_once()
+
+
+
+
+@patch('idsse.common.rabbitmq_utils.BlockingConnection')
+@patch('idsse.common.rabbitmq_utils.ThreadPoolExecutor')
+def test_on_message(mock_executor, mock_blocking_connection, mock_conn_params,
+                    mock_rmq_params_and_callback, mock_channel):
+    mock_blocking_connection.return_value.channel.return_value = mock_channel
+    consumer = Consumer(conn_params=mock_conn_params,
+                        rmq_params_and_callbacks=mock_rmq_params_and_callback)
+    mock_func = MagicMock()
+    consumer._on_message(mock_channel, MagicMock(), MagicMock(), b"Test Message", func=mock_func)
+    mock_executor.return_value.submit.assert_called_once_with(mock_func,
+                                                              mock_channel,
+                                                              ANY,
+                                                              ANY,
+                                                              b"Test Message")
+
 @fixture
 def mock_message():
     return MagicMock(name='RabbitMqMessage', spec=dict)
@@ -367,7 +422,6 @@ def test_publish_success(mock_channel, mock_queue):
     done_event = Event()
 
     # Act
-    from idsse.common.rabbitmq_utils import _publish
     _publish(
         mock_channel,
         exch,
@@ -397,7 +451,6 @@ def test_publish_failure(mock_channel):
     exch = Exch(name='test', type='topic', route_key='test.route', mandatory=True)
 
     # Act & Assert
-    from idsse.common.rabbitmq_utils import _publish
     with raises(Exception, match="Publish error"):
         _publish(
             mock_channel,
@@ -421,7 +474,6 @@ def test_publish_with_private_queue(mock_channel, mock_queue):
     msg = RabbitMqMessage(body={'data': 123}, route_key='', properties=None)
 
     # Act
-    from idsse.common.rabbitmq_utils import _publish
     _publish(
         mock_channel,
         exch,
@@ -438,8 +490,6 @@ def test_publish_with_private_queue(mock_channel, mock_queue):
 
 def test_publish_unroutable_error(mock_channel, mock_message):
     # Arrange
-    from pika.exceptions import UnroutableError
-
     mock_channel.basic_publish.side_effect = UnroutableError(mock_message)
     success_flag = [False]
     done_event = Event()
@@ -447,7 +497,6 @@ def test_publish_unroutable_error(mock_channel, mock_message):
     msg = RabbitMqMessage(body={'data': 123}, route_key='', properties=None)
 
     # Act
-    from idsse.common.rabbitmq_utils import _publish
     _publish(
         mock_channel,
         exch,
@@ -459,3 +508,154 @@ def test_publish_unroutable_error(mock_channel, mock_message):
     # Assert
     assert success_flag[0] is False
     assert done_event.is_set()
+
+
+
+def test_setup_exch_and_queue_with_default_exchange(mock_channel):
+    """Test setup when using the default exchange (no exchange declaration or binding)."""
+    exch = Exch(name="", type="direct")
+    queue = Queue(name="test_queue",
+                  route_key="test_key",
+                  durable=True,
+                  exclusive=False,
+                  auto_delete=False)
+
+    _setup_exch_and_queue(mock_channel, exch, queue)
+    mock_channel.queue_bind.assert_not_called()
+
+
+def test_setup_exch_and_queue_with_exchange(mock_channel):
+    """Test setup with a named exchange and binding to a queue."""
+    exch = Exch(name="test_exchange", type="direct")
+    queue = Queue(name="test_queue",
+                  route_key="test_key",
+                  durable=True,
+                  exclusive=False,
+                  auto_delete=False)
+
+    with patch('idsse.common.rabbitmq_utils._setup_exch') as mock_setup_exch:
+        _setup_exch_and_queue(mock_channel, exch, queue)
+
+        mock_setup_exch.assert_called_once_with(mock_channel, exch)
+        mock_channel.queue_bind.assert_called_once_with(
+            "test_queue",
+            exchange="test_exchange",
+            routing_key="test_key"
+        )
+
+
+def test_setup_exch_and_queue_with_quorum_queue(mock_channel):
+    """Test that ValueError is raised for quorum queues with auto_delete=True."""
+    exch = Exch(name="test_exchange", type="direct")
+    queue = Queue(
+        name="test_queue",
+        route_key="test_key",
+        durable=True,
+        exclusive=False,
+        auto_delete=True,
+        arguments={"x-queue-type": "quorum"}
+    )
+
+    with raises(ValueError, match="Quorum queues can not be configured to auto delete"):
+        _setup_exch_and_queue(mock_channel, exch, queue)
+
+
+def test_setup_exch_and_queue_direct_reply_to(mock_channel):
+    """Test behavior with the Direct Reply-to queue."""
+    exch = Exch(name="", type="direct")
+    queue = Queue(name="amq.rabbitmq.reply-to",
+                  route_key="test_key",
+                  durable=False,
+                  exclusive=True,
+                  auto_delete=False)
+
+    _setup_exch_and_queue(mock_channel, exch, queue)
+
+    mock_channel.queue_declare.assert_not_called()
+    mock_channel.queue_bind.assert_not_called()
+
+
+def test_threadsafe_call_with_open_channel(mock_channel):
+    """Test threadsafe_call when the channel is open."""
+    mock_func1 = MagicMock()
+    mock_func2 = MagicMock()
+    threadsafe_call(mock_channel, mock_func1, mock_func2)
+
+    assert mock_channel.connection.add_callback_threadsafe.called
+    callback = mock_channel.connection.add_callback_threadsafe.call_args[0][0]
+    callback()
+
+    mock_func1.assert_called_once()
+    mock_func2.assert_called_once()
+
+
+def test_threadsafe_call_with_closed_channel(mock_channel):
+    """Test threadsafe_call when the channel is closed."""
+    mock_channel.is_open = False
+    mock_func = MagicMock()
+
+    threadsafe_call(mock_channel, mock_func)
+
+    assert mock_channel.connection.add_callback_threadsafe.called
+    callback = mock_channel.connection.add_callback_threadsafe.call_args[0][0]
+    with raises(ConnectionError):
+        callback()
+    mock_func.assert_not_called()
+
+
+def test_threadsafe_ack(mock_channel):
+    """Test threadsafe_ack functionality."""
+    delivery_tag = 123
+    mock_extra_func = MagicMock()
+
+    threadsafe_ack(mock_channel, delivery_tag, extra_func=mock_extra_func)
+
+    assert mock_channel.connection.add_callback_threadsafe.called
+    callback = mock_channel.connection.add_callback_threadsafe.call_args[0][0]
+    callback()
+
+    mock_channel.basic_ack.assert_called_once_with(delivery_tag)
+    mock_extra_func.assert_called_once()
+
+
+def test_threadsafe_ack_without_extra_func(mock_channel):
+    """Test threadsafe_ack without an extra function."""
+    delivery_tag = 123
+
+    threadsafe_ack(mock_channel, delivery_tag)
+
+    assert mock_channel.connection.add_callback_threadsafe.called
+    callback = mock_channel.connection.add_callback_threadsafe.call_args[0][0]
+    callback()
+
+    mock_channel.basic_ack.assert_called_once_with(delivery_tag)
+
+
+def test_threadsafe_nack(mock_channel):
+    """Test threadsafe_nack functionality."""
+    delivery_tag = 123
+    requeue = True
+    mock_extra_func = MagicMock()
+
+    threadsafe_nack(mock_channel, delivery_tag, extra_func=mock_extra_func, requeue=requeue)
+
+    assert mock_channel.connection.add_callback_threadsafe.called
+    callback = mock_channel.connection.add_callback_threadsafe.call_args[0][0]
+    callback()
+
+    mock_channel.basic_nack.assert_called_once_with(delivery_tag, requeue=requeue)
+    mock_extra_func.assert_called_once()
+
+
+def test_threadsafe_nack_without_extra_func(mock_channel):
+    """Test threadsafe_nack without an extra function."""
+    delivery_tag = 123
+    requeue = False
+
+    threadsafe_nack(mock_channel, delivery_tag, requeue=requeue)
+
+    assert mock_channel.connection.add_callback_threadsafe.called
+    callback = mock_channel.connection.add_callback_threadsafe.call_args[0][0]
+    callback()
+
+    mock_channel.basic_nack.assert_called_once_with(delivery_tag, requeue=requeue)
