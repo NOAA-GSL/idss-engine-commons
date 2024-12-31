@@ -257,7 +257,7 @@ class GeoImage():
             i, j = self.proj.map_geo_to_pixel(i, j)
         self.rgb_array[int(i*self.scale), int(j*self.scale)] = color
 
-    def draw_line_seg(  # pylint: disable=too-many-arguments,too-many-positional-arguments
+    def draw_line_seg(  # pylint: disable=too-many-arguments
             self,
             i_1: float, j_1: float,
             i_2: float, j_2: float,
