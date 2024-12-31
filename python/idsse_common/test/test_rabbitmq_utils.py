@@ -9,7 +9,7 @@
 #     Mackenzie Grimes (2)
 #
 # ------------------------------------------------------------------------------
-# pylint: disable=missing-function-docstring,missing-class-docstring,too-few-public-methods,too-many-positional-arguments
+# pylint: disable=missing-function-docstring,missing-class-docstring,too-few-public-methods
 # pylint: disable=redefined-outer-name,unused-argument,protected-access,duplicate-code,unused-import
 
 import json
