@@ -46,7 +46,11 @@ class AwsUtils(ProtocolUtils):
             return [os.path.join(path, filename.split(' ')[-1]) for filename in commands_result]
         return [filename.split(' ')[-1] for filename in commands_result]
 
-    def cp(self, path: str, dest: str, concurrency: int | None = None, chunk_size: int | None = None) -> bool:
+    def cp(self,
+           path: str,
+           dest: str,
+           concurrency: int | None = None,
+           chunk_size: int | None = None) -> bool:
         """Execute a 'cp' on the AWS s3 bucket specified by path, dest. Attempts to use
         [s5cmd](https://github.com/peak/s5cmd) to copy the file from S3 with parallelization,
         but falls back to (slower) aws-cli if s5cmd is not installed or throws an error.
