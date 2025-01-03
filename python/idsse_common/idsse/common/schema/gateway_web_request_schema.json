@@ -1,0 +1,4 @@
+{
+  "description": "Mechanism for making NWSC Gateway /profiles web request",
+  "allOf": [{ "$ref": "gateway_web_request.json#/GatewayWebRequest" }]
+}
