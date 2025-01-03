@@ -1,0 +1,151 @@
+{
+  "Phrase": {
+    "description": "Definition of one weather field threshold. Akin to Criteria 'part'",
+    "type": "object",
+    "properties": {
+      "type": { "type": "string" },
+      "phraseId": { "type": "string" },
+      "probability": { "type": "number" },
+      "environmentalConditionType": { "type": "string" },
+      "wwaProduct": { "type": "string" },
+      "condition": { "type": "string" },
+      "value": { "type": "string" },
+      "timeFrame": { "type": "string" },
+      "minDuration": { "type": "string" },
+      "dataSource": { "type": "string" },
+      "dataParameter": { "type": "string" }
+    },
+    "required": [
+      "dataSource",
+      "environmentalConditionType",
+      "condition",
+      "value",
+      "units"
+    ]
+  },
+
+  "Severity": {
+    "description": "Definition of weather field thresholds to reach this severity impact",
+    "type": "object",
+    "properties": {
+      "severity": { "type": "string" },
+      "encodedRepresentation": {
+        "description": "Compound statement of relationship of all weather thresholds phrases, by phraseId",
+        "type": "string"
+      },
+      "map": {
+        "type": "object",
+        "patternProperties": {
+          "^[a-zA-Z]*$": { "$ref": "#/Phrase" }
+        }
+      }
+    },
+    "required": ["severity", "encodedRepresentation", "map"]
+  },
+
+  "NonImpactThresholds": {
+    "description": "Support Profile weather conditions to determine if impact is met/not met",
+    "type": "object",
+    "properties": {
+      "phrasesForAllSeverities": {
+        "type": "object",
+        "properties": {
+          "MINOR": { "$ref": "#/Severity" },
+          "MODERATE": { "$ref": "#/Severity" },
+          "SEVERE": { "$ref": "#/Severity" },
+          "EXTREME": { "$ref": "#/Severity" }
+        },
+        "oneOf": [
+          { "required": ["MINOR"] },
+          { "required": ["MODERATE"] },
+          { "required": ["SEVERE"] },
+          { "required": ["EXTREME"] }
+        ]
+      },
+      "allTypesAsStrings": {
+        "type": "array",
+        "items": { "type": "string" },
+        "minItems": 1
+      }
+    },
+    "required": ["phrasesForAllSeverities", "allTypesAsStrings"]
+  },
+
+  "Timing": {
+    "description": "Time range of Support Profile event",
+    "type": "object",
+    "properties": {
+      "start": { "type": ["string", "null"] },
+      "duration": { "type": ["number", "null"] },
+      "rrule": { "type": ["string", "null"] }
+    }
+  },
+
+  "Location": {
+    "description": "Geographic location of Support Profile event",
+    "type": "object",
+    "properties": {
+      "createdAt": { "type": "string" },
+      "lastModified": { "type": "string" },
+      "name": { "type": "string" },
+      "geomAsString": { "type": "string" },
+      "geometryType": {
+        "type": "string",
+        "enum": ["POINT", "LINESTRING", "POLYGON", "CIRCLE"]
+      },
+      "geoShapeCreationMethod": { "type": "string" },
+      "validTime": { "type": ["string", "null"] },
+      "creationMethod": { "type": "string" },
+      "notes": { "type": "string" },
+      "editable": { "type": "boolean" },
+      "minElevation": { "type": "number" },
+      "maxElevation": { "type": "number" },
+      "original": { "type": "null" },
+      "address": { "type": "null" },
+      "userData": { "type": "null" }
+    },
+    "required": ["geomAsString", "name"]
+  },
+
+  "Setting": {
+    "description": "Definition of Support Profile event location and timing",
+    "type": "object",
+    "properties": {
+      "id": { "type": "string" },
+      "name": { "type": "string" },
+      "driverType": { "type": "string" },
+      "locations": {
+        "type": "array",
+        "items": { "$ref": "#/Location" },
+        "minItems": 1
+      },
+      "timing": { "$ref": "#/Timing" },
+      "nationalSecurity": { "type": "boolean" },
+      "website": { "type": "string" },
+      "numberOfPeople": { "type": "number" }
+    }
+  },
+
+  "SupportProfile": {
+    "description": "Mechanism for defining an NWS Connect Support Profile",
+    "type": "object",
+    "properties": {
+      "id": { "type": "string" },
+      "name": { "type": "string" },
+      "associatedOfficeId": { "type": "string" },
+      "profileType": { "type": "string" },
+      "lifecycleStatus": { "type": "string" },
+      "maxLeadTime": { "type": "number" },
+      "maxLeadTimeAsString": { "type": "string" },
+      "isLive": { "type": "boolean" },
+      "timeBuffer": { "type": "number" },
+      "geoBuffer": { "type": "number" },
+      "requestedServices": { "type": "array" },
+      "profileLevelActionPlans": { "type": "array" },
+      "setting": { "$ref": "#/Setting" },
+      "impacts": { "type": "array" },
+      "nonImpactThresholds": { "$ref": "#/NonImpactThresholds" }
+    },
+    "required": ["id", "name", "setting", "nonImpactThresholds"]
+  }
+}

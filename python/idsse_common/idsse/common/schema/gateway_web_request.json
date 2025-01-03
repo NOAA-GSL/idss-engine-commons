@@ -1,0 +1,21 @@
+{
+  "GatewayWebRequest": {
+    "description": "Definition of an NWSC Gateway request via the web API to publish new Support Profile/Criteria",
+    "type": "object",
+    "properties": {
+      "issueDt": { "$ref": "timing.json#/TimeString" },
+      "validDt": {
+        "oneOf": [
+          { "$ref": "timing.json#/Timing" },
+          { "$ref": "timing.json#/TimeList" }
+        ]
+      },
+      "criteria": { "$ref": "criteria.json#/Criteria" },
+      "supportProfile": { "$ref": "support_profile.json#/SupportProfile" }
+    },
+    "oneOf": [
+      { "required": ["supportProfile", "issueDt"] },
+      { "required": ["criteria"] }
+    ]
+  }
+}
