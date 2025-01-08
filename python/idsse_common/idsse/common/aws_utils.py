@@ -28,12 +28,16 @@ class AwsUtils(ProtocolUtils):
         """Execute a 'ls' on the AWS s3 bucket specified by path
 
         Args:
-            path (str): s3 bucket
-            prepend_path (bool): Add to the filename
+            path (str): path to S3 bucket directory, e.g. s3://my-bucket/
+            prepend_path (bool): Add the full s3 bucket path to any returned filenames.
+                Defaults to True.
 
         Returns:
             Sequence[str]: The results sent to stdout from executing a 'ls' on passed path
         """
+        if path[-1] != '/':
+            path = path + '/'  # ensure a trailing slash, which is expected by S3
+
         try:
             commands = ['s5cmd',  '--no-sign-request', 'ls', path]
             commands_result = exec_cmd(commands)
