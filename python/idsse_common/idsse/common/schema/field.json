@@ -29,7 +29,8 @@
           "VISIBILITY",
           "WINDDIR",
           "WINDGUST",
-          "WINDSPEED"
+          "WINDSPEED",
+          "CREF"
         ]
     },
 
