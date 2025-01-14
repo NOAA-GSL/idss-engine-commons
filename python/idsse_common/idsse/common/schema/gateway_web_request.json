@@ -10,6 +10,7 @@
           { "$ref": "timing.json#/TimeList" }
         ]
       },
+      "originator": { "type": "string" },
       "criteria": { "$ref": "criteria.json#/Criteria" },
       "supportProfile": { "$ref": "support_profile.json#/SupportProfile" }
     },
