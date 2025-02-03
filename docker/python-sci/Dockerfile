@@ -26,9 +26,9 @@ RUN conda config --set solver classic && \
     python-dateutil==2.9.0 \
     pint==0.23 \
     numpy==1.26.4 \
-    netcdf4==1.6.5 \
+    netcdf4==1.7.2 \
     h5netcdf==1.3.0 \
-    pygrib==2.1.5 \
+    pygrib==2.1.6 \
     awscli==1.32.41 \
     jsonschema==4.21.1 \
     s5cmd=2.2.2 \
