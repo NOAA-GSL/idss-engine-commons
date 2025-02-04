@@ -359,7 +359,6 @@ class Rpc:
 
         # send request to external RMQ service, providing the queue where it should respond
         properties = BasicProperties(content_type='application/json',
-                                     #correlation_id=request_id,
                                      headers={'rpc': request_id},
                                      reply_to=self._queue.name)
 
@@ -417,7 +416,6 @@ class Rpc:
                      method.routing_key, properties.content_type, str(body, encoding='utf-8'))
 
         # remove future from pending list. we will update result shortly
-        # request_future = self._pending_requests.pop(properties.correlation_id)
         request_future = self._pending_requests.pop(properties.headers['rpc'])
 
         # messages sent through RabbitMQ Direct reply-to are auto acked
