@@ -359,7 +359,8 @@ class Rpc:
 
         # send request to external RMQ service, providing the queue where it should respond
         properties = BasicProperties(content_type='application/json',
-                                     correlation_id=request_id,
+                                     #correlation_id=request_id,
+                                     headers={'rpc': request_id},
                                      reply_to=self._queue.name)
 
         # add future to dict where callback can retrieve it and set result
@@ -376,7 +377,8 @@ class Rpc:
             # block until callback runs (we'll know when the future's result has been changed)
             return request_future.result(timeout=self._timeout)
         except TimeoutError:
-            logger.warning('Timed out waiting for response. correlation_id: %s', request_id)
+            # logger.warning('Timed out waiting for response. correlation_id: %s', request_id)
+            logger.warning('Timed out waiting for response. rpc request_id: %s', request_id)
             self._pending_requests.pop(request_id)  # stop tracking request Future
             return None
         except Exception as exc:  # pylint: disable=broad-exception-caught
@@ -415,7 +417,8 @@ class Rpc:
                      method.routing_key, properties.content_type, str(body, encoding='utf-8'))
 
         # remove future from pending list. we will update result shortly
-        request_future = self._pending_requests.pop(properties.correlation_id)
+        # request_future = self._pending_requests.pop(properties.correlation_id)
+        request_future = self._pending_requests.pop(properties.headers['rpc'])
 
         # messages sent through RabbitMQ Direct reply-to are auto acked
         is_direct_reply = str(method.routing_key).startswith(DIRECT_REPLY_QUEUE)
