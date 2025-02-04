@@ -296,9 +296,9 @@ def test_send_request_works_without_calling_start(rpc_thread: Rpc,
     def mock_blocking_publish(*_args, **_kwargs):
         # build mock message from imaginary external service
         method = Method('', 123)
-        props = BasicProperties(content_type='application/json', correlation_id=EXAMPLE_UUID)
+        #props = BasicProperties(content_type='application/json', correlation_id=EXAMPLE_UUID)
+        props = BasicProperties(content_type='application/json', headers={'rpc': EXAMPLE_UUID})
         body = bytes(json.dumps(example_message), encoding='utf-8')
-
         rpc_thread._response_callback(mock_channel, method, props, body)
 
     monkeypatch.setattr('idsse.common.rabbitmq_utils._blocking_publish',
