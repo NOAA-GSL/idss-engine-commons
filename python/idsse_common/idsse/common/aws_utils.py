@@ -96,3 +96,5 @@ class AwsUtils(ProtocolUtils):
                 return False
             finally:
                 pass
+        except PermissionError:
+            return False
