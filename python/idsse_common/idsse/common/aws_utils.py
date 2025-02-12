@@ -98,4 +98,3 @@ class AwsUtils(ProtocolUtils):
                 return False
             finally:
                 pass
-
