@@ -132,6 +132,18 @@ def test_cp_retries_with_s3_command_line(aws_utils: AwsUtils, monkeypatch: Monke
     assert mock_exec_cmd_failure.call_count == 2
 
 
+def test_cp_permissions_error(aws_utils: AwsUtils, monkeypatch: MonkeyPatch):
+    mock_exec_cmd_failure = Mock(
+        side_effect=PermissionError)
+    monkeypatch.setattr('idsse.common.aws_utils.exec_cmd',
+                        mock_exec_cmd_failure)
+
+    copy_success = aws_utils.cp('s3:/some/path', 's3:/new/path')
+    assert not copy_success
+    # should not re-attempt with s3; not an s5cmd problem
+    assert mock_exec_cmd_failure.call_count == 1
+
+
 def test_cp_fails(aws_utils: AwsUtils, monkeypatch: MonkeyPatch):
     mock_exec_cmd_failure = Mock(
         side_effect=[FileNotFoundError, Exception('unexpected bad thing happened')])
