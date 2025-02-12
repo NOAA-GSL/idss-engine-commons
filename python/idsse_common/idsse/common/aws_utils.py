@@ -86,6 +86,8 @@ class AwsUtils(ProtocolUtils):
 
             exec_cmd(commands)
             return True
+        except PermissionError:
+            return False  # in s5cmd, this means 404 FileNotFound; don't bother retrying with aws-cli
         except FileNotFoundError:
             try:
                 logger.debug('Second attempt with aws command line')
@@ -96,5 +98,4 @@ class AwsUtils(ProtocolUtils):
                 return False
             finally:
                 pass
-        except PermissionError:
-            return False
+

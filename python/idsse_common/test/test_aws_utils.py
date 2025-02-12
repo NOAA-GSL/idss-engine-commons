@@ -140,7 +140,7 @@ def test_cp_permissions_error(aws_utils: AwsUtils, monkeypatch: MonkeyPatch):
 
     copy_success = aws_utils.cp('s3:/some/path', 's3:/new/path')
     assert not copy_success
-    # should not re-attempt with s3; not an s5cmd problem
+    # should not re-attempt with s3; s5cmd PermissionError means 404 FileNotFound
     assert mock_exec_cmd_failure.call_count == 1
 
 
