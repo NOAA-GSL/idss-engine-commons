@@ -326,16 +326,15 @@ class Rpc:
         self._timeout = timeout
         # only publish to built-in Direct Reply-to queue (recommended for RPC, less setup needed)
         self._queue = Queue(DIRECT_REPLY_QUEUE, '', True, False, False)
+        exch = RabbitMqParams(Exch('', 'direct'))
 
-        # worklist to track corr_ids sent to remote service, and associated response when it arrives
+        # worklist to track request_ids sent to remote service, and associated response when it arrives
         self._pending_requests: dict[str, Future] = {}
 
         # Start long-running thread to consume any messages from response queue
-        self.consumer = Consumer(
-            conn_params,
-            RabbitMqParamsAndCallback(RabbitMqParams(Exch('', 'direct'), self._queue),
-                                      self._response_callback)
-        )
+        self.consumer = Consumer(conn_params,
+                                 RabbitMqParamsAndCallback(RabbitMqParams(exch, self._queue),
+                                                           self._response_callback))
 
     @property
     def is_open(self) -> bool:
@@ -416,7 +415,12 @@ class Rpc:
                      method.routing_key, properties.content_type, str(body, encoding='utf-8'))
 
         # remove future from pending list. we will update result shortly
-        request_future = self._pending_requests.pop(properties.headers['rpc'])
+        message_rpc_id = properties.headers.get('rpc') if properties.headers else None
+        if message_rpc_id not in self._pending_requests:
+            logger.warning(('Received unrecognized reply ID (does not match any pending requests),'
+                           'ignoring. properties.headers.rpc: %s', message_rpc_id))
+
+        request_future = self._pending_requests.pop(message_rpc_id)
 
         # messages sent through RabbitMQ Direct reply-to are auto acked
         is_direct_reply = str(method.routing_key).startswith(DIRECT_REPLY_QUEUE)
