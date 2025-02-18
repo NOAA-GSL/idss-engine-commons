@@ -144,14 +144,14 @@ class Consumer(Thread):
             _setup_exch_and_queue(self.channel, exch, queue)
             self._consumer_tags.append(
                 self.channel.basic_consume(queue.name,
-                                           partial(self._on_message, func=func),
+                                           partial(self.on_message, func=func),
                                            # RMQ requires auto_ack=True for Direct Reply-to
                                            auto_ack=queue.name == DIRECT_REPLY_QUEUE)
             )
 
     def run(self):
         _set_context(self.context)
-        # create a local logger since this is run in a separate threat when start() is called
+        # create a local logger since this is run in a separate thread when start() is called
         _logger = logging.getLogger(f'{__name__}::{self.__class__.__name__}')
         _logger.info('Start Consuming...  (to stop press CTRL+C)')
         self.channel.start_consuming()
@@ -178,10 +178,11 @@ class Consumer(Thread):
                             self.connection.close)
 
     # pylint: disable=too-many-arguments
-    def _on_message(self, channel, method, properties, body, func):
+    def on_message(self, channel, method, properties, body, func):
         """This is the callback wrapper, the core callback is passed as func"""
         try:
-            self._tpx.submit(func, channel, method, properties, body)
+            self.context = contextvars.copy_context()
+            self._tpx.submit(self.context.run, func, channel, method, properties, body)
         except RuntimeError as exe:
             logger.error('Unable to submit it to thread pool, Cause: %s', exe)
 
@@ -328,13 +329,13 @@ class Rpc:
         self._queue = Queue(DIRECT_REPLY_QUEUE, '', True, False, False)
 
         # worklist to track corr_ids sent to remote service, and associated response when it arrives
-        self._pending_requests: dict[str, Future] = {}
+        self.pending_requests: dict[str, Future] = {}
 
         # Start long-running thread to consume any messages from response queue
         self.consumer = Consumer(
             conn_params,
             RabbitMqParamsAndCallback(RabbitMqParams(Exch('', 'direct'), self._queue),
-                                      self._response_callback)
+                                      self.on_response)
         )
 
     @property
@@ -364,7 +365,7 @@ class Rpc:
 
         # add future to dict where callback can retrieve it and set result
         request_future = Future()
-        self._pending_requests[request_id] = request_future
+        self.pending_requests[request_id] = request_future
 
         logger.debug('Publishing request message to external service with body: %s', request_body)
         _blocking_publish(self.consumer.channel,
@@ -378,11 +379,11 @@ class Rpc:
         except TimeoutError:
             # logger.warning('Timed out waiting for response. correlation_id: %s', request_id)
             logger.warning('Timed out waiting for response. rpc request_id: %s', request_id)
-            self._pending_requests.pop(request_id)  # stop tracking request Future
+            self.pending_requests.pop(request_id)  # stop tracking request Future
             return None
         except Exception as exc:  # pylint: disable=broad-exception-caught
             logger.warning('Unexpected response from external service: %s', str(exc))
-            self._pending_requests.pop(request_id)  # stop tracking request Future
+            self.pending_requests.pop(request_id)  # stop tracking request Future
             return None
 
     def start(self):
@@ -404,7 +405,7 @@ class Rpc:
         self.consumer.stop()
         self.consumer.join()
 
-    def _response_callback(
+    def on_response(
             self,
             channel: Channel,
             method: Basic.Deliver,
@@ -415,11 +416,19 @@ class Rpc:
         logger.debug('Received response with routing_key: %s, content_type: %s, message: %i',
                      method.routing_key, properties.content_type, str(body, encoding='utf-8'))
 
-        # remove future from pending list. we will update result shortly
-        request_future = self._pending_requests.pop(properties.headers['rpc'])
-
         # messages sent through RabbitMQ Direct reply-to are auto acked
         is_direct_reply = str(method.routing_key).startswith(DIRECT_REPLY_QUEUE)
+
+        # remove future from pending list. we will update result shortly
+        request_id = properties.headers.get('rpc')
+        if request_id not in self.pending_requests:
+            logger.warning(('Received response whose headers.rpc does not match any pending '
+                            'request, unable to resolve Future. headers: %s'), properties.headers)
+            if not is_direct_reply:
+                channel.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+            return None
+
+        request_future = self.pending_requests.pop(request_id)
         if not is_direct_reply:
             channel.basic_ack(delivery_tag=method.delivery_tag)
 
