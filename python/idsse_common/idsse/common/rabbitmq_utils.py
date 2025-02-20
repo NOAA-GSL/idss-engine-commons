@@ -144,7 +144,7 @@ class Consumer(Thread):
             _setup_exch_and_queue(self.channel, exch, queue)
             self._consumer_tags.append(
                 self.channel.basic_consume(queue.name,
-                                           partial(self.on_message, func=func),
+                                           partial(self._on_message, func=func),
                                            # RMQ requires auto_ack=True for Direct Reply-to
                                            auto_ack=queue.name == DIRECT_REPLY_QUEUE)
             )
@@ -178,7 +178,7 @@ class Consumer(Thread):
                             self.connection.close)
 
     # pylint: disable=too-many-arguments
-    def on_message(self, channel, method, properties, body, func):
+    def _on_message(self, channel, method, properties, body, func):
         """This is the callback wrapper, the core callback is passed as func"""
         try:
             self.context = contextvars.copy_context()
@@ -329,7 +329,7 @@ class Rpc:
         self._queue = Queue(DIRECT_REPLY_QUEUE, '', True, False, False)
 
         # worklist to track corr_ids sent to remote service, and associated response when it arrives
-        self.pending_requests: dict[str, Future] = {}
+        self._pending_requests: dict[str, Future] = {}
 
         # Start long-running thread to consume any messages from response queue
         self._consumer = Consumer(
@@ -365,7 +365,7 @@ class Rpc:
 
         # add future to dict where callback can retrieve it and set result
         request_future = Future()
-        self.pending_requests[request_id] = request_future
+        self._pending_requests[request_id] = request_future
 
         logger.debug('Publishing request message to external service with body: %s', request_body)
         _blocking_publish(self._consumer.channel,
@@ -379,11 +379,11 @@ class Rpc:
         except TimeoutError:
             # logger.warning('Timed out waiting for response. correlation_id: %s', request_id)
             logger.warning('Timed out waiting for response. rpc request_id: %s', request_id)
-            self.pending_requests.pop(request_id)  # stop tracking request Future
+            self._pending_requests.pop(request_id)  # stop tracking request Future
             return None
         except Exception as exc:  # pylint: disable=broad-exception-caught
             logger.warning('Unexpected response from external service: %s', str(exc))
-            self.pending_requests.pop(request_id)  # stop tracking request Future
+            self._pending_requests.pop(request_id)  # stop tracking request Future
             return None
 
     def start(self):
@@ -421,14 +421,14 @@ class Rpc:
 
         # remove future from pending list. we will update result shortly
         request_id = properties.headers.get('rpc')
-        if request_id not in self.pending_requests:
+        if request_id not in self._pending_requests:
             logger.warning(('Received response whose headers.rpc does not match any pending '
                             'request, unable to resolve Future. headers: %s'), properties.headers)
             if not is_direct_reply:
                 channel.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
             return None
 
-        request_future = self.pending_requests.pop(request_id)
+        request_future = self._pending_requests.pop(request_id)
         if not is_direct_reply:
             channel.basic_ack(delivery_tag=method.delivery_tag)
 

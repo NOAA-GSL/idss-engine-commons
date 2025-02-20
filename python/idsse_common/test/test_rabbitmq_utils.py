@@ -10,7 +10,7 @@
 #
 # ------------------------------------------------------------------------------
 # pylint: disable=missing-function-docstring,missing-class-docstring,too-few-public-methods
-# pylint: disable=redefined-outer-name,unused-argument,duplicate-code
+# pylint: disable=redefined-outer-name,unused-argument,duplicate-code,protected-access
 
 import json
 from threading import Event
@@ -299,7 +299,6 @@ def test_send_request_works_without_calling_start(rpc_thread: Rpc,
         method = Method('', 123)
         props = BasicProperties(content_type='application/json', headers={'rpc': EXAMPLE_UUID})
         body = bytes(json.dumps(example_message), encoding='utf-8')
-        # pylint: disable=protected-access
         rpc_thread._on_response(mock_channel, method, props, body)
 
     monkeypatch.setattr('idsse.common.rabbitmq_utils._blocking_publish',
@@ -321,7 +320,7 @@ def test_send_request_times_out_if_no_response(mock_connection: Mock,
                         Mock(side_effect=lambda *_args, **_kwargs: None))
 
     result = _thread.send_request(json.dumps({'data': 123}))
-    assert EXAMPLE_UUID not in _thread.pending_requests  # request was cleaned up
+    assert EXAMPLE_UUID not in _thread._pending_requests  # request was cleaned up
     assert result is None
 
 
@@ -332,13 +331,13 @@ def test_send_requests_returns_none_on_error(rpc_thread: Rpc,
     def mock_blocking_publish(channel, exch, message_params, queue = None, success_flag = None,
                                 done_event = None):
         # cause exception for pending request Future
-        rpc_thread.pending_requests[EXAMPLE_UUID].set_exception(RuntimeError('Something broke'))
+        rpc_thread._pending_requests[EXAMPLE_UUID].set_exception(RuntimeError('Something broke'))
 
     monkeypatch.setattr('idsse.common.rabbitmq_utils._blocking_publish',
                         Mock(side_effect=mock_blocking_publish))
 
     result = rpc_thread.send_request({'data': 123})
-    assert EXAMPLE_UUID not in rpc_thread.pending_requests  # request was cleaned up
+    assert EXAMPLE_UUID not in rpc_thread._pending_requests  # request was cleaned up
     assert result is None
 
 
@@ -346,19 +345,18 @@ def test_nacks_unrecognized_response(rpc_thread: Rpc,
                                      mock_connection: Mock,
                                      mock_channel: Mock,
                                      monkeypatch: MonkeyPatch):
-    rpc_thread.pending_requests = {'abcd': Future()}
+    rpc_thread._pending_requests = {'abcd': Future()}
     delivery_tag = 123
     props = BasicProperties(content_type='application/json', headers={'rpc': 'unknown_id'})
     body = bytes(json.dumps({'data': 123}), encoding='utf-8')
 
-    # pylint: disable=protected-access
     rpc_thread._on_response(mock_channel, Method(delivery_tag=delivery_tag), props, body)
 
     # unregistered message was nacked
     mock_channel.basic_nack.assert_called_with(delivery_tag=delivery_tag, requeue=False)
     # pending requests inside Rpc was not touched
-    assert 'abcd' in rpc_thread.pending_requests
-    assert not rpc_thread.pending_requests['abcd'].done()
+    assert 'abcd' in rpc_thread._pending_requests
+    assert not rpc_thread._pending_requests['abcd'].done()
 
 
 @fixture
@@ -418,7 +416,7 @@ def test_on_message(mock_executor, mock_blocking_connection, mock_conn_params,
     consumer = Consumer(conn_params=mock_conn_params,
                         rmq_params_and_callbacks=mock_rmq_params_and_callback)
     mock_func = MagicMock()
-    consumer.on_message(mock_channel, MagicMock(), MagicMock(), b"Test Message", func=mock_func)
+    consumer._on_message(mock_channel, MagicMock(), MagicMock(), b"Test Message", func=mock_func)
     mock_executor.return_value.submit.assert_called_once_with(consumer.context.run,
                                                               mock_func,
                                                               mock_channel,
@@ -530,7 +528,6 @@ def test_publish_unroutable_error(mock_channel, mock_message):
     # Assert
     assert success_flag[0] is False
     assert done_event.is_set()
-
 
 
 def test_setup_exch_and_queue_with_default_exchange(mock_channel):
