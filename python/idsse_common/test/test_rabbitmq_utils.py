@@ -299,7 +299,8 @@ def test_send_request_works_without_calling_start(rpc_thread: Rpc,
         method = Method('', 123)
         props = BasicProperties(content_type='application/json', headers={'rpc': EXAMPLE_UUID})
         body = bytes(json.dumps(example_message), encoding='utf-8')
-        rpc_thread.on_response(mock_channel, method, props, body)
+        # pylint: disable=protected-access
+        rpc_thread._on_response(mock_channel, method, props, body)
 
     monkeypatch.setattr('idsse.common.rabbitmq_utils._blocking_publish',
                         Mock(side_effect=mock_blocking_publish))
@@ -350,7 +351,8 @@ def test_nacks_unrecognized_response(rpc_thread: Rpc,
     props = BasicProperties(content_type='application/json', headers={'rpc': 'unknown_id'})
     body = bytes(json.dumps({'data': 123}), encoding='utf-8')
 
-    rpc_thread.on_response(mock_channel, Method(delivery_tag=delivery_tag), props, body)
+    # pylint: disable=protected-access
+    rpc_thread._on_response(mock_channel, Method(delivery_tag=delivery_tag), props, body)
 
     # unregistered message was nacked
     mock_channel.basic_nack.assert_called_with(delivery_tag=delivery_tag, requeue=False)
