@@ -151,7 +151,7 @@ class Consumer(Thread):
 
     def run(self):
         _set_context(self.context)
-        # create a local logger since this is run in a separate threat when start() is called
+        # create a local logger since this is run in a separate thread when start() is called
         _logger = logging.getLogger(f'{__name__}::{self.__class__.__name__}')
         _logger.info('Start Consuming...  (to stop press CTRL+C)')
         self.channel.start_consuming()
@@ -181,7 +181,8 @@ class Consumer(Thread):
     def _on_message(self, channel, method, properties, body, func):
         """This is the callback wrapper, the core callback is passed as func"""
         try:
-            self._tpx.submit(func, channel, method, properties, body)
+            self.context = contextvars.copy_context()
+            self._tpx.submit(self.context.run, func, channel, method, properties, body)
         except RuntimeError as exe:
             logger.error('Unable to submit it to thread pool, Cause: %s', exe)
 
@@ -331,16 +332,16 @@ class Rpc:
         self._pending_requests: dict[str, Future] = {}
 
         # Start long-running thread to consume any messages from response queue
-        self.consumer = Consumer(
+        self._consumer = Consumer(
             conn_params,
             RabbitMqParamsAndCallback(RabbitMqParams(Exch('', 'direct'), self._queue),
-                                      self._response_callback)
+                                      self._on_response)
         )
 
     @property
     def is_open(self) -> bool:
         """Returns True if RabbitMQ connection (Publisher) is open and ready to send messages"""
-        return self.consumer.is_alive() and self.consumer.channel.is_open
+        return self._consumer.is_alive() and self._consumer.channel.is_open
 
     def send_request(self, request_body: str | bytes) -> RabbitMqMessage | None:
         """Send message to remote RabbitMQ service using thread-safe RPC. Will block until response
@@ -367,7 +368,7 @@ class Rpc:
         self._pending_requests[request_id] = request_future
 
         logger.debug('Publishing request message to external service with body: %s', request_body)
-        _blocking_publish(self.consumer.channel,
+        _blocking_publish(self._consumer.channel,
                           self._exch,
                           RabbitMqMessage(request_body, properties, self._exch.route_key),
                           self._queue)
@@ -391,7 +392,7 @@ class Rpc:
         not required to use the client. It will automatically call this internally as needed."""
         if not self.is_open:
             logger.debug('Starting RPC thread to send and consume messages')
-            self.consumer.start()
+            self._consumer.start()
 
     def stop(self):
         """Unsubscribe to Direct Reply-To queue and cleanup thread"""
@@ -401,10 +402,10 @@ class Rpc:
             return
 
         # tell Consumer cleanup RabbitMQ resources and wait for thread to terminate
-        self.consumer.stop()
-        self.consumer.join()
+        self._consumer.stop()
+        self._consumer.join()
 
-    def _response_callback(
+    def _on_response(
             self,
             channel: Channel,
             method: Basic.Deliver,
@@ -415,11 +416,19 @@ class Rpc:
         logger.debug('Received response with routing_key: %s, content_type: %s, message: %i',
                      method.routing_key, properties.content_type, str(body, encoding='utf-8'))
 
-        # remove future from pending list. we will update result shortly
-        request_future = self._pending_requests.pop(properties.headers['rpc'])
-
         # messages sent through RabbitMQ Direct reply-to are auto acked
         is_direct_reply = str(method.routing_key).startswith(DIRECT_REPLY_QUEUE)
+
+        # remove future from pending list. we will update result shortly
+        request_id = properties.headers.get('rpc')
+        if request_id not in self._pending_requests:
+            logger.warning(('Received response whose headers.rpc does not match any pending '
+                            'request, unable to resolve Future. headers: %s'), properties.headers)
+            if not is_direct_reply:
+                channel.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+            return None
+
+        request_future = self._pending_requests.pop(request_id)
         if not is_direct_reply:
             channel.basic_ack(delivery_tag=method.delivery_tag)
 

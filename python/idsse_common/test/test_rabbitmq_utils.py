@@ -10,12 +10,12 @@
 #
 # ------------------------------------------------------------------------------
 # pylint: disable=missing-function-docstring,missing-class-docstring,too-few-public-methods
-# pylint: disable=redefined-outer-name,unused-argument,protected-access,duplicate-code,unused-import
+# pylint: disable=redefined-outer-name,unused-argument,duplicate-code,protected-access
 
 import json
 from threading import Event
 from typing import NamedTuple
-from unittest.mock import MagicMock, Mock, patch, call, ANY
+from unittest.mock import MagicMock, Mock, patch, ANY
 from uuid import UUID
 
 from pytest import fixture, raises, MonkeyPatch
@@ -23,11 +23,10 @@ from pika import BasicProperties, BlockingConnection
 from pika.adapters.blocking_connection import BlockingChannel
 from pika.exceptions import UnroutableError
 
-import idsse.common.rabbitmq_utils
 from idsse.common.rabbitmq_utils import (
-    Conn, Consumer, Exch, Queue, Publisher, RabbitMqParams, RabbitMqParamsAndCallback,
-    RabbitMqMessage, Rpc, subscribe_to_queue, _publish, _blocking_publish, _set_context,
-    _setup_exch_and_queue, threadsafe_call, threadsafe_ack, threadsafe_nack
+    Conn, Consumer, Exch, Future, Queue, Publisher, RabbitMqParams, RabbitMqParamsAndCallback,
+    RabbitMqMessage, Rpc, subscribe_to_queue, _publish, _setup_exch_and_queue,
+    threadsafe_call, threadsafe_ack, threadsafe_nack
 )
 
 # Example data objects
@@ -67,6 +66,7 @@ def mock_channel() -> Mock:
     mock_obj.is_open = True
     return mock_obj
 
+
 @fixture
 def mock_connection(mock_channel: Mock) -> Mock:
     """Mock pika.BlockingChannel object"""
@@ -89,6 +89,7 @@ def mock_consumer(monkeypatch: MonkeyPatch, mock_connection: Mock, mock_channel:
 
     monkeypatch.setattr('idsse.common.rabbitmq_utils.Consumer', mock_obj)
     return mock_obj
+
 
 @fixture
 def mock_uuid(monkeypatch: MonkeyPatch) -> Mock:
@@ -298,7 +299,7 @@ def test_send_request_works_without_calling_start(rpc_thread: Rpc,
         method = Method('', 123)
         props = BasicProperties(content_type='application/json', headers={'rpc': EXAMPLE_UUID})
         body = bytes(json.dumps(example_message), encoding='utf-8')
-        rpc_thread._response_callback(mock_channel, method, props, body)
+        rpc_thread._on_response(mock_channel, method, props, body)
 
     monkeypatch.setattr('idsse.common.rabbitmq_utils._blocking_publish',
                         Mock(side_effect=mock_blocking_publish))
@@ -339,6 +340,23 @@ def test_send_requests_returns_none_on_error(rpc_thread: Rpc,
     assert EXAMPLE_UUID not in rpc_thread._pending_requests  # request was cleaned up
     assert result is None
 
+
+def test_nacks_unrecognized_response(rpc_thread: Rpc,
+                                     mock_connection: Mock,
+                                     mock_channel: Mock,
+                                     monkeypatch: MonkeyPatch):
+    rpc_thread._pending_requests = {'abcd': Future()}
+    delivery_tag = 123
+    props = BasicProperties(content_type='application/json', headers={'rpc': 'unknown_id'})
+    body = bytes(json.dumps({'data': 123}), encoding='utf-8')
+
+    rpc_thread._on_response(mock_channel, Method(delivery_tag=delivery_tag), props, body)
+
+    # unregistered message was nacked
+    mock_channel.basic_nack.assert_called_with(delivery_tag=delivery_tag, requeue=False)
+    # pending requests inside Rpc was not touched
+    assert 'abcd' in rpc_thread._pending_requests
+    assert not rpc_thread._pending_requests['abcd'].done()
 
 
 @fixture
@@ -399,7 +417,8 @@ def test_on_message(mock_executor, mock_blocking_connection, mock_conn_params,
                         rmq_params_and_callbacks=mock_rmq_params_and_callback)
     mock_func = MagicMock()
     consumer._on_message(mock_channel, MagicMock(), MagicMock(), b"Test Message", func=mock_func)
-    mock_executor.return_value.submit.assert_called_once_with(mock_func,
+    mock_executor.return_value.submit.assert_called_once_with(consumer.context.run,
+                                                              mock_func,
                                                               mock_channel,
                                                               ANY,
                                                               ANY,
@@ -409,9 +428,11 @@ def test_on_message(mock_executor, mock_blocking_connection, mock_conn_params,
 def mock_message():
     return MagicMock(name='RabbitMqMessage', spec=dict)
 
+
 @fixture
 def mock_queue():
     return MagicMock(name='Queue', spec=dict)
+
 
 def test_publish_success(mock_channel, mock_queue):
     # Arrange
@@ -507,7 +528,6 @@ def test_publish_unroutable_error(mock_channel, mock_message):
     # Assert
     assert success_flag[0] is False
     assert done_event.is_set()
-
 
 
 def test_setup_exch_and_queue_with_default_exchange(mock_channel):
