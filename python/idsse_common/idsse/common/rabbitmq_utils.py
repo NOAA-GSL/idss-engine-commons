@@ -438,6 +438,8 @@ class Rpc:
         return request_future.set_result(RabbitMqMessage(str(body, encoding='utf-8'), properties))
 
 
+# Tech debt: this is a temporary class "alias" to Rpc to match naming convention of
+# `RpcConsumer`. Will be deleted (and `Rpc` renamed) after current usages of `Rpc` are migrated
 class RpcPublisher(Rpc):
     """RabbitMQ RPC (remote procedure call) publishing client, runs in own thread to not block
     heartbeat. This class can be used to send "requests" (outbound messages) over RabbitMQ and
@@ -462,8 +464,43 @@ class RpcPublisher(Rpc):
         logger.info(f'Got response from external service: {response}')
         ```
     """
-    # Tech debt: this is a temporary class "alias" to Rpc to match naming convention of
-    # `RpcConsumer`. Will be deleted (and `Rpc` renamed) after current usages of `Rpc` are migrated
+    def send_request(self,
+                     request_body: str | bytes,
+                     properties: BasicProperties = BasicProperties()) -> RabbitMqMessage | None:
+        if not self.is_open:
+            logger.debug('RPC thread not yet initialized. Setting up now')
+            self.start()
+
+        # generate unique ID to associate our request to external service's response
+        request_id = str(uuid.uuid4())
+
+        # send request to external RMQ service, providing unique RPC message ID and
+        # the queue where it should respond
+        properties.headers['rpc'] = request_id
+        properties.reply_to = self._queue.name
+
+        # add future to dict where callback can retrieve it and set result
+        request_future = Future()
+        self._pending_requests[request_id] = request_future
+
+        logger.debug('Publishing request message to external service with body: %s', request_body)
+        _blocking_publish(self._consumer.channel,
+                          self._exch,
+                          RabbitMqMessage(request_body, properties, self._exch.route_key),
+                          self._queue)
+
+        try:
+            # block until callback runs (we'll know when the future's result has been changed)
+            return request_future.result(timeout=self._timeout)
+        except TimeoutError:
+            # logger.warning('Timed out waiting for response. correlation_id: %s', request_id)
+            logger.warning('Timed out waiting for response. rpc request_id: %s', request_id)
+            self._pending_requests.pop(request_id)  # stop tracking request Future
+            return None
+        except Exception as exc:  # pylint: disable=broad-exception-caught
+            logger.warning('Unexpected response from external service: %s', str(exc))
+            self._pending_requests.pop(request_id)  # stop tracking request Future
+            return None
 
 
 class ResponseAction(IntEnum):
@@ -548,13 +585,11 @@ class RpcConsumer():
         self._consumer.stop()
         self._consumer.join()
 
-    def _on_message(
-            self,
-            channel: Channel,
-            method: Basic.Deliver,
-            properties: BasicProperties,
-            body: bytes,
-    ):
+    def _on_message(self,
+                    channel: Channel,
+                    method: Basic.Deliver,
+                    properties: BasicProperties,
+                    body: bytes):
         """Handle receiving a request message from an `RpcPublisher`. Invoke user-provided callback
         to form response body, then send RabbitMQ message over Exchange (likely default) and Queue
         (likely a unique Direct Reply-to) that `RpcPublisher` specified in message props.
