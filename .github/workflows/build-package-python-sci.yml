@@ -100,6 +100,7 @@ jobs:
       run: |
         DEPENDENT_REPOS=(
           "NOAA-GSL/nwsc-gateway"
+          "NOAA-GSL/risk-processor"
         )
         for REPO in "${DEPENDENT_REPOS[@]}"; do
           echo "Triggering repository_dispatch for $REPO..."
