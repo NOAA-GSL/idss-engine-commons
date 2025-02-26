@@ -98,8 +98,16 @@ jobs:
     
     - name: Trigger Dependent Repository Workflows
       run: |
-        curl -X POST -H "Accept: application/vnd.github+json" \
-        -H "Authorization: Bearer ${{ secrets.REPO_PAT }}" \
-        -H "Content-Type: application/json" \
-        --data '{"event_type": "commons-updated"}' \
-        https://api.github.com/repos/NOAA-GSL/event-portfolio-manager/dispatches
+        DEPENDENT_REPOS=(
+          "NOAA-GSL/event-portfolio-manager"
+        )
+        for REPO in "${DEPENDENT_REPOS[@]}"; do
+          echo "Triggering repository_dispatch for $REPO..."
+          curl -X POST -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.REPO_PAT }}" \
+            -H "Content-Type: application/json" \
+            --data '{"event_type": "commons-updated"}' \
+            "https://api.github.com/repos/$REPO/dispatches"
+
+          echo "Triggered $REPO"
+        done
