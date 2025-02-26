@@ -410,7 +410,7 @@ class Rpc:
             channel: Channel,
             method: Basic.Deliver,
             properties: BasicProperties,
-            body: bytes
+            body: bytes,
     ):
         """Handle RabbitMQ message emitted to response queue."""
         logger.debug('Received response with routing_key: %s, content_type: %s, message: %i',
@@ -434,6 +434,122 @@ class Rpc:
 
         # update future with response body to communicate it back up to main thread
         return request_future.set_result(RabbitMqMessage(str(body, encoding='utf-8'), properties))
+
+
+class RpcPublisher(Rpc):
+    """RabbitMQ RPC (remote procedure call) publishing client, runs in own thread to not block
+    heartbeat. This class can be used to send "requests" (outbound messages) over RabbitMQ and
+    block until a "response" (inbound message) comes back from an `RpcConsumer` instance.
+    All producing to/consuming of different queues, and associating requests with their responses,
+    is abstracted away.
+
+    Note that RPC by RabbitMQ convention uses the built-in Direct Reply-To queue to field the
+    responses messages, which generates a temporary, random queue name for that individual message,
+    rather than creating its own durable queue. Directing responses to a custom, durable queue
+    is not yet supported by `RpcPublisher`.
+
+    The `start()` and `stop()` methods should be called from the same thread that created the
+    `RpcPublisher` instance.
+
+    Example usage:
+        ```
+        my_client = RpcPublisher(...insert RabbitMQ parameters here...)
+        my_client.start()
+
+        response = my_client.send_message('{"some": "json"}')  # blocks while waiting for response
+        logger.info(f'Got response from external service: {response}')
+        ```
+    """
+    # Tech debt: this is a temporary class "alias" to Rpc to match naming convention of
+    # `RpcConsumer`. Will be deleted (and `Rpc` renamed) after current usages of `Rpc` are migrated
+
+
+class RpcConsumer():
+    """Consumer RPC (remote prodecure call) class that serves as the listener to `RpcPublisher`
+    messages. `RpcConsumer` creates a thread to constantly consume RPC message "requests" emitted
+    by `RpcConsumer`, form a response, and send it back to the publisher asynchronously.
+
+    Note that RPC by RabbitMQ convention uses built-in Direct Reply-to queue over the default
+    exchange, and listeners for responses on a temporary queue unique to a given RPC request.
+    Consumer RPC messages from a custom, durable queue is not yet supported by `RpcConsumer`.
+
+    Example usage:
+        ```
+        def on_receive_request(body: bytes):
+            logger.info(f'Got request from external service: {body}')
+            blocking_publish('{"response": [1, 2, 3]}')
+
+
+        my_consumer = RpcConsumer(<insert Conn>,
+                                  RmqParams(<insert Exch>, <insert Queue>),
+                                  )
+        my_consumer.start()
+
+        response = my_client.send_message('{"some": "json"}')  # blocks while waiting for response
+        ```
+    """
+    def __init__(self,
+                 conn_params: Conn,
+                 rmq_params: RabbitMqParams,
+                 on_message_callback: Callable[[], str]):
+        """
+        Args:
+            conn_params (Conn): parameters to connect to RabbitMQ server
+            rmq_params (RabbitMqParams): parameters of RMQ Exchange and Queue where RPC messages
+                are expected to be received from an `RpcPublisher`.
+            on_message_callback (Callable[]):
+        """
+        self._rmq_params = rmq_params
+        self._on_message_callback = on_message_callback
+
+        # worklist to track corr_ids sent to remote service, and associated response when it arrives
+        self._pending_requests: dict[str, Future] = {}
+
+        # Start long-running thread to consume any messages from response queue
+        self._consumer = Consumer(conn_params,
+                                  RabbitMqParamsAndCallback(rmq_params, self._on_request))
+
+    @property
+    def is_open(self):
+        """Returns True if RabbitMQ connection (Consumer) is open and ready to receive messages"""
+        return self._consumer.is_alive and self._consumer.channel.is_open
+
+    def start(self):
+        """Start dedicated threads to asynchronously send and receive RPC messages using a new
+        RabbitMQ connection and channel. Note: this method can be called externally, but it is
+        not required to use the client. It will automatically call this internally as needed."""
+        if not self.is_open:
+            logger.debug('Starting RPC thread to send and consume messages')
+            self._consumer.start()
+
+    def stop(self):
+        """Unsubscribe to queue and cleanup thread(s)"""
+        logger.debug('Shutting down RpcConsumer threads')
+        if not self.is_open:
+            logger.debug('RpcConsumer threads not running, nothing to cleanup')
+            return
+
+        # tell Consumer to cleanup RabbitMQ resources and wait for thread to terminate
+        self._consumer.stop()
+        self._consumer.join()
+
+    def _on_request(
+            self,
+            channel: Channel,
+            method: Basic.Deliver,
+            properties: BasicProperties,
+            body: bytes,
+    ):
+        """Handle receiving a request message from an `RpcPublisher`. Invoke user-provided callback
+        to form response body, then send RabbitMQ message over Exchange (likely default) and Queue
+        (likely Direct Reply-to) that `RpcPublisher` specified in message.
+        """
+        request_body = {}
+        logger.debug('Publishing response message to external service with body: %s', request_body)
+        _blocking_publish(self._consumer.channel,
+                          self._exch,
+                          RabbitMqMessage(request_body, properties, self._exch.route_key),
+                          self._queue)
 
 
 def subscribe_to_queue(

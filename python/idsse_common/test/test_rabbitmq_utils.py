@@ -23,6 +23,7 @@ from pika import BasicProperties, BlockingConnection
 from pika.adapters.blocking_connection import BlockingChannel
 from pika.exceptions import UnroutableError
 
+
 from idsse.common.rabbitmq_utils import (
     Conn, Consumer, Exch, Future, Queue, Publisher, RabbitMqParams, RabbitMqParamsAndCallback,
     RabbitMqMessage, Rpc, subscribe_to_queue, _publish, _setup_exch_and_queue,
