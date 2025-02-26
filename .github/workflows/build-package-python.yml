@@ -1,7 +1,10 @@
 name: Build and Package the Python Commons Base package to Dev Registry
+
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
+
 env:
   DEV_REGISTRY: ghcr.io/noaa-gsl/idss/commons/python
 jobs:
@@ -92,3 +95,19 @@ jobs:
     - name: Push Image to Dev Registry
       run: |
         docker push ${{env.DEV_REGISTRY}}/${{env.APP_LOWERCASE}}:${{env.BRANCH}}
+    
+    - name: Trigger Dependent Repository Workflows
+      run: |
+        DEPENDENT_REPOS=(
+          "NOAA-GSL/event-portfolio-manager"
+        )
+        for REPO in "${DEPENDENT_REPOS[@]}"; do
+          echo "Triggering repository_dispatch for $REPO..."
+          curl -X POST -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.REPO_PAT }}" \
+            -H "Content-Type: application/json" \
+            --data '{"event_type": "commons-updated"}' \
+            "https://api.github.com/repos/$REPO/dispatches"
+
+          echo "Triggered $REPO"
+        done
