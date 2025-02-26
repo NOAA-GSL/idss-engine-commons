@@ -19,7 +19,6 @@ import uuid
 from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
 from copy import deepcopy
-from enum import IntEnum, auto
 from functools import partial
 from threading import Event, Thread
 from typing import NamedTuple
@@ -98,7 +97,7 @@ class RabbitMqMessage(NamedTuple):
     Data class to hold a RabbitMQ message body, properties, and optional route_key (if outbound)
     """
     body: str
-    properties: BasicProperties
+    properties: BasicProperties = BasicProperties()
     route_key: str | None = None
 
 
@@ -464,9 +463,8 @@ class RpcPublisher(Rpc):
         logger.info(f'Got response from external service: {response}')
         ```
     """
-    def send_request(self,
-                     request_body: str | bytes,
-                     properties: BasicProperties = BasicProperties()) -> RabbitMqMessage | None:
+    # pylint: disable=arguments-renamed
+    def send_request(self, request: RabbitMqMessage) -> RabbitMqMessage | None:
         if not self.is_open:
             logger.debug('RPC thread not yet initialized. Setting up now')
             self.start()
@@ -476,17 +474,22 @@ class RpcPublisher(Rpc):
 
         # send request to external RMQ service, providing unique RPC message ID and
         # the queue where it should respond
-        properties.headers['rpc'] = request_id
-        properties.reply_to = self._queue.name
+        if request.properties.headers is None:
+            request.properties.headers = {}
+        request.properties.headers['rpc'] = request_id
+        request.properties.reply_to = self._queue.name
+
+        # overwrite routing key (if any) to enforce use of default Exchange and Direct Reply-to
+        request = RabbitMqMessage(request.body, request.properties, self._exch.route_key)
 
         # add future to dict where callback can retrieve it and set result
         request_future = Future()
         self._pending_requests[request_id] = request_future
 
-        logger.debug('Publishing request message to external service with body: %s', request_body)
+        logger.debug('Publishing request message to external service with body: %s', request.body)
         _blocking_publish(self._consumer.channel,
                           self._exch,
-                          RabbitMqMessage(request_body, properties, self._exch.route_key),
+                          request,
                           self._queue)
 
         try:
@@ -503,13 +506,17 @@ class RpcPublisher(Rpc):
             return None
 
 
-class ResponseAction(IntEnum):
-    """Enum specifying how RPC request result should be communicated to the RMQ broker.
-    Either ack, nack with requeue (to re-attempt processing), or nack with no requeue
-    (to permanently destroy--message was invalid)"""
-    ACK = auto()
-    NACK_REQUEUE = auto()
-    NACK_NO_REQUEUE = auto()
+class RpcResponse(NamedTuple):
+    """Data class to specify how result of RPC request should be communicated to the RMQ broker.
+    Either ack or nack with no requeue (usually a response RabbitMqMessage should be published),
+    or nack with requeue True (to re-attempt processing).
+
+    Message can be None (and is None by default), meaning request is only acked/nacked without
+    a response to the awaiting requestor, but this should generally only be used if requeue=True.
+    """
+    message: RabbitMqMessage | None
+    ack: bool = True
+    requeue: bool = False
 
 
 class RpcConsumer():
@@ -526,8 +533,8 @@ class RpcConsumer():
         def on_receive_request(message: RabbitMqMessage):
             logger.info('Got request from external service: %s', message.body)
             if message.properties.content_type == 'application/json':
-                return RabbitMqMessage('success!'), ResponseAction.ACK
-            return RabbitMqMessage('failure!'), ResponseAction.NACK_NO_REQUEUE
+                return RpcResponse(ack=True, message=RabbitMqMessage('success!'))
+            return RpcResponse(ack=False, requeue=False)
 
         my_consumer = RpcConsumer(<insert Conn>,
                                   RmqParams(<insert Exch>, <insert Queue>),
@@ -538,33 +545,33 @@ class RpcConsumer():
     def __init__(self,
                  conn_params: Conn,
                  rmq_params: RabbitMqParams,
-                 on_request_callback:
-                     Callable[[RabbitMqMessage], tuple[RabbitMqMessage, ResponseAction]]):
+                 on_request_callback: Callable[[RabbitMqMessage], RpcResponse],
+                 *args,
+                 **kwargs):
         """
         Args:
             conn_params (Conn): parameters to connect to RabbitMQ server
             rmq_params (RabbitMqParams): parameters of RMQ Exchange and Queue where RPC messages
                 are expected to be received from an `RpcPublisher`.
-            on_message_callback (Callable[[RabbitMqMesssage], tuple[RabbitMqMessage, ResponseAction]]):
-                a function that receives an inbound RPC request message, does some work with it,
-                then returns a RabbitMqMessage (the content of the response message to be published
-                back to the original requester) and a response action (indicating if request
-                message should be ack'd, nack'd with requeue, or nack'd with no requeue)
+            on_message_callback (Callable[[RabbitMqMesssage], RpcResponse]): a function that
+                receives an inbound RPC request message, does some work with it, then returns a
+                RpcResponse, which controls if message should be acked/nacked and some
+                RabbitMqMessage published back the original requester, or if the request
+                should be nack'd and requeued to re-attempt processing
         """
         self._rmq_params = rmq_params
         self._on_request_callback = on_request_callback
 
-        # worklist to track corr_ids sent to remote service, and associated response when it arrives
-        self._pending_requests: dict[str, Future] = {}
-
         # Start long-running thread to consume any messages from response queue
         self._consumer = Consumer(conn_params,
-                                  RabbitMqParamsAndCallback(rmq_params, self._on_message))
+                                  RabbitMqParamsAndCallback(rmq_params, self._on_message),
+                                  *args,
+                                  **kwargs)
 
     @property
     def is_open(self):
         """Returns True if RabbitMQ connection (Consumer) is open and ready to receive messages"""
-        return self._consumer.is_alive and self._consumer.channel.is_open
+        return self._consumer.is_alive() and self._consumer.channel.is_open
 
     def start(self):
         """Start dedicated threads to asynchronously receive, and send, RPC messages using a new
@@ -573,6 +580,7 @@ class RpcConsumer():
         if not self.is_open:
             logger.debug('Starting RPC thread to consume messages')
             self._consumer.start()
+            self._consumer.join()
 
     def stop(self):
         """Unsubscribe to queue and cleanup thread(s)"""
@@ -596,37 +604,39 @@ class RpcConsumer():
         """
         request = body.decode()
         logger.debug('Received request message from external message with body: %s', request)
-        response, action = self._on_request_callback(RabbitMqMessage(request, properties))
+        response = self._on_request_callback(RabbitMqMessage(request, properties,
+                                                             method.routing_key))
 
-        # communicate to RpcPublisher if their request was processed successfully or rejected
-        if action == ResponseAction.ACK:
+        if response.ack:
             threadsafe_ack(channel,
-                           method.delivery_tag,
-                           lambda: logger.debug('Request %s was acked',
-                                                properties.headers.get('rpc')))
+                              method.delivery_tag,
+                              lambda: logger.debug('Request %s was acked',
+                                                   properties.headers.get('rpc')))
         else:
-            # request was not well received; nack it, requeuing the message only if
-            # _on_request_callback specified that we should
             threadsafe_nack(channel,
                             method.delivery_tag,
                             lambda: logger.debug('Request %s was nacked',
-                                                properties.headers.get('rpc')),
-                            requeue=action == ResponseAction.NACK_REQUEUE)
+                                                 properties.headers.get('rpc')),
+                            requeue=response.requeue)
 
+        if content := response.message:
+            # per RabbitMQ RPC convention, always use default Exchange so clients can operate on
+            # any exchange and RabbitMQ will route the message to their queue correctly
+            exch = Exch('', 'direct', route_key=properties.reply_to)
+            logger.info('Publishing response to default exchange, routing key: %s', exch.route_key)
+            logger.debug('Publishing response to external request service: %s', content.body)
 
-        # per RabbitMQ RPC convention, always use default Exchange and dynamic DIRECT_REPLY_TO
-        exch = Exch('', 'direct', route_key=properties.reply_to)
-        logger.info('Publishing response to default exchange, routing key: %s', exch.route_key)
-        logger.debug('Publishing response to external request service: %s', response.body)
+            # tag this response message using the "rpc" UUID from request's headers; required so
+            # RpcPublisher can associate each request/response pair and resolve all pending Futures
+            response_props = deepcopy(content.properties)
+            response_props.reply_to = properties.reply_to
+            if response_props.headers is None:
+                response_props.headers = {}
+            response_props.headers['rpc'] = properties.headers.get('rpc')
 
-        # tag this response message using the "rpc" UUID from request's headers; required so that
-        # RpcPublisher can associate each request/response pair and resolve all pending Futures
-        response_props = deepcopy(response.properties)
-        response_props.headers['rpc'] = properties.headers.get('rpc')
-
-        _blocking_publish(channel,
-                          exch,
-                          RabbitMqMessage(response.body, response_props, exch.route_key))
+            _blocking_publish(channel,
+                              exch,
+                              RabbitMqMessage(content.body, response_props, exch.route_key))
 
 
 def subscribe_to_queue(

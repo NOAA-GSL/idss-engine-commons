@@ -11,7 +11,6 @@
 # ------------------------------------------------------------------------------
 # pylint: disable=missing-function-docstring,missing-class-docstring,too-few-public-methods
 # pylint: disable=redefined-outer-name,unused-argument,duplicate-code,protected-access
-
 import json
 from threading import Event
 from typing import NamedTuple
@@ -23,11 +22,10 @@ from pika import BasicProperties, BlockingConnection
 from pika.adapters.blocking_connection import BlockingChannel
 from pika.exceptions import UnroutableError
 
-
 from idsse.common.rabbitmq_utils import (
     Conn, Consumer, Exch, Future, Queue, Publisher, RabbitMqParams, RabbitMqParamsAndCallback,
-    RabbitMqMessage, Rpc, subscribe_to_queue, _publish, _setup_exch_and_queue,
-    threadsafe_call, threadsafe_ack, threadsafe_nack
+    RabbitMqMessage, RpcConsumer, RpcPublisher, RpcResponse, subscribe_to_queue,
+    _publish, _setup_exch_and_queue, threadsafe_call, threadsafe_ack, threadsafe_nack
 )
 
 # Example data objects
@@ -103,8 +101,8 @@ def mock_uuid(monkeypatch: MonkeyPatch) -> Mock:
 
 
 @fixture
-def rpc_thread(mock_consumer: Mock, mock_uuid: Mock) -> Rpc:
-    return Rpc(CONN, RMQ_PARAMS.exchange, timeout=5)
+def rpc_thread(mock_consumer: Mock, mock_uuid: Mock) -> RpcPublisher:
+    return RpcPublisher(CONN, RMQ_PARAMS.exchange, timeout=5)
 
 
 # tests
@@ -254,7 +252,7 @@ def test_simple_publisher(monkeypatch: MonkeyPatch, mock_connection: Mock):
     assert 'MockChannel.close' in str(mock_threadsafe.call_args[0][1])
 
 
-def test_rpc_opens_new_connection_and_channel(rpc_thread: Rpc, mock_consumer: Mock):
+def test_rpc_opens_new_connection_and_channel(rpc_thread: RpcPublisher, mock_consumer: Mock):
     assert not rpc_thread.is_open
     rpc_thread.start()
 
@@ -271,7 +269,7 @@ def test_rpc_opens_new_connection_and_channel(rpc_thread: Rpc, mock_consumer: Mo
     mock_consumer.return_value.join.assert_called_once()
 
 
-def test_stop_does_nothing_if_not_started(rpc_thread: Rpc, mock_consumer: Mock):
+def test_stop_does_nothing_if_not_started(rpc_thread: RpcPublisher, mock_consumer: Mock):
     # calling stop before starting does nothing
     rpc_thread.stop()
     mock_consumer.stop.assert_not_called()
@@ -285,7 +283,7 @@ def test_stop_does_nothing_if_not_started(rpc_thread: Rpc, mock_consumer: Mock):
     mock_consumer.return_value.start.assert_not_called()
 
 
-def test_send_request_works_without_calling_start(rpc_thread: Rpc,
+def test_send_request_works_without_calling_start(rpc_thread: RpcPublisher,
                                                   mock_channel: Mock,
                                                   mock_connection: Mock,
                                                   mock_consumer: Mock,
@@ -305,7 +303,7 @@ def test_send_request_works_without_calling_start(rpc_thread: Rpc,
     monkeypatch.setattr('idsse.common.rabbitmq_utils._blocking_publish',
                         Mock(side_effect=mock_blocking_publish))
 
-    result = rpc_thread.send_request(json.dumps({'fake': 'request message'}))
+    result = rpc_thread.send_request(RabbitMqMessage(json.dumps({'fake': 'request message'})))
     assert json.loads(result.body) == example_message
 
 
@@ -314,35 +312,31 @@ def test_send_request_times_out_if_no_response(mock_connection: Mock,
                                                mock_uuid: Mock,
                                                monkeypatch: MonkeyPatch):
     # create client with same parameters, except a very short timeout
-    _thread = Rpc(CONN, RMQ_PARAMS.exchange, timeout=0.01)
+    _thread = RpcPublisher(CONN, RMQ_PARAMS.exchange, timeout=0.01)
 
     # do nothing on message publish
     monkeypatch.setattr('idsse.common.rabbitmq_utils._blocking_publish',
                         Mock(side_effect=lambda *_args, **_kwargs: None))
 
-    result = _thread.send_request(json.dumps({'data': 123}))
+    result = _thread.send_request(RabbitMqMessage(json.dumps({'data': 123})))
     assert EXAMPLE_UUID not in _thread._pending_requests  # request was cleaned up
     assert result is None
 
 
-def test_send_requests_returns_none_on_error(rpc_thread: Rpc,
-                                             mock_connection: Mock,
-                                             monkeypatch: MonkeyPatch):
+def test_send_requests_returns_none_on_error(rpc_thread: RpcPublisher, mock_channel: Mock):
     # pylint: disable=too-many-arguments
-    def mock_blocking_publish(channel, exch, message_params, queue = None, success_flag = None,
-                                done_event = None):
+    def mock_basic_publish(exchange, routing_key, body, properties = None, mandatory = False):
         # cause exception for pending request Future
         rpc_thread._pending_requests[EXAMPLE_UUID].set_exception(RuntimeError('Something broke'))
+    mock_channel.basic_publish.side_effect = mock_basic_publish
 
-    monkeypatch.setattr('idsse.common.rabbitmq_utils._blocking_publish',
-                        Mock(side_effect=mock_blocking_publish))
+    result = rpc_thread.send_request(RabbitMqMessage({'data': 123}))
 
-    result = rpc_thread.send_request({'data': 123})
     assert EXAMPLE_UUID not in rpc_thread._pending_requests  # request was cleaned up
     assert result is None
 
 
-def test_nacks_unrecognized_response(rpc_thread: Rpc,
+def test_nacks_unrecognized_response(rpc_thread: RpcPublisher,
                                      mock_connection: Mock,
                                      mock_channel: Mock,
                                      monkeypatch: MonkeyPatch):
@@ -358,6 +352,22 @@ def test_nacks_unrecognized_response(rpc_thread: Rpc,
     # pending requests inside Rpc was not touched
     assert 'abcd' in rpc_thread._pending_requests
     assert not rpc_thread._pending_requests['abcd'].done()
+
+
+def test_send_request_preserves_props(rpc_thread: RpcPublisher, mock_channel: Mock):
+    # pylint: disable=too-many-arguments
+    def mock_basic_publish(exchange, routing_key, body, properties = None, mandatory = False):
+        # cause exception for pending request Future
+        rpc_thread._pending_requests[EXAMPLE_UUID].set_exception(RuntimeError('Something broke'))
+    mock_channel.basic_publish.side_effect = mock_basic_publish
+
+    result = rpc_thread.send_request(RabbitMqMessage({'data': 123}))
+
+    assert EXAMPLE_UUID not in rpc_thread._pending_requests  # request was cleaned up
+    assert result is None
+
+
+# TODO: unit tests for RpcConsumer
 
 
 @fixture
