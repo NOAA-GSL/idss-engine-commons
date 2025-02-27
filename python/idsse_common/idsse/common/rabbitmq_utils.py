@@ -465,6 +465,15 @@ class RpcPublisher(Rpc):
     """
     # pylint: disable=arguments-renamed
     def send_request(self, request: RabbitMqMessage) -> RabbitMqMessage | None:
+        """_summary_
+
+        Args:
+            request (RabbitMqMessage): _description_
+
+        Returns:
+            RabbitMqMessage | None: The response message (body and properties), or None on request
+                timeout or error handling response.
+        """
         if not self.is_open:
             logger.debug('RPC thread not yet initialized. Setting up now')
             self.start()
@@ -496,7 +505,6 @@ class RpcPublisher(Rpc):
             # block until callback runs (we'll know when the future's result has been changed)
             return request_future.result(timeout=self._timeout)
         except TimeoutError:
-            # logger.warning('Timed out waiting for response. correlation_id: %s', request_id)
             logger.warning('Timed out waiting for response. rpc request_id: %s', request_id)
             self._pending_requests.pop(request_id)  # stop tracking request Future
             return None
@@ -533,8 +541,8 @@ class RpcConsumer():
         def on_receive_request(message: RabbitMqMessage):
             logger.info('Got request from external service: %s', message.body)
             if message.properties.content_type == 'application/json':
-                return RpcResponse(ack=True, message=RabbitMqMessage('success!'))
-            return RpcResponse(ack=False, requeue=False)
+                return RpcResponse(RabbitMqMessage('success!'), ack=True)
+            return RpcResponse(None, ack=False, requeue=True)
 
         my_consumer = RpcConsumer(<insert Conn>,
                                   RmqParams(<insert Exch>, <insert Queue>),
