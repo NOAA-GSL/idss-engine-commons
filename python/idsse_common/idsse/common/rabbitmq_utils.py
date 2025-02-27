@@ -273,7 +273,7 @@ class Publisher(Thread):
             route_key (str): Optional route key, overriding key provided during initialization
 
         Returns:
-            bool: Returns True if no errors ocurred during publication. If this
+            bool: Returns True if no errors occurred during publication. If this
                   publisher is configured to confirm delivery will return False if
                   failed to confirm.
         """
