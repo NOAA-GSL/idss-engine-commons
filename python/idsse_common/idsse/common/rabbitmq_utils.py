@@ -344,7 +344,7 @@ class Rpc:
         """Returns True if RabbitMQ connection (Publisher) is open and ready to send messages"""
         return self._consumer.is_alive() and self._consumer.channel.is_open
 
-    def send_request(self, request_body: str | bytes) -> RabbitMqMessage | None:
+    def send_request(self, request_body: str | bytes) -> RabbitMqMessage | None:  # pragma: no cover
         """Send message to remote RabbitMQ service using thread-safe RPC. Will block until response
         is received back, or timeout occurs.
 
@@ -609,9 +609,9 @@ class RpcConsumer():
 
         if response.ack:
             threadsafe_ack(channel,
-                              method.delivery_tag,
-                              lambda: logger.debug('Request %s was acked',
-                                                   properties.headers.get('rpc')))
+                           method.delivery_tag,
+                           lambda: logger.debug('Request %s was acked',
+                                                properties.headers.get('rpc')))
         else:
             threadsafe_nack(channel,
                             method.delivery_tag,
@@ -841,7 +841,6 @@ def _initialize_connection_and_channel(
         _channel = channel
 
     queue_name = _initialize_exchange_and_queue(_channel, params)
-
     return _connection, _channel, queue_name
 
 

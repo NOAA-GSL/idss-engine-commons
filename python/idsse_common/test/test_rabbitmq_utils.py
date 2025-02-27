@@ -23,9 +23,10 @@ from pika.adapters.blocking_connection import BlockingChannel
 from pika.exceptions import UnroutableError
 
 from idsse.common.rabbitmq_utils import (
-    Conn, Consumer, Exch, Future, Queue, Publisher, RabbitMqParams, RabbitMqParamsAndCallback,
-    RabbitMqMessage, RpcConsumer, RpcPublisher, RpcResponse, subscribe_to_queue,
-    _publish, _setup_exch_and_queue, threadsafe_call, threadsafe_ack, threadsafe_nack
+    DIRECT_REPLY_QUEUE, Conn, Consumer, Exch, Future, Queue, Publisher, RabbitMqParams,
+    RabbitMqParamsAndCallback, RabbitMqMessage, RpcConsumer, RpcPublisher, RpcResponse,
+    subscribe_to_queue, _publish, _setup_exch_and_queue, threadsafe_call, threadsafe_ack,
+    threadsafe_nack
 )
 
 # Example data objects
@@ -367,7 +368,59 @@ def test_send_request_preserves_props(rpc_thread: RpcPublisher, mock_channel: Mo
     assert result is None
 
 
-# TODO: unit tests for RpcConsumer
+def test_rpc_consumer_start_stop(mock_consumer: Mock):
+    mock_consumer.return_value.is_alive.return_value = False
+    rpc_consumer = RpcConsumer(CONN, RMQ_PARAMS, lambda: None)
+
+    rpc_consumer.start()
+    mock_consumer.return_value.start.assert_called_once()
+
+    mock_consumer.return_value.is_alive.return_value = True
+
+    rpc_consumer.stop()
+    mock_consumer.return_value.stop.assert_called_once()
+
+
+def test_rpc_consumer_on_message_ack(mock_channel: Mock, mock_consumer: Mock):
+    example_response = RabbitMqMessage('{"response": "bar"}',
+                                       BasicProperties(content_type='application/json',
+                                                       correlation_id='some-correlation-id'))
+    mock_on_request = Mock(return_value=RpcResponse(example_response, ack=True))
+    inbound_tag = 7
+    inbound_rpc_id = '123'
+    inbound_reply_to = f'{DIRECT_REPLY_QUEUE}.g1h2AA5yZXBseUA1NTQ3NDU0OQAWaZUAAAAAZ7FK9g=='
+    inbound_props = BasicProperties(content_type='text/html',
+                                    headers={'rpc': inbound_rpc_id},
+                                    reply_to=inbound_reply_to)
+    inbound_body = bytes('{"request": "foo"}', encoding='utf-8')
+    rpc_consumer = RpcConsumer(CONN, RMQ_PARAMS, mock_on_request)
+
+    rpc_consumer._on_message(mock_channel, Method('', '', inbound_tag), inbound_props, inbound_body)
+
+    mock_channel.basic_ack.assert_called_once_with(inbound_tag)
+    assert mock_channel.basic_publish.call_count == 1
+    published_args = mock_channel.basic_publish.call_args[1]
+    assert published_args['body'] == example_response.body
+    assert published_args['properties'].reply_to == inbound_reply_to
+    assert published_args['properties'].content_type == 'application/json'
+    assert published_args['properties'].correlation_id == 'some-correlation-id'
+    assert published_args['properties'].headers['rpc'] == inbound_rpc_id
+
+
+def test_rpc_consumer_on_message_nack(mock_channel: Mock, mock_consumer: Mock):
+    example_response = RabbitMqMessage('{"response": "bar"}',
+                                       BasicProperties(content_type='application/json'))
+    mock_on_request = Mock(return_value=RpcResponse(example_response, ack=False, requeue=True))
+    inbound_tag = 7
+    inbound_props = BasicProperties(content_type='application/json',
+                                    headers={'rpc': '123'},
+                                    reply_to=DIRECT_REPLY_QUEUE)
+    inbound_body = bytes('{"request": "foo"}', encoding='utf-8')
+    rpc_consumer = RpcConsumer(CONN, RMQ_PARAMS, mock_on_request)
+
+    rpc_consumer._on_message(mock_channel, Method('', '', inbound_tag), inbound_props, inbound_body)
+
+    mock_channel.basic_nack.assert_called_once_with(inbound_tag, requeue=True)
 
 
 @fixture
@@ -394,7 +447,6 @@ def mock_rmq_params_and_callback():
     return RabbitMqParamsAndCallback(params=params, callback=callback)
 
 
-
 @patch('idsse.common.rabbitmq_utils.BlockingConnection')
 @patch('idsse.common.rabbitmq_utils.ThreadPoolExecutor')
 def test_consumer_initialization(mock_executor, mock_blocking_connection, mock_conn_params,
@@ -417,8 +469,6 @@ def test_consumer_start(mock_executor, mock_blocking_connection, mock_conn_param
         start_consuming.assert_called_once()
 
 
-
-
 @patch('idsse.common.rabbitmq_utils.BlockingConnection')
 @patch('idsse.common.rabbitmq_utils.ThreadPoolExecutor')
 def test_on_message(mock_executor, mock_blocking_connection, mock_conn_params,
@@ -434,6 +484,7 @@ def test_on_message(mock_executor, mock_blocking_connection, mock_conn_params,
                                                               ANY,
                                                               ANY,
                                                               b"Test Message")
+
 
 @fixture
 def mock_message():
