@@ -57,6 +57,7 @@ def mock_channel() -> Mock:
     """Mock pika.adapters.blocking_connection.BlockingChannel object"""
     def mock_queue_declare(queue: str, **_kwargs) -> Method:
         return Frame(Method(queue=queue))  # create a usable (mock) Frame using queue name passed
+
     def mock_exch_declare(exchange: str, **_kwargs) -> Method:
         return Frame(Method(exchange=exchange))
 
@@ -328,8 +329,8 @@ def test_send_requests_returns_none_on_error(rpc_thread: Rpc,
                                              mock_connection: Mock,
                                              monkeypatch: MonkeyPatch):
     # pylint: disable=too-many-arguments
-    def mock_blocking_publish(channel, exch, message_params, queue = None, success_flag = None,
-                                done_event = None):
+    def mock_blocking_publish(channel, exch, message_params, queue=None, success_flag=None,
+                              done_event=None):
         # cause exception for pending request Future
         rpc_thread._pending_requests[EXAMPLE_UUID].set_exception(RuntimeError('Something broke'))
 
@@ -383,7 +384,6 @@ def mock_rmq_params_and_callback():
     return RabbitMqParamsAndCallback(params=params, callback=callback)
 
 
-
 @patch('idsse.common.rabbitmq_utils.BlockingConnection')
 @patch('idsse.common.rabbitmq_utils.ThreadPoolExecutor')
 def test_consumer_initialization(mock_executor, mock_blocking_connection, mock_conn_params,
@@ -406,8 +406,6 @@ def test_consumer_start(mock_executor, mock_blocking_connection, mock_conn_param
         start_consuming.assert_called_once()
 
 
-
-
 @patch('idsse.common.rabbitmq_utils.BlockingConnection')
 @patch('idsse.common.rabbitmq_utils.ThreadPoolExecutor')
 def test_on_message(mock_executor, mock_blocking_connection, mock_conn_params,
@@ -423,6 +421,7 @@ def test_on_message(mock_executor, mock_blocking_connection, mock_conn_params,
                                                               ANY,
                                                               ANY,
                                                               b"Test Message")
+
 
 @fixture
 def mock_message():
