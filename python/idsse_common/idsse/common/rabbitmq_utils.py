@@ -465,10 +465,12 @@ class RpcPublisher(Rpc):
     """
     # pylint: disable=arguments-renamed
     def send_request(self, request: RabbitMqMessage) -> RabbitMqMessage | None:
-        """_summary_
+        """Send message to remote RabbitMQ service using thread-safe RPC. Will block until response
+        is received back, or timeout occurs.
 
         Args:
-            request (RabbitMqMessage): _description_
+            request (RabbitMqMessage): the RabbitMQ message body and (optional) properties to send
+                as a "request" to the listening RpcConsumer service.
 
         Returns:
             RabbitMqMessage | None: The response message (body and properties), or None on request
