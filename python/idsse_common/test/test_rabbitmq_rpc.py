@@ -9,7 +9,7 @@
 #
 # ------------------------------------------------------------------------------
 # pylint: disable=missing-function-docstring,missing-class-docstring,too-few-public-methods
-# pylint: disable=redefined-outer-name,unused-argument,protected-access
+# pylint: disable=redefined-outer-name,unused-argument,protected-access,duplicate-code
 import json
 from typing import NamedTuple
 from unittest.mock import Mock

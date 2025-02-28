@@ -71,7 +71,7 @@ class RpcPublisher(Rpc):
         logger.info(f'Got response from external service: {response}')
         ```
     """
-    # pylint: disable=arguments-renamed
+    # pylint: disable=arguments-renamed,duplicate-code
     def send_request(self, request: RabbitMqMessage) -> RabbitMqMessage | None:
         """Send message to remote RabbitMQ service using thread-safe RPC. Will block until response
         is received back, or timeout occurs.
