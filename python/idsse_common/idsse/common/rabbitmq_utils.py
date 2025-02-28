@@ -17,7 +17,6 @@ import uuid
 
 from collections.abc import Callable
 from concurrent.futures import Future, ThreadPoolExecutor
-from copy import deepcopy
 from functools import partial
 from threading import Event, Thread
 from typing import NamedTuple
