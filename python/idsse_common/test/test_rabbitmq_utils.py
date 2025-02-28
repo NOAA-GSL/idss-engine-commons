@@ -54,6 +54,7 @@ def mock_channel() -> Mock:
     """Mock pika.adapters.blocking_connection.BlockingChannel object"""
     def mock_queue_declare(queue: str, **_kwargs) -> Method:
         return Frame(Method(queue=queue))  # create a usable (mock) Frame using queue name passed
+
     def mock_exch_declare(exchange: str, **_kwargs) -> Method:
         return Frame(Method(exchange=exchange))
 

@@ -96,6 +96,9 @@ jobs:
       run: |
         docker push ${{env.DEV_REGISTRY}}/${{env.APP_LOWERCASE}}:${{env.BRANCH}}
     
+    # DAS will be triggered by commons-sci-updated trigger, predicated on
+    # the sci package taking a lot longer to build than this base package,
+    # this latest base package will be available when sci triggers
     - name: Trigger Dependent Repository Workflows
       run: |
         DEPENDENT_REPOS=(
