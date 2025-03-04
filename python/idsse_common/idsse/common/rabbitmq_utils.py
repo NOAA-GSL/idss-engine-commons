@@ -10,14 +10,13 @@
 #     Mackenzie Grimes (2)
 #
 # ----------------------------------------------------------------------------------
-
 import contextvars
 import logging
 import logging.config
 import uuid
 
-from concurrent.futures import Future, ThreadPoolExecutor
 from collections.abc import Callable
+from concurrent.futures import Future, ThreadPoolExecutor
 from functools import partial
 from threading import Event, Thread
 from typing import NamedTuple
@@ -96,7 +95,7 @@ class RabbitMqMessage(NamedTuple):
     Data class to hold a RabbitMQ message body, properties, and optional route_key (if outbound)
     """
     body: str
-    properties: BasicProperties
+    properties: BasicProperties = BasicProperties()
     route_key: str | None = None
 
 
@@ -277,7 +276,7 @@ class Publisher(Thread):
                   publisher is configured to confirm delivery will return False if
                   failed to confirm.
         """
-        return _blocking_publish(self.channel,
+        return blocking_publish(self.channel,
                                  self._exch,
                                  RabbitMqMessage(message, properties, route_key),
                                  self._queue)
@@ -296,6 +295,8 @@ class Publisher(Thread):
 
 class Rpc:
     """
+    !! DEPRECATED !! Use `rabbitmq_rpc.RpcPublisher` instead.
+
     RabbitMQ RPC (remote procedure call) client, runs in own thread to not block heartbeat.
     The start() and stop() methods should be called from the same thread that created the instance.
 
@@ -308,12 +309,11 @@ class Rpc:
     is not yet supported by Rpc.
 
     Example usage:
-
+        ```
         my_client = RpcClient(...insert params here...)
-
         response = my_client.send_message('{"some": "json"}')  # blocks while waiting for response
-
         logger.info(f'Response from external service: {response}')
+        ```
     """
     def __init__(self, conn_params: Conn, exch: Exch, timeout: float | None = None):
         """
@@ -332,18 +332,17 @@ class Rpc:
         self._pending_requests: dict[str, Future] = {}
 
         # Start long-running thread to consume any messages from response queue
-        self._consumer = Consumer(
-            conn_params,
-            RabbitMqParamsAndCallback(RabbitMqParams(Exch('', 'direct'), self._queue),
-                                      self._on_response)
-        )
+        self._consumer = Consumer(conn_params,
+                                  RabbitMqParamsAndCallback(
+                                      RabbitMqParams(Exch('', 'direct'), self._queue),
+                                      self._on_response))
 
     @property
     def is_open(self) -> bool:
         """Returns True if RabbitMQ connection (Publisher) is open and ready to send messages"""
         return self._consumer.is_alive() and self._consumer.channel.is_open
 
-    def send_request(self, request_body: str | bytes) -> RabbitMqMessage | None:
+    def send_request(self, request_body: str | bytes) -> RabbitMqMessage | None:  # pragma: no cover
         """Send message to remote RabbitMQ service using thread-safe RPC. Will block until response
         is received back, or timeout occurs.
 
@@ -368,7 +367,7 @@ class Rpc:
         self._pending_requests[request_id] = request_future
 
         logger.debug('Publishing request message to external service with body: %s', request_body)
-        _blocking_publish(self._consumer.channel,
+        blocking_publish(self._consumer.channel,
                           self._exch,
                           RabbitMqMessage(request_body, properties, self._exch.route_key),
                           self._queue)
@@ -410,7 +409,7 @@ class Rpc:
             channel: Channel,
             method: Basic.Deliver,
             properties: BasicProperties,
-            body: bytes
+            body: bytes,
     ):
         """Handle RabbitMQ message emitted to response queue."""
         logger.debug('Received response with routing_key: %s, content_type: %s, message: %i',
@@ -439,8 +438,7 @@ class Rpc:
 def subscribe_to_queue(
     connection: Conn | BlockingConnection,
     rmq_params: RabbitMqParams,
-    on_message_callback: Callable[
-        [Channel, Basic.Deliver, BasicProperties, bytes], None],
+    on_message_callback: Callable[[Channel, Basic.Deliver, BasicProperties, bytes], None],
     channel: Channel | None = None
 ) -> tuple[BlockingConnection, BlockingChannel]:
     """
@@ -576,6 +574,40 @@ def threadsafe_nack(
         threadsafe_call(channel, lambda: channel.basic_nack(delivery_tag, requeue=requeue))
 
 
+def blocking_publish(
+        channel: BlockingChannel,
+        exch: Exch,
+        message_params: RabbitMqMessage,
+        queue: Queue | None = None,
+) -> bool:
+    """
+    Threadsafe, blocking publish on the specified RabbitMQ exch via the provided channel.
+    Is thread-safe.
+
+    Args:
+        channel (BlockingChannel): the pika channel to use to publish.
+        exch (Exch): parameters for the RabbitMQ exchange to publish message to.
+        message_params (RabbitMqMessage): the message body to publish, plus properties and
+        queue (optional, Queue | None): parameters for RabbitMQ queue, if message is being
+            published to a "temporary"/"private" message queue. The published message will be
+            purged from this queue after its TTL expires.
+            Default is None (destination queue not private).
+    Returns:
+        (bool) True if message published successfully. If the provided queue is confirmed to
+            confirm delivery, will return False if failed to confirm.
+    """
+    success_flag = [False]
+    done_event = Event()
+    threadsafe_call(channel, lambda: _publish(channel,
+                                              exch,
+                                              message_params,
+                                              queue,
+                                              success_flag,
+                                              done_event))
+    done_event.wait()
+    return success_flag[0]
+
+
 def _initialize_exchange_and_queue(channel: Channel, params: RabbitMqParams) -> str:
     """Declare and bind RabbitMQ exchange and queue using the provided channel.
 
@@ -638,7 +670,6 @@ def _initialize_connection_and_channel(
         _channel = channel
 
     queue_name = _initialize_exchange_and_queue(_channel, params)
-
     return _connection, _channel, queue_name
 
 
@@ -748,40 +779,6 @@ def _publish(channel: BlockingChannel,
     finally:
         if done_event:
             done_event.set()
-
-
-def _blocking_publish(
-        channel: BlockingChannel,
-        exch: Exch,
-        message_params: RabbitMqMessage,
-        queue: Queue | None = None,
-) -> bool:
-    """
-    Threadsafe, blocking publish on the specified RabbitMQ exch via the provided channel.
-    Is thread-safe.
-
-    Args:
-        channel (BlockingChannel): the pika channel to use to publish.
-        exch (Exch): parameters for the RabbitMQ exchange to publish message to.
-        message_params (RabbitMqMessage): the message body to publish, plus properties and
-        queue (optional, Queue | None): parameters for RabbitMQ queue, if message is being
-            published to a "temporary"/"private" message queue. The published message will be
-            purged from this queue after its TTL expires.
-            Default is None (destination queue not private).
-    Returns:
-        (bool) True if message published successfully. If the provided queue is confirmed to
-            confirm delivery, will return False if failed to confirm.
-    """
-    success_flag = [False]
-    done_event = Event()
-    threadsafe_call(channel, lambda: _publish(channel,
-                                              exch,
-                                              message_params,
-                                              queue,
-                                              success_flag,
-                                              done_event))
-    done_event.wait()
-    return success_flag[0]
 
 
 def _set_context(context):
