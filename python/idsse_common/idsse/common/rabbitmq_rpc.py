@@ -22,9 +22,11 @@ from pika.spec import Basic, BasicProperties
 from .rabbitmq_utils import (Conn,
                              Consumer,
                              Exch,
+                             Queue,
                              RabbitMqParams,
                              RabbitMqParamsAndCallback,
-                             Rpc, RabbitMqMessage,
+                             RabbitMqMessage,
+                             DIRECT_REPLY_QUEUE,
                              threadsafe_ack,
                              threadsafe_nack,
                              blocking_publish)
@@ -45,9 +47,7 @@ class RpcResponse(NamedTuple):
     requeue: bool = False
 
 
-# Tech debt: this is a temporary class "alias" to Rpc to match naming convention of
-# `RpcConsumer`. Will be deleted (and `Rpc` renamed) after current usages of `Rpc` are migrated
-class RpcPublisher(Rpc):
+class RpcPublisher():
     """RabbitMQ RPC (remote procedure call) publishing client, runs in own thread to not block
     heartbeat. This class can be used to send "requests" (outbound messages) over RabbitMQ and
     block until a "response" (inbound message) comes back from an `RpcConsumer` instance.
@@ -71,7 +71,33 @@ class RpcPublisher(Rpc):
         logger.info(f'Got response from external service: {response}')
         ```
     """
-    # pylint: disable=arguments-renamed,duplicate-code
+    def __init__(self, conn_params: Conn, exch: Exch, timeout: float | None = None):
+        """
+        Args:
+            conn_params (Conn): parameters to connect to RabbitMQ server
+            exch (Exch): parameters of RMQ Exchange where messages should be sent
+            timeout (float | None): optional timeout to give up on receiving each response.
+                Default is None, meaning wait indefinitely for response from external RMQ service.
+        """
+        self._exch = exch
+        self._timeout = timeout
+        # only publish to built-in Direct Reply-to queue (recommended for RPC, less setup needed)
+        self._queue = Queue(DIRECT_REPLY_QUEUE, '', True, False, False)
+
+        # worklist to track corr_ids sent to remote service, and associated response when it arrives
+        self._pending_requests: dict[str, Future] = {}
+
+        # Start long-running thread to consume any messages from response queue
+        self._consumer = Consumer(conn_params,
+                                  RabbitMqParamsAndCallback(
+                                      RabbitMqParams(Exch('', 'direct'), self._queue),
+                                      self._on_response))
+
+    @property
+    def is_open(self) -> bool:
+        """Returns True if RabbitMQ connection (Publisher) is open and ready to send messages"""
+        return self._consumer.is_alive() and self._consumer.channel.is_open
+
     def send_request(self, request: RabbitMqMessage) -> RabbitMqMessage | None:
         """Send message to remote RabbitMQ service using thread-safe RPC. Will block until response
         is received back, or timeout occurs.
@@ -122,6 +148,53 @@ class RpcPublisher(Rpc):
             logger.warning('Unexpected response from external service: %s', str(exc))
             self._pending_requests.pop(request_id)  # stop tracking request Future
             return None
+
+    def start(self):
+        """Start dedicated threads to asynchronously send and receive RPC messages using a new
+        RabbitMQ connection and channel. Note: this method can be called externally, but it is
+        not required to use the client. It will automatically call this internally as needed."""
+        if not self.is_open:
+            logger.debug('Starting RPC thread to send and consume messages')
+            self._consumer.start()
+
+    def stop(self):
+        """Unsubscribe to Direct Reply-To queue and cleanup thread"""
+        logger.debug('Shutting down RPC threads')
+        if not self.is_open:
+            logger.debug('RPC threads not running, nothing to cleanup')
+            return
+
+        # tell Consumer cleanup RabbitMQ resources and wait for thread to terminate
+        self._consumer.stop()
+        self._consumer.join()
+
+    def _on_response(self,
+                     channel: Channel,
+                     method: Basic.Deliver,
+                     properties: BasicProperties,
+                     body: bytes):
+        """Handle RabbitMQ message emitted to response queue."""
+        logger.debug('Received response with routing_key: %s, content_type: %s, message: %i',
+                     method.routing_key, properties.content_type, str(body, encoding='utf-8'))
+
+        # messages sent through RabbitMQ Direct reply-to are auto acked
+        is_direct_reply = str(method.routing_key).startswith(DIRECT_REPLY_QUEUE)
+
+        # remove future from pending list. we will update result shortly
+        request_id = properties.headers.get('rpc')
+        if request_id not in self._pending_requests:
+            logger.warning(('Received response whose headers.rpc does not match any pending '
+                            'request, unable to resolve Future. headers: %s'), properties.headers)
+            if not is_direct_reply:
+                channel.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+            return None
+
+        request_future = self._pending_requests.pop(request_id)
+        if not is_direct_reply:
+            channel.basic_ack(delivery_tag=method.delivery_tag)
+
+        # update future with response body to communicate it back up to main thread
+        return request_future.set_result(RabbitMqMessage(str(body, encoding='utf-8'), properties))
 
 
 class RpcConsumer():
