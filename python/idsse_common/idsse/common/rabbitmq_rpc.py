@@ -183,10 +183,10 @@ class RpcPublisher():
         # remove future from pending list. we will update result shortly
         request_id = properties.headers.get('rpc')
         if request_id not in self._pending_requests:
-            logger.warning(('Received response whose headers.rpc does not match any pending '
-                            'request, unable to resolve Future. headers: %s'), properties.headers)
+            logger.debug(('Received response whose headers.rpc does not match any pending '
+                           'request, may have already timed out. headers: %s'), properties.headers)
             if not is_direct_reply:
-                channel.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+                channel.basic_ack(delivery_tag=method.delivery_tag)
             return None
 
         request_future = self._pending_requests.pop(request_id)
