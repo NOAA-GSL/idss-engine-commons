@@ -198,9 +198,8 @@ def test_nacks_unrecognized_response(rpc_thread: RpcPublisher,
 
     rpc_thread._on_response(mock_channel, Method(delivery_tag=delivery_tag), props, body)
 
-    # unregistered message was nacked
-    mock_channel.basic_nack.assert_called_with(delivery_tag=delivery_tag, requeue=False)
-    # pending requests inside Rpc was not touched
+    # unregistered message was acked with no-op (nothing was done to pending requests)
+    mock_channel.basic_ack.assert_called_with(delivery_tag=delivery_tag)
     assert 'abcd' in rpc_thread._pending_requests
     assert not rpc_thread._pending_requests['abcd'].done()
 
