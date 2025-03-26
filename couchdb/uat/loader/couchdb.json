@@ -1,6 +1,6 @@
 {
-    "hostname" : "couchdb-svc-couchdb",
-    "username": "admin",
-    "password": "admin",
-    "database": "idss"
+  "hostname": "localhost",
+  "username": "guest",
+  "password": "guest",
+  "database": "idss"
 }
