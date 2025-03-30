@@ -2,6 +2,7 @@
     "Product": {
       "description": "Identifier for supported products",
       "type": "string",
-      "enum": ["NBM", "NBM.AWS", "NBM.AWS.GRIB", "MRMS"]
+      "enum":
+       ["NBM", "NBM.AWS", "NBM.AWS.GRIB", "MRMS.HTTP.CREF", "MRMS.HTTP.LIGHTNING"]
     }
 }
