@@ -97,7 +97,7 @@ class ProtocolUtils(ABC):
     def get_issues(self,
                    num_issues: int = 1,
                    issue_start: datetime | None = None,
-                   issue_end: datetime = datetime.now(UTC),
+                   issue_end: datetime | None = None,
                    time_delta: timedelta = timedelta(hours=1),
                    **kwargs
                    ) -> Sequence[datetime]:
@@ -116,6 +116,9 @@ class ProtocolUtils(ABC):
         zero_time_delta = timedelta(seconds=0)
         if time_delta == zero_time_delta:
             raise ValueError('Time delta must be non zero')
+
+        if not issue_end:
+            issue_end = datetime.now(UTC)
 
         issues_set: set[datetime] = set()
         if issue_start:
@@ -207,12 +210,14 @@ class ProtocolUtils(ABC):
                                             Empty Sequence if no valids found for given time range.
         """
         issues_set: set[datetime] = set()
-        for file_path in sorted(self.ls(dir_path), reverse=True):
-            if file_path.endswith(self.path_builder.file_ext):
-                try:
-                    issues_set.add(self.path_builder.get_issue(file_path))
-                    if num_issues and len(issues_set) >= num_issues:
-                        break
-                except ValueError:  # Ignore invalid filepaths...
-                    pass
+        # sort files alphabetically in reverse; this should give us the longest lead time first
+        filepaths = sorted((f for f in self.ls(dir_path) if f.endswith(self.path_builder.file_ext)),
+                           reverse=True)
+        for file_path in filepaths:
+            try:
+                issues_set.add(self.path_builder.get_issue(file_path))
+                if num_issues and len(issues_set) >= num_issues:
+                    break
+            except ValueError:  # Ignore invalid filepaths...
+                pass
         return issues_set
