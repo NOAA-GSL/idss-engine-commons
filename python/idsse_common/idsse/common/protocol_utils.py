@@ -2,11 +2,11 @@
 # -------------------------------------------------------------------------------
 # Created on Tue Dec 3 2024
 #
-# Copyright (c) 2023 Colorado State University. All rights reserved.             (1)
-# Copyright (c) 2023 Regents of the University of Colorado. All rights reserved. (2)
+# Copyright (c) 2024 Colorado State University. All rights reserved.             (1)
 #
 # Contributors:
 #     Paul Hamer (1)
+#     Mackenzie Grimes (1)
 #
 # -------------------------------------------------------------------------------
 import fnmatch
@@ -211,7 +211,9 @@ class ProtocolUtils(ABC):
         """
         issues_set: set[datetime] = set()
         # sort files alphabetically in reverse; this should give us the longest lead time first
-        filepaths = sorted((f for f in self.ls(dir_path) if f.endswith(self.path_builder.file_ext)),
+        # which is more indicative that the issueDt is fully available on this server
+        filepaths = sorted((f for f in self.ls(dir_path)
+                            if f.endswith(self.path_builder.file_ext)),
                            reverse=True)
         for file_path in filepaths:
             try:
