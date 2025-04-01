@@ -180,12 +180,33 @@ def test_get_issues_with_same_start_stop(aws_utils: AwsUtils, mock_exec_cmd):
     assert result[0] == EXAMPLE_ISSUE
 
 
-def test_get_issues_latest_issue_default_today(aws_utils: AwsUtils, mock_exec_cmd):
+def test_get_issues_latest_issue_default_today(aws_utils: AwsUtils,
+                                               mock_exec_cmd: Mock,
+                                               monkeypatch: MonkeyPatch):
+    # first time .now() is called, it's 12:59. Next call, it's 13:01
+    example_datetimes = [datetime(2025, 1, 1, 12, 59, tzinfo=UTC),
+                         datetime(2025, 1, 1, 13, 1, tzinfo=UTC)]
+    mock_datetime = Mock(spec=datetime, now=Mock(side_effect=example_datetimes))
+    monkeypatch.setattr('idsse.common.protocol_utils.datetime', mock_datetime)
+
     result = aws_utils.get_issues()
     # with current mocks returned issue (latest issue) will always be "now" with
     # truncated minute, second, and microsecond
     assert len(result) == 1
-    assert result[0] == datetime.now(UTC).replace(minute=0, second=0, microsecond=0)
+
+    assert result[0] == example_datetimes[0].replace(minute=0)
+    # should have ls'd the 12Z directory in AWS
+    aws_dir = mock_exec_cmd.call_args[0][0][3]
+    assert aws_utils.path_builder.parse_dir(aws_dir)['issue.hour'] == example_datetimes[0].hour
+
+    # simulate the passage of time: it's now 13:01 and a new 13Z issueDt has appeared
+    result = aws_utils.get_issues()
+
+    assert result[0] == example_datetimes[1].replace(minute=0)
+    # should have ls'd the 13Z directory in AWS
+    aws_dir = mock_exec_cmd.call_args[0][0][3]
+    assert aws_utils.path_builder.parse_dir(aws_dir)['issue.hour'] == example_datetimes[1].hour
+
 
 
 def test_get_valids_all(aws_utils: AwsUtils, mock_exec_cmd):
