@@ -32,8 +32,8 @@ class HttpUtils(ProtocolUtils):
         Returns:
             Sequence[str]: The results from executing a request get on passed path
         """
+        files = []
         try:
-            files = []
             response = requests.get(path, timeout=5)
             response.raise_for_status()  # Raise an exception for bad status codes
 
@@ -46,7 +46,8 @@ class HttpUtils(ProtocolUtils):
                         files.append(filename)
 
         except requests.exceptions.RequestException as exp:
-            logger.warning('Unable to query supplied Path : %s', str(exp))
+            if "403" not in str(exp):
+                logger.warning('Unable to query supplied Path : %s', str(exp))
             return []
         files = sorted(files, reverse=True)
         if prepend_path:
