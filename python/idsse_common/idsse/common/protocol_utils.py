@@ -119,7 +119,6 @@ class ProtocolUtils(ABC):
 
         if not issue_end:
             issue_end = datetime.now(UTC)
-
         issues_set: set[datetime] = set()
         if issue_start:
             datetimes = datetime_gen(issue_end, time_delta, issue_start, num_issues)
