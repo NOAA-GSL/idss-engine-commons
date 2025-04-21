@@ -1,42 +1,44 @@
 ============================= test session starts ==============================
-platform linux -- Python 3.11.11, pytest-8.3.4, pluggy-1.5.0
+platform linux -- Python 3.11.12, pytest-8.3.5, pluggy-1.5.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
-plugins: cov-4.1.0, pytest_httpserver-1.1.0
-collected 235 items
+plugins: cov-4.1.0, pytest_httpserver-1.1.3
+collected 258 items
 
 test/sci/test_bit_pack.py ........                                       [  3%]
-test/sci/test_geo_image.py ......................                        [ 12%]
-test/sci/test_grid_proj.py .......................                       [ 22%]
-test/sci/test_netcdf_io.py ....                                          [ 24%]
-test/sci/test_vectaster.py ...............                               [ 30%]
-test/test_aws_utils.py ..................                                [ 38%]
-test/test_config.py ............                                         [ 43%]
-test/test_http_utils.py .............                                    [ 48%]
-test/test_json_message.py ...........                                    [ 53%]
-test/test_log_util.py .......                                            [ 56%]
-test/test_path_builder.py ...................                            [ 64%]
-test/test_rabbitmq_utils.py ............                                 [ 69%]
-test/test_utils.py ...........................                           [ 81%]
-test/test_validate_criteria_schema.py ......                             [ 83%]
-test/test_validate_das_schema.py ...............                         [ 90%]
+test/sci/test_geo_image.py ......................                        [ 11%]
+test/sci/test_grid_proj.py .......................                       [ 20%]
+test/sci/test_netcdf_io.py ....                                          [ 22%]
+test/sci/test_vectaster.py ...............                               [ 27%]
+test/test_aws_utils.py ...................                               [ 35%]
+test/test_config.py ............                                         [ 39%]
+test/test_http_utils.py .............                                    [ 44%]
+test/test_json_message.py ...........                                    [ 49%]
+test/test_log_util.py .......                                            [ 51%]
+test/test_path_builder.py ...................                            [ 59%]
+test/test_rabbitmq_rpc.py ..........                                     [ 63%]
+test/test_rabbitmq_utils.py ........................                     [ 72%]
+test/test_utils.py ...........................                           [ 82%]
+test/test_validate_criteria_schema.py ......                             [ 85%]
+test/test_validate_das_schema.py ...............                         [ 91%]
 test/test_validate_das_web_schema.py .........                           [ 94%]
 test/test_validate_event_port_schema.py .....                            [ 96%]
 test/test_validate_new_data_schema.py .........                          [100%]
 
 - generated xml file: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/pytest.xml -
 
----------- coverage: platform linux, python 3.11.11-final-0 ----------
+---------- coverage: platform linux, python 3.11.12-final-0 ----------
 Name                              Stmts   Miss  Cover
 -----------------------------------------------------
 idsse/common/__init__.py              0      0   100%
-idsse/common/aws_utils.py            39      2    95%
+idsse/common/aws_utils.py            43      2    95%
 idsse/common/config.py               69      5    93%
-idsse/common/http_utils.py           39      7    82%
+idsse/common/http_utils.py           40      4    90%
 idsse/common/json_message.py         24      1    96%
 idsse/common/log_util.py             41      3    93%
 idsse/common/path_builder.py        211     22    90%
-idsse/common/protocol_utils.py       82      8    90%
-idsse/common/rabbitmq_utils.py      264     95    64%
+idsse/common/protocol_utils.py       84      8    90%
+idsse/common/rabbitmq_rpc.py        110      2    98%
+idsse/common/rabbitmq_utils.py      217     28    87%
 idsse/common/sci/__init__.py          0      0   100%
 idsse/common/sci/bit_pack.py         84      3    96%
 idsse/common/sci/geo_image.py       236     17    93%
@@ -47,6 +49,6 @@ idsse/common/sci/vectaster.py       190     17    91%
 idsse/common/utils.py               128     12    91%
 idsse/common/validate_schema.py      40      0   100%
 -----------------------------------------------------
-TOTAL                              1600    193    88%
+TOTAL                              1670    125    93%
 
-============================= 235 passed in 5.97s ==============================
+============================= 258 passed in 6.24s ==============================
