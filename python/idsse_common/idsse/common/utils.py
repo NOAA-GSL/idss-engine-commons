@@ -133,7 +133,7 @@ class FileBasedLock():
         self._max_age = max_age
 
     def __enter__(self):
-        self.acquire()  # TODO is this functional?
+        self.acquire()
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -146,13 +146,16 @@ class FileBasedLock():
 
     @property
     def expired(self) -> bool:
-        """True if lock is older than `ttl` milliseconds and should be considered orphaned"""
-        current_age = (
-            datetime.now(UTC).timestamp() - os.stat(self._lock_path).st_birthtime
-            if self.locked
-            else math.inf
-        )
-        return self.locked and current_age >= self._max_age
+        """True if lock is older than `_max_age` seconds and should be considered orphaned"""
+        if not self.locked:
+            return False  # lock cannot be expired if it isn't locked
+
+        try:
+            creation_time = os.stat(self._lock_path).st_birthtime
+        except AttributeError:
+            # Linux (and maybe Windows) don't support birthtime
+            creation_time = os.stat(self._lock_path).st_ctime
+        return (datetime.now(UTC).timestamp() - creation_time) >= self._max_age
 
     def acquire(self, timeout=300.0) -> bool:
         """Block until the desired file (declared in FileLock __init__) is free to read/write.
