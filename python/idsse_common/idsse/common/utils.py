@@ -12,10 +12,12 @@
 import copy
 import logging
 import math
+import os
 from collections.abc import Sequence
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from enum import Enum
 from subprocess import PIPE, Popen, TimeoutExpired
+from time import sleep
 from typing import Any, Generator
 from uuid import UUID
 
@@ -96,6 +98,104 @@ class Map(dict):
         del self.__dict__[key]
 
 
+class FileBasedLock():
+    """
+    Ensure atomic read/write of a given file using only the filesystem; behavior is the same
+    whether workers accessing the file are distributed across Python threads, subprocesses,
+    Docker containers, VMs, etc.
+
+    Note: this thread must have permissions to WRITE as well as read on the filesystem where
+    this file is stored.
+
+    Example usage:
+    ```
+    file_of_interest = './foo.txt'
+    with FileBasedLock(file_of_interest):
+        # now guaranteed that no other process on any machine is accessing this file
+        with open(file_of_interest, 'a') as f:
+            f.write('hello world')
+    # lock is now released for other threads/processes
+    ```
+    """
+    def __init__(self, filepath: str, max_age: float):
+        """
+        Args:
+            filepath (str): The file on which the caller wants to do atomic I/O (read/write)
+            max_age (float): The maximum time (seconds) after which a `.lock` file will be treated
+                as `expired` or "orphaned" by a process/thread that was unexpectedly exited.
+                FileBasedLocks are auto-released after this duration and the original locker
+                loses all guarantees of atomicity. Recommended to keep this short (10 minutes?),
+                based on how long a single thread could reasonably being expected to read/write
+                for this file type and usage.
+        """
+        self.filepath = filepath
+        self._lock_path = f'{self.filepath}.lock'
+        self._max_age = max_age
+
+    def __enter__(self):
+        self.acquire()  # TODO is this functional?
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return self.release()
+
+    @property
+    def locked(self) -> bool:
+        """True if some thread has already locked this file resource"""
+        return os.path.exists(self._lock_path)
+
+    @property
+    def expired(self) -> bool:
+        """True if lock is older than `ttl` milliseconds and should be considered orphaned"""
+        current_age = (
+            datetime.now(UTC).timestamp() - os.stat(self._lock_path).st_birthtime
+            if self.locked
+            else math.inf
+        )
+        return self.locked and current_age >= self._max_age
+
+    def acquire(self, timeout=300.0) -> bool:
+        """Block until the desired file (declared in FileLock __init__) is free to read/write.
+        Does this by creating a `.lock` file that communicates to other `FileBasedLock` instances
+        that this file is in use.
+
+        If `_max_age` has passed, lock will be forcefully released before acquiring for this caller.
+
+        Args:
+            timeout (float, optional): Number of seconds until TimeoutError will be raised.
+                Defaults to 300.
+
+        Raises:
+            TimeoutError: if timeout was exceeded waiting for lock to be released
+        """
+
+        wait_ms = 0
+        while self.locked and not self.expired and wait_ms / 1000 < timeout:
+            sleep(0.01)
+            wait_ms += 10
+
+        if wait_ms / 1000 >= timeout:
+            raise TimeoutError
+
+        if self.expired:
+            self.release()  # _max_age has passed, consider this lock abandoned and delete it
+
+        self._create_lockfile()  # this actually acquires the lock
+        return True
+
+    def release(self) -> bool:
+        """Release the lock so other processes/threads can do I/O"""
+        if not self.locked:
+            return False
+        os.remove(self._lock_path)
+        return True
+
+    def _create_lockfile(self):
+        """The actual functionality triggered by `acquire()` (after lock is confirmed free)"""
+        with open(self._lock_path, 'a', encoding='utf-8') as file:
+            file.write('')
+
+
 def exec_cmd(commands: Sequence[str], timeout: int | None = None) -> Sequence[str]:
     """Execute the passed commands via a Popen call
 
@@ -130,7 +230,7 @@ def to_iso(date_time: datetime) -> str:
     """Format a datetime instance to an ISO string"""
     return (f'{date_time.strftime("%Y-%m-%dT%H:%M")}:'
             f'{(date_time.second + date_time.microsecond / 1e6):06.3f}'
-            'Z' if date_time.tzname() in [None, str(timezone.utc)]
+            'Z' if date_time.tzname() in [None, str(UTC)]
             else date_time.strftime("%Z")[3:])
 
 
