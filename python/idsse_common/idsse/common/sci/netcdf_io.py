@@ -20,6 +20,8 @@ from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 import h5netcdf as h5nc
 import numpy as np
 
+from ..utils import FileBasedLock
+
 logger = logging.getLogger(__name__)
 
 
@@ -73,12 +75,13 @@ def read_netcdf(filepath: str, use_h5_lib: bool = False) -> tuple[dict, np.ndarr
             return nc_file.attrs, grid
 
     # otherwise, use netcdf4 library (default)
-    with Dataset(filepath) as dataset:
-        dataset.set_auto_maskandscale(False)
-        grid = dataset.variables['grid'][:]
+    with FileBasedLock(filepath, max_age=60):
+        with Dataset(filepath) as dataset:
+            dataset.set_auto_maskandscale(False)
+            grid = dataset.variables['grid'][:]
 
-        global_attrs = _read_attrs(dataset)
-        return global_attrs, grid
+            global_attrs = _read_attrs(dataset)
+            return global_attrs, grid
 
 
 def write_netcdf(attrs: dict,
@@ -112,8 +115,10 @@ def write_netcdf(attrs: dict,
             for key, value in attrs.items():
                 file.attrs[key] = value
 
-    else:
-        # otherwise, write file using netCDF4 library (default)
+        return filepath
+
+    # otherwise, write file using netCDF4 library (default)
+    with FileBasedLock(filepath, max_age=60):
         with Dataset(filepath, 'w', format='NETCDF4') as dataset:
             y_dimensions, x_dimensions = grid.shape
             dataset.createDimension('x', x_dimensions)
