@@ -137,7 +137,8 @@ class FileBasedLock():
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        return self.release()
+        self.release()
+        return False
 
     @property
     def locked(self) -> bool:
