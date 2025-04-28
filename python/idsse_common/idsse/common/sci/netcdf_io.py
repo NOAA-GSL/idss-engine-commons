@@ -20,10 +20,7 @@ from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 import h5netcdf as h5nc
 import numpy as np
 
-from ..utils import FileBasedLock
-
 logger = logging.getLogger(__name__)
-MAX_LOCK_AGE = 5  # number of seconds after which we assume an .nc.lock file is orphaned
 
 
 # cSpell:ignore ncattrs, getncattr, maskandscale
@@ -56,8 +53,7 @@ def read_netcdf_global_attrs(filepath: str) -> dict:
     Returns:
         dict: Global attributes as dictionary
     """
-    with FileBasedLock(filepath, MAX_LOCK_AGE):
-        return _read_attrs(Dataset(filepath))
+    return _read_attrs(Dataset(filepath))
 
 
 def read_netcdf(filepath: str, use_h5_lib: bool = False) -> tuple[dict, np.ndarray]:
@@ -77,15 +73,12 @@ def read_netcdf(filepath: str, use_h5_lib: bool = False) -> tuple[dict, np.ndarr
             return nc_file.attrs, grid
 
     # otherwise, use netcdf4 library (default)
-    # note we create a `.lock` file before attempting to read the file, because
-    # netcdf4 as a library is not thread-safe
-    with FileBasedLock(filepath, MAX_LOCK_AGE):
-        with Dataset(filepath) as dataset:
-            dataset.set_auto_maskandscale(False)
-            grid = dataset.variables['grid'][:]
+    with Dataset(filepath) as dataset:
+        dataset.set_auto_maskandscale(False)
+        grid = dataset.variables['grid'][:]
 
-            global_attrs = _read_attrs(dataset)
-            return global_attrs, grid
+        global_attrs = _read_attrs(dataset)
+        return global_attrs, grid
 
 
 def write_netcdf(attrs: dict,
@@ -124,17 +117,16 @@ def write_netcdf(attrs: dict,
         return filepath
 
     # otherwise, write file using netCDF4 library (default)
-    with FileBasedLock(filepath, MAX_LOCK_AGE):
-        with Dataset(filepath, 'w', format='NETCDF4') as dataset:
-            y_dimensions, x_dimensions = grid.shape
-            dataset.createDimension('x', x_dimensions)
-            dataset.createDimension('y', y_dimensions)
+    with Dataset(filepath, 'w', format='NETCDF4') as dataset:
+        y_dimensions, x_dimensions = grid.shape
+        dataset.createDimension('x', x_dimensions)
+        dataset.createDimension('y', y_dimensions)
 
-            grid_var = dataset.createVariable('grid', 'f4', ('y', 'x'))
-            grid_var[:] = grid
+        grid_var = dataset.createVariable('grid', 'f4', ('y', 'x'))
+        grid_var[:] = grid
 
-            for key, value in attrs.items():
-                setattr(dataset, key, str(value))
+        for key, value in attrs.items():
+            setattr(dataset, key, str(value))
 
     return filepath
 
