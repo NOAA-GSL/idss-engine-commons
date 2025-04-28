@@ -155,6 +155,9 @@ class FileBasedLock():
         except AttributeError:
             # Linux (and maybe Windows) don't support birthtime
             creation_time = os.stat(self._lock_path).st_ctime
+        except FileNotFoundError:
+            # lock file disappeared since start of function call?? *shrug* treat it as unexpired
+            creation_time = datetime.now(UTC).timestamp()
         return (datetime.now(UTC).timestamp() - creation_time) >= self._max_age
 
     def acquire(self, timeout=300.0) -> bool:
@@ -195,7 +198,7 @@ class FileBasedLock():
 
     def _create_lockfile(self):
         """The actual functionality triggered by `acquire()` (after lock is confirmed free)"""
-        with open(self._lock_path, 'a', encoding='utf-8') as file:
+        with open(self._lock_path, 'w', encoding='utf-8') as file:
             file.write('')
 
 

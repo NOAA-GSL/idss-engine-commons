@@ -23,6 +23,7 @@ import numpy as np
 from ..utils import FileBasedLock
 
 logger = logging.getLogger(__name__)
+MAX_LOCK_AGE = 5  # number of seconds after which we assume an .nc.lock file is orphaned
 
 
 # cSpell:ignore ncattrs, getncattr, maskandscale
@@ -55,7 +56,8 @@ def read_netcdf_global_attrs(filepath: str) -> dict:
     Returns:
         dict: Global attributes as dictionary
     """
-    return _read_attrs(Dataset(filepath))
+    with FileBasedLock(filepath, MAX_LOCK_AGE):
+        return _read_attrs(Dataset(filepath))
 
 
 def read_netcdf(filepath: str, use_h5_lib: bool = False) -> tuple[dict, np.ndarray]:
@@ -75,7 +77,9 @@ def read_netcdf(filepath: str, use_h5_lib: bool = False) -> tuple[dict, np.ndarr
             return nc_file.attrs, grid
 
     # otherwise, use netcdf4 library (default)
-    with FileBasedLock(filepath, max_age=60):
+    # note we create a `.lock` file before attempting to read the file, because
+    # netcdf4 as a library is not thread-safe
+    with FileBasedLock(filepath, MAX_LOCK_AGE):
         with Dataset(filepath) as dataset:
             dataset.set_auto_maskandscale(False)
             grid = dataset.variables['grid'][:]
@@ -100,9 +104,11 @@ def write_netcdf(attrs: dict,
     Returns:
         str: The location that data was written to
     """
-    _make_dirs(filepath)
-    logger.debug('Writing data to: %s', filepath)
+    # ensure parent directories exist
+    dirname = os.path.dirname(os.path.abspath(filepath))
+    os.makedirs(dirname, exist_ok=True)
 
+    logger.debug('Writing data to: %s', filepath)
     if use_h5_lib:
         with h5nc.File(filepath, 'w') as file:
             y_dimensions, x_dimensions = grid.shape
@@ -118,7 +124,7 @@ def write_netcdf(attrs: dict,
         return filepath
 
     # otherwise, write file using netCDF4 library (default)
-    with FileBasedLock(filepath, max_age=60):
+    with FileBasedLock(filepath, MAX_LOCK_AGE):
         with Dataset(filepath, 'w', format='NETCDF4') as dataset:
             y_dimensions, x_dimensions = grid.shape
             dataset.createDimension('x', x_dimensions)
@@ -131,11 +137,6 @@ def write_netcdf(attrs: dict,
                 setattr(dataset, key, str(value))
 
     return filepath
-
-
-def _make_dirs(filename: str):
-    dirname = os.path.dirname(os.path.abspath(filename))
-    os.makedirs(dirname, exist_ok=True)
 
 
 def _read_attrs(has_nc_attr: HasNcAttr) -> dict:
