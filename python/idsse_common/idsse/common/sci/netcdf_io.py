@@ -97,9 +97,11 @@ def write_netcdf(attrs: dict,
     Returns:
         str: The location that data was written to
     """
-    _make_dirs(filepath)
-    logger.debug('Writing data to: %s', filepath)
+    # ensure parent directories exist
+    dirname = os.path.dirname(os.path.abspath(filepath))
+    os.makedirs(dirname, exist_ok=True)
 
+    logger.debug('Writing data to: %s', filepath)
     if use_h5_lib:
         with h5nc.File(filepath, 'w') as file:
             y_dimensions, x_dimensions = grid.shape
@@ -112,25 +114,21 @@ def write_netcdf(attrs: dict,
             for key, value in attrs.items():
                 file.attrs[key] = value
 
-    else:
-        # otherwise, write file using netCDF4 library (default)
-        with Dataset(filepath, 'w', format='NETCDF4') as dataset:
-            y_dimensions, x_dimensions = grid.shape
-            dataset.createDimension('x', x_dimensions)
-            dataset.createDimension('y', y_dimensions)
+        return filepath
 
-            grid_var = dataset.createVariable('grid', 'f4', ('y', 'x'))
-            grid_var[:] = grid
+    # otherwise, write file using netCDF4 library (default)
+    with Dataset(filepath, 'w', format='NETCDF4') as dataset:
+        y_dimensions, x_dimensions = grid.shape
+        dataset.createDimension('x', x_dimensions)
+        dataset.createDimension('y', y_dimensions)
 
-            for key, value in attrs.items():
-                setattr(dataset, key, str(value))
+        grid_var = dataset.createVariable('grid', 'f4', ('y', 'x'))
+        grid_var[:] = grid
+
+        for key, value in attrs.items():
+            setattr(dataset, key, str(value))
 
     return filepath
-
-
-def _make_dirs(filename: str):
-    dirname = os.path.dirname(os.path.abspath(filename))
-    os.makedirs(dirname, exist_ok=True)
 
 
 def _read_attrs(has_nc_attr: HasNcAttr) -> dict:

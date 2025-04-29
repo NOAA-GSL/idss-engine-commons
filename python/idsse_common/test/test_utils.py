@@ -8,16 +8,19 @@
 #     Geary J Layne
 #
 # --------------------------------------------------------------------------------
-# pylint: disable=missing-function-docstring,disable=invalid-name
+# pylint: disable=missing-function-docstring,invalid-name,redefined-outer-name
 
+import os
 from copy import deepcopy
 from datetime import datetime, timedelta
 from math import pi
 from os import path
+from time import sleep
+from uuid import uuid4
 
 import pytest
 
-from idsse.common.utils import TimeDelta, Map
+from idsse.common.utils import TimeDelta, Map, FileBasedLock
 from idsse.common.utils import (
     datetime_gen,
     dict_copy_with,
@@ -205,3 +208,48 @@ def test_is_valid_uuid_success():
 def test_is_valid_uuid_failure():
     assert not is_valid_uuid('abc-def-ghi-jlk')  # badly-formed UUID
     assert not is_valid_uuid('1d10609e-ba56-11ee-af51-fa605d1346b6', version=7)  # invalid version
+
+
+@pytest.fixture
+def example_file():
+    return f'.tmp-{uuid4()}'
+
+
+@pytest.fixture(autouse=True)
+def auto_cleanup(example_file: str):
+    # ensure any previous test .lock files are cleaned up
+    if os.path.exists(example_file):
+        os.remove(example_file)
+    yield
+    if os.path.exists(example_file):
+        os.remove(example_file)
+
+
+def test_lock_acquire(example_file):
+    lock = FileBasedLock(example_file, max_age=600)
+    assert not lock.locked
+
+    lock.acquire()
+    assert lock.locked
+
+    lock.release()
+    assert not lock.locked
+
+
+def test_lock_expired(example_file):
+    lock = FileBasedLock(example_file, max_age=0.001)
+    lock.acquire()
+    sleep(0.002)
+
+    assert lock.expired
+    lock.release()
+
+
+def test_lock_timeout(example_file):
+    lock = FileBasedLock(example_file, max_age=60)
+    lock.acquire()
+
+    with pytest.raises(TimeoutError) as exc:
+        lock.acquire(0.1)
+    assert exc is not None
+    lock.release()  # cleanup lock
