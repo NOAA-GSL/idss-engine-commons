@@ -199,6 +199,7 @@ class FileBasedLock():
 
     def _create_lockfile(self):
         """The actual functionality triggered by `acquire()` (after lock is confirmed free)"""
+        os.makedirs(os.path.dirname(self._lock_path), exist_ok=True)
         with open(self._lock_path, 'w', encoding='utf-8') as file:
             file.write('')
 
