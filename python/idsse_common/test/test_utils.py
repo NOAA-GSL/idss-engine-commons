@@ -212,7 +212,7 @@ def test_is_valid_uuid_failure():
 
 @pytest.fixture
 def example_file():
-    return f'.tmp-{uuid4()}'
+    return f'./tmp/{uuid4()}'
 
 
 @pytest.fixture(autouse=True)
@@ -220,9 +220,13 @@ def auto_cleanup(example_file: str):
     # ensure any previous test .lock files are cleaned up
     if os.path.exists(example_file):
         os.remove(example_file)
+
     yield
+
     if os.path.exists(example_file):
         os.remove(example_file)
+    if os.path.exists(os.path.dirname(example_file)):
+        os.rmdir(os.path.dirname(example_file))
 
 
 def test_lock_acquire(example_file):
@@ -253,3 +257,21 @@ def test_lock_timeout(example_file):
         lock.acquire(0.1)
     assert exc is not None
     lock.release()  # cleanup lock
+
+
+def test_lock_creates_parent_dir():
+    parent_dir_a = './foo'
+    parent_dir_b = 'bar'
+    file_to_download = f'{parent_dir_a}/{parent_dir_b}/baz.txt'
+    assert not os.path.exists(parent_dir_a)
+    lock = FileBasedLock(file_to_download, max_age=60)
+
+    lock.acquire()  # acquire() will magically create all nested parent dirs for .lock
+    assert lock.locked
+    assert os.path.exists(f'{parent_dir_a}/{parent_dir_b}')
+
+    # clean up lock and temporary parent dirs created for the lock
+    lock.release()
+    os.rmdir(f'{parent_dir_a}/{parent_dir_b}')
+    os.rmdir(parent_dir_a)
+    assert not os.path.exists(parent_dir_a)

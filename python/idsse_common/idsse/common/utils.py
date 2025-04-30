@@ -128,7 +128,7 @@ class FileBasedLock():
                 based on how long a single thread could reasonably being expected to read/write
                 for this file type and usage.
         """
-        self.filepath = filepath
+        self.filepath = os.path.abspath(filepath)
         self._lock_path = f'{self.filepath}.lock'
         self._max_age = max_age
 
