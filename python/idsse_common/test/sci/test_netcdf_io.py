@@ -70,46 +70,53 @@ def test_read_netcdf(example_netcdf_data: tuple[dict[str, any], ndarray]):
     assert attrs == EXAMPLE_ATTRIBUTES
 
 
-def test_read_and_write_netcdf(example_netcdf_data: tuple[dict[str, any], ndarray]):
+@fixture
+def destination_nc_file() -> str:
+    parent_dir = os.path.abspath('./tmp')
+    file = 'test_netcdf_file.nc'
+    filepath = f'{parent_dir}/{file}'
+    # create test file dir if needed
+    if not os.path.exists(parent_dir):
+        os.mkdir(parent_dir)
     # cleanup existing test file if needed
-    temp_netcdf_filepath = './tmp/test_netcdf_file.nc'
-    if os.path.exists(temp_netcdf_filepath):
-        os.remove(temp_netcdf_filepath)
+    if os.path.exists(filepath):
+        os.remove(filepath)
 
+    yield filepath
+
+    # cleanup created netcdf file and its parent dir
+    if os.path.exists(filepath):
+        os.remove(filepath)
+    if os.path.exists(parent_dir):
+        os.rmdir(parent_dir)
+
+
+def test_read_and_write_netcdf(example_netcdf_data: tuple[dict[str, any], ndarray],
+                               destination_nc_file: str):
     attrs, grid = example_netcdf_data
 
     # verify write_netcdf functionality
     attrs['prodKey'] = EXAMPLE_PROD_KEY
     attrs['prodSource'] = attrs['product']
-    written_filepath = write_netcdf(attrs, grid, temp_netcdf_filepath)
-    assert written_filepath == temp_netcdf_filepath
-    assert os.path.exists(temp_netcdf_filepath)
+    written_filepath = write_netcdf(attrs, grid, destination_nc_file)
+    assert written_filepath == destination_nc_file
+    assert os.path.exists(destination_nc_file)
 
     new_file_attrs, new_file_grid = read_netcdf(written_filepath)
     assert new_file_attrs == attrs
     assert new_file_grid[123][321] == grid[123][321]
 
-    # cleanup created netcdf file
-    os.remove(temp_netcdf_filepath)
 
-
-def test_read_and_write_netcdf_with_h5nc(example_netcdf_data: tuple[dict[str, any], ndarray]):
-    # create h5nc file
-    temp_netcdf_h5_filepath = './tmp/test_netcdf_h5_file.nc'
-    if os.path.exists(temp_netcdf_h5_filepath):
-        os.remove(temp_netcdf_h5_filepath)
-
+def test_read_and_write_netcdf_with_h5nc(example_netcdf_data: tuple[dict[str, any], ndarray],
+                                         destination_nc_file: str):
     attrs, grid = example_netcdf_data
 
     # verify write_netcdf_with_h5nc functionality
     attrs['prodKey'] = EXAMPLE_PROD_KEY
     attrs['prodSource'] = attrs['product']
-    written_filepath = write_netcdf(attrs, grid, temp_netcdf_h5_filepath, use_h5_lib=True)
-    assert written_filepath == temp_netcdf_h5_filepath
+    written_filepath = write_netcdf(attrs, grid, destination_nc_file, use_h5_lib=True)
+    assert written_filepath == destination_nc_file
 
     # Don't verify h5 attrs for now; they are some custom h5py type and aren't easy to access
     _, new_file_grid = read_netcdf(written_filepath, use_h5_lib=True)
     assert new_file_grid[123][321] == grid[123][321]
-
-    # cleanup created netcdf h5 file
-    os.remove(temp_netcdf_h5_filepath)

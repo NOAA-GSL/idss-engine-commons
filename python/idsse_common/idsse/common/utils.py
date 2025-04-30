@@ -128,7 +128,7 @@ class FileBasedLock():
                 based on how long a single thread could reasonably being expected to read/write
                 for this file type and usage.
         """
-        self.filepath = filepath
+        self.filepath = os.path.abspath(filepath)
         self._lock_path = f'{self.filepath}.lock'
         self._max_age = max_age
 
@@ -199,6 +199,7 @@ class FileBasedLock():
 
     def _create_lockfile(self):
         """The actual functionality triggered by `acquire()` (after lock is confirmed free)"""
+        os.makedirs(os.path.dirname(self._lock_path), exist_ok=True)
         with open(self._lock_path, 'w', encoding='utf-8') as file:
             file.write('')
 
