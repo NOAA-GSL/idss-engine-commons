@@ -9,12 +9,52 @@
 The `idss-engine-commons` project is responsible for defining all implicit common dependencies that are used by the apps that make up the IDSS Engine Project distributed system. This
 repository should be used to house elements that are common across multiple projects to encourage reuse.
 
-
-# Twelve-Factors
+## Twelve-Factors
 The complete twelve-factors methodologies that the IDSS Engine Project adheres to can be found in the umbrella [idss-engine](https://github.com/NOAA-GSL/idss-engine) repository. The subset of the twelve factors that follows are specifics to this app only.
 
 ## Logging
 To support some standardization and best practices for IDSS Engine, developers should following the logging guide found [here](python/logging.rst)
+
+## Contributing
+Clone this repository.
+
+Create a Python pip environment and activate it:
+```sh
+python3 -m venv .venv && source .venv/bin/activate
+```
+
+Install all Python dependencies based on what is installed in any of the GitHub Actions in `.github/workflows`, e.g. `linter.yml`.
+```sh
+pip install <libs_from_.github/workflows/linter.yml>
+```
+
+If you intend to run unit tests, you'll need to clone the [idsse-testing](https://github.com/NOAA-GSL/idsse-testing) GitHub repository, then install it as an "editable" (a.k.a. local) pip package:
+```sh
+pip install -e <path_to_idsse_testing_clone>/python
+```
+
+### Formatting
+Python code is formatted according to the [black](https://black.readthedocs.io/) style guide, and any Pull Requests will be checked against this styling to ensure the new code has been auto-formatted.
+
+To have `black` reformat all Python code every time you create a git commit, install the [pre-commit](https://pre-commit.com/) library:
+```sh
+pip install pre-commit
+```
+
+And run this to have any Git pre-commit hooks installed for you according to `.pre-commit.config.yaml`:
+```sh
+pre-commit install
+```
+
+If you prefer, you can install the `black` library and run it yourself manually (not running on `git commit`):
+```sh
+pip install black
+```
+
+This will reformat all your Python files for you:
+```sh
+black . --line-length 99
+```
 
 ## Build, Release, and Run
 The subsections below outline how to build the common images within this project. All microservices built with Docker are done within the
@@ -69,7 +109,7 @@ can create their own RabbitMQ service as follows:
 
 #### Build
 From the IDSS Engine project root directory `idss-engine/build/<env>/<arch>/`:
-  
+
 `$ docker-compose build couch_db`
 
 **Development Image Name** `idss.engine.commons.couchbase.server:<tag>`
