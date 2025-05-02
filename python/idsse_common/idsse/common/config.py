@@ -1,4 +1,5 @@
 """Utility for loading configuration data"""
+
 # ------------------------------------------------------------------------------
 # Created on Wed Mar 01 2023
 #
@@ -21,11 +22,14 @@ logger = logging.getLogger(__name__)
 
 class Config:
     """Configuration data class"""
-    def __init__(self,
-                 config: dict | Iterable[dict] | str,
-                 keys: Iterable | str | None = None,
-                 recursive: bool = False,
-                 ignore_missing: bool = False) -> None:
+
+    def __init__(
+        self,
+        config: dict | Iterable[dict] | str,
+        keys: Iterable | str | None = None,
+        recursive: bool = False,
+        ignore_missing: bool = False,
+    ) -> None:
 
         self._previous = None
         self._next = None
@@ -34,7 +38,7 @@ class Config:
         if keys is None:
             keys = self.__class__.__name__
         # check if keys is empty, set to empty list, results in not looking for sub structs
-        elif isinstance(keys, str) and keys == '':
+        elif isinstance(keys, str) and keys == "":
             keys = []
 
         # check is config is a string representation of a dictionary
@@ -42,7 +46,7 @@ class Config:
             try:
                 config = json.loads(config)
             except json.JSONDecodeError:
-                logger.debug('Unsuccessful loading config as string rep of dict')
+                logger.debug("Unsuccessful loading config as string rep of dict")
 
         # if config is a string use it to find filepaths
         if isinstance(config, str):
@@ -60,8 +64,8 @@ class Config:
         # check for all expected config attributes
         if not ignore_missing:
             for key, value in self.__dict__.items():
-                if value is None and key not in ['_next', '_previous']:
-                    raise NameError(f'name ({key}) not found in config')
+                if value is None and key not in ["_next", "_previous"]:
+                    raise NameError(f"name ({key}) not found in config")
 
     @property
     def first(self) -> Self:
@@ -88,12 +92,11 @@ class Config:
         return self._next.last
 
     def _load_from_filepath(self, filepath: str) -> dict:
-        with open(filepath, 'r', encoding='utf8') as file:
+        with open(filepath, "r", encoding="utf8") as file:
             return json.load(file)
 
     def _from_filepaths(self, filepaths: Iterable[str], keys: str) -> Self:
-        config_dicts = [self._load_from_filepath(filepath)
-                        for filepath in filepaths]
+        config_dicts = [self._load_from_filepath(filepath) for filepath in filepaths]
         self._from_config_dicts(config_dicts, keys)
 
     def _from_config_dict(self, config_dict: dict, keys: str) -> Self:

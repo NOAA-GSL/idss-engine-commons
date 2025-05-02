@@ -1,4 +1,5 @@
 """Helper function for listing directories and retrieving s3 objects"""
+
 # -------------------------------------------------------------------------------
 # Created on Tue Dec 3 2024
 #
@@ -20,9 +21,9 @@ from .protocol_utils import ProtocolUtils
 
 logger = logging.getLogger(__name__)
 
+
 class HttpUtils(ProtocolUtils):
     """http Utility Class - Used by DAS for file downloads"""
-
 
     def ls(self, path: str, prepend_path: bool = True) -> Sequence[str]:
         """Execute a 'ls' on the http(s) server
@@ -42,12 +43,14 @@ class HttpUtils(ProtocolUtils):
                     filename = line.split('href="')[1].split('"')[0]
 
                     # Exclude directories and file without expected suffix
-                    if not filename.endswith('/') and filename.endswith(self.path_builder.file_ext):
+                    if not filename.endswith("/") and filename.endswith(
+                        self.path_builder.file_ext
+                    ):
                         files.append(filename)
 
         except requests.exceptions.RequestException as exp:
             if "403" not in str(exp):
-                logger.warning('Unable to query supplied Path : %s', str(exp))
+                logger.warning("Unable to query supplied Path : %s", str(exp))
             return []
         files = sorted(files, reverse=True)
         if prepend_path:
@@ -55,11 +58,9 @@ class HttpUtils(ProtocolUtils):
         return files
 
     # pylint: disable=unused-argument
-    def cp(self,
-           path: str,
-           dest: str,
-           concurrency: int | None = None,
-           chunk_size: int | None = None) -> bool:
+    def cp(
+        self, path: str, dest: str, concurrency: int | None = None, chunk_size: int | None = None
+    ) -> bool:
         """Execute http request download from path to dest.
 
         Args:
@@ -82,8 +83,8 @@ class HttpUtils(ProtocolUtils):
                         shutil.copyfileobj(response.raw, file)
                     return True
 
-                logger.info('copy fail: request status code: %s', response.status_code)
+                logger.info("copy fail: request status code: %s", response.status_code)
                 return False
         except Exception as e:  # pylint: disable=broad-exception-caught, invalid-name
-            logger.error('copy fail: exception %s', str(e))
+            logger.error("copy fail: exception %s", str(e))
             return False

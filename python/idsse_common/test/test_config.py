@@ -1,4 +1,5 @@
 """Test suit for config.py"""
+
 # --------------------------------------------------------------------------------
 # Created on Fri Mar 17 2023
 #
@@ -24,10 +25,10 @@ def test_load_from_dict_without_key():
 
         def __init__(self, config: dict) -> None:
             self.a_key = None
-            super().__init__(config, '')
+            super().__init__(config, "")
 
-    config = WithoutKeyConfig({'a_key': 'value found'})
-    assert config.a_key == 'value found'
+    config = WithoutKeyConfig({"a_key": "value found"})
+    assert config.a_key == "value found"
 
 
 def test_load_from_dict_as_string_without_key():
@@ -36,10 +37,10 @@ def test_load_from_dict_as_string_without_key():
 
         def __init__(self, config: dict) -> None:
             self.some_key = None
-            super().__init__(config, '')
+            super().__init__(config, "")
 
     config = WithoutKeyConfig('{"some_key": "value found"}')
-    assert config.some_key == 'value found'
+    assert config.some_key == "value found"
 
 
 def test_load_from_dict_with_name_key():
@@ -50,8 +51,8 @@ def test_load_from_dict_with_name_key():
             self.best_key = None
             super().__init__(config, None)
 
-    config = NameAsKeyConfig({'NameAsKeyConfig': {'best_key': 'value found'}})
-    assert config.best_key == 'value found'
+    config = NameAsKeyConfig({"NameAsKeyConfig": {"best_key": "value found"}})
+    assert config.best_key == "value found"
 
 
 def test_load_from_dict_require_string_key():
@@ -62,9 +63,8 @@ def test_load_from_dict_require_string_key():
             self.some_key = None
             super().__init__(config, key)
 
-    config = RequireKeyConfig(
-        '{"custom_key": {"some_key": "value found"}}', 'custom_key')
-    assert config.some_key == 'value found'
+    config = RequireKeyConfig('{"custom_key": {"some_key": "value found"}}', "custom_key")
+    assert config.some_key == "value found"
 
 
 def test_load_from_dict_require_list_key():
@@ -75,10 +75,11 @@ def test_load_from_dict_require_list_key():
             self.some_key = None
             super().__init__(config, key)
 
-    key_list = ['custom_key', 'custom_key2']
-    config = RequireKeyConfig('{"custom_key": {"custom_key2": {"some_key": "value found"}}}',
-                              key_list)
-    assert config.some_key == 'value found'
+    key_list = ["custom_key", "custom_key2"]
+    config = RequireKeyConfig(
+        '{"custom_key": {"custom_key2": {"some_key": "value found"}}}', key_list
+    )
+    assert config.some_key == "value found"
 
 
 def test_load_with_missing_attribute_should_fail():
@@ -87,10 +88,10 @@ def test_load_with_missing_attribute_should_fail():
 
         def __init__(self, config: dict) -> None:
             self.a_key = None
-            super().__init__(config, '')
+            super().__init__(config, "")
 
     with raises(NameError) as exc:
-        WithoutKeyConfig({'diff_key': 'value found'})
+        WithoutKeyConfig({"diff_key": "value found"})
     assert exc is not None
 
 
@@ -100,12 +101,12 @@ def test_config_str_with_no_files_raises_error(monkeypatch: MonkeyPatch):
 
         def __init__(self, config: str) -> None:
             self.a_key = None
-            super().__init__(config, '')
+            super().__init__(config, "")
 
-    monkeypatch.setattr('glob.glob', Mock(return_value=[]))
+    monkeypatch.setattr("glob.glob", Mock(return_value=[]))
 
     with raises(FileNotFoundError) as exc:
-        WithoutKeyConfig('wont_be_found')
+        WithoutKeyConfig("wont_be_found")
     assert exc is not None
 
 
@@ -116,15 +117,14 @@ def test_config_list_of_dicts_succeeds():
         def __init__(self, config: dict) -> None:
             self.a_key = None
             self.b_key = None
-            super().__init__(config, keys='', ignore_missing=True)
+            super().__init__(config, keys="", ignore_missing=True)
 
-    config = WithoutKeyConfig([{'a_key': 'value for a'},
-                               {'b_key': 'value for b'}])
+    config = WithoutKeyConfig([{"a_key": "value for a"}, {"b_key": "value for b"}])
 
-    assert config.a_key == 'value for a'
+    assert config.a_key == "value for a"
     config = config.next
-    assert config.b_key == 'value for b'
-    assert config.first.a_key == 'value for a'
+    assert config.b_key == "value for b"
+    assert config.first.a_key == "value for a"
 
 
 def test_load_with_ignore_missing_attribute():
@@ -134,10 +134,10 @@ def test_load_with_ignore_missing_attribute():
         def __init__(self, config: dict) -> None:
             self.a_key = None
             self.b_key = None
-            super().__init__(config, '', ignore_missing=True)
+            super().__init__(config, "", ignore_missing=True)
 
-    config = WithoutKeyConfig({'a_key': 'value for a'})
-    assert config.a_key == 'value for a'
+    config = WithoutKeyConfig({"a_key": "value for a"})
+    assert config.a_key == "value for a"
 
 
 def test_load_from_file(monkeypatch: MonkeyPatch):
@@ -146,14 +146,14 @@ def test_load_from_file(monkeypatch: MonkeyPatch):
 
         def __init__(self, config: dict) -> None:
             self.y_this_is_a_key = None
-            super().__init__(config, '')
+            super().__init__(config, "")
 
-    monkeypatch.setattr('glob.glob', Mock(return_value=['filename']))
+    monkeypatch.setattr("glob.glob", Mock(return_value=["filename"]))
 
     read_data = json.dumps({"y_this_is_a_key": "value found in file"})
-    monkeypatch.setattr('builtins.open', mock_open(read_data=read_data))
+    monkeypatch.setattr("builtins.open", mock_open(read_data=read_data))
 
-    config = WithoutKeyConfig('path/to/file')
+    config = WithoutKeyConfig("path/to/file")
 
     assert config.y_this_is_a_key == "value found in file"
 
@@ -166,16 +166,16 @@ def test_load_from_files_with_out_key(monkeypatch: MonkeyPatch):
             self.y_this_is_a_key = None
             super().__init__(config, [])
 
-    monkeypatch.setattr('glob.glob', Mock(
-        return_value=['filename1', 'filename2']))
+    monkeypatch.setattr("glob.glob", Mock(return_value=["filename1", "filename2"]))
 
-    read_data = [json.dumps({"y_this_is_a_key": "value found in file1"}),
-                 json.dumps({"y_this_is_a_key": "value found in file2"})]
-    mock_files = Mock(side_effect=(
-        mock_open(read_data=data).return_value for data in read_data))
-    monkeypatch.setattr('builtins.open', mock_files)
+    read_data = [
+        json.dumps({"y_this_is_a_key": "value found in file1"}),
+        json.dumps({"y_this_is_a_key": "value found in file2"}),
+    ]
+    mock_files = Mock(side_effect=(mock_open(read_data=data).return_value for data in read_data))
+    monkeypatch.setattr("builtins.open", mock_files)
 
-    config = WithoutKeyConfig('path/to/dir')
+    config = WithoutKeyConfig("path/to/dir")
 
     assert config.y_this_is_a_key == "value found in file1"
     assert config.next.y_this_is_a_key == "value found in file2"
@@ -188,18 +188,18 @@ def test_load_from_files_with_key(monkeypatch: MonkeyPatch):
 
         def __init__(self, config: dict) -> None:
             self.y_this_is_a_key = None
-            super().__init__(config, 'config_key')
+            super().__init__(config, "config_key")
 
-    monkeypatch.setattr('glob.glob', Mock(
-        return_value=['filename1', 'filename2']))
+    monkeypatch.setattr("glob.glob", Mock(return_value=["filename1", "filename2"]))
 
-    read_data = [json.dumps({"config_key": {"y_this_is_a_key": "value found in file1"}}),
-                 json.dumps({"config_key": {"y_this_is_a_key": "value found in file2"}})]
-    mock_files = Mock(side_effect=(
-        mock_open(read_data=data).return_value for data in read_data))
-    monkeypatch.setattr('builtins.open', mock_files)
+    read_data = [
+        json.dumps({"config_key": {"y_this_is_a_key": "value found in file1"}}),
+        json.dumps({"config_key": {"y_this_is_a_key": "value found in file2"}}),
+    ]
+    mock_files = Mock(side_effect=(mock_open(read_data=data).return_value for data in read_data))
+    monkeypatch.setattr("builtins.open", mock_files)
 
-    config = WithoutKeyConfig('path/to/dir')
+    config = WithoutKeyConfig("path/to/dir")
 
     assert config.y_this_is_a_key == "value found in file1"
     assert config.next.y_this_is_a_key == "value found in file2"

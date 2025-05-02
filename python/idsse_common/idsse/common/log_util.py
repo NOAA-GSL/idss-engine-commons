@@ -1,4 +1,5 @@
 """Module for providing the tools logging including the incorporation of correlation id"""
+
 # ------------------------------------------------------------------------------
 # Created on Thu Apr 27 2023
 #
@@ -23,13 +24,13 @@ from .utils import to_iso
 
 # cSpell:words gmtime
 
-corr_id_context_var: ContextVar[str] = ContextVar('correlation_id')
+corr_id_context_var: ContextVar[str] = ContextVar("correlation_id")
 
 
 def set_corr_id_context_var(
-        originator: str,
-        key: uuid.UUID = uuid.UUID('00000000-0000-0000-0000-000000000000'),
-        issue_dt: str | datetime | None = None
+    originator: str,
+    key: uuid.UUID = uuid.UUID("00000000-0000-0000-0000-000000000000"),
+    issue_dt: str | datetime | None = None,
 ) -> None:
     """
     Build and set correlation ID ContextVar for logging module, based on originator and
@@ -43,9 +44,9 @@ def set_corr_id_context_var(
     if issue_dt:
         if not isinstance(issue_dt, str):
             issue_dt = to_iso(issue_dt)
-        corr_id_context_var.set(f'{originator};{key};{issue_dt}')
+        corr_id_context_var.set(f"{originator};{key};{issue_dt}")
     else:
-        corr_id_context_var.set(f'{originator};{key};_')
+        corr_id_context_var.set(f"{originator};{key};_")
 
 
 def get_corr_id_context_var_str() -> str:
@@ -55,11 +56,11 @@ def get_corr_id_context_var_str() -> str:
 
 def get_corr_id_context_var_parts() -> Sequence[str]:
     """Split correlation ID ContextVar into its parts, such as [originator, key, issue_datetime]"""
-    return corr_id_context_var.get().split(';')
+    return corr_id_context_var.get().split(";")
 
 
 class AddCorrelationIdFilter(logging.Filter):
-    """"Provides correlation id parameter for the logger"""
+    """Provides correlation id parameter for the logger"""
 
     def filter(self, record: logging.LogRecord) -> bool:
         try:
@@ -70,26 +71,29 @@ class AddCorrelationIdFilter(logging.Filter):
 
 
 class CorrIdFilter(logging.Filter):
-    """"Provides correlation id parameter for the logger"""
+    """Provides correlation id parameter for the logger"""
 
     def __init__(self, corr_id, name: str = "") -> None:
         self._corr_id = corr_id
         super().__init__(name)
 
     def filter(self, record):
-        return not hasattr(record, 'correlation_id') or self._corr_id == record.corr_id
+        return not hasattr(record, "correlation_id") or self._corr_id == record.corr_id
 
 
 class UTCFormatter(logging.Formatter):
-    """"Provides a callable time format converter for the logging"""
+    """Provides a callable time format converter for the logging"""
+
     converter = time.gmtime
 
 
-def get_default_log_config(level: str,
-                           with_corr_id: bool = True,
-                           host: str = 'localhost',
-                           port: int = 5672,
-                           report_level: str = 'ERROR'):
+def get_default_log_config(
+    level: str,
+    with_corr_id: bool = True,
+    host: str = "localhost",
+    port: int = 5672,
+    report_level: str = "ERROR",
+):
     """
     Get standardized python logging config (formatters, handlers directing to stdout, rabbitmq etc.)
     as a dictionary. This dictionary can be passed directly to logging.config.dictConfig:
@@ -108,55 +112,54 @@ def get_default_log_config(level: str,
         port (int): rabbitmq port number
         report_level: rabbitmq logging level
     """
-    set_corr_id_context_var('None', uuid.UUID('00000000-0000-0000-0000-000000000000'))
+    set_corr_id_context_var("None", uuid.UUID("00000000-0000-0000-0000-000000000000"))
     if with_corr_id:
         format_str = (
-            '%(asctime)-15s %(name)-5s %(levelname)-8s %(corr_id)s %(module)s::'
+            "%(asctime)-15s %(name)-5s %(levelname)-8s %(corr_id)s %(module)s::"
             '%(funcName)s"(line %(lineno)d) %(message)s'
         )
-        filter_list = ['corr_id', ]
+        filter_list = [
+            "corr_id",
+        ]
     else:
         format_str = (
-            '%(asctime)-15s %(name)-5s %(levelname)-8s %(module)s::'
-            '%(funcName)s(line %(lineno)d) %(message)s'
+            "%(asctime)-15s %(name)-5s %(levelname)-8s %(module)s::"
+            "%(funcName)s(line %(lineno)d) %(message)s"
         )
         filter_list = []
 
     return {
-        'version': 1,
-        'disable_existing_loggers': False,
-        'formatters': {
-            'standard': {
-                '()': UTCFormatter,
-                'format': format_str
+        "version": 1,
+        "disable_existing_loggers": False,
+        "formatters": {
+            "standard": {"()": UTCFormatter, "format": format_str},
+        },
+        "filters": {
+            "corr_id": {
+                "()": AddCorrelationIdFilter,
             },
         },
-        'filters': {
-            'corr_id': {
-                '()': AddCorrelationIdFilter,
+        "handlers": {
+            "default": {
+                "class": "logging.StreamHandler",
+                "stream": "ext://sys.stdout",
+                "formatter": "standard",
+                "filters": filter_list,
+            },
+            "rabbit": {
+                "class": "python_logging_rabbitmq.RabbitMQHandler",
+                "host": host,
+                "port": port,
+                "formatter": "standard",
+                "filters": filter_list,
+                "level": report_level,
+                "declare_exchange": True,
             },
         },
-        'handlers': {
-            'default': {
-                'class': 'logging.StreamHandler',
-                'stream': 'ext://sys.stdout',
-                'formatter': 'standard',
-                'filters': filter_list,
-            },
-            'rabbit': {
-                'class': 'python_logging_rabbitmq.RabbitMQHandler',
-                'host': host,
-                'port': port,
-                'formatter': 'standard',
-                'filters': filter_list,
-                'level': report_level,
-                'declare_exchange': True,
+        "loggers": {
+            "": {
+                "level": level,
+                "handlers": ["default"],  # , 'rabbit']
             },
         },
-        'loggers': {
-            '': {
-                'level': level,
-                'handlers': ['default'],   # , 'rabbit']
-            },
-        }
     }

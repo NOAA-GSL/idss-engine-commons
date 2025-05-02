@@ -1,4 +1,5 @@
-'''Test suite for vectaster.py'''
+"""Test suite for vectaster.py"""
+
 # ----------------------------------------------------------------------------------
 # Created on Mon Dec 8 2023
 #
@@ -17,19 +18,21 @@ import numpy
 from pytest import fixture, MonkeyPatch
 
 from idsse.common.sci.grid_proj import GridProj
-from idsse.common.sci.vectaster import (geographic_to_pixel,
-                                        geographic_linestring_to_pixel,
-                                        geographic_point_to_pixel,
-                                        geographic_polygon_to_pixel,
-                                        from_wkt,
-                                        rasterize,
-                                        rasterize_point,
-                                        rasterize_linestring,
-                                        rasterize_polygon)
+from idsse.common.sci.vectaster import (
+    geographic_to_pixel,
+    geographic_linestring_to_pixel,
+    geographic_point_to_pixel,
+    geographic_polygon_to_pixel,
+    from_wkt,
+    rasterize,
+    rasterize_point,
+    rasterize_linestring,
+    rasterize_polygon,
+)
 
 
-EXAMPLE_PROJ_SPEC = '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +a=6371200'
-EXAMPLE_GRID_SPEC = '+dx=2539.703 +dy=2539.703 +w=2345 +h=1597 +lat_ll=19.229 +lon_ll=-126.2766'
+EXAMPLE_PROJ_SPEC = "+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +a=6371200"
+EXAMPLE_GRID_SPEC = "+dx=2539.703 +dy=2539.703 +w=2345 +h=1597 +lat_ll=19.229 +lon_ll=-126.2766"
 
 
 @fixture
@@ -39,50 +42,56 @@ def grid_proj() -> GridProj:
 
 # test
 def test_geographic_point_to_pixel(grid_proj: GridProj):
-    point = from_wkt('POINT (-105 40)')
-    pixel_point = from_wkt('POINT (940.5282319922111 781.3426922405841)')
+    point = from_wkt("POINT (-105 40)")
+    pixel_point = from_wkt("POINT (940.5282319922111 781.3426922405841)")
     result = geographic_point_to_pixel(point, grid_proj)
 
     assert result == pixel_point
 
 
 def test_geographic_linestring_to_pixel(grid_proj: GridProj):
-    linestring = from_wkt('LINESTRING (-100 30, -110 40, -120 50)')
-    pixel_linestring = from_wkt('LINESTRING (1097.723937434988 326.5786009191758,'
-                                '767.3803599551428 797.3524918062432,'
-                                '509.3960133013222 1309.2825656112072)')
+    linestring = from_wkt("LINESTRING (-100 30, -110 40, -120 50)")
+    pixel_linestring = from_wkt(
+        "LINESTRING (1097.723937434988 326.5786009191758,"
+        "767.3803599551428 797.3524918062432,"
+        "509.3960133013222 1309.2825656112072)"
+    )
     result = geographic_linestring_to_pixel(linestring, grid_proj)
     assert result == pixel_linestring
 
 
 def test_geographic_polygon_to_pixel(grid_proj: GridProj):
-    poly = from_wkt('POLYGON ((-105 40, -110 40, -110 50, -105 50, -105 40), '
-                    '(-107 42, -107 47, -108 47, -108 42, -107 42))')
-    pixel_poly = from_wkt('POLYGON ((940.5282319922111 781.3426922405841,'
-                          '767.3803599551428 797.3524918062432,'
-                          '819.139672193266 1263.254300515678,'
-                          '975.0735971750927 1248.836156907704,'
-                          '940.5282319922111 781.3426922405841),'
-                          '(879.2683115975804 877.9054076290231,'
-                          '899.8846796684276 1110.2160158217966,'
-                          '867.636632346796 1113.1977722126155,'
-                          '845.307298979268 881.0455502058236,'
-                          '879.2683115975804 877.9054076290231))')
+    poly = from_wkt(
+        "POLYGON ((-105 40, -110 40, -110 50, -105 50, -105 40), "
+        "(-107 42, -107 47, -108 47, -108 42, -107 42))"
+    )
+    pixel_poly = from_wkt(
+        "POLYGON ((940.5282319922111 781.3426922405841,"
+        "767.3803599551428 797.3524918062432,"
+        "819.139672193266 1263.254300515678,"
+        "975.0735971750927 1248.836156907704,"
+        "940.5282319922111 781.3426922405841),"
+        "(879.2683115975804 877.9054076290231,"
+        "899.8846796684276 1110.2160158217966,"
+        "867.636632346796 1113.1977722126155,"
+        "845.307298979268 881.0455502058236,"
+        "879.2683115975804 877.9054076290231))"
+    )
     result = geographic_polygon_to_pixel(poly, grid_proj)
     assert result == pixel_poly
 
 
 def test_geographic_to_pixel(monkeypatch: MonkeyPatch, grid_proj: GridProj):
-    point = from_wkt('POINT (-105 40)')
-    line_string = from_wkt('LINESTRING (-105 40, -110 40, -110 50)')
-    polygon = from_wkt('POLYGON ((-105 40, -110 40, -110 50, -105 50, -105 40))')
+    point = from_wkt("POINT (-105 40)")
+    line_string = from_wkt("LINESTRING (-105 40, -110 40, -110 50)")
+    polygon = from_wkt("POLYGON ((-105 40, -110 40, -110 50, -105 50, -105 40))")
 
     point_mock = Mock()
     line_str_mock = Mock()
     polygon_mock = Mock()
-    monkeypatch.setattr('idsse.common.sci.vectaster.geographic_point_to_pixel', point_mock)
-    monkeypatch.setattr('idsse.common.sci.vectaster.geographic_linestring_to_pixel', line_str_mock)
-    monkeypatch.setattr('idsse.common.sci.vectaster.geographic_polygon_to_pixel', polygon_mock)
+    monkeypatch.setattr("idsse.common.sci.vectaster.geographic_point_to_pixel", point_mock)
+    monkeypatch.setattr("idsse.common.sci.vectaster.geographic_linestring_to_pixel", line_str_mock)
+    monkeypatch.setattr("idsse.common.sci.vectaster.geographic_polygon_to_pixel", polygon_mock)
 
     _ = geographic_to_pixel(point, grid_proj)
     point_mock.assert_called_once_with(point, grid_proj, None)
@@ -95,7 +104,7 @@ def test_geographic_to_pixel(monkeypatch: MonkeyPatch, grid_proj: GridProj):
 
 
 def test_rasterize_point(grid_proj: GridProj):
-    point = 'POINT (-100.5 30.5)'
+    point = "POINT (-100.5 30.5)"
     pixels = (numpy.array([1079]), numpy.array([349]))
     result = rasterize_point(point, grid_proj)
     numpy.testing.assert_array_equal(result, pixels)
@@ -109,32 +118,100 @@ def test_rasterize_point_from_coord(grid_proj: GridProj):
 
 
 def test_rasterize_point_without_grid_proj():
-    point = from_wkt('POINT (1001.5 1130.5)')
-    pixels = ((numpy.array([1001]), numpy.array([1130])))
+    point = from_wkt("POINT (1001.5 1130.5)")
+    pixels = (numpy.array([1001]), numpy.array([1130]))
     # default round in floor
     result = rasterize_point(point)
     numpy.testing.assert_array_equal(result, pixels)
 
-    pixels = ((numpy.array([1002]), numpy.array([1131])))
+    pixels = (numpy.array([1002]), numpy.array([1131]))
     # rounding='round' means round half away from zero (both even and odd)
-    result = rasterize_point(point, rounding='round')
+    result = rasterize_point(point, rounding="round")
     numpy.testing.assert_array_equal(result, pixels)
 
 
 def test_rasterize_linestring(grid_proj: GridProj):
-    linestring = 'LINESTRING (-100 30, -100.1 30.1, -100.2 30)'
-    pixels = (numpy.array([1090, 1091, 1092, 1092, 1093, 1094, 1095, 1095, 1096, 1096, 1097]),
-              numpy.array([326, 327, 328, 329, 330, 331, 329, 330, 327, 328, 326]))
+    linestring = "LINESTRING (-100 30, -100.1 30.1, -100.2 30)"
+    pixels = (
+        numpy.array([1090, 1091, 1092, 1092, 1093, 1094, 1095, 1095, 1096, 1096, 1097]),
+        numpy.array([326, 327, 328, 329, 330, 331, 329, 330, 327, 328, 326]),
+    )
     result = rasterize_linestring(linestring, grid_proj)
     numpy.testing.assert_array_equal(result, pixels)
 
 
 def test_rasterize_polygon_as_linestring(grid_proj: GridProj):
-    poly = from_wkt('POLYGON ((0 0, 0 5, 5 5, 5 0, 0 0), (1 1, 3 1, 3 4, 1 4, 1 1))')
-    pixels = (numpy.array([0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 5, 5, 5, 5, 1, 1,
-                           1, 1, 2, 2, 3, 3, 3, 3]),
-              numpy.array([0, 1, 2, 3, 4, 5, 0, 5, 0, 5, 0, 5, 0, 5, 0, 1, 2, 3, 4, 5, 1, 2,
-                           3, 4, 1, 4, 1, 2, 3, 4]))
+    poly = from_wkt("POLYGON ((0 0, 0 5, 5 5, 5 0, 0 0), (1 1, 3 1, 3 4, 1 4, 1 1))")
+    pixels = (
+        numpy.array(
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                2,
+                2,
+                3,
+                3,
+                4,
+                4,
+                5,
+                5,
+                5,
+                5,
+                5,
+                5,
+                1,
+                1,
+                1,
+                1,
+                2,
+                2,
+                3,
+                3,
+                3,
+                3,
+            ]
+        ),
+        numpy.array(
+            [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                0,
+                5,
+                0,
+                5,
+                0,
+                5,
+                0,
+                5,
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                1,
+                2,
+                3,
+                4,
+                1,
+                4,
+                1,
+                2,
+                3,
+                4,
+            ]
+        ),
+    )
     result = rasterize_linestring(poly, grid_proj)
     numpy.testing.assert_array_equal(result, pixels)
 
@@ -147,60 +224,266 @@ def test_rasterize_linestring_from_coords(grid_proj: GridProj):
 
 
 def test_rasterize_polygon(grid_proj: GridProj):
-    poly = 'POLYGON ((-105 40, -105.1 40, -105.1 40.1, -105 40.1, -105 40))'
-    pixels = (numpy.array([937, 937, 937, 937, 937, 937, 938, 938, 938, 938, 938, 938, 939,
-                           939, 939, 939, 939, 940, 940, 940, 940, 940]),
-              numpy.array([781, 782, 783, 784, 785, 786, 781, 782, 783, 784, 785, 786, 781,
-                           782, 783, 784, 785, 781, 782, 783, 784, 785]))
+    poly = "POLYGON ((-105 40, -105.1 40, -105.1 40.1, -105 40.1, -105 40))"
+    pixels = (
+        numpy.array(
+            [
+                937,
+                937,
+                937,
+                937,
+                937,
+                937,
+                938,
+                938,
+                938,
+                938,
+                938,
+                938,
+                939,
+                939,
+                939,
+                939,
+                939,
+                940,
+                940,
+                940,
+                940,
+                940,
+            ]
+        ),
+        numpy.array(
+            [
+                781,
+                782,
+                783,
+                784,
+                785,
+                786,
+                781,
+                782,
+                783,
+                784,
+                785,
+                786,
+                781,
+                782,
+                783,
+                784,
+                785,
+                781,
+                782,
+                783,
+                784,
+                785,
+            ]
+        ),
+    )
     result = rasterize_polygon(poly, grid_proj)
     numpy.testing.assert_array_equal(result, pixels)
 
 
 def test_rasterize_polygon_from_coords(grid_proj: GridProj):
     poly = (((-105, 40), (-105.1, 40), (-105.1, 40.1), (-105, 40)),)
-    pixels = (numpy.array([937, 937, 937, 937, 937, 937, 938, 938, 938,
-                           938, 938, 939, 939, 939, 940]),
-              numpy.array([781, 782, 783, 784, 785, 786, 781, 782, 783,
-                           784, 785, 781, 782, 783, 781]))
+    pixels = (
+        numpy.array([937, 937, 937, 937, 937, 937, 938, 938, 938, 938, 938, 939, 939, 939, 940]),
+        numpy.array([781, 782, 783, 784, 785, 786, 781, 782, 783, 784, 785, 781, 782, 783, 781]),
+    )
     result = rasterize_polygon(poly, grid_proj)
     numpy.testing.assert_array_equal(result, pixels)
 
 
 def test_rasterize_polygon_with_hole():
-    poly = from_wkt('POLYGON ((0 0, 0 5, 5 5, 5 0, 0 0), (1 1, 3 1, 3 4, 1 4, 1 1))')
-    pixels = (numpy.array([0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3,
-                           4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 5, 5]),
-              numpy.array([0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 4, 5, 0, 1, 2, 3, 4, 5,
-                           0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5]))
+    poly = from_wkt("POLYGON ((0 0, 0 5, 5 5, 5 0, 0 0), (1 1, 3 1, 3 4, 1 4, 1 1))")
+    pixels = (
+        numpy.array(
+            [
+                0,
+                0,
+                0,
+                0,
+                0,
+                0,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                2,
+                2,
+                2,
+                2,
+                3,
+                3,
+                3,
+                3,
+                3,
+                3,
+                4,
+                4,
+                4,
+                4,
+                4,
+                4,
+                5,
+                5,
+                5,
+                5,
+                5,
+                5,
+            ]
+        ),
+        numpy.array(
+            [
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                0,
+                1,
+                4,
+                5,
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+                0,
+                1,
+                2,
+                3,
+                4,
+                5,
+            ]
+        ),
+    )
     result = rasterize_polygon(poly)
     numpy.testing.assert_array_equal(result, pixels)
 
 
 def test_rasterize_multi_polygon():
-    multi_poly = from_wkt('MULTIPOLYGON (((40 40, 39 41, 41 39, 40 40)), '
-                          '((20 35, 19 34, 19 33, 22 33, 35 34, 20 35), '
-                          '(30 20, 28 18, 29 19, 30 20)))')
-    pixels = (numpy.array([39, 40, 41, 19, 19, 20, 20, 20, 21, 21, 21, 22, 22, 22,
-                           23, 23, 23, 24, 24, 24, 25, 25, 25, 26, 26, 26, 27, 27,
-                           27, 28, 28, 29, 30, 31, 32, 33, 34, 35]),
-              numpy.array([41, 40, 39, 33, 34, 33, 34, 35, 33, 34, 35, 33, 34, 35,
-                           33, 34, 35, 33, 34, 35, 33, 34, 35, 33, 34, 35, 33, 34,
-                           35, 33, 34, 34, 34, 34, 34, 34, 34, 34]))
+    multi_poly = from_wkt(
+        "MULTIPOLYGON (((40 40, 39 41, 41 39, 40 40)), "
+        "((20 35, 19 34, 19 33, 22 33, 35 34, 20 35), "
+        "(30 20, 28 18, 29 19, 30 20)))"
+    )
+    pixels = (
+        numpy.array(
+            [
+                39,
+                40,
+                41,
+                19,
+                19,
+                20,
+                20,
+                20,
+                21,
+                21,
+                21,
+                22,
+                22,
+                22,
+                23,
+                23,
+                23,
+                24,
+                24,
+                24,
+                25,
+                25,
+                25,
+                26,
+                26,
+                26,
+                27,
+                27,
+                27,
+                28,
+                28,
+                29,
+                30,
+                31,
+                32,
+                33,
+                34,
+                35,
+            ]
+        ),
+        numpy.array(
+            [
+                41,
+                40,
+                39,
+                33,
+                34,
+                33,
+                34,
+                35,
+                33,
+                34,
+                35,
+                33,
+                34,
+                35,
+                33,
+                34,
+                35,
+                33,
+                34,
+                35,
+                33,
+                34,
+                35,
+                33,
+                34,
+                35,
+                33,
+                34,
+                35,
+                33,
+                34,
+                34,
+                34,
+                34,
+                34,
+                34,
+                34,
+                34,
+            ]
+        ),
+    )
     result = rasterize(multi_poly)
     numpy.testing.assert_array_equal(result, pixels)
 
 
 def test_rasterize(monkeypatch: MonkeyPatch, grid_proj: GridProj):
-    point = from_wkt('POINT (-105 40)')
-    linestring = from_wkt('LINESTRING (-105 40, -110 40, -110 50)')
-    polygon = 'POLYGON ((-105 40, -110 40, -110 50, -105 50, -105 40))'
+    point = from_wkt("POINT (-105 40)")
+    linestring = from_wkt("LINESTRING (-105 40, -110 40, -110 50)")
+    polygon = "POLYGON ((-105 40, -110 40, -110 50, -105 50, -105 40))"
 
     point_mock = Mock()
     linestring_mock = Mock()
     polygon_mock = Mock()
-    monkeypatch.setattr('idsse.common.sci.vectaster.rasterize_point', point_mock)
-    monkeypatch.setattr('idsse.common.sci.vectaster.rasterize_linestring', linestring_mock)
-    monkeypatch.setattr('idsse.common.sci.vectaster.rasterize_polygon', polygon_mock)
+    monkeypatch.setattr("idsse.common.sci.vectaster.rasterize_point", point_mock)
+    monkeypatch.setattr("idsse.common.sci.vectaster.rasterize_linestring", linestring_mock)
+    monkeypatch.setattr("idsse.common.sci.vectaster.rasterize_polygon", polygon_mock)
 
     rasterize(point, grid_proj)
     point_mock.assert_called_once()

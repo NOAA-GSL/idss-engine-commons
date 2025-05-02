@@ -1,4 +1,5 @@
 """Module that wraps pyproj (cartographic) library and transforms objects into other data forms"""
+
 # ----------------------------------------------------------------------------------
 # Created on Mon Jul 31 2023
 #
@@ -33,14 +34,15 @@ CoordinatePair = tuple[Coordinate, Coordinate]
 
 # variables passed to GridProj.map_* methods can be anything in this list, but
 # method will always preserve the argument's type in the return value
-T = TypeVar('T', Scalar, ScalarPair, ScalarArray, np.ndarray)
+T = TypeVar("T", Scalar, ScalarPair, ScalarArray, np.ndarray)
 
 
 class Flip(Enum):
     """Flip axis indicators to be applied flipping pixel orientation"""
-    BOTH = 'BOTH'
-    HORIZONTAL = 'HORIZONTAL'
-    VERTICAL = 'VERTICAL'
+
+    BOTH = "BOTH"
+    HORIZONTAL = "HORIZONTAL"
+    VERTICAL = "VERTICAL"
 
 
 class GridProj:
@@ -48,14 +50,17 @@ class GridProj:
     Wrapper for pyproj instance with methods to convert
     to and from geographic coordinates, pixels, etc.
     """
-    def __init__(self,
-                 crs: CRS,
-                 lower_left_lat: float | None,
-                 lower_left_lon: float | None,
-                 width: float,
-                 height: float,
-                 dx: float,
-                 dy: float | None = None):
+
+    def __init__(
+        self,
+        crs: CRS,
+        lower_left_lat: float | None,
+        lower_left_lon: float | None,
+        width: float,
+        height: float,
+        dx: float,
+        dy: float | None = None,
+    ):
         # pylint: disable=too-many-arguments,unpacking-non-sequence
         self._trans = Transformer.from_crs(crs.geodetic_crs, crs)
         self._x_offset = 0.0
@@ -69,7 +74,7 @@ class GridProj:
 
     @classmethod
     def from_proj_grid_spec(cls, proj_string: str, grid_string: str) -> Self:
-        """ Create GridProj instance from projection grid specs
+        """Create GridProj instance from projection grid specs
 
         Args:
             proj_string (str): pyproj projection string
@@ -81,17 +86,20 @@ class GridProj:
         crs = CRS.from_proj4(proj_string)
         grid_args = {
             key[1:]: float(value)
-            for key, value in (
-                pair.split('=') for pair in grid_string.split(' ')
-            )
+            for key, value in (pair.split("=") for pair in grid_string.split(" "))
         }
-        if 'lat_ll' not in grid_args:
-            grid_args['lat_ll'] = None
-            grid_args['lon_ll'] = None
-        return GridProj(crs,
-                        grid_args['lat_ll'], grid_args['lon_ll'],
-                        int(grid_args['w']), int(grid_args['h']),
-                        grid_args['dx'], grid_args['dy'])
+        if "lat_ll" not in grid_args:
+            grid_args["lat_ll"] = None
+            grid_args["lon_ll"] = None
+        return GridProj(
+            crs,
+            grid_args["lat_ll"],
+            grid_args["lon_ll"],
+            int(grid_args["w"]),
+            int(grid_args["h"]),
+            grid_args["dx"],
+            grid_args["dy"],
+        )
 
     @property
     def width(self):
@@ -134,10 +142,7 @@ class GridProj:
         self.flip(Flip.VERTICAL)
 
     def _transform(
-        self,
-        xx: T,
-        yy: T,
-        direction: TransformDirection | str = TransformDirection.FORWARD
+        self, xx: T, yy: T, direction: TransformDirection | str = TransformDirection.FORWARD
     ) -> tuple[T, T]:
         """Transform any x coordinate/array and y coordinate/array to a tuple of the same types,
         converted into the GridProj's coordination system.
@@ -147,11 +152,7 @@ class GridProj:
         return self._trans.transform(xx, yy, direction=direction)
 
     def map_geo_to_pixel(
-        self,
-        lon: T,
-        lat: T,
-        rounding: RoundingParam | None = None,
-        precision: int = 0
+        self, lon: T, lat: T, rounding: RoundingParam | None = None, precision: int = 0
     ) -> tuple[T, T]:
         """Map geographic coordinates to a pixel.
 
@@ -172,11 +173,7 @@ class GridProj:
         """
         crs_coordinates = self.map_geo_to_crs(lon, lat)
         # pylint: disable=not-an-iterable
-        return self.map_crs_to_pixel(
-            *crs_coordinates,
-            rounding,
-            precision
-        )
+        return self.map_crs_to_pixel(*crs_coordinates, rounding, precision)
 
     def map_pixel_to_geo(self, x: T, y: T) -> tuple[T, T]:
         """Map one or more pixel(s) x,y to a projection
@@ -230,7 +227,7 @@ class GridProj:
             return tuple(zip(*crs_pairs))
 
         raise TypeError(
-            f'Cannot transpose pixel values of ({type(x).__name__})({type(y).__name__}) to CRS'
+            f"Cannot transpose pixel values of ({type(x).__name__})({type(y).__name__}) to CRS"
         )
 
     def map_crs_to_geo(self, x: T, y: T) -> tuple[T, T]:
@@ -287,8 +284,9 @@ class GridProj:
             # Merge array of x coordinates with array of y coordinates to make list of CRS
             # x, y pairs. Transform each CRS pair to a pixel (recursively), then split back into
             # arrays of x coordinates and y coordinates (but now dimensions are pixel, not CRS)
-            pixel_pairs = [self.map_crs_to_pixel(*crs_coord, rounding, precision)
-                           for crs_coord in zip(x, y)]
+            pixel_pairs = [
+                self.map_crs_to_pixel(*crs_coord, rounding, precision) for crs_coord in zip(x, y)
+            ]
 
             # if passed as numpy arrays, return numpy arrays. Otherwise return as lists
             if isinstance(x, np.ndarray) and isinstance(y, np.ndarray):
@@ -297,5 +295,5 @@ class GridProj:
 
         # x value(s) and y value(s) were not the same shape
         raise TypeError(
-            f'Cannot transpose CRS values of ({type(x).__name__})({type(y).__name__}) to pixel'
+            f"Cannot transpose CRS values of ({type(x).__name__})({type(y).__name__}) to pixel"
         )
