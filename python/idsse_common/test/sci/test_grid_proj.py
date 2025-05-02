@@ -1,4 +1,5 @@
 """Test suite for grid_proj.py"""
+
 # ----------------------------------------------------------------------------------
 # Created on Wed Aug 2 2023
 #
@@ -23,32 +24,28 @@ from idsse.common.utils import round_, RoundingMethod
 
 
 # example data
-EXAMPLE_PROJ_SPEC = '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +a=6371200'
-EXAMPLE_GRID_SPEC = '+dx=2539.703 +dy=2539.703 +w=2345 +h=1597 +lat_ll=19.229 +lon_ll=-126.2766'
+EXAMPLE_PROJ_SPEC = "+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +a=6371200"
+EXAMPLE_GRID_SPEC = "+dx=2539.703 +dy=2539.703 +w=2345 +h=1597 +lat_ll=19.229 +lon_ll=-126.2766"
 
 PROJ_SPEC_WITH_OFFSET = (
-    '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 '
-    '+x_0=3275807.350733357 +y_0=260554.63043505285 +a=6371200'
+    "+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 "
+    "+x_0=3275807.350733357 +y_0=260554.63043505285 +a=6371200"
 )
-GRID_SPEC_WITHOUT_LOWER_LEFT = '+dx=2539.703 +dy=2539.703 +w=2345 +h=1597'
+GRID_SPEC_WITHOUT_LOWER_LEFT = "+dx=2539.703 +dy=2539.703 +w=2345 +h=1597"
 
 WIDTH = 2345
 HEIGHT = 1597
 
-EXAMPLE_PIXELS: Sequence[tuple[int, int]] = [
-    (0, 0),
-    (0, 1),
-    (2000, 1500)
-]
+EXAMPLE_PIXELS: Sequence[tuple[int, int]] = [(0, 0), (0, 1), (2000, 1500)]
 EXAMPLE_LON_LAT = [
     (-126.2766, 19.229),
     (-126.28210431967231, 19.25112362717893),
-    (-71.02234126905036, 54.014077268729)
+    (-71.02234126905036, 54.014077268729),
 ]
 EXAMPLE_CRS = [
     (-3271151.6058371724, -263793.7334645616),
     (-3271151.6058371724, -261254.03046456157),
-    (1808254.3941628276, 3545760.7665354386)
+    (1808254.3941628276, 3545760.7665354386),
 ]
 
 
@@ -74,13 +71,14 @@ def test_from_proj_grid_spec(grid_proj: GridProj):
     assert grid_proj._dy == grid_proj._dx
 
     t = grid_proj._trans
-    assert t.source_crs is not None and t.source_crs.type_name == 'Geographic 2D CRS'
-    assert t.target_crs is not None and t.target_crs.type_name == 'Projected CRS'
+    assert t.source_crs is not None and t.source_crs.type_name == "Geographic 2D CRS"
+    assert t.target_crs is not None and t.target_crs.type_name == "Projected CRS"
 
 
 def test_from_proj_grid_spec_with_offset():
-    proj_with_offset = GridProj.from_proj_grid_spec(PROJ_SPEC_WITH_OFFSET,
-                                                    GRID_SPEC_WITHOUT_LOWER_LEFT)
+    proj_with_offset = GridProj.from_proj_grid_spec(
+        PROJ_SPEC_WITH_OFFSET, GRID_SPEC_WITHOUT_LOWER_LEFT
+    )
 
     proj_xy = proj_with_offset.map_pixel_to_geo(*EXAMPLE_PIXELS[0])
     assert proj_xy == approx_tuple((-126.32657866, 19.247681536))
@@ -121,19 +119,13 @@ def test_flip_both_lr_ud(grid_proj: GridProj):
 # transformation methods testing
 def test_map_crs_to_pixel_round(grid_proj: GridProj):
     for index, crs_xy in enumerate(EXAMPLE_CRS):
-        pixel_xy = grid_proj.map_crs_to_pixel(
-            *crs_xy,
-            rounding=RoundingMethod.ROUND
-        )
+        pixel_xy = grid_proj.map_crs_to_pixel(*crs_xy, rounding=RoundingMethod.ROUND)
         assert pixel_xy == EXAMPLE_PIXELS[index]
 
 
 def test_map_crs_to_pixel_floor(grid_proj: GridProj):
     for index, crs_xy in enumerate(EXAMPLE_CRS):
-        i, j = grid_proj.map_crs_to_pixel(
-            *crs_xy,
-            rounding=RoundingMethod.FLOOR
-        )
+        i, j = grid_proj.map_crs_to_pixel(*crs_xy, rounding=RoundingMethod.FLOOR)
         # due to math imprecision internal to pyproj.transform(), some test results are a bit
         # unpredictable. E.g. returns 0.999994, which floors to 0, when expected pixel value is 1
         assert (approx(i, abs=1), approx(j, abs=1)) == EXAMPLE_PIXELS[index]
@@ -177,7 +169,8 @@ def test_crs_to_pixel_floor(grid_proj: GridProj):
 
         floor_ij = grid_proj.map_crs_to_pixel(*geo, rounding=RoundingMethod.FLOOR)
         assert (
-            round_(i, rounding=RoundingMethod.FLOOR), round_(j, rounding=RoundingMethod.FLOOR)
+            round_(i, rounding=RoundingMethod.FLOOR),
+            round_(j, rounding=RoundingMethod.FLOOR),
         ) == floor_ij
 
 
@@ -188,10 +181,10 @@ def test_crs_to_pixel_round(grid_proj: GridProj):
 
 
 def test_crs_to_pixel_round_str(grid_proj: GridProj):
-    i, j = grid_proj.map_crs_to_pixel(*EXAMPLE_CRS[0], rounding='round')
+    i, j = grid_proj.map_crs_to_pixel(*EXAMPLE_CRS[0], rounding="round")
     assert (i, j) == EXAMPLE_PIXELS[0]
 
-    i, j = grid_proj.map_crs_to_pixel(*EXAMPLE_CRS[1], rounding='ROUND')
+    i, j = grid_proj.map_crs_to_pixel(*EXAMPLE_CRS[1], rounding="ROUND")
     assert (i, j) == EXAMPLE_PIXELS[1]
 
 
@@ -262,9 +255,9 @@ def test_unbalanced_pixel_or_crs_arrays_fail_to_transform(grid_proj: GridProj):
     with raises(TypeError) as exc:
         bad_pixel = (1.0, [1.0, 2.0, 3.0])
         grid_proj.map_pixel_to_crs(*bad_pixel)
-    assert 'Cannot transpose pixel values' in exc.value.args[0]
+    assert "Cannot transpose pixel values" in exc.value.args[0]
 
     with raises(TypeError) as exc:
         bad_crs = (EXAMPLE_CRS[0], EXAMPLE_CRS[1][1])
         grid_proj.map_crs_to_pixel(*bad_crs, rounding=RoundingMethod.ROUND)
-    assert 'Cannot transpose CRS values' in exc.value.args[0]
+    assert "Cannot transpose CRS values" in exc.value.args[0]

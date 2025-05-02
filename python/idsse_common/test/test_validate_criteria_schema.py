@@ -1,4 +1,5 @@
-'''Test suite for criteria message using validate_schema.py'''
+"""Test suite for criteria message using validate_schema.py"""
+
 # ----------------------------------------------------------------------------------
 # Created on Mon Nov 20 2023
 #
@@ -21,7 +22,7 @@ from idsse.common.validate_schema import get_validator
 
 @fixture
 def criteria_validator() -> Validator:
-    schema_name = 'criteria_schema'
+    schema_name = "criteria_schema"
     return get_validator(schema_name)
 
 
@@ -31,35 +32,28 @@ def simple_criteria_message() -> dict:
         "corrId": {
             "originator": "IDSSe",
             "uuid": "4899d220-beec-467b-a0e6-9d215b715b97",
-            "issueDt": "2022-11-11T14:00:00.000Z"
+            "issueDt": "2022-11-11T14:00:00.000Z",
         },
         "issueDt": "2022-11-11T14:00:00.000Z",
         "location": {
             "features": [
                 {
                     "type": "Feature",
-                    "properties": {
-                        "name": "Abq"
-                    },
+                    "properties": {"name": "Abq"},
                     "geometry": {
                         "type": "Point",
-                        "coordinates": [-106.62312540068922, 34.964261450738306]
-                    }
+                        "coordinates": [-106.62312540068922, 34.964261450738306],
+                    },
                 }
             ]
         },
-        "validDt": [
-            {
-                "start": "2022-11-12T00:00:00.000Z",
-                "end": "2022-11-12T00:00:00.000Z"
-            }
-        ],
+        "validDt": [{"start": "2022-11-12T00:00:00.000Z", "end": "2022-11-12T00:00:00.000Z"}],
         "conditions": [
             {
                 "name": "Above Freeze Temp",
                 "severity": "MODERATE",
                 "combined": "A",
-                "partsUsed": ["A"]
+                "partsUsed": ["A"],
             }
         ],
         "parts": [
@@ -67,31 +61,16 @@ def simple_criteria_message() -> dict:
                 "name": "A",
                 "duration": 0,
                 "arealPercentage": 0,
-                "product": {
-                    "fcst": [
-                        "NBM"
-                    ]
-                },
+                "product": {"fcst": ["NBM"]},
                 "field": "TEMPERATURE",
                 "units": "DEG F",
                 "region": "CONUS",
                 "relational": "GREATER THAN",
                 "thresh": 30,
-                "mapping": {
-                    "min": 0.0,
-                    "max": 75.0,
-                    "clip": "true"
-                }
+                "mapping": {"min": 0.0, "max": 75.0, "clip": "true"},
             }
         ],
-        "tags": {
-            "values": [
-            ],
-            "keyValues": {
-                "name": "Abq Temp",
-                "nwsOffice": "BOU"
-            }
-        }
+        "tags": {"values": [], "keyValues": {"name": "Abq Temp", "nwsOffice": "BOU"}},
     }
 
 
@@ -101,36 +80,28 @@ def criteria_message() -> dict:
         "corrId": {
             "originator": "IDSSe",
             "uuid": "4899d220-beec-467b-a0e6-9d215b715b97",
-            "issueDt": "2022-10-07T14:00:00.000Z"
+            "issueDt": "2022-10-07T14:00:00.000Z",
         },
         "issueDt": "2022-10-07T14:00:00.000Z",
         "location": {
             "features": [
                 {
                     "type": "Feature",
-                    "properties": {
-                        "name": "The spot",
-                        "radius": 3.00
-                    },
+                    "properties": {"name": "The spot", "radius": 3.00},
                     "geometry": {
                         "type": "Point",
-                        "coordinates": [-106.62312540068922, 34.964261450738306]
-                    }
+                        "coordinates": [-106.62312540068922, 34.964261450738306],
+                    },
                 }
             ]
         },
-        "validDt": [
-            {
-                "start": "2022-10-08T0:00:00.000Z",
-                "end": "2022-10-08T12:00:00.000Z"
-            }
-        ],
+        "validDt": [{"start": "2022-10-08T0:00:00.000Z", "end": "2022-10-08T12:00:00.000Z"}],
         "conditions": [
             {
                 "name": "Two part Condition",
                 "severity": "MODERATE",
                 "combined": "A AND B",
-                "partsUsed": ["A", "B"]
+                "partsUsed": ["A", "B"],
             },
         ],
         "parts": [
@@ -138,94 +109,76 @@ def criteria_message() -> dict:
                 "name": "A",
                 "arealPercentage": 0,
                 "duration": 0,
-                "product": {
-                    "fcst": [
-                        "NBM"
-                    ]
-                },
+                "product": {"fcst": ["NBM"]},
                 "field": "DEW POINT",
                 "units": "Fahrenheit",
                 "region": "CONUS",
                 "relational": "LESS THAN",
                 "thresh": 60,
-                "mapping": {
-                    "min": 35.0,
-                    "max": 75.0,
-                    "clip": "true"
-                }
+                "mapping": {"min": 35.0, "max": 75.0, "clip": "true"},
             },
             {
                 "name": "B",
                 "arealPercentage": 0,
                 "duration": 0,
-                "product": {
-                    "fcst": [
-                        "NBM"
-                    ]
-                },
+                "product": {"fcst": ["NBM"]},
                 "field": "RELATIVE HUMIDITY",
                 "units": "PERCENT",
                 "region": "CONUS",
                 "relational": "GREATER THAN",
                 "thresh": 30,
-                "mapping": {
-                    "min": 0.0,
-                    "max": 75.0,
-                    "clip": "true"
-                }
-            }
+                "mapping": {"min": 0.0, "max": 75.0, "clip": "true"},
+            },
         ],
-        "tags": {
-            "values": [
-            ],
-            "keyValues": {
-                "name": "Abq Rain",
-                "nwsOffice": "BOU"
-            }
-        }
+        "tags": {"values": [], "keyValues": {"name": "Abq Rain", "nwsOffice": "BOU"}},
     }
 
 
-def test_validate_simple_criteria_message(criteria_validator: Validator,
-                                          simple_criteria_message: dict):
+def test_validate_simple_criteria_message(
+    criteria_validator: Validator, simple_criteria_message: dict
+):
     try:
         criteria_validator.validate(simple_criteria_message)
     except ValidationError as exc:
-        assert False, f'Validate message raised an exception {exc}'
+        assert False, f"Validate message raised an exception {exc}"
 
 
 def test_validate_criteria_message(criteria_validator: Validator, criteria_message: dict):
     try:
         criteria_validator.validate(criteria_message)
     except ValidationError as exc:
-        assert False, f'Validate message raised an exception {exc}'
+        assert False, f"Validate message raised an exception {exc}"
 
 
-def test_validate_criteria_message_without_conditions(criteria_validator: Validator,
-                                                      criteria_message: dict):
-    criteria_message.pop('conditions')
+def test_validate_criteria_message_without_conditions(
+    criteria_validator: Validator, criteria_message: dict
+):
+    criteria_message.pop("conditions")
     with raises(ValidationError):
         criteria_validator.validate(criteria_message)
 
 
-def test_validate_criteria_message_with_missing_name(criteria_validator: Validator,
-                                                     criteria_message: dict):
-    criteria_message['tags']['keyValues'].pop('name')
+def test_validate_criteria_message_with_missing_name(
+    criteria_validator: Validator, criteria_message: dict
+):
+    criteria_message["tags"]["keyValues"].pop("name")
     with raises(ValidationError):
         criteria_validator.validate(criteria_message)
 
 
-def test_validate_criteria_message_with_bad_product_type(criteria_validator: Validator,
-                                                         criteria_message: dict):
-    product = criteria_message['parts'][0]['product']
-    product['not_fcst_or_obs'] = product.pop('fcst')
+def test_validate_criteria_message_with_bad_product_type(
+    criteria_validator: Validator, criteria_message: dict
+):
+    product = criteria_message["parts"][0]["product"]
+    product["not_fcst_or_obs"] = product.pop("fcst")
     with raises(ValidationError):
         criteria_validator.validate(criteria_message)
 
 
-def test_validate_criteria_message_with_bad_mapping(criteria_validator: Validator,
-                                                    criteria_message: dict):
-    mapping = criteria_message['parts'][1]['mapping']
-    mapping['smallest'] = mapping.pop('min')
+def test_validate_criteria_message_with_bad_mapping(
+    criteria_validator: Validator, criteria_message: dict
+):
+    mapping = criteria_message["parts"][1]["mapping"]
+    mapping["smallest"] = mapping.pop("min")
     with raises(ValidationError):
         criteria_validator.validate(criteria_message)

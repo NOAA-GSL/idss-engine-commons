@@ -1,4 +1,5 @@
 """Helper function for listing directories and retrieving s3 objects"""
+
 # -------------------------------------------------------------------------------
 # Created on Tue Feb 14 2023
 #
@@ -35,26 +36,24 @@ class AwsUtils(ProtocolUtils):
         Returns:
             Sequence[str]: The results sent to stdout from executing a 'ls' on passed path
         """
-        if path[-1] != '/':
-            path = path + '/'  # ensure a trailing slash, which is expected by S3
+        if path[-1] != "/":
+            path = path + "/"  # ensure a trailing slash, which is expected by S3
 
         try:
-            commands = ['s5cmd',  '--no-sign-request', 'ls', path]
+            commands = ["s5cmd", "--no-sign-request", "ls", path]
             commands_result = exec_cmd(commands)
         except FileNotFoundError:
-            commands = ['aws', 's3',  '--no-sign-request', 'ls', path]
+            commands = ["aws", "s3", "--no-sign-request", "ls", path]
             commands_result = exec_cmd(commands)
         except PermissionError:
             return []
         if prepend_path:
-            return [os.path.join(path, filename.split(' ')[-1]) for filename in commands_result]
-        return [filename.split(' ')[-1] for filename in commands_result]
+            return [os.path.join(path, filename.split(" ")[-1]) for filename in commands_result]
+        return [filename.split(" ")[-1] for filename in commands_result]
 
-    def cp(self,
-           path: str,
-           dest: str,
-           concurrency: int | None = None,
-           chunk_size: int | None = None) -> bool:
+    def cp(
+        self, path: str, dest: str, concurrency: int | None = None, chunk_size: int | None = None
+    ) -> bool:
         """Execute a 'cp' on the AWS s3 bucket specified by path, dest. Attempts to use
         [s5cmd](https://github.com/peak/s5cmd) to copy the file from S3 with parallelization,
         but falls back to (slower) aws-cli if s5cmd is not installed or throws an error.
@@ -73,25 +72,30 @@ class AwsUtils(ProtocolUtils):
             bool: Returns True if copy is successful
         """
         try:
-            logger.debug('First attempt with s5cmd, concurrency: %d, chunk_size: %s',
-                         concurrency, chunk_size)
-            commands = ['s5cmd', '--no-sign-request',  'cp']
+            logger.debug(
+                "First attempt with s5cmd, concurrency: %d, chunk_size: %s",
+                concurrency,
+                chunk_size,
+            )
+            commands = ["s5cmd", "--no-sign-request", "cp"]
 
             # if concurrency and/or chunk_size options were provided, append to s5cmd before paths
             if concurrency:
-                commands += ['--concurrency', str(concurrency)]
+                commands += ["--concurrency", str(concurrency)]
             if chunk_size:
-                commands += ['--part-size', str(chunk_size)]
+                commands += ["--part-size", str(chunk_size)]
             commands += [path, dest]  # finish the command list with the src and destination
 
             exec_cmd(commands)
             return True
         except PermissionError:
-            return False  # in s5cmd, this means 404 FileNotFound; don't bother retrying with aws-cli
+            return (
+                False  # in s5cmd, this means 404 FileNotFound; don't bother retrying with aws-cli
+            )
         except FileNotFoundError:
             try:
-                logger.debug('Second attempt with aws command line')
-                commands = ['aws', 's3', '--no-sign-request',  'cp', path, dest]
+                logger.debug("Second attempt with aws command line")
+                commands = ["aws", "s3", "--no-sign-request", "cp", path, dest]
                 exec_cmd(commands)
                 return True
             except Exception:  # pylint: disable=broad-exception-caught

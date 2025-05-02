@@ -1,4 +1,5 @@
 """Class for validating IDSSe JSON messages against schema"""
+
 # ----------------------------------------------------------------------------------
 # Created on Mon Aug 07 2023
 #
@@ -26,8 +27,8 @@ def _get_refs(json_obj: dict | list, result: set | None = None) -> set:
         result = set()
     if isinstance(json_obj, dict):
         for key, value in json_obj.items():
-            if key == '$ref':
-                idx = value.index('#/')
+            if key == "$ref":
+                idx = value.index("#/")
                 if idx > 0:
                     result.add(value[:idx])
             else:
@@ -49,9 +50,9 @@ def get_validator(schema_name) -> Validator:
         Validator: A validator loaded with schema and all dependencies
     """
     current_path = os.path.dirname(os.path.realpath(__file__))
-    schema_dir = os.path.join(current_path, 'schema')
-    schema_filename = os.path.join(schema_dir, schema_name+'.json')
-    with open(schema_filename, 'r', encoding='utf8') as file:
+    schema_dir = os.path.join(current_path, "schema")
+    schema_filename = os.path.join(schema_dir, schema_name + ".json")
+    with open(schema_filename, "r", encoding="utf8") as file:
         schema: dict = json.load(file)
 
     dependencies = {}
@@ -60,13 +61,15 @@ def get_validator(schema_name) -> Validator:
         new_refs = set()
         for ref in refs:
             schema_filename = os.path.join(schema_dir, ref)
-            with open(schema_filename, 'r', encoding='utf8') as file:
+            with open(schema_filename, "r", encoding="utf8") as file:
                 ref_schema: dict = json.load(file)
-            dependencies[ref_schema.get('$id', ref)] = _draft.create_resource(ref_schema)
+            dependencies[ref_schema.get("$id", ref)] = _draft.create_resource(ref_schema)
             new_refs = _get_refs(ref_schema, new_refs)
         refs = {ref for ref in new_refs if ref not in dependencies}
 
     # used default Validator type
-    return _validator(schema=schema,
-                      registry=Registry().with_resources(dependencies.items()),
-                      format_checker=FormatChecker())
+    return _validator(
+        schema=schema,
+        registry=Registry().with_resources(dependencies.items()),
+        format_checker=FormatChecker(),
+    )

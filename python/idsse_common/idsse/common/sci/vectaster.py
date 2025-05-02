@@ -1,4 +1,5 @@
 """Utility module for vector/raster conversion"""
+
 # ----------------------------------------------------------------------------------
 # Created on Thu Dec 07 2023
 #
@@ -16,9 +17,16 @@ from math import floor
 from numbers import Number
 
 import numpy
-from shapely import (Geometry, LinearRing, LineString,
-                     MultiPolygon, Point, Polygon,
-                     from_geojson, from_wkt)
+from shapely import (
+    Geometry,
+    LinearRing,
+    LineString,
+    MultiPolygon,
+    Point,
+    Polygon,
+    from_geojson,
+    from_wkt,
+)
 
 from idsse.common.sci.grid_proj import GridProj
 from idsse.common.sci.utils import Pixel, Coord, Coords, coordinate_pairs_to_axes
@@ -30,7 +38,7 @@ logger = logging.getLogger(__name__)
 def rasterize(
     geometry: str | Geometry,
     grid_proj: GridProj | None = None,
-    rounding: RoundingParam = RoundingMethod.FLOOR
+    rounding: RoundingParam = RoundingMethod.FLOOR,
 ) -> tuple[numpy.array]:
     """Takes a geographic geometry (specified with lon/lat) and determines all the
     associated pixels in the translated space (as specified by grid_proj).
@@ -67,13 +75,13 @@ def rasterize(
 
         return x_coords, y_coords
 
-    raise TypeError(f'Passed geometry is type:{type(geometry)}, which is not supported')
+    raise TypeError(f"Passed geometry is type:{type(geometry)}, which is not supported")
 
 
 def rasterize_point(
     point: str | Coord | Point,
     grid_proj: GridProj | None = None,
-    rounding: RoundingParam | None = RoundingMethod.FLOOR
+    rounding: RoundingParam | None = RoundingMethod.FLOOR,
 ) -> tuple[numpy.array]:
     """Takes a geographic Point (specified with lon/lat) and determines the
     associated pixel in the translated space (as specified by grid_proj).
@@ -99,20 +107,22 @@ def rasterize_point(
     elif _is_coord(point):
         coord = point
     else:
-        raise TypeError(f'Passed geometry is type:{type(point)}, but must be Point')
+        raise TypeError(f"Passed geometry is type:{type(point)}, but must be Point")
 
     if grid_proj is not None:
-        return coordinate_pairs_to_axes([grid_proj.map_geo_to_pixel(*coord, rounding)],
-                                        dtype=numpy.int64)
+        return coordinate_pairs_to_axes(
+            [grid_proj.map_geo_to_pixel(*coord, rounding)], dtype=numpy.int64
+        )
 
-    return coordinate_pairs_to_axes([tuple(round_values(*coord, rounding=rounding))],
-                                    dtype=numpy.int64)
+    return coordinate_pairs_to_axes(
+        [tuple(round_values(*coord, rounding=rounding))], dtype=numpy.int64
+    )
 
 
 def rasterize_linestring(
     linestring: str | Sequence[Coord] | LineString,
     grid_proj: GridProj | None = None,
-    rounding: RoundingParam | None = RoundingMethod.FLOOR
+    rounding: RoundingParam | None = RoundingMethod.FLOOR,
 ) -> tuple[numpy.array]:
     """Takes a geographic LineString (specified with lon/lat) and determines all the
     associated pixels in the translated space (as specified by grid_proj).
@@ -156,13 +166,14 @@ def rasterize_linestring(
     elif _is_coords(linestring):
         coords = linestring
     else:
-        raise TypeError(f'Passed geometry is type:{type(linestring)}, but must be LineString')
+        raise TypeError(f"Passed geometry is type:{type(linestring)}, but must be LineString")
 
     if grid_proj is not None:
         linestring = geographic_linestring_to_pixel(coords, grid_proj, rounding)
     else:
-        linestring = LineString([round_values(*coord, rounding=rounding)
-                                 for coord in linestring.coords])
+        linestring = LineString(
+            [round_values(*coord, rounding=rounding) for coord in linestring.coords]
+        )
 
     return pixels_for_linestring(linestring)
 
@@ -170,7 +181,7 @@ def rasterize_linestring(
 def rasterize_polygon(
     polygon: str | Sequence[Coords] | Polygon,
     grid_proj: GridProj | None = None,
-    rounding: RoundingParam | None = RoundingMethod.FLOOR
+    rounding: RoundingParam | None = RoundingMethod.FLOOR,
 ) -> tuple[numpy.array]:
     """Takes a geographic Polygon (specified with lon/lat) and determines all the
     associated pixels in the translated space (as specified by grid_proj).
@@ -200,22 +211,19 @@ def rasterize_polygon(
     elif all(_is_coords(coords) for coords in polygon):
         coords = polygon
     else:
-        raise TypeError(f'Passed geometry is type:{type(polygon)}, but must be Polygon')
+        raise TypeError(f"Passed geometry is type:{type(polygon)}, but must be Polygon")
 
     if grid_proj is not None:
         polygon = geographic_polygon_to_pixel(coords, grid_proj, rounding)
     else:
-        coords = [[round_values(*coord, rounding=rounding)
-                  for coord in ring] for ring in coords]
+        coords = [[round_values(*coord, rounding=rounding) for coord in ring] for ring in coords]
         polygon = Polygon(coords[0], holes=coords[1:])
 
     return pixels_in_polygon(polygon)
 
 
 def geographic_to_pixel(
-    geo: Geometry,
-    grid_proj: GridProj,
-    rounding: RoundingParam | None = None
+    geo: Geometry, grid_proj: GridProj, rounding: RoundingParam | None = None
 ) -> Geometry:
     """Map a geometry specified in lat/lon space to geometry specified in pixel space
 
@@ -238,16 +246,15 @@ def geographic_to_pixel(
     if isinstance(geo, Polygon):
         return geographic_polygon_to_pixel(geo, grid_proj, rounding)
     if isinstance(geo, MultiPolygon):
-        return MultiPolygon([geographic_polygon_to_pixel(poly, grid_proj, rounding)
-                             for poly in geo.geoms])
+        return MultiPolygon(
+            [geographic_polygon_to_pixel(poly, grid_proj, rounding) for poly in geo.geoms]
+        )
 
-    raise ValueError(f'Passed geometry is type:{type(geo)}, which is not of supported types')
+    raise ValueError(f"Passed geometry is type:{type(geo)}, which is not of supported types")
 
 
 def geographic_point_to_pixel(
-    point: Point,
-    grid_proj: GridProj,
-    rounding: RoundingParam | None = None
+    point: Point, grid_proj: GridProj, rounding: RoundingParam | None = None
 ) -> Point:
     """Map a Point specified in lat/lon space to geometry specified in pixel space
 
@@ -262,7 +269,7 @@ def geographic_point_to_pixel(
         Point: Shapely Point with vertices defined by x,y pixels
     """
     if not isinstance(point, Point):
-        raise ValueError(f'Geometry must be a Point but is a {type(point)}')
+        raise ValueError(f"Geometry must be a Point but is a {type(point)}")
 
     coords = grid_proj.map_geo_to_pixel(*list(zip(*point.coords)), rounding)
     return Point(coords)
@@ -271,7 +278,7 @@ def geographic_point_to_pixel(
 def geographic_linestring_to_pixel(
     linestring: LineString | Sequence[Coord],
     grid_proj: GridProj,
-    rounding: RoundingParam | None = None
+    rounding: RoundingParam | None = None,
 ) -> LineString:
     """Map a LineString specified in lat/lon space to geometry specified in pixel space
 
@@ -290,7 +297,7 @@ def geographic_linestring_to_pixel(
     elif isinstance(linestring, LineString):
         coords = linestring.coords
     else:
-        raise TypeError(f'Geometry must be a LineString but is a {type(linestring)}')
+        raise TypeError(f"Geometry must be a LineString but is a {type(linestring)}")
 
     coords = list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*coords)), rounding)))
 
@@ -298,9 +305,7 @@ def geographic_linestring_to_pixel(
 
 
 def geographic_polygon_to_pixel(
-    poly: Polygon | Sequence[Coords],
-    grid_proj: GridProj,
-    rounding: RoundingParam | None = None
+    poly: Polygon | Sequence[Coords], grid_proj: GridProj, rounding: RoundingParam | None = None
 ) -> Polygon:
     """Map a Polygon specified in lat/lon space to geometry specified in pixel space
 
@@ -322,11 +327,13 @@ def geographic_polygon_to_pixel(
         exterior = poly[0]
         interiors = poly[1:]
     else:
-        raise TypeError(f'Geometry must be a Polygon but is a {type(poly)}')
+        raise TypeError(f"Geometry must be a Polygon but is a {type(poly)}")
 
     exterior = list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*exterior)), rounding)))
-    interiors = [list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*interior.coords)), rounding)))
-                 for interior in interiors]
+    interiors = [
+        list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*interior.coords)), rounding)))
+        for interior in interiors
+    ]
 
     return Polygon(exterior, holes=interiors)
 
@@ -362,9 +369,7 @@ def pixels_in_polygon(poly: Polygon) -> tuple[numpy.ndarray]:
     return coordinate_pairs_to_axes(pixels, dtype=numpy.int64)
 
 
-def _pixels_for_linestring(
-        linestring: LineString
-) -> list[Pixel]:
+def _pixels_for_linestring(linestring: LineString) -> list[Pixel]:
     """Get pixels crossed while traversing a linestring
 
     Args:
@@ -386,9 +391,7 @@ def _pixels_for_linestring(
 
 # pylint: disable=invalid-name
 def _pixels_for_line_seg(
-    pnt1: tuple[int, int],
-    pnt2: tuple[int, int],
-    exclude_first: bool = False
+    pnt1: tuple[int, int], pnt2: tuple[int, int], exclude_first: bool = False
 ) -> list[Pixel]:
     """Get pixels crossed while traversing a line segment
 
@@ -404,7 +407,7 @@ def _pixels_for_line_seg(
     x2, y2 = pnt2
 
     if int(x1) != x1 or int(x2) != x2 or int(y1) != y1 or int(y2) != y2:
-        raise TypeError('Line segment end points coordinates must be integers')
+        raise TypeError("Line segment end points coordinates must be integers")
     x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
 
     dx = x2 - x1
@@ -416,14 +419,14 @@ def _pixels_for_line_seg(
         step = 1 if x1 < x2 else -1
         if exclude_first:
             x1 += step
-        pixels = set((x, round_(slope * x + intercept)) for x in range(x1, x2+step, step))
+        pixels = set((x, round_(slope * x + intercept)) for x in range(x1, x2 + step, step))
     else:
         slope = dx / dy
         intercept = x1 - slope * y1
         step = 1 if y1 < y2 else -1
         if exclude_first:
             y1 += step
-        pixels = set((round_(slope * y + intercept), y) for y in range(y1, y2+step, step))
+        pixels = set((round_(slope * y + intercept), y) for y in range(y1, y2 + step, step))
 
     pixels = list(pixels)
     pixels.sort()
@@ -432,9 +435,7 @@ def _pixels_for_line_seg(
 
 
 # pylint: disable=too-many-locals
-def _pixels_for_polygon(
-    polygon_boundary: LinearRing
-) -> list[Pixel]:
+def _pixels_for_polygon(polygon_boundary: LinearRing) -> list[Pixel]:
     """Get all pixels in a polygon using a line scan algorithm
 
     Args:
@@ -445,7 +446,7 @@ def _pixels_for_polygon(
         list[Pixel]: List of x,y tuples in pixel space
     """
     xmin, ymin, _, ymax = polygon_boundary.bounds
-    x_offset = 0 if xmin >= 0 else int(1-xmin)
+    x_offset = 0 if xmin >= 0 else int(1 - xmin)
     ymin = floor(ymin)
     ymax = floor(ymax)
     edge_info = []
@@ -457,19 +458,19 @@ def _pixels_for_polygon(
                 y1, y2 = y2, y1
                 int_y1, int_y2 = int_y2, int_y1
 
-            edge_info.append((int_y1, int_y2, x1+x_offset, (x2 - x1)/(y2 - y1)))
+            edge_info.append((int_y1, int_y2, x1 + x_offset, (x2 - x1) / (y2 - y1)))
 
     pixels = set()
-    for y in range(ymin, ymax+1):
+    for y in range(ymin, ymax + 1):
         x_list = []
         for y1, y2, x, slope in edge_info:
             if y1 <= y <= y2:
-                x_list.append(int(x + (y-y1) * slope))
+                x_list.append(int(x + (y - y1) * slope))
 
         x_list.sort()
 
         for x1, x2 in zip(x_list[:-1], x_list[1:]):
-            pixels.update([(x, y) for x in range(x1-x_offset, x2-x_offset+1)])
+            pixels.update([(x, y) for x in range(x1 - x_offset, x2 - x_offset + 1)])
 
     # make sure the edges are included in list of pixels
     pixels.update(_pixels_for_linestring(polygon_boundary))

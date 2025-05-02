@@ -1,4 +1,5 @@
 """A module for managing the json messages used to communicate between services"""
+
 # ------------------------------------------------------------------------------
 # Created on Tue May 09 2023
 #
@@ -17,9 +18,7 @@ from uuid import UUID, uuid4
 Json = dict[str, Any] | Sequence[Any] | int | str | float | bool | None
 
 
-def get_corr_id(
-    message: str | dict
-) -> tuple[str | None, UUID | str | None, str | None] | None:
+def get_corr_id(message: str | dict) -> tuple[str | None, UUID | str | None, str | None] | None:
     """Extract the correlation id from a json message.
        The correlation id is made of three parts: originator, uuid, issue date/time
 
@@ -34,23 +33,27 @@ def get_corr_id(
     if isinstance(message, str):
         message = json.loads(message)
 
-    corr_id = message.get('corrId', None)
+    corr_id = message.get("corrId", None)
     if not corr_id:
         return corr_id
 
-    corr_id = (corr_id.get('originator', None),
-               corr_id.get('uuid', None),
-               corr_id.get('issueDt', None))
+    corr_id = (
+        corr_id.get("originator", None),
+        corr_id.get("uuid", None),
+        corr_id.get("issueDt", None),
+    )
 
     if any(corr_id):
         return corr_id
     return None
 
 
-def add_corr_id(message: dict | str,
-                originator: str,
-                uuid_: UUID | str | None = None,
-                issue_dt: str | None = None) -> dict:
+def add_corr_id(
+    message: dict | str,
+    originator: str,
+    uuid_: UUID | str | None = None,
+    issue_dt: str | None = None,
+) -> dict:
     """Add (or overwrites) the three part correlation id to a json message
 
     Args:
@@ -69,9 +72,7 @@ def add_corr_id(message: dict | str,
     if not uuid_:
         uuid_ = uuid4()
     if not issue_dt:
-        issue_dt = '_'
-    message['corrId'] = {'originator': originator,
-                         'uuid': f'{uuid_}',
-                         'issueDt': issue_dt}
+        issue_dt = "_"
+    message["corrId"] = {"originator": originator, "uuid": f"{uuid_}", "issueDt": issue_dt}
 
     return message

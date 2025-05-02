@@ -1,4 +1,5 @@
 """Base class for http and awc data access"""
+
 # -------------------------------------------------------------------------------
 # Created on Tue Dec 3 2024
 #
@@ -23,11 +24,7 @@ from .utils import TimeDelta, datetime_gen
 class ProtocolUtils(ABC):
     """Base Class - interface for DAS data discovery"""
 
-    def __init__(self,
-                 basedir: str,
-                 subdir: str,
-                 file_base: str,
-                 file_ext: str) -> None:
+    def __init__(self, basedir: str, subdir: str, file_base: str, file_ext: str) -> None:
         self.path_builder = PathBuilder(basedir, subdir, file_base, file_ext)
 
     # pylint: disable=invalid-name
@@ -65,7 +62,7 @@ class ProtocolUtils(ABC):
         Returns:
             str: Absolute path to file or object
         """
-        lead = TimeDelta(valid-issue)
+        lead = TimeDelta(valid - issue)
         return self.path_builder.build_path(issue=issue, valid=valid, lead=lead, **kwargs)
 
     def check_for(self, issue: datetime, valid: datetime, **kwargs) -> tuple[datetime, str] | None:
@@ -94,13 +91,14 @@ class ProtocolUtils(ABC):
                 return valid, os.path.join(dir_path, fname)
         return None
 
-    def get_issues(self,
-                   num_issues: int = 1,
-                   issue_start: datetime | None = None,
-                   issue_end: datetime | None = None,
-                   time_delta: timedelta = timedelta(hours=1),
-                   **kwargs
-                   ) -> Sequence[datetime]:
+    def get_issues(
+        self,
+        num_issues: int = 1,
+        issue_start: datetime | None = None,
+        issue_end: datetime | None = None,
+        time_delta: timedelta = timedelta(hours=1),
+        **kwargs
+    ) -> Sequence[datetime]:
         """Determine the available issue date/times
 
         Args:
@@ -115,7 +113,7 @@ class ProtocolUtils(ABC):
         """
         zero_time_delta = timedelta(seconds=0)
         if time_delta == zero_time_delta:
-            raise ValueError('Time delta must be non zero')
+            raise ValueError("Time delta must be non zero")
 
         if not issue_end:
             issue_end = datetime.now(UTC)
@@ -141,12 +139,13 @@ class ProtocolUtils(ABC):
             issues_set.remove(None)
         return sorted(issues_set)[:num_issues]
 
-    def get_valids(self,
-                   issue: datetime,
-                   valid_start: datetime | None = None,
-                   valid_end: datetime | None = None,
-                   **kwargs
-                   ) -> Sequence[tuple[datetime, str]]:
+    def get_valids(
+        self,
+        issue: datetime,
+        valid_start: datetime | None = None,
+        valid_end: datetime | None = None,
+        **kwargs
+    ) -> Sequence[tuple[datetime, str]]:
         """Get all objects consistent with the passed issue date/time and filter by valid range
 
         Args:
@@ -179,24 +178,23 @@ class ProtocolUtils(ABC):
         # Remove any tuple that has "None" as the valid time
         if valid_start:
             if valid_end:
-                valid_and_file = [(valid, filename)
-                                  for valid, filename in valid_and_file
-                                  if valid_start <= valid <= valid_end]
+                valid_and_file = [
+                    (valid, filename)
+                    for valid, filename in valid_and_file
+                    if valid_start <= valid <= valid_end
+                ]
             else:
-                valid_and_file = [(valid, filename)
-                                  for valid, filename in valid_and_file
-                                  if valid >= valid_start]
+                valid_and_file = [
+                    (valid, filename) for valid, filename in valid_and_file if valid >= valid_start
+                ]
         elif valid_end:
-            valid_and_file = [(valid, filename)
-                              for valid, filename in valid_and_file
-                              if valid <= valid_end]
+            valid_and_file = [
+                (valid, filename) for valid, filename in valid_and_file if valid <= valid_end
+            ]
 
         return valid_and_file
 
-    def _get_issues(self,
-                    dir_path: str,
-                    num_issues: int = 1
-                    ) -> set[datetime]:
+    def _get_issues(self, dir_path: str, num_issues: int = 1) -> set[datetime]:
         """Get all objects consistent with the passed directory path and filter by valid range
 
         Args:
@@ -211,9 +209,9 @@ class ProtocolUtils(ABC):
         issues_set: set[datetime] = set()
         # sort files alphabetically in reverse; this should give us the longest lead time first
         # which is more indicative that the issueDt is fully available on this server
-        filepaths = sorted((f for f in self.ls(dir_path)
-                            if f.endswith(self.path_builder.file_ext)),
-                           reverse=True)
+        filepaths = sorted(
+            (f for f in self.ls(dir_path) if f.endswith(self.path_builder.file_ext)), reverse=True
+        )
         for file_path in filepaths:
             try:
                 issues_set.add(self.path_builder.get_issue(file_path))

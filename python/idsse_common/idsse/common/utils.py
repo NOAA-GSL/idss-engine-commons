@@ -1,4 +1,5 @@
 """A collection of useful classes and utility functions"""
+
 # -------------------------------------------------------------------------------
 # Created on Wed Feb 15 2023
 #
@@ -26,8 +27,9 @@ logger = logging.getLogger(__name__)
 
 class RoundingMethod(Enum):
     """Transformations indicators to be applied to numbers when rounding to ints"""
-    ROUND = 'ROUND'
-    FLOOR = 'FLOOR'
+
+    ROUND = "ROUND"
+    FLOOR = "FLOOR"
 
 
 RoundingParam = str | RoundingMethod
@@ -35,6 +37,7 @@ RoundingParam = str | RoundingMethod
 
 class TimeDelta(timedelta):
     """Extend class for datetime.timedelta to add helpful properties."""
+
     def __new__(cls, *args, **kwargs):
         if isinstance(args[0], timedelta):
             return super().__new__(cls, seconds=args[0].total_seconds())
@@ -98,7 +101,7 @@ class Map(dict):
         del self.__dict__[key]
 
 
-class FileBasedLock():
+class FileBasedLock:
     """
     Ensure atomic read/write of a given file using only the filesystem; behavior is the same
     whether workers accessing the file are distributed across Python threads, subprocesses,
@@ -117,6 +120,7 @@ class FileBasedLock():
     # lock is now released for other threads/processes
     ```
     """
+
     def __init__(self, filepath: str, max_age: float):
         """
         Args:
@@ -129,7 +133,7 @@ class FileBasedLock():
                 for this file type and usage.
         """
         self.filepath = os.path.abspath(filepath)
-        self._lock_path = f'{self.filepath}.lock'
+        self._lock_path = f"{self.filepath}.lock"
         self._max_age = max_age
 
     def __enter__(self):
@@ -200,8 +204,8 @@ class FileBasedLock():
     def _create_lockfile(self):
         """The actual functionality triggered by `acquire()` (after lock is confirmed free)"""
         os.makedirs(os.path.dirname(self._lock_path), exist_ok=True)
-        with open(self._lock_path, 'w', encoding='utf-8') as file:
-            file.write('')
+        with open(self._lock_path, "w", encoding="utf-8") as file:
+            file.write("")
 
 
 def exec_cmd(commands: Sequence[str], timeout: int | None = None) -> Sequence[str]:
@@ -216,7 +220,7 @@ def exec_cmd(commands: Sequence[str], timeout: int | None = None) -> Sequence[st
     Returns:
         Sequence[str]: Result of executing the commands
     """
-    logger.debug('Making system call %s', commands)
+    logger.debug("Making system call %s", commands)
     with Popen(commands, stdout=PIPE, stderr=PIPE) as process:
         try:
             outs, errs = process.communicate(timeout=timeout)
@@ -236,15 +240,18 @@ def exec_cmd(commands: Sequence[str], timeout: int | None = None) -> Sequence[st
 
 def to_iso(date_time: datetime) -> str:
     """Format a datetime instance to an ISO string"""
-    return (f'{date_time.strftime("%Y-%m-%dT%H:%M")}:'
-            f'{(date_time.second + date_time.microsecond / 1e6):06.3f}'
-            'Z' if date_time.tzname() in [None, str(UTC)]
-            else date_time.strftime("%Z")[3:])
+    return (
+        f'{date_time.strftime("%Y-%m-%dT%H:%M")}:'
+        f"{(date_time.second + date_time.microsecond / 1e6):06.3f}"
+        "Z"
+        if date_time.tzname() in [None, str(UTC)]
+        else date_time.strftime("%Z")[3:]
+    )
 
 
 def to_compact(date_time: datetime) -> str:
     """Format a datetime instance to a compact string"""
-    return date_time.strftime('%Y%m%d%H%M%S')
+    return date_time.strftime("%Y%m%d%H%M%S")
 
 
 def hash_code(string: str) -> int:
@@ -277,10 +284,9 @@ def dict_copy_with(old_dict: dict, **kwargs) -> dict:
     return new_dict
 
 
-def datetime_gen(dt_start: datetime,
-                 time_delta: timedelta,
-                 dt_end: datetime | None = None,
-                 max_num: int = 100) -> Generator[datetime, Any, None]:
+def datetime_gen(
+    dt_start: datetime, time_delta: timedelta, dt_end: datetime | None = None, max_num: int = 100
+) -> Generator[datetime, Any, None]:
     """Create a date/time sequence generator, given a starting date/time and a time stride
 
     Args:
@@ -298,15 +304,14 @@ def datetime_gen(dt_start: datetime,
     if dt_end:
         time_delta_pos = time_delta > timedelta(seconds=0)
 
-        if (dt_start > dt_end and time_delta_pos) or \
-                (dt_start < dt_end and not time_delta_pos):
+        if (dt_start > dt_end and time_delta_pos) or (dt_start < dt_end and not time_delta_pos):
             time_delta = timedelta(seconds=-1.0 * time_delta.total_seconds())
 
         dt_cnt = int((dt_end - dt_start) / time_delta) + 1
         max_num = min(max_num, dt_cnt) if max_num else dt_cnt
 
     for i in range(0, max_num):
-        logger.debug('dt generator %d/%d', i, max_num)
+        logger.debug("dt generator %d/%d", i, max_num)
         yield dt_start + time_delta * i
 
 
@@ -340,21 +345,20 @@ def round_half_away(number: int | float, precision: int = 0) -> int | float:
     Returns:
         (int | float): rounded number as int if precision is 0, otherwise as float
     """
-    factor = 10 ** precision
+    factor = 10**precision
     factored_number = number * factor
     is_less_than_half = abs(factored_number - math.trunc(factored_number)) < 0.5
 
     rounded_number = (
-        _round_toward_zero(factored_number) if is_less_than_half
+        _round_toward_zero(factored_number)
+        if is_less_than_half
         else _round_away_from_zero(factored_number)
     ) / factor
     return int(rounded_number) if precision == 0 else float(rounded_number)
 
 
 def round_(
-    number: int | float,
-    precision: int = 0,
-    rounding: RoundingParam = RoundingMethod.ROUND
+    number: int | float, precision: int = 0, rounding: RoundingParam = RoundingMethod.ROUND
 ) -> int | float:
     """
     Round a float to a set number of decimal places, using "ties away from zero" method if rounding
@@ -384,13 +388,13 @@ def round_(
         try:
             rounding = RoundingMethod[rounding.upper()]
         except KeyError as exc:
-            raise ValueError(f'Unsupported rounding method {rounding}') from exc
+            raise ValueError(f"Unsupported rounding method {rounding}") from exc
 
     if rounding is RoundingMethod.ROUND:
         return round_half_away(number, precision)
     if rounding is RoundingMethod.FLOOR:
         return math.floor(number)
-    raise ValueError('rounding method cannot be None')
+    raise ValueError("rounding method cannot be None")
 
 
 def round_values(

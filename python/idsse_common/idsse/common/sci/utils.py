@@ -1,4 +1,5 @@
 """A collection of useful classes and utility functions involving scientific libraries"""
+
 # -----------------------------------------------------------------------------------
 # Created on Wed Jan 24 2024
 #
@@ -15,14 +16,15 @@ from collections.abc import Sequence
 from typing import NewType
 
 import numpy
+
 # import shapely
 
 logger = logging.getLogger(__name__)
 
 # type aliases
-Pixel = NewType('Pixel', Sequence[int])
-Coord = NewType('Coord', Sequence[float])
-Coords = NewType('Coords', Sequence[Coord])
+Pixel = NewType("Pixel", Sequence[int])
+Coord = NewType("Coord", Sequence[float])
+Coords = NewType("Coords", Sequence[Coord])
 
 
 def coordinate_pairs_to_axes(

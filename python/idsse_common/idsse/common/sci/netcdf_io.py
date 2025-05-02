@@ -1,4 +1,5 @@
 """Utilities for reading NetCDF files"""
+
 # ----------------------------------------------------------------------------------
 # Created on Mon Feb 13 2023
 #
@@ -26,6 +27,7 @@ logger = logging.getLogger(__name__)
 # cSpell:ignore ncattrs, getncattr, maskandscale
 class HasNcAttr(Protocol):
     """Protocol that allows retrieving attributes"""
+
     def ncattrs(self) -> Sequence[str]:
         """Gives access to list of keys
 
@@ -68,23 +70,20 @@ def read_netcdf(filepath: str, use_h5_lib: bool = False) -> tuple[dict, np.ndarr
         tuple[dict, np.ndarray]: Global attributes and data
     """
     if use_h5_lib:
-        with h5nc.File(filepath, 'r') as nc_file:
-            grid = nc_file.variables['grid'][:]
+        with h5nc.File(filepath, "r") as nc_file:
+            grid = nc_file.variables["grid"][:]
             return nc_file.attrs, grid
 
     # otherwise, use netcdf4 library (default)
     with Dataset(filepath) as dataset:
         dataset.set_auto_maskandscale(False)
-        grid = dataset.variables['grid'][:]
+        grid = dataset.variables["grid"][:]
 
         global_attrs = _read_attrs(dataset)
         return global_attrs, grid
 
 
-def write_netcdf(attrs: dict,
-                 grid: np.ndarray,
-                 filepath: str,
-                 use_h5_lib: bool = False) -> str:
+def write_netcdf(attrs: dict, grid: np.ndarray, filepath: str, use_h5_lib: bool = False) -> str:
     """Store data and attributes to a Netcdf4 file
 
     Args:
@@ -101,14 +100,14 @@ def write_netcdf(attrs: dict,
     dirname = os.path.dirname(os.path.abspath(filepath))
     os.makedirs(dirname, exist_ok=True)
 
-    logger.debug('Writing data to: %s', filepath)
+    logger.debug("Writing data to: %s", filepath)
     if use_h5_lib:
-        with h5nc.File(filepath, 'w') as file:
+        with h5nc.File(filepath, "w") as file:
             y_dimensions, x_dimensions = grid.shape
             # set dimensions with a dictionary
-            file.dimensions = {'x': x_dimensions, 'y': y_dimensions}
+            file.dimensions = {"x": x_dimensions, "y": y_dimensions}
 
-            grid_var = file.create_variable('grid', ('y', 'x'), 'f4')
+            grid_var = file.create_variable("grid", ("y", "x"), "f4")
             grid_var[:] = grid
 
             for key, value in attrs.items():
@@ -117,12 +116,12 @@ def write_netcdf(attrs: dict,
         return filepath
 
     # otherwise, write file using netCDF4 library (default)
-    with Dataset(filepath, 'w', format='NETCDF4') as dataset:
+    with Dataset(filepath, "w", format="NETCDF4") as dataset:
         y_dimensions, x_dimensions = grid.shape
-        dataset.createDimension('x', x_dimensions)
-        dataset.createDimension('y', y_dimensions)
+        dataset.createDimension("x", x_dimensions)
+        dataset.createDimension("y", y_dimensions)
 
-        grid_var = dataset.createVariable('grid', 'f4', ('y', 'x'))
+        grid_var = dataset.createVariable("grid", "f4", ("y", "x"))
         grid_var[:] = grid
 
         for key, value in attrs.items():

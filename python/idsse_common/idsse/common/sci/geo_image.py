@@ -1,4 +1,5 @@
 """Utility for generating geo referenced images"""
+
 # ----------------------------------------------------------------------------------
 # Created on Fri Dec 29 2023
 #
@@ -29,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 class Color(NamedTuple):
     """Data class used to hold RGB colors"""
+
     red: float
     green: float
     blue: float
@@ -36,6 +38,7 @@ class Color(NamedTuple):
 
 class ColorPalette(NamedTuple):
     """Color Palette Class"""
+
     lut: Sequence[Color]
     num_colors: int
     under_idx: int
@@ -51,7 +54,7 @@ class ColorPalette(NamedTuple):
         colors: Sequence[Color],
         anchors: Sequence[int] | None = None,
         min_value: float | None = None,
-        max_value: float | None = None
+        max_value: float | None = None,
     ) -> Self:
         """Create a color palette by linearly interpolating between colors
 
@@ -73,17 +76,18 @@ class ColorPalette(NamedTuple):
         num = len(colors)
         if anchors is not None:
             if len(anchors) != num:
-                raise ValueError('Colors and Anchors must be of the same length')
+                raise ValueError("Colors and Anchors must be of the same length")
             if min_value:
-                anchors = [x-min_value for x in anchors]
+                anchors = [x - min_value for x in anchors]
             if max_value:
-                anchors = [x/max_value*255 for x in anchors]
+                anchors = [x / max_value * 255 for x in anchors]
             xp = anchors
         else:
-            xp = [round_(pos, rounding='floor') for pos in np.linspace(0, 255, num=num)]
+            xp = [round_(pos, rounding="floor") for pos in np.linspace(0, 255, num=num)]
         lut = list(
-            (round_(r, 0, 'floor'), round_(g, 0, 'floor'), round_(b, 0, 'floor')) for (r, g, b) in
-            zip(*list(np.interp(range(256), xp, fp) for fp in np.array(colors).T)))
+            (round_(r, 0, "floor"), round_(g, 0, "floor"), round_(b, 0, "floor"))
+            for (r, g, b) in zip(*list(np.interp(range(256), xp, fp) for fp in np.array(colors).T))
+        )
         return ColorPalette(lut, 256, 0, 255, 0, min_value, max_value)
 
     @classmethod
@@ -106,7 +110,7 @@ class ColorPalette(NamedTuple):
         return color_palette
 
 
-class GeoImage():
+class GeoImage:
     """Geographic Image Class"""
 
     def __init__(self, proj: GridProj, rgb_array: np.ndarray, scale: int = 1):
@@ -116,10 +120,7 @@ class GeoImage():
 
     @classmethod
     def from_proj(
-        cls,
-        proj: GridProj,
-        fill_color: Color = (255, 255, 255),
-        scale: int = 1
+        cls, proj: GridProj, fill_color: Color = (255, 255, 255), scale: int = 1
     ) -> Self:
         """Method for building a geographical image without background data.
 
@@ -132,7 +133,7 @@ class GeoImage():
         Returns:
             Self: GeoImage
         """
-        rgb_array = np.zeros((proj.width*scale, proj.height*scale, 3), np.uint8)
+        rgb_array = np.zeros((proj.width * scale, proj.height * scale, 3), np.uint8)
         rgb_array[...] = fill_color
         return GeoImage(proj, rgb_array, scale)
 
@@ -142,7 +143,7 @@ class GeoImage():
         proj: GridProj,
         index_array: np.ndarray,
         colors: ColorPalette | None = None,
-        scale: int = 1
+        scale: int = 1,
     ) -> Self:
         """Method for building a geographical image from previously indexed data in a ndarray.
         Meaning that the data grid is has been mapped to indexed values that map to the provided
@@ -179,7 +180,7 @@ class GeoImage():
         scale: int = 1,
         min_value: float | None = None,
         max_value: float | None = None,
-        fill_value: float | None = None
+        fill_value: float | None = None,
     ) -> Self:
         """Method for building a geographical image from data in a ndarray.
 
@@ -240,7 +241,7 @@ class GeoImage():
 
     def show(self):
         """A convenience method for showing the current state of the image"""
-        image = Image.fromarray(np.flipud(np.transpose(self.rgb_array, [1, 0, 2])), mode='RGB')
+        image = Image.fromarray(np.flipud(np.transpose(self.rgb_array, [1, 0, 2])), mode="RGB")
         image.show()
 
     def draw_point(self, i: float, j: float, color: Color, geo: bool = True):
@@ -255,15 +256,11 @@ class GeoImage():
         """
         if geo:
             i, j = self.proj.map_geo_to_pixel(i, j)
-        self.rgb_array[int(i*self.scale), int(j*self.scale)] = color
+        self.rgb_array[int(i * self.scale), int(j * self.scale)] = color
 
     def draw_line_seg(  # pylint: disable=too-many-arguments
-            self,
-            i_1: float, j_1: float,
-            i_2: float, j_2: float,
-            color: Color,
-            geo: bool = True
-            ):
+        self, i_1: float, j_1: float, i_2: float, j_2: float, color: Color, geo: bool = True
+    ):
         """Draw a line segment onto the image, will only be on image cell wide
         and doesn't make use of scale.
 
@@ -276,14 +273,9 @@ class GeoImage():
             geo (bool): Flag that indicates if the i,j's are geographic (ie lon/lat) or pixel.
                         Defaults to True.
         """
-        self.draw_shape(f'LINESTRING ({i_1} {j_1}, {i_2} {j_2})', color, geo=geo)
+        self.draw_shape(f"LINESTRING ({i_1} {j_1}, {i_2} {j_2})", color, geo=geo)
 
-    def draw_linestring(
-        self,
-        shape: Geometry,
-        color: Color,
-        geo: bool = True
-    ):
+    def draw_linestring(self, shape: Geometry, color: Color, geo: bool = True):
         """Draw the outline of a shape onto the image, treats all parts (exterior, holes, ect)
         as linestrings.
 
@@ -312,14 +304,9 @@ class GeoImage():
             for poly in shape.geoms:
                 self.draw_linestring(poly, color, geo=False)
         else:
-            raise TypeError(f'Passed shape (with type: {type(shape)}) in not currently supported')
+            raise TypeError(f"Passed shape (with type: {type(shape)}) in not currently supported")
 
-    def draw_shape(
-        self,
-        shape: Geometry | str | dict,
-        color: Color,
-        geo: bool = True
-    ):
+    def draw_shape(self, shape: Geometry | str | dict, color: Color, geo: bool = True):
         """Draw a shape onto the image, points and lines will only be on image cell wide
         and polygon will be filled, doesn't make use of scale.
 
@@ -342,19 +329,21 @@ class GeoImage():
             shape = geographic_to_pixel(shape, self.proj)
 
         if isinstance(shape, LineString):
-            vertices = [(int(i*self.scale), int(j*self.scale)) for i, j in shape.coords]
+            vertices = [(int(i * self.scale), int(j * self.scale)) for i, j in shape.coords]
             shape = LineString(vertices)
         elif isinstance(shape, Polygon):
-            outer = [(int(i*self.scale), int(j*self.scale)) for i, j in shape.exterior.coords]
-            inner = [[(int(i*self.scale), int(j*self.scale)) for i, j in inner.coords]
-                     for inner in shape.interiors]
+            outer = [(int(i * self.scale), int(j * self.scale)) for i, j in shape.exterior.coords]
+            inner = [
+                [(int(i * self.scale), int(j * self.scale)) for i, j in inner.coords]
+                for inner in shape.interiors
+            ]
             shape = Polygon(outer, inner)
         elif isinstance(shape, MultiPolygon):
             for poly in shape.geoms:
                 self.draw_shape(poly, color, False)
             return
         else:
-            raise TypeError(f'Passed shape (with type: {type(shape)}) in not currently supported')
+            raise TypeError(f"Passed shape (with type: {type(shape)}) in not currently supported")
 
         coords = rasterize(shape)
 
@@ -375,9 +364,9 @@ class GeoImage():
         if geo:
             i, j = self.proj.map_geo_to_pixel(i, j)
 
-        i = math.floor(i)*self.scale
-        j = math.floor(j)*self.scale
-        self.rgb_array[i:i+self.scale, j:j+self.scale] = color
+        i = math.floor(i) * self.scale
+        j = math.floor(j) * self.scale
+        self.rgb_array[i : i + self.scale, j : j + self.scale] = color
 
     def set_pixel_for_shape(self, shape: Geometry, color: Color, geo: bool = True):
         """Set all image cell associated with geometry to the specified color.
@@ -409,12 +398,12 @@ class GeoImage():
         if geo:
             i, j = self.proj.map_geo_to_pixel(i, j)
 
-        i = math.floor(i)*self.scale
-        j = math.floor(j)*self.scale
-        self.rgb_array[i:i+self.scale, j] = color
-        self.rgb_array[i:i+self.scale, j+self.scale-1] = color
-        self.rgb_array[i, j:j+self.scale] = color
-        self.rgb_array[i+self.scale-1, j:j+self.scale] = color
+        i = math.floor(i) * self.scale
+        j = math.floor(j) * self.scale
+        self.rgb_array[i : i + self.scale, j] = color
+        self.rgb_array[i : i + self.scale, j + self.scale - 1] = color
+        self.rgb_array[i, j : j + self.scale] = color
+        self.rgb_array[i + self.scale - 1, j : j + self.scale] = color
 
     def outline_pixel_for_shape(self, shape, color, geo: bool = True):
         """Set all image cell associated outside edge of pixels associated with geometry
@@ -452,7 +441,7 @@ class GeoImage():
             color (Color): RGB value as a tuple of three values between 0 and 255
         """
         states = _get_states_json()
-        if state == 'All':
+        if state == "All":
             for state_geo in states.values():
                 self.draw_linestring(state_geo, color)
         elif isinstance(state, str):
@@ -466,7 +455,7 @@ def normalize(
     array: np.ndarray,
     min_value: float | None = None,
     max_value: float | None = None,
-    missing_value: float | None = None
+    missing_value: float | None = None,
 ) -> np.ndarray | np.ma.MaskedArray:
     """Normalize a data array, map the values in array to between [0, 1]
 
@@ -541,11 +530,11 @@ def normalize(
 
 
 def scale_to_color_palette(
-        norm_array: np.ndarray | np.ma.MaskedArray,
-        num_colors: int,
-        with_under: bool = False,
-        with_over: bool = False,
-        with_fill: bool = False
+    norm_array: np.ndarray | np.ma.MaskedArray,
+    num_colors: int,
+    with_under: bool = False,
+    with_over: bool = False,
+    with_fill: bool = False,
 ) -> np.ndarray:
     """Take a normalized array and build index array relative to a color palette.
 
@@ -577,7 +566,7 @@ def scale_to_color_palette(
     if with_under:
         under_idx = next_idx
         next_idx += 1
-    over_idx = num_colors-1
+    over_idx = num_colors - 1
     if with_over:
         over_idx = next_idx
         next_idx += 1
@@ -586,7 +575,7 @@ def scale_to_color_palette(
         bad_idx = next_idx
 
     with np.errstate(invalid="ignore"):
-        array = (norm_array * (num_colors-1)).astype(int)
+        array = (norm_array * (num_colors - 1)).astype(int)
 
     if np.ma.is_masked(array):
         norm_array = norm_array.data
@@ -601,10 +590,10 @@ def scale_to_color_palette(
 def _get_states_json() -> dict[str, Any]:
     """Load geojson of US states into a dict"""
     current_path = os.path.dirname(os.path.realpath(__file__))
-    states_filename = os.path.join(current_path, 'resources', 'us_states.json')
-    with open(states_filename, 'r', encoding='utf8') as file:
+    states_filename = os.path.join(current_path, "resources", "us_states.json")
+    with open(states_filename, "r", encoding="utf8") as file:
         states_json = json.load(file)
     states = {}
-    for feature in states_json['features']:
-        states[feature['properties']['NAME']] = from_geojson(json.dumps(feature))
+    for feature in states_json["features"]:
+        states[feature["properties"]["NAME"]] = from_geojson(json.dumps(feature))
     return states

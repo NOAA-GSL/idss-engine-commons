@@ -1,4 +1,5 @@
 """Test suite for netcdf_io.py"""
+
 # --------------------------------------------------------------------------------
 # Created on Mon May 1 2023
 #
@@ -19,27 +20,27 @@ from idsse.common.sci.netcdf_io import read_netcdf, read_netcdf_global_attrs, wr
 
 
 # test data
-EXAMPLE_NETCDF_FILEPATH = f'{os.path.dirname(__file__)}/../resources/gridstore55657865.nc'
+EXAMPLE_NETCDF_FILEPATH = f"{os.path.dirname(__file__)}/../resources/gridstore55657865.nc"
 
 EXAMPLE_ATTRIBUTES = {
-    'product': 'NBM.AWS.GRIB',
-    'field': 'TEMP',
-    'valid_dt': '2022-11-11 17:00:00+00:00',
-    'issue_dt': '2022-11-11 14:00:00+00:00',
-    'task': 'data_task',
-    'region': 'CONUS',
-    'units': 'Fahrenheit',
-    'proj_name': 'NBM',
-    'proj_spec': '+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +a=6371200',
-    'grid_spec': '+dx=2539.703 +dy=2539.703 +w=2345 +h=1597 +lat_ll=19.229 +lon_ll=-126.2766',
-    'data_key': 'NBM.AWS.GRIB:CO:TEMP::Fahrenheit::20221111140000.20221111170000',
-    'data_name': 'Temperature: 2m',
-    'data_loc': 'arn:aws:s3:::noaa-nbm-grib2-pds:',
-    'data_order': 'latitude,longitude'
+    "product": "NBM.AWS.GRIB",
+    "field": "TEMP",
+    "valid_dt": "2022-11-11 17:00:00+00:00",
+    "issue_dt": "2022-11-11 14:00:00+00:00",
+    "task": "data_task",
+    "region": "CONUS",
+    "units": "Fahrenheit",
+    "proj_name": "NBM",
+    "proj_spec": "+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +a=6371200",
+    "grid_spec": "+dx=2539.703 +dy=2539.703 +w=2345 +h=1597 +lat_ll=19.229 +lon_ll=-126.2766",
+    "data_key": "NBM.AWS.GRIB:CO:TEMP::Fahrenheit::20221111140000.20221111170000",
+    "data_name": "Temperature: 2m",
+    "data_loc": "arn:aws:s3:::noaa-nbm-grib2-pds:",
+    "data_order": "latitude,longitude",
 }
 
 EXAMPLE_PROD_KEY = (
-    'product:NBM.AWS.GRIB-field:TEMP-issue:20221111140000-valid:20221112000000-units:Fahrenheit'
+    "product:NBM.AWS.GRIB-field:TEMP-issue:20221111140000-valid:20221112000000-units:Fahrenheit"
 )
 
 
@@ -72,9 +73,9 @@ def test_read_netcdf(example_netcdf_data: tuple[dict[str, any], ndarray]):
 
 @fixture
 def destination_nc_file() -> str:
-    parent_dir = os.path.abspath('./tmp')
-    file = 'test_netcdf_file.nc'
-    filepath = f'{parent_dir}/{file}'
+    parent_dir = os.path.abspath("./tmp")
+    file = "test_netcdf_file.nc"
+    filepath = f"{parent_dir}/{file}"
     # create test file dir if needed
     if not os.path.exists(parent_dir):
         os.mkdir(parent_dir)
@@ -91,13 +92,14 @@ def destination_nc_file() -> str:
         os.rmdir(parent_dir)
 
 
-def test_read_and_write_netcdf(example_netcdf_data: tuple[dict[str, any], ndarray],
-                               destination_nc_file: str):
+def test_read_and_write_netcdf(
+    example_netcdf_data: tuple[dict[str, any], ndarray], destination_nc_file: str
+):
     attrs, grid = example_netcdf_data
 
     # verify write_netcdf functionality
-    attrs['prodKey'] = EXAMPLE_PROD_KEY
-    attrs['prodSource'] = attrs['product']
+    attrs["prodKey"] = EXAMPLE_PROD_KEY
+    attrs["prodSource"] = attrs["product"]
     written_filepath = write_netcdf(attrs, grid, destination_nc_file)
     assert written_filepath == destination_nc_file
     assert os.path.exists(destination_nc_file)
@@ -107,13 +109,14 @@ def test_read_and_write_netcdf(example_netcdf_data: tuple[dict[str, any], ndarra
     assert new_file_grid[123][321] == grid[123][321]
 
 
-def test_read_and_write_netcdf_with_h5nc(example_netcdf_data: tuple[dict[str, any], ndarray],
-                                         destination_nc_file: str):
+def test_read_and_write_netcdf_with_h5nc(
+    example_netcdf_data: tuple[dict[str, any], ndarray], destination_nc_file: str
+):
     attrs, grid = example_netcdf_data
 
     # verify write_netcdf_with_h5nc functionality
-    attrs['prodKey'] = EXAMPLE_PROD_KEY
-    attrs['prodSource'] = attrs['product']
+    attrs["prodKey"] = EXAMPLE_PROD_KEY
+    attrs["prodSource"] = attrs["product"]
     written_filepath = write_netcdf(attrs, grid, destination_nc_file, use_h5_lib=True)
     assert written_filepath == destination_nc_file
 
