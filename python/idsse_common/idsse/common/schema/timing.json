@@ -1,42 +1,44 @@
 {
-    "TimeString": {
-        "description": "String representation of a date/time",
-        "type": "string",
-        "format": "date-time"
-    },
-    
-    "TimeList": {
-        "description": "A list of specific time_string(s)",
-        "type": "array",
-        "items": {"$ref": "#/TimeString"},
-        "minItems": 1
-    },
+  "TimeString": {
+    "description": "String representation of a date/time",
+    "type": "string",
+    "format": "date-time"
+  },
 
-    "TimeObject": {
-        "description": "Either a time range specifying the start and end date/times, or a list of specific date/times",
-        "type": "object",
-        "properties": {
-          "start": {"$ref": "#/TimeString" },
-          "end": {"$ref": "#/TimeString" },
-          "times": {"$ref": "#/TimeList"},
-          "proximal": {"type": "boolean"}
-        },
-        "dependencies": {
-          "start": ["end"],
-          "end": ["start"]
-        },
-        "oneOf": [
-          { "required": ["start"] },
-          { "required": ["times"] }
-        ]
-    },
-    
-    "Timing": {
-        "description": "A list of one or more timing objects",
-        "type": "array",
-        "items": {"$ref": "#/TimeObject"},
-        "minItems": 1
-    }
-}    
+  "TimeStringOrNull": {
+    "description": "String representation of a date/time",
+    "type": ["string", "null"],
+    "format": "date-time"
+  },
 
-  
+  "TimeList": {
+    "description": "A list of specific time_string(s)",
+    "type": "array",
+    "items": { "$ref": "#/TimeString" },
+    "minItems": 1
+  },
+
+  "TimeObject": {
+    "description": "Either a time range specifying the start and end date/times, or a list of specific date/times",
+    "type": "object",
+    "properties": {
+      "start": { "$ref": "#/TimeString" },
+      "end": { "$ref": "#/TimeString" },
+      "times": { "$ref": "#/TimeList" },
+      "proximal": { "type": "boolean" }
+    },
+    "dependencies": {
+      "start": ["end"],
+      "end": ["start"]
+    },
+    "oneOf": [{ "required": ["start"] }, { "required": ["times"] }]
+  },
+
+  "Timing": {
+    "description": "A list of one or more timing objects",
+    "type": "array",
+    "items": { "$ref": "#/TimeObject" },
+    "minItems": 1
+  }
+}
+

@@ -1,159 +1,164 @@
 {
-    "DataDescription": {
-        "description": "Identification of the data used for evaluation",
-        "properties": {
-            "partName": {
-                "type": "string"
-            },
-            "dataName": {
-                "type": "string"
-            },
-            "dataLocation": {
-                "type": "string"
-            },
-            "issueDt": {"$ref": "timing.json#/TimeString"}
-        },
-        "required": [
-            "partName",
-            "dataName",
-            "dataLocation",
-            "issueDt"
-        ]
-    }, 
-
-    "SingleValue": {
-        "description": "Mechanism for storing the 'Single Value' result for a specific Condition/Location/Product(s)",
-        "type": "object",
-        "properties": {
-            "criteria": {"type": "array", "items": {"type": "number"}, "minItems": 1},
-            "raw": {"type": "array", "items": {"type": "number"}, "minItems": 1}
-        },
-        "required": [
-            "criteria",
-            "raw"
-        ]
+  "DataDescription": {
+    "description": "Identification of the data used for evaluation",
+    "properties": {
+      "partName": {
+        "type": "string"
+      },
+      "productName": {
+        "type": ["string", "null"]
+      },
+      "dataName": {
+        "type": ["string", "null"]
+      },
+      "dataLocation": {
+        "type": ["string", "null"]
+      },
+      "issueDt": { "$ref": "timing.json#/TimeStringOrNull" }
     },
+    "required": ["partName", "dataName", "dataLocation", "issueDt"]
+  },
 
-    "ValueCount": {
-        "description": "Value found in data and the number of time found",
-        "type": "object",
-        "patternProperties": {
-            "[+-]?(?:0|[1-9]d*)(?:.d+)?(?:[eE][+-]?d+)?": {"type": "integer"},
-            "[^0-9.+-E]": {"not": {}}
-        },
-        "minProperties": 1
+  "SingleValue": {
+    "description": "Mechanism for storing the 'Single Value' result for a specific Condition/Location/Product(s)",
+    "type": "object",
+    "properties": {
+      "criteria": {
+        "type": "array",
+        "items": { "type": "number" },
+        "minItems": 1
+      },
+      "raw": { "type": "array", "items": { "type": "number" }, "minItems": 1 }
     },
+    "required": ["criteria", "raw"]
+  },
 
-    "DataType": {
-        "type": "string", "enum": ["condition", "criteria", "raw"]
+  "ValueCount": {
+    "description": "Value found in data and the number of time found",
+    "type": "object",
+    "patternProperties": {
+      "[+-]?(?:0|[1-9]d*)(?:.d+)?(?:[eE][+-]?d+)?": { "type": "integer" },
+      "[^0-9.+-E]": { "not": {} }
     },
+    "minProperties": 1
+  },
 
-    "Data": {
-        "description": "Mechanism for storing the data values contained the criteria location",
-        "type": "object",
-        "properties": {
-            "name": {"type": "string"},
-            "type": {"$ref": "#/DataType"},
-            "singleValue": {
-                "type": "array",
-                "items": {"type": "number"}
-            },
-            "geoDist": {
-                "type": "array",
-                "items": {"$ref": "#/ValueCount"}
-            }
-        },
-        "required": [
-            "name",
-            "type",
-            "singleValue",
-            "geoDist"
-        ]
+  "DataType": {
+    "type": "string",
+    "enum": ["condition", "criteria", "raw"]
+  },
+
+  "Data": {
+    "description": "Mechanism for storing the data values contained the criteria location",
+    "type": "object",
+    "properties": {
+      "name": { "type": "string" },
+      "type": { "$ref": "#/DataType" },
+      "singleValue": {
+        "type": "array",
+        "items": { "type": "number" }
+      },
+      "geoDist": {
+        "type": "array",
+        "items": { "$ref": "#/ValueCount" }
+      }
     },
+    "required": ["name", "type", "singleValue", "geoDist"]
+  },
 
-    "DataSummary": {
-        "description": "Mechanism for storing the data associated with a criteria for a specific set of valid date/times",
-        "type": "object",
-        "properties": {
-            "validDt": {"type": "array", "items": {"$ref": "timing.json#/TimeString"}, "minItems": 1},
-            "data": {"type": "array", "items": {"$ref": "#/Data"}, "minItems": 2}
-        },
-        "required": [
-            "validDt",
-            "data"
-        ]
+  "DataSummary": {
+    "description": "Mechanism for storing the data associated with a criteria for a specific set of valid date/times",
+    "type": "object",
+    "properties": {
+      "validDt": {
+        "type": "array",
+        "items": { "$ref": "timing.json#/TimeString" },
+        "minItems": 0
+      },
+      "data": { "type": "array", "items": { "$ref": "#/Data" }, "minItems": 2 }
     },
+    "required": ["validDt", "data"]
+  },
 
-    "StateType": {
-        "type": "string", "enum": ["HIT", "MISS", "PROXIMAL", "NONE"]
+  "StateType": {
+    "type": "string",
+    "enum": ["HIT", "MISS", "PROXIMAL", "NONE"]
+  },
+
+  "State": {
+    "description": "Mechanism for storing the a contiguous state (when the criteria is met or not met",
+    "type": "object",
+    "properties": {
+      "empirical": { "$ref": "#/StateType" },
+      "geographic": { "$ref": "#/StateType" },
+      "temporal": { "$ref": "#/StateType" },
+      "startDt": { "$ref": "timing.json#/TimeString" },
+      "endDt": { "$ref": "timing.json#/TimeString" },
+      "durationInMin": { "type": "integer" },
+      "min": { "type": "number" },
+      "max": { "type": "number" },
+      "minAt": { "$ref": "timing.json#/TimeString" },
+      "maxAt": { "$ref": "timing.json#/TimeString" }
     },
+    "required": [
+      "empirical",
+      "startDt",
+      "endDt",
+      "durationInMin",
+      "min",
+      "max",
+      "minAt",
+      "maxAt"
+    ]
+  },
 
-    "State": {
-        "description": "Mechanism for storing the a contiguous state (when the criteria is met or not met",
-        "type": "object",
-        "properties": {
-            "empirical": {"$ref": "#/StateType"},
-            "geographic": {"$ref": "#/StateType"},
-            "temporal": {"$ref": "#/StateType"},
-            "startDt": {"$ref": "timing.json#/TimeString"},
-            "endDt": {"$ref": "timing.json#/TimeString"},
-            "durationInMin": {"type": "integer"},
-            "min": {"type": "number"},
-            "max": {"type": "number"},
-            "minAt": {"$ref": "timing.json#/TimeString"},
-            "maxAt": {"$ref": "timing.json#/TimeString"}
-        },
-        "required": [
-            "empirical",
-            "startDt",
-            "endDt",
-            "durationInMin",
-            "min",
-            "max",
-            "minAt",
-            "maxAt"
-        ]
-    }, 
-
-    "MetaData": {
-        "description": "Mechanism for storing the list of State Objects, these describe the met/notMet states for the full time frame",
-        "type": "object",
-        "properties": {
-            "name": {"type": "string"},
-            "type": {"$ref": "#/DataType"},
-            "states": {
-                "type": "array",
-                "items": {"$ref": "#/State"},
-                "minItems": 1        
-            }
-        },
-        "required": [
-            "name",
-            "type",
-            "states"
-        ]
+  "MetaData": {
+    "description": "Mechanism for storing the list of State Objects, these describe the met/notMet states for the full time frame",
+    "type": "object",
+    "properties": {
+      "name": { "type": "string" },
+      "type": { "$ref": "#/DataType" },
+      "states": {
+        "type": "array",
+        "items": { "$ref": "#/State" },
+        "minItems": 1
+      }
     },
+    "required": ["name", "type", "states"]
+  },
 
-    "RiskResults": {
-        "description": "Mechanism for storing the result from the Risk Processor",
-        "type": "object",
-        "properties": {
-            "evaluatedAt": {"$ref": "timing.json#/TimeString"},
-            "conditionKey": {"type": "string"},
-            "locationKey": {"type": "string"},
-            "productKey": {"type": "string"},
-            "dataDescript": {"type": "array", "items": {"$ref": "#/DataDescription"}, "minItems": 1},
-            "dataSummary": {"type": "array", "items": {"$ref": "#/DataSummary"}, "minItems": 1},
-            "metaData": {"type": "array", "items": {"$ref": "#/MetaData"}, "minItems": 1}
-        },
-        "required": [
-            "evaluatedAt",
-            "conditionKey",
-            "locationKey",
-            "productKey",    
-            "dataDescript",
-            "dataSummary",
-            "metaData"
-        ]
-    }
+  "RiskResults": {
+    "description": "Mechanism for storing the result from the Risk Processor",
+    "type": "object",
+    "properties": {
+      "evaluatedAt": { "$ref": "timing.json#/TimeString" },
+      "conditionKey": { "type": "string" },
+      "locationKey": { "type": "string" },
+      "productKey": { "type": "string" },
+      "dataDescript": {
+        "type": "array",
+        "items": { "$ref": "#/DataDescription" },
+        "minItems": 1
+      },
+      "dataSummary": {
+        "type": "array",
+        "items": { "$ref": "#/DataSummary" },
+        "minItems": 1
+      },
+      "metaData": {
+        "type": "array",
+        "items": { "$ref": "#/MetaData" },
+        "minItems": 1
+      }
+    },
+    "required": [
+      "evaluatedAt",
+      "conditionKey",
+      "locationKey",
+      "productKey",
+      "dataDescript",
+      "dataSummary",
+      "metaData"
+    ]
+  }
 }
