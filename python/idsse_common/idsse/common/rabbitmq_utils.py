@@ -132,9 +132,8 @@ class Consumer(Thread):
             num_message_handlers (optional, int): The max thread pool size for workers to handle
                 message callbacks concurrently. Default is 2.
         """
-        super().__init__(*args, **kwargs, name="Consumer")
+        super().__init__(*args, **kwargs, name="Consumer", daemon=True)
         self.context = contextvars.copy_context()
-        self.daemon = True
         self._tpx = ThreadPoolExecutor(max_workers=num_message_handlers)
 
         if isinstance(rmq_params_and_callbacks, list):
@@ -216,16 +215,16 @@ class Publisher(Thread):
             conn_params (Conn): RabbitMQ Conn parameters to create a new RabbitMQ connection
             exch_params (Exch): params for what RabbitMQ exchange to publish messages to.
         """
-        super().__init__(*args, **kwargs, name="Publisher")
+        super().__init__(*args, **kwargs, name="Publisher", daemon=True)
         self.context = contextvars.copy_context()
-        self.daemon = True
         self._is_running = True
         self._exch = exch_params
+        self._conn_params = conn_params
         self._queue = None
 
         # create new RabbitMQ Connection and Channel using the provided params
-        self.connection = BlockingConnection(conn_params.connection_parameters)
-        self.channel = self.connection.channel()
+        connection = BlockingConnection(self._conn_params.connection_parameters)
+        self.channel = connection.channel()
 
         # if delivery is mandatory there must be a queue attach to the exchange
         if self._exch.mandatory:
@@ -251,8 +250,9 @@ class Publisher(Thread):
         _logger = logging.getLogger(f"{__name__}::{self.__class__.__name__}")
         _logger.info("Starting publisher")
         while self._is_running:
-            if self.connection and self.connection.is_open:
-                self.connection.process_data_events(time_limit=1)
+            connection: BlockingConnection = self.channel.connection
+            if connection and connection.is_open:
+                connection.process_data_events(time_limit=1)
 
     def publish(self, message: bytes, properties: BasicProperties = None, route_key: str = None):
         """
@@ -291,6 +291,12 @@ class Publisher(Thread):
                   publisher is configured to confirm delivery will return False if
                   failed to confirm.
         """
+        if not self.channel.is_open:
+            # somehow RabbitMQ channel closed itself. Forceably create new connection/channel
+            logger.warning("Attempt to publish to closed connection. Reconnecting to RabbitMQ now")
+            connection = BlockingConnection(self._conn_params.connection_parameters)
+            self.channel = connection.channel()
+
         return blocking_publish(
             self.channel, self._exch, RabbitMqMessage(message, properties, route_key), self._queue
         )
@@ -300,9 +306,10 @@ class Publisher(Thread):
         logger.info("Stopping publisher")
         self._is_running = False
         # Wait until all the data events have been processed
-        if self.connection and self.connection.is_open:
-            self.connection.process_data_events(time_limit=1)
-            threadsafe_call(self.channel, self.channel.close, self.connection.close)
+        connection: BlockingConnection = self.channel.connection
+        if connection and connection.is_open:
+            connection.process_data_events(time_limit=1)
+            threadsafe_call(self.channel, self.channel.close, connection.close)
 
 
 def subscribe_to_queue(

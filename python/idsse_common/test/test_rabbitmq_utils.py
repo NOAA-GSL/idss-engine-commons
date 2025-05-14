@@ -220,7 +220,7 @@ def test_simple_publisher(monkeypatch: MonkeyPatch, mock_connection: Mock):
     mock_blocking_connection.assert_called_once()
     _channel = mock_blocking_connection.return_value.channel
     _channel.assert_called_once()
-    assert publisher.connection == mock_connection
+    assert publisher.channel.connection == mock_connection
 
     publisher.publish({"data": 123})
     assert "Publisher.publish" in str(mock_threadsafe.call_args[0][1])
