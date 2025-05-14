@@ -144,12 +144,12 @@ class RpcPublisher:
         try:
             # block until callback runs (we'll know when the future's result has been changed)
             return request_future.result(timeout=self._timeout)
-        except TimeoutError:
-            logger.warning("Timed out waiting for response. rpc request_id: %s", request_id)
+        except TimeoutError as exc:
+            logger.debug("Timed out waiting for response. rpc request_id: %s", request_id)
             self._pending_requests.pop(request_id)  # stop tracking request Future
-            return None
+            raise exc
         except Exception as exc:  # pylint: disable=broad-exception-caught
-            logger.warning("Unexpected response from external service: %s", str(exc))
+            logger.warning("Unexpected error sending request to external service: %s", str(exc))
             self._pending_requests.pop(request_id)  # stop tracking request Future
             return None
 

@@ -16,7 +16,7 @@ from typing import NamedTuple
 from unittest.mock import Mock
 from uuid import UUID
 
-from pytest import fixture, MonkeyPatch
+from pytest import fixture, raises, MonkeyPatch
 from pika import BasicProperties, BlockingConnection
 from pika.adapters.blocking_connection import BlockingChannel
 
@@ -186,9 +186,10 @@ def test_send_request_times_out_if_no_response(
         Mock(side_effect=lambda *_args, **_kwargs: None),
     )
 
-    result = _thread.send_request(RabbitMqMessage(json.dumps({"data": 123})))
+    with raises(TimeoutError) as exc:
+        _thread.send_request(RabbitMqMessage(json.dumps({"data": 123})))
     assert EXAMPLE_UUID not in _thread._pending_requests  # request was cleaned up
-    assert result is None
+    assert exc is not None
 
 
 def test_send_requests_returns_none_on_error(rpc_thread: RpcPublisher, mock_channel: Mock):
