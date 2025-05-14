@@ -77,6 +77,7 @@
     "properties": {
       "start": { "type": ["string", "null"] },
       "duration": { "type": ["number", "null"] },
+      "durationInMinutes": { "type": ["number", "null"] },
       "rrule": { "type": ["string", "null"] }
     }
   },

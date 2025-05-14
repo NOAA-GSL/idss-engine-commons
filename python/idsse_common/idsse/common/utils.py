@@ -161,7 +161,7 @@ class FileBasedLock:
             # Linux (and maybe Windows) don't support birthtime
             creation_time = os.stat(self._lock_path).st_ctime
         except FileNotFoundError:
-            # lock file disappeared since start of function call?? *shrug* treat it as unexpired
+            # lock file disappeared since start of function call?? Treat it as unexpired
             creation_time = datetime.now(UTC).timestamp()
         return (datetime.now(UTC).timestamp() - creation_time) >= self._max_age
 
@@ -198,7 +198,10 @@ class FileBasedLock:
         """Release the lock so other processes/threads can do I/O"""
         if not self.locked:
             return False
-        os.remove(self._lock_path)
+        try:
+            os.remove(self._lock_path)
+        except FileNotFoundError:
+            pass  # lock file disappeared since start of function call?? Treat it as released
         return True
 
     def _create_lockfile(self):
