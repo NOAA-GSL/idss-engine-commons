@@ -49,6 +49,7 @@ class Conn(NamedTuple):
     port: int
     username: str
     password: str
+    heartbeat = 3600  # 60-minute heartbeats from broker (RabbitMQ default is 1 minute)
 
     @property
     def connection_parameters(self) -> ConnectionParameters:
@@ -59,6 +60,7 @@ class Conn(NamedTuple):
             virtual_host=self.v_host,
             port=self.port,
             credentials=PlainCredentials(self.username, self.password),
+            heartbeat=self.heartbeat,
         )
 
 
