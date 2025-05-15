@@ -241,9 +241,14 @@ class Publisher(Thread):
             try:
                 connection: BlockingConnection = self.channel.connection
                 connection.process_data_events(time_limit=1)
-            except (ConnectionClosed, ChannelClosed, ChannelWrongStateError) as exc:
+            except (
+                ConnectionClosed,
+                ConnectionResetError,
+                ChannelClosed,
+                ChannelWrongStateError,
+            ) as exc:
                 _logger.warning(
-                    "RabbitMQ connection not open, reconnecting now. Exc: [%s] %s",
+                    "RabbitMQ connection closed unexpectedly, reconnecting now. Exc: [%s] %s",
                     type(exc),
                     str(exc),
                 )
