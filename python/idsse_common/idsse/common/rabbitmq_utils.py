@@ -26,7 +26,12 @@ from pika import BasicProperties, ConnectionParameters, PlainCredentials
 from pika.adapters import BlockingConnection
 from pika.adapters.blocking_connection import BlockingChannel
 from pika.channel import Channel
-from pika.exceptions import UnroutableError
+from pika.exceptions import (
+    UnroutableError,
+    ChannelClosed,
+    ChannelWrongStateError,
+    ConnectionClosed,
+)
 from pika.frame import Method
 from pika.spec import Basic
 
@@ -44,6 +49,7 @@ class Conn(NamedTuple):
     port: int
     username: str
     password: str
+    heartbeat = 3600  # 60-minute heartbeats from broker (RabbitMQ default is 1 minute)
 
     @property
     def connection_parameters(self) -> ConnectionParameters:
@@ -54,6 +60,7 @@ class Conn(NamedTuple):
             virtual_host=self.v_host,
             port=self.port,
             credentials=PlainCredentials(self.username, self.password),
+            heartbeat=self.heartbeat,
         )
 
 
@@ -132,9 +139,8 @@ class Consumer(Thread):
             num_message_handlers (optional, int): The max thread pool size for workers to handle
                 message callbacks concurrently. Default is 2.
         """
-        super().__init__(*args, **kwargs, name="Consumer")
+        super().__init__(*args, **kwargs, name="Consumer", daemon=True)
         self.context = contextvars.copy_context()
-        self.daemon = True
         self._tpx = ThreadPoolExecutor(max_workers=num_message_handlers)
 
         if isinstance(rmq_params_and_callbacks, list):
@@ -216,34 +222,15 @@ class Publisher(Thread):
             conn_params (Conn): RabbitMQ Conn parameters to create a new RabbitMQ connection
             exch_params (Exch): params for what RabbitMQ exchange to publish messages to.
         """
-        super().__init__(*args, **kwargs, name="Publisher")
+        super().__init__(*args, **kwargs, name="Publisher", daemon=True)
         self.context = contextvars.copy_context()
-        self.daemon = True
         self._is_running = True
         self._exch = exch_params
-        self._queue = None
+        self._conn_params = conn_params
+        self._queue: Queue | None = None
 
         # create new RabbitMQ Connection and Channel using the provided params
-        self.connection = BlockingConnection(conn_params.connection_parameters)
-        self.channel = self.connection.channel()
-
-        # if delivery is mandatory there must be a queue attach to the exchange
-        if self._exch.mandatory:
-            self._queue = Queue(
-                name=f"_{self._exch.name}_{uuid.uuid4()}",
-                route_key=self._exch.route_key,
-                durable=False,
-                exclusive=True,
-                auto_delete=False,
-                arguments={"x-queue-type": "classic", "x-message-ttl": 10 * 1000},
-            )
-
-            _setup_exch_and_queue(self.channel, self._exch, self._queue)
-        elif self._exch.name != "":  # if using default exchange, skip declare (not allowed by RMQ)
-            _setup_exch(self.channel, self._exch)
-
-        if self._exch.delivery_conf:
-            self.channel.confirm_delivery()
+        self.channel = self._connect()
 
     def run(self):
         _set_context(self.context)
@@ -251,8 +238,21 @@ class Publisher(Thread):
         _logger = logging.getLogger(f"{__name__}::{self.__class__.__name__}")
         _logger.info("Starting publisher")
         while self._is_running:
-            if self.connection and self.connection.is_open:
-                self.connection.process_data_events(time_limit=1)
+            try:
+                connection: BlockingConnection = self.channel.connection
+                connection.process_data_events(time_limit=1)
+            except (
+                ConnectionClosed,
+                ConnectionResetError,
+                ChannelClosed,
+                ChannelWrongStateError,
+            ) as exc:
+                _logger.warning(
+                    "RabbitMQ connection closed unexpectedly, reconnecting now. Exc: [%s] %s",
+                    type(exc),
+                    str(exc),
+                )
+                self.channel = self._connect()
 
     def publish(self, message: bytes, properties: BasicProperties = None, route_key: str = None):
         """
@@ -291,6 +291,11 @@ class Publisher(Thread):
                   publisher is configured to confirm delivery will return False if
                   failed to confirm.
         """
+        if not self.channel.is_open:
+            # somehow RabbitMQ channel closed itself. Forceably create new connection/channel
+            logger.warning("Attempt to publish to closed connection. Reconnecting to RabbitMQ now")
+            self.channel = self._connect()
+
         return blocking_publish(
             self.channel, self._exch, RabbitMqMessage(message, properties, route_key), self._queue
         )
@@ -300,9 +305,38 @@ class Publisher(Thread):
         logger.info("Stopping publisher")
         self._is_running = False
         # Wait until all the data events have been processed
-        if self.connection and self.connection.is_open:
-            self.connection.process_data_events(time_limit=1)
-            threadsafe_call(self.channel, self.channel.close, self.connection.close)
+        connection: BlockingConnection = self.channel.connection
+        if connection and connection.is_open:
+            connection.process_data_events(time_limit=1)
+            threadsafe_call(self.channel, self.channel.close, connection.close)
+
+    def _connect(self) -> BlockingChannel:
+        """Create new RabbitMQ Connection and Channel using the Conn and Exch this Publisher
+        was initialized with. Returns the new pika.BlockingChannel instance, with the Exchange
+        (and possibly Queue, if `self._exch.mandatory`) declared and bound.
+        """
+        connection = BlockingConnection(self._conn_params.connection_parameters)
+        channel = connection.channel()
+
+        # if delivery is mandatory there must be a queue attach to the exchange
+        if self._exch.mandatory:
+            self._queue = Queue(
+                name=f"_{self._exch.name}_{uuid.uuid4()}",
+                route_key=self._exch.route_key,
+                durable=False,
+                exclusive=True,
+                auto_delete=False,
+                arguments={"x-queue-type": "classic", "x-message-ttl": 10 * 1000},
+            )
+
+            _setup_exch_and_queue(channel, self._exch, self._queue)
+        elif self._exch.name != "":  # if using default exchange, skip declare (not allowed by RMQ)
+            _setup_exch(channel, self._exch)
+
+        if self._exch.delivery_conf:
+            channel.confirm_delivery()
+
+        return channel
 
 
 def subscribe_to_queue(

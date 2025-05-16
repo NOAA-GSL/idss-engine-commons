@@ -207,20 +207,21 @@ def test_default_exchange_does_not_declare_exchange(
     new_channel.basic_consume.assert_called_once()
 
 
-def test_simple_publisher(monkeypatch: MonkeyPatch, mock_connection: Mock):
+def test_simple_publisher(monkeypatch: MonkeyPatch, mock_connection: Mock, mock_channel: Mock):
+    mock_channel.connection = mock_connection
     # add mock to get Connection callback to invoke immediately
     mock_connection.add_callback_threadsafe = Mock(side_effect=lambda callback: callback())
-    mock_blocking_connection = Mock(return_value=mock_connection)
+    mock_blocking_connection = Mock(name="MockBlockingConnection", return_value=mock_connection)
     monkeypatch.setattr("idsse.common.rabbitmq_utils.BlockingConnection", mock_blocking_connection)
-
     mock_threadsafe = Mock()
     monkeypatch.setattr("idsse.common.rabbitmq_utils.threadsafe_call", mock_threadsafe)
 
     publisher = Publisher(CONN, RMQ_PARAMS.exchange)
+
     mock_blocking_connection.assert_called_once()
     _channel = mock_blocking_connection.return_value.channel
     _channel.assert_called_once()
-    assert publisher.connection == mock_connection
+    assert publisher.channel.connection == mock_connection
 
     publisher.publish({"data": 123})
     assert "Publisher.publish" in str(mock_threadsafe.call_args[0][1])
