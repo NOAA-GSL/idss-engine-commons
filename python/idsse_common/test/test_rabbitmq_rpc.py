@@ -192,7 +192,7 @@ def test_send_request_times_out_if_no_response(
     assert exc is not None
 
 
-def test_send_requests_returns_none_on_error(rpc_thread: RpcPublisher, mock_channel: Mock):
+def test_send_requests_raises_on_error(rpc_thread: RpcPublisher, mock_channel: Mock):
     # pylint: disable=too-many-arguments
     def mock_basic_publish(exchange, routing_key, body, properties=None, mandatory=False):
         # cause exception for pending request Future
@@ -200,10 +200,10 @@ def test_send_requests_returns_none_on_error(rpc_thread: RpcPublisher, mock_chan
 
     mock_channel.basic_publish.side_effect = mock_basic_publish
 
-    result = rpc_thread.send_request(RabbitMqMessage({"data": 123}))
+    with raises(RuntimeError):
+        _ = rpc_thread.send_request(RabbitMqMessage({"data": 123}))
 
     assert EXAMPLE_UUID not in rpc_thread._pending_requests  # request was cleaned up
-    assert result is None
 
 
 def test_nacks_unrecognized_response(
@@ -220,20 +220,6 @@ def test_nacks_unrecognized_response(
     mock_channel.basic_ack.assert_called_with(delivery_tag=delivery_tag)
     assert "abcd" in rpc_thread._pending_requests
     assert not rpc_thread._pending_requests["abcd"].done()
-
-
-def test_send_request_preserves_props(rpc_thread: RpcPublisher, mock_channel: Mock):
-    # pylint: disable=too-many-arguments
-    def mock_basic_publish(exchange, routing_key, body, properties=None, mandatory=False):
-        # cause exception for pending request Future
-        rpc_thread._pending_requests[EXAMPLE_UUID].set_exception(RuntimeError("Something broke"))
-
-    mock_channel.basic_publish.side_effect = mock_basic_publish
-
-    result = rpc_thread.send_request(RabbitMqMessage({"data": 123}))
-
-    assert EXAMPLE_UUID not in rpc_thread._pending_requests  # request was cleaned up
-    assert result is None
 
 
 def test_rpc_consumer_start_stop(mock_consumer: Mock):
