@@ -1,16 +1,11 @@
-{   
-    "description": "Mechanism for making communicating an Event Portfolio",
-    "allOf": [
-        {"$ref": "criteria.json#/Criteria"}
-    ],
-    "properties": {
-        "riskResults": {
-            "type": "array",
-            "items": {"$ref": "risk_results.json#/RiskResults"},
-            "minItems": 1
-        }
-    },
-    "required": [
-        "riskResults"
-    ]
+{
+  "description": "Mechanism for making communicating an Event Portfolio",
+  "allOf": [{ "$ref": "criteria.json#/Criteria" }],
+  "properties": {
+    "riskResults": {
+      "type": "array",
+      "items": { "$ref": "risk_results.json#/RiskResults" }
+    }
+  },
+  "required": ["riskResults"]
 }

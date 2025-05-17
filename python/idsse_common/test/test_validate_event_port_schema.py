@@ -153,6 +153,16 @@ def test_validate_event_port_message(
         assert False, f"Validate message raised an exception {exc}"
 
 
+def test_validate_event_port_with_empty_results(
+    event_port_validator: Validator, simple_event_port_message: dict
+):
+    simple_event_port_message["riskResults"] = []
+    try:
+        event_port_validator.validate(simple_event_port_message)
+    except ValidationError as exc:
+        assert False, f"Validate message raised an exception {exc}"
+
+
 def test_validate_event_port_message_without_results(
     event_port_validator: Validator, simple_event_port_message: dict
 ):
