@@ -105,7 +105,7 @@ class RpcPublisher:
         """Returns True if RabbitMQ connection (Publisher) is open and ready to send messages"""
         return self._consumer.is_alive() and self._consumer.channel.is_open
 
-    def send_request(self, request: RabbitMqMessage) -> RabbitMqMessage | None:
+    def send_request(self, request: RabbitMqMessage) -> RabbitMqMessage:
         """Send message to remote RabbitMQ service using thread-safe RPC. Will block until response
         is received back, or timeout occurs.
 
@@ -114,8 +114,11 @@ class RpcPublisher:
                 as a "request" to the listening RpcConsumer service.
 
         Returns:
-            RabbitMqMessage | None: The response message (body and properties), or None on request
-                timeout or error handling response.
+            RabbitMqMessage: The response message (body and properties)
+        Raises:
+            TimeoutError: if timeout (defined in RpcPublisher creation) is exceeded before response
+                is received from the listening RpcConsumer service
+            Exception: if some exception was thrown trying to send the RabbitMQ message
         """
         if not self.is_open:
             logger.debug("RPC thread not yet initialized. Setting up now")
@@ -149,9 +152,9 @@ class RpcPublisher:
             self._pending_requests.pop(request_id)  # stop tracking request Future
             raise exc
         except Exception as exc:  # pylint: disable=broad-exception-caught
-            logger.warning("Unexpected error sending request to external service: %s", str(exc))
+            logger.debug("Unexpected error sending request to external service: %s", str(exc))
             self._pending_requests.pop(request_id)  # stop tracking request Future
-            return None
+            raise exc
 
     def start(self):
         """Start dedicated threads to asynchronously send and receive RPC messages using a new
