@@ -16,7 +16,7 @@ from typing import NamedTuple
 from unittest.mock import Mock
 from uuid import UUID
 
-from pytest import fixture, MonkeyPatch
+from pytest import fixture, raises, MonkeyPatch
 from pika import BasicProperties, BlockingConnection
 from pika.adapters.blocking_connection import BlockingChannel
 
@@ -186,12 +186,13 @@ def test_send_request_times_out_if_no_response(
         Mock(side_effect=lambda *_args, **_kwargs: None),
     )
 
-    result = _thread.send_request(RabbitMqMessage(json.dumps({"data": 123})))
+    with raises(TimeoutError) as exc:
+        _thread.send_request(RabbitMqMessage(json.dumps({"data": 123})))
     assert EXAMPLE_UUID not in _thread._pending_requests  # request was cleaned up
-    assert result is None
+    assert exc is not None
 
 
-def test_send_requests_returns_none_on_error(rpc_thread: RpcPublisher, mock_channel: Mock):
+def test_send_requests_raises_on_error(rpc_thread: RpcPublisher, mock_channel: Mock):
     # pylint: disable=too-many-arguments
     def mock_basic_publish(exchange, routing_key, body, properties=None, mandatory=False):
         # cause exception for pending request Future
@@ -199,10 +200,10 @@ def test_send_requests_returns_none_on_error(rpc_thread: RpcPublisher, mock_chan
 
     mock_channel.basic_publish.side_effect = mock_basic_publish
 
-    result = rpc_thread.send_request(RabbitMqMessage({"data": 123}))
+    with raises(RuntimeError):
+        _ = rpc_thread.send_request(RabbitMqMessage({"data": 123}))
 
     assert EXAMPLE_UUID not in rpc_thread._pending_requests  # request was cleaned up
-    assert result is None
 
 
 def test_nacks_unrecognized_response(
@@ -219,20 +220,6 @@ def test_nacks_unrecognized_response(
     mock_channel.basic_ack.assert_called_with(delivery_tag=delivery_tag)
     assert "abcd" in rpc_thread._pending_requests
     assert not rpc_thread._pending_requests["abcd"].done()
-
-
-def test_send_request_preserves_props(rpc_thread: RpcPublisher, mock_channel: Mock):
-    # pylint: disable=too-many-arguments
-    def mock_basic_publish(exchange, routing_key, body, properties=None, mandatory=False):
-        # cause exception for pending request Future
-        rpc_thread._pending_requests[EXAMPLE_UUID].set_exception(RuntimeError("Something broke"))
-
-    mock_channel.basic_publish.side_effect = mock_basic_publish
-
-    result = rpc_thread.send_request(RabbitMqMessage({"data": 123}))
-
-    assert EXAMPLE_UUID not in rpc_thread._pending_requests  # request was cleaned up
-    assert result is None
 
 
 def test_rpc_consumer_start_stop(mock_consumer: Mock):
