@@ -1,34 +1,34 @@
 {
-    "KeyValues": {
-        "description": "List of key,value pairs that are meaningful to user",
-        "type": "object",
-        "properties": {
-            "name": {"type": "string"},
-            "nwsOffice": {"type": "string"}
-        },
-        "patternProperties": {
-            "": {"type": "string"}
-        },
-        "required": [
-            "name",
-            "nwsOffice"
-        ]
+  "KeyValues": {
+    "description": "List of key,value pairs that are meaningful to user",
+    "type": "object",
+    "properties": {
+      "name": { "type": "string" },
+      "nwsOffice": { "type": "string" },
+      "createdAt": { "type": "string" },
+      "status": {
+        "type": "string",
+        "enum": ["CREATED", "PROCESSING", "COMPLETE", "FAILED"]
+      }
     },
+    "patternProperties": {
+      "": { "type": "string" }
+    },
+    "required": ["name", "nwsOffice"]
+  },
 
-    "Tags": {
-        "description": "List of values and/or key,value pairs that are meaningful to user",
-        "type": "object",
-        "properties": {
-            "values": {
-                "description": "List of values that are meaningful to user",
-                "type": [ "array", "null" ],
-                "items": {"type": "string"}, 
-                "required": false
-            },
-            "keyValues":  {"$ref": "#/KeyValues"}
-        },
-        "required": [
-            "keyValues"
-        ]
-    }
+  "Tags": {
+    "description": "List of values and/or key,value pairs that are meaningful to user",
+    "type": "object",
+    "properties": {
+      "values": {
+        "description": "List of values that are meaningful to user",
+        "type": ["array", "null"],
+        "items": { "type": "string" },
+        "required": false
+      },
+      "keyValues": { "$ref": "#/KeyValues" }
+    },
+    "required": ["keyValues"]
+  }
 }
