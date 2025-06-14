@@ -18,10 +18,11 @@ import numpy
 
 
 class PackType(IntEnum):
-    """Enumerated type used to indicate if data is packed into a byte or short (16 bit)"""
+    """Enumerated type to mark if data is packed into a byte, short (16 bit), or int (32 bit)"""
 
     BYTE = 8
     SHORT = 16
+    INT = 32
 
 
 class PackInfo(NamedTuple):
@@ -294,8 +295,9 @@ def _pack_np_array_to_list(data: numpy.array, scale: float, offset: float) -> li
 #    return numpy.trunc(dip_data)
 
 
-# private lookup for the max value possible for bit packing type
-_max_values = {PackType.BYTE: 255, PackType.SHORT: 65535}
+# private lookup for the max value possible for bit packing type.
+# this is just memoization of `math.pow(2, pack_type) - 1` for pack_type in PackType enum
+_max_values = {PackType.BYTE: 255, PackType.SHORT: 65535, PackType.INT: 4294967295}
 
 _scale_lookup = {0: 1.0, 1: 0.1, 2: 0.01, 3: 0.001, 4: 0.0001, 5: 0.00001, 6: 0.000001}
 
