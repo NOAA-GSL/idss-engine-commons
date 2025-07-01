@@ -99,7 +99,7 @@ class ProtocolUtils(ABC):
         issue_start: datetime | None = None,
         issue_end: datetime | None = None,
         time_delta: timedelta = timedelta(hours=1),
-        max_workers: int = 1,
+        max_workers: int = 24,
         **kwargs,
     ) -> Sequence[datetime]:
         """Determine the available issue date/times
@@ -110,7 +110,7 @@ class ProtocolUtils(ABC):
             issue_end (datetime): The newest date/time to look for. Defaults to now (UTC).
             time_delta (timedelta): The time step size. Defaults to 1 hour.
             max_workers (int): The number of Python threads to use to make AWS ls() calls.
-                Defaults to 1 (no parallel AWS calls).
+                Defaults to 24, which is reasonable. More threads will not necessarily run faster.
             kwargs: Additional arguments, e.g. region
 
         Returns:
