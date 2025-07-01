@@ -15,6 +15,7 @@ import os
 
 from abc import abstractmethod, ABC
 from collections.abc import Sequence
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime, timedelta, UTC
 
 from .path_builder import PathBuilder
@@ -91,13 +92,15 @@ class ProtocolUtils(ABC):
                 return valid, os.path.join(dir_path, fname)
         return None
 
+    # pylint: disable=too-many-arguments
     def get_issues(
         self,
         num_issues: int = 1,
         issue_start: datetime | None = None,
         issue_end: datetime | None = None,
         time_delta: timedelta = timedelta(hours=1),
-        **kwargs
+        max_workers: int = 1,
+        **kwargs,
     ) -> Sequence[datetime]:
         """Determine the available issue date/times
 
@@ -106,6 +109,8 @@ class ProtocolUtils(ABC):
             issue_start (datetime, optional): The oldest date/time to look for. Defaults to None.
             issue_end (datetime): The newest date/time to look for. Defaults to now (UTC).
             time_delta (timedelta): The time step size. Defaults to 1 hour.
+            max_workers (int): The number of Python threads to use to make AWS ls() calls.
+                Defaults to 1 (no parallel AWS calls).
             kwargs: Additional arguments, e.g. region
 
         Returns:
@@ -125,26 +130,37 @@ class ProtocolUtils(ABC):
             if time_delta > zero_time_delta:
                 time_delta = timedelta(seconds=-1.0 * time_delta.total_seconds())
             datetimes = datetime_gen(issue_end, time_delta)
-        for issue_dt in datetimes:
-            if issue_start and issue_dt < issue_start:
-                break
+
+        # trim list of datetimes to requested length, then build list of unique datetimes
+        # that are confirmed to exist in AWS. ls() calls of each issue_dt folder happen in parallel
+        issue_filepaths = [
+            (dt, self.path_builder.build_dir(issue=dt, **kwargs))
+            for dt in list(datetimes)[:num_issues]
+        ]
+        with ThreadPoolExecutor(max_workers, "AwsLsThread") as pool:
+            futures = [
+                pool.submit(self._get_issues, dir_path, num_issues)
+                for dir_path in [
+                    dir_path
+                    for (dt, dir_path) in issue_filepaths
+                    if not (issue_start and dt < issue_start)
+                ]
+            ]
+        for future in as_completed(futures):
             try:
-                dir_path = self.path_builder.build_dir(issue=issue_dt, **kwargs)
-                issues_set.update(self._get_issues(dir_path, num_issues))
-                if num_issues and len(issues_set) >= num_issues:
-                    break
+                issues_in_aws = future.result()
+                issues_set.update(issues_in_aws)
             except PermissionError:
-                pass
-        if None in issues_set:
-            issues_set.remove(None)
-        return sorted(issues_set)[:num_issues]
+                pass  # last valid_dt wasn't quite available on AWS yet; skip that issue_dt
+
+        return list(issues_set)
 
     def get_valids(
         self,
         issue: datetime,
         valid_start: datetime | None = None,
         valid_end: datetime | None = None,
-        **kwargs
+        **kwargs,
     ) -> Sequence[tuple[datetime, str]]:
         """Get all objects consistent with the passed issue date/time and filter by valid range
 
@@ -209,14 +225,13 @@ class ProtocolUtils(ABC):
         issues_set: set[datetime] = set()
         # sort files alphabetically in reverse; this should give us the longest lead time first
         # which is more indicative that the issueDt is fully available on this server
-        filepaths = sorted(
+        final_valid_filepaths = sorted(
             (f for f in self.ls(dir_path) if f.endswith(self.path_builder.file_ext)), reverse=True
         )
-        for file_path in filepaths:
+        for valid_file_path in final_valid_filepaths:
             try:
-                issues_set.add(self.path_builder.get_issue(file_path))
-                if num_issues and len(issues_set) >= num_issues:
-                    break
+                if issue_dt := self.path_builder.get_issue(valid_file_path):
+                    issues_set.add(issue_dt)
             except ValueError:  # Ignore invalid filepaths...
                 pass
-        return issues_set
+        return sorted(list(issues_set), reverse=True)[:num_issues]
