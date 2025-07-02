@@ -31,6 +31,7 @@ from pika.exceptions import (
     ChannelClosed,
     ChannelWrongStateError,
     ConnectionClosed,
+    StreamLostError,
 )
 from pika.frame import Method
 from pika.spec import Basic
@@ -246,6 +247,7 @@ class Publisher(Thread):
                 ConnectionResetError,
                 ChannelClosed,
                 ChannelWrongStateError,
+                StreamLostError,
             ) as exc:
                 _logger.warning(
                     "RabbitMQ connection closed unexpectedly, reconnecting now. Exc: [%s] %s",
@@ -291,11 +293,6 @@ class Publisher(Thread):
                   publisher is configured to confirm delivery will return False if
                   failed to confirm.
         """
-        if not self.channel.is_open:
-            # somehow RabbitMQ channel closed itself. Forceably create new connection/channel
-            logger.warning("Attempt to publish to closed connection. Reconnecting to RabbitMQ now")
-            self.channel = self._connect()
-
         return blocking_publish(
             self.channel, self._exch, RabbitMqMessage(message, properties, route_key), self._queue
         )

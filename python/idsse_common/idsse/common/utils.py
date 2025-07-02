@@ -314,7 +314,6 @@ def datetime_gen(
         max_num = min(max_num, dt_cnt) if max_num else dt_cnt
 
     for i in range(0, max_num):
-        logger.debug("dt generator %d/%d", i, max_num)
         yield dt_start + time_delta * i
 
 
