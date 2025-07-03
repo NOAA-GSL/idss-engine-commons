@@ -15,7 +15,7 @@ import os
 
 from abc import abstractmethod, ABC
 from collections.abc import Sequence
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, wait
 from datetime import datetime, timedelta, UTC
 
 from .path_builder import PathBuilder
@@ -95,7 +95,7 @@ class ProtocolUtils(ABC):
     # pylint: disable=too-many-arguments
     def get_issues(
         self,
-        num_issues: int = 1,
+        num_issues: int | None = 1,
         issue_start: datetime | None = None,
         issue_end: datetime | None = None,
         time_delta: timedelta = timedelta(hours=1),
@@ -109,7 +109,7 @@ class ProtocolUtils(ABC):
             issue_start (datetime, optional): The oldest date/time to look for. Defaults to None.
             issue_end (datetime): The newest date/time to look for. Defaults to now (UTC).
             time_delta (timedelta): The time step size. Defaults to 1 hour.
-            max_workers (int): The number of Python threads to use to make AWS ls() calls.
+            max_workers (int): The number of Python threads to use to make server ls() calls.
                 Defaults to 24, which is reasonable. More threads will not necessarily run faster.
             kwargs: Additional arguments, e.g. region
 
@@ -122,38 +122,23 @@ class ProtocolUtils(ABC):
 
         if not issue_end:
             issue_end = datetime.now(UTC)
-        issues_set: set[datetime] = set()
         if issue_start:
-            datetimes = datetime_gen(issue_end, time_delta, issue_start, num_issues)
+            datetimes = list(datetime_gen(issue_end, time_delta, issue_start, num_issues))
         else:
             # check if time delta is positive, if so make negative
             if time_delta > zero_time_delta:
                 time_delta = timedelta(seconds=-1.0 * time_delta.total_seconds())
-            datetimes = datetime_gen(issue_end, time_delta)
+            datetimes = list(datetime_gen(issue_end, time_delta))
 
-        # trim list of datetimes to requested length, then build list of unique datetimes
-        # that are confirmed to exist in AWS. ls() calls of each issue_dt folder happen in parallel
+        # build list of filepaths on the server for each dt (ignoring ones earlier than issue_dt)
         issue_filepaths = [
-            (dt, self.path_builder.build_dir(issue=dt, **kwargs))
-            for dt in list(datetimes)[:num_issues]
+            self.path_builder.build_dir(issue=dt, **kwargs)
+            for dt in datetimes
+            if not (issue_start and dt < issue_start)
         ]
-        with ThreadPoolExecutor(max_workers, "AwsLsThread") as pool:
-            futures = [
-                pool.submit(self._get_issues, dir_path, num_issues)
-                for dir_path in [
-                    dir_path
-                    for (dt, dir_path) in issue_filepaths
-                    if not (issue_start and dt < issue_start)
-                ]
-            ]
-        for future in as_completed(futures):
-            try:
-                issues_in_aws = future.result()
-                issues_set.update(issues_in_aws)
-            except PermissionError:
-                pass  # last valid_dt wasn't quite available on AWS yet; skip that issue_dt
 
-        return list(issues_set)
+        issues_with_valid_dts = self._get_unique_issues(issue_filepaths, num_issues, max_workers)
+        return sorted(list(issues_with_valid_dts))[:num_issues]
 
     def get_valids(
         self,
@@ -210,12 +195,55 @@ class ProtocolUtils(ABC):
 
         return valid_and_file
 
-    def _get_issues(self, dir_path: str, num_issues: int = 1) -> set[datetime]:
+    def _get_unique_issues(
+        self,
+        dir_paths: list[str],
+        num_issues: int,
+        max_workers: int,
+    ) -> list[datetime]:
+        """
+        Based on a list of server directory paths, find all issue_dts on the server
+        that seem ready (have valid_dt files). Server network calls will be made in parallel,
+        up to `max_workers` number of threads at a time.
+
+        Returns:
+            list[datetime]: A list of unique issue_dts confirmed to be ready on the server
+        """
+        ready_issues: set[datetime] = set()
+        paths_to_request = dir_paths  # create local copy, because we're going to mutate
+
+        target_num_issues = num_issues if num_issues else len(paths_to_request)
+        # if caller only asked for 1, 2, 6, etc. issue_dts, we don't need to use 24 threads
+        thread_count = min(max_workers, target_num_issues)
+
+        with ThreadPoolExecutor(thread_count, "AwsLsThread") as pool:
+            # we have to use this while-loop approach, rather than just slicing the `datetimes`
+            # above to the number of requested `num_issues`, because we can't know how many
+            # non-empty filepaths we will find on the server until we try
+            while len(ready_issues) < target_num_issues and len(paths_to_request) > 0:
+                # list.pop() the next few filepaths (removing them from the overall filepaths list)
+                filepaths_chunk = paths_to_request[:thread_count]
+                paths_to_request = paths_to_request[thread_count:]
+                futures = [
+                    pool.submit(self._get_issue, dir_path, num_issues)
+                    for dir_path in filepaths_chunk
+                ]
+
+                wait(futures)  # run the `ls` on all these server directories in parallel
+                for future in futures:
+                    try:
+                        issues_in_aws = future.result()
+                        ready_issues.update(issues_in_aws)
+                    except PermissionError:
+                        pass  # no valid_dt was available on server for this issue_dt yet; ignore
+
+        return list(ready_issues)
+
+    def _get_issue(self, dir_path: str, num_issues: int = 1) -> list[datetime]:
         """Get all objects consistent with the passed directory path and filter by valid range
 
         Args:
             dir_path (str): The directory path
-            num_issues (int): Maximum number of issue to return. Defaults to 1.
 
         Returns:
             Sequence[tuple[datetime, str]]: A sequence of tuples with valid date/time (indicated by
@@ -225,10 +253,11 @@ class ProtocolUtils(ABC):
         issues_set: set[datetime] = set()
         # sort files alphabetically in reverse; this should give us the longest lead time first
         # which is more indicative that the issueDt is fully available on this server
-        final_valid_filepaths = sorted(
+        valid_filepaths_in_dir = sorted(
             (f for f in self.ls(dir_path) if f.endswith(self.path_builder.file_ext)), reverse=True
         )
-        for valid_file_path in final_valid_filepaths:
+
+        for valid_file_path in valid_filepaths_in_dir:
             try:
                 if issue_dt := self.path_builder.get_issue(valid_file_path):
                     issues_set.add(issue_dt)

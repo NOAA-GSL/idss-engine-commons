@@ -178,7 +178,9 @@ def test_get_issues(aws_utils: AwsUtils, mock_exec_cmd):
 
 
 def test_get_issues_with_same_start_stop(aws_utils: AwsUtils, mock_exec_cmd):
-    result = aws_utils.get_issues(issue_start=EXAMPLE_ISSUE, issue_end=EXAMPLE_ISSUE)
+    result = aws_utils.get_issues(
+        issue_start=EXAMPLE_ISSUE, issue_end=EXAMPLE_ISSUE, num_issues=None
+    )
     assert len(result) == 1
     assert result[0] == EXAMPLE_ISSUE
 
@@ -201,7 +203,7 @@ def test_get_issues_latest_issue_default_today(
 
     assert result[0] == example_datetimes[0].replace(minute=0)
     # should have ls'd the 12Z directory in AWS
-    aws_dir = mock_exec_cmd.call_args[0][0][3]
+    aws_dir = mock_exec_cmd.mock_calls[0][1][0][3]
     assert aws_utils.path_builder.parse_dir(aws_dir)["issue.hour"] == example_datetimes[0].hour
 
     # simulate the passage of time: it's now 13:01 and a new 13Z issueDt has appeared
