@@ -15,7 +15,6 @@
 # cspell:word fliplr, flipud
 
 import json
-import logging
 from collections.abc import Sequence
 from enum import Enum
 from typing import Self, TypeVar, Iterable
@@ -26,8 +25,6 @@ from pyproj.enums import TransformDirection
 
 from idsse.common.utils import round_values, RoundingParam, RoundingMethod
 from idsse.common.sci.utils import coordinate_pairs_to_axes
-
-logger = logging.getLogger(__name__)
 
 # type hints
 Scalar = int | float | np.integer | np.float_
