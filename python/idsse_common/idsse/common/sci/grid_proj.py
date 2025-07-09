@@ -14,6 +14,8 @@
 # pylint: disable=invalid-name
 # cspell:word fliplr, flipud
 
+import json
+import logging
 from collections.abc import Sequence
 from enum import Enum
 from typing import Self, TypeVar, Iterable
@@ -22,8 +24,10 @@ import numpy as np
 from pyproj import CRS, Transformer
 from pyproj.enums import TransformDirection
 
-from idsse.common.utils import round_values, RoundingParam
+from idsse.common.utils import round_values, RoundingParam, RoundingMethod
 from idsse.common.sci.utils import coordinate_pairs_to_axes
+
+logger = logging.getLogger(__name__)
 
 # type hints
 Scalar = int | float | np.integer | np.float_
@@ -297,3 +301,89 @@ class GridProj:
         raise TypeError(
             f"Cannot transpose CRS values of ({type(x).__name__})({type(y).__name__}) to pixel"
         )
+
+    def slice_coords_to_slice_str(
+        self,
+        slice_coords: str | tuple[tuple[float]],
+        min_buffer: str | int | None = None,
+        min_size: str | tuple[int, int] | None = None,
+        rounding_method: str = RoundingMethod.FLOOR.value,
+    ) -> tuple[str, list[str] | None]:
+        """Convert a Geographic (lat/lon) slice into a Cartesian slice string.
+
+        Args:
+            slice_coords (str | tuple[tuple[float]]): The start and end (e.g. bottom left and top
+                right corners) of a map slice in Geographic (lat/lon) space. E.g.
+                "[[-100, 30], [-90, 20]]". Can be tuple of lat/lon coordinates (tuple) or
+                stringified tuple of lat/lon coordinates.
+            min_buffer (str | dict | None, optional): Pixel buffer to add around slice
+                coordinates. E.g. "10" will add 10 pixels in the x and y direction to
+                `slice_coords`. Defaults to None.
+            min_size (str | dict | None, optional): Minimum size of total bounding box
+                of `slice_coords`. The resulting slice will be extended from `slice_coords`
+                until it is at least `min_size`. E.g. "[400, 300]" will ensure at least a
+                400px x 300px slice results, even if the lat/lon coordinates of `slice_coords`
+                do not cover this area. Defaults to None.
+            rounding_method (str | None, optional): RoundingMethod string. Defaults to "FLOOR".
+
+        Returns:
+            tuple[str, list[str] | None]: Slice string in Cartesian space, e.g. [1:10,100:200].
+                Coordinates are guaranteed to be non-negative (at least 0), but if coordinates have
+                to be clipped to 0, the arg that caused the out-of-bounds coordinate
+                (e.g. ["min_buffer"] or ["slice_coords"]) are also returned as a list of strings.
+        """
+        # pylint: disable=too-many-arguments
+        if isinstance(slice_coords, str):
+            slice_coords = json.loads(slice_coords)
+
+        rounding_method = RoundingMethod(rounding_method) if rounding_method else None
+
+        coords = self.map_geo_to_pixel(*zip(*slice_coords), rounding=rounding_method)
+        i_min, i_max = min(coords[0]), max(coords[0])
+        j_min, j_max = min(coords[1]), max(coords[1])
+
+        # if we have to clip the Cartesian coordinates to 0, track which argument caused it
+        clip_causes: list[str] = []
+
+        i_min, j_min, is_clipped = self._clip_to_zero(i_min, j_min)
+        if is_clipped:
+            clip_causes.append("slice_coords")
+
+        if min_buffer:
+            if isinstance(min_buffer, str):
+                min_buffer = json.loads(min_buffer)
+            i_min, i_max = i_min - min_buffer, i_max + min_buffer
+            j_min, j_max = j_min - min_buffer, j_max + min_buffer
+
+            i_min, j_min, is_clipped = self._clip_to_zero(i_min, j_min)
+            if is_clipped:
+                clip_causes.append("min_buffer")
+
+        if min_size:
+            if isinstance(min_size, str):
+                min_size = json.loads(min_size)
+            # since slice operator is inclusive on both ends subtract 1 from size
+            i_size, j_size = [size - 1 for size in min_size]
+            if i_max - i_min < i_size:
+                i_max += (i_size - i_max + i_min) >> 1
+                i_min = i_max - i_size
+            if j_max - j_min < j_size:
+                j_max += (j_size - j_max + j_min) >> 1
+                j_min = j_max - j_size
+
+            i_min, j_min, is_clipped = self._clip_to_zero(i_min, j_min)
+            if is_clipped:
+                clip_causes.append("min_size")
+
+        return (
+            f"[{i_min}:{i_max+1},{j_min}:{j_max+1}]",
+            clip_causes if len(clip_causes) > 0 else None,
+        )
+
+    @staticmethod
+    def _clip_to_zero(i: int, j: int) -> tuple[int, int, bool]:
+        """Clip i and j coordinates to at least 0, returning the clipped coordinates and True
+        if clipping was necessary.
+        """
+        is_clipped = i < 0 or j < 0
+        return max(0, i), max(0, j), is_clipped

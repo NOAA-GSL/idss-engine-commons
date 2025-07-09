@@ -7,7 +7,7 @@
 # Copyright (c) 2024 Colorado State University. All rights reserved.             (2)
 #
 # Contributors:
-#    Mackenzie Grimes
+#    Mackenzie Grimes (2)
 #
 # ------------------------------------------------------------------------------------
 

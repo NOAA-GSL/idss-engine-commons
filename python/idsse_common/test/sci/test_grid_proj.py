@@ -17,7 +17,7 @@
 from collections.abc import Sequence
 
 import numpy as np
-from pytest import approx, fixture, raises
+from pytest import approx, fixture, mark, raises
 
 from idsse.common.sci.grid_proj import GridProj
 from idsse.common.utils import round_, RoundingMethod
@@ -261,3 +261,46 @@ def test_unbalanced_pixel_or_crs_arrays_fail_to_transform(grid_proj: GridProj):
         bad_crs = (EXAMPLE_CRS[0], EXAMPLE_CRS[1][1])
         grid_proj.map_crs_to_pixel(*bad_crs, rounding=RoundingMethod.ROUND)
     assert "Cannot transpose CRS values" in exc.value.args[0]
+
+
+@mark.parametrize(
+    "slice_coords",
+    [
+        "[[-126.25, 19.27], [-126.22, 19.30]]",
+        [[-126.25, 19.27], [-126.22, 19.30]],
+    ],
+)
+def test_slice_coords_to_str(grid_proj: GridProj, slice_coords):
+    slice_str = grid_proj.slice_coords_to_slice_str(slice_coords)
+
+    assert slice_str == "[1:4,1:3]"
+
+
+@mark.parametrize("min_buffer", ["100", 100])
+def test_slice_coords_to_str_min_buffer(grid_proj: GridProj, min_buffer):
+    slice_coords = "[[-110,30],[-100,35]]"
+
+    slice_str = grid_proj.slice_coords_to_slice_str(slice_coords, min_buffer=min_buffer)
+
+    assert slice_str == "[618:1206,254:648]"
+
+
+def test_slice_coords_to_str_negative_buffer(grid_proj: GridProj):
+    slice_coords = "[[-110,30],[-100,35]]"
+    min_buffer = 1000
+
+    slice_str, clip_causes = grid_proj.slice_coords_to_slice_str(
+        slice_coords, min_buffer=min_buffer
+    )
+
+    assert slice_str == "[0:2106,0:1548]"
+    assert clip_causes == ["min_buffer"]
+
+
+@mark.parametrize("min_size", ["[400, 300]", [400, 300]])
+def test_slice_coords_to_str_min_size(grid_proj: GridProj, min_size):
+    slice_coords = "[[-110,30],[-100,35]]"
+
+    slice_str, _ = grid_proj.slice_coords_to_slice_str(slice_coords, min_size=min_size)
+
+    assert slice_str == "[712:1112,301:601]"
