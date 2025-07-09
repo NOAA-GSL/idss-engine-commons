@@ -15,6 +15,7 @@
 # cspell:word fliplr, flipud
 
 import json
+import re
 from collections.abc import Sequence
 from enum import Enum
 from typing import Self, TypeVar, Iterable
@@ -305,7 +306,7 @@ class GridProj:
         min_buffer: str | int | None = None,
         min_size: str | tuple[int, int] | None = None,
         rounding_method: str = RoundingMethod.FLOOR.value,
-    ) -> tuple[str, list[str] | None]:
+    ) -> str:
         """Convert a Geographic (lat/lon) slice into a Cartesian slice string.
 
         Args:
@@ -324,10 +325,8 @@ class GridProj:
             rounding_method (str | None, optional): RoundingMethod string. Defaults to "FLOOR".
 
         Returns:
-            tuple[str, list[str] | None]: Slice string in Cartesian space, e.g. [1:10,100:200].
-                Coordinates are guaranteed to be non-negative (at least 0), but if coordinates have
-                to be clipped to 0, the arg that caused the out-of-bounds coordinate
-                (e.g. ["min_buffer"] or ["slice_coords"]) are also returned as a list of strings.
+            str: Slice string in Cartesian space, e.g. [1:10,100:200]. Coordinates are _not_
+                guaranteed to be non-negative or outside of GridProj bounds.
         """
         # pylint: disable=too-many-arguments
         if isinstance(slice_coords, str):
@@ -339,22 +338,11 @@ class GridProj:
         i_min, i_max = min(coords[0]), max(coords[0])
         j_min, j_max = min(coords[1]), max(coords[1])
 
-        # if we have to clip the Cartesian coordinates to 0, track which argument caused it
-        clip_causes: list[str] = []
-
-        i_min, j_min, is_clipped = self._clip_to_zero(i_min, j_min)
-        if is_clipped:
-            clip_causes.append("slice_coords")
-
         if min_buffer:
             if isinstance(min_buffer, str):
                 min_buffer = json.loads(min_buffer)
             i_min, i_max = i_min - min_buffer, i_max + min_buffer
             j_min, j_max = j_min - min_buffer, j_max + min_buffer
-
-            i_min, j_min, is_clipped = self._clip_to_zero(i_min, j_min)
-            if is_clipped:
-                clip_causes.append("min_buffer")
 
         if min_size:
             if isinstance(min_size, str):
@@ -368,19 +356,41 @@ class GridProj:
                 j_max += (j_size - j_max + j_min) >> 1
                 j_min = j_max - j_size
 
-            i_min, j_min, is_clipped = self._clip_to_zero(i_min, j_min)
-            if is_clipped:
-                clip_causes.append("min_size")
-
-        return (
-            f"[{i_min}:{i_max+1},{j_min}:{j_max+1}]",
-            clip_causes if len(clip_causes) > 0 else None,
-        )
+        return f"[{i_min}:{i_max+1},{j_min}:{j_max+1}]"
 
     @staticmethod
-    def _clip_to_zero(i: int, j: int) -> tuple[int, int, bool]:
-        """Clip i and j coordinates to at least 0, returning the clipped coordinates and True
-        if clipping was necessary.
+    def clip_slice_str(
+        original: str,
+        i_interval: tuple[int | None, int | None] | None = None,
+        j_interval: tuple[int | None, int | None] | None = None,
+    ) -> str:
         """
-        is_clipped = i < 0 or j < 0
-        return max(0, i), max(0, j), is_clipped
+        For a Python slice string, clip (limit) all i values outside of `i_interval` and
+        j values outside of `j_interval`, then return as Python slice string format.
+
+        Args:
+            original (str): A Python slice string (e.g. "[0:100,100:200]")
+            i_interval (tuple[int, int] | None): The min and max for all i (a.k.a. "row") values.
+                Can be None (no clipping) or either the min or max can be None.
+            j_interval (tuple[int, int] | None): The min and max for all j (a.k.a. "column") values.
+                Can be None (no clipping), or either the min or max can be None.
+
+        Returns:
+            str: Python slice string, with all values clipped to within i or j interval
+        """
+        # disassemble stringified coordinates of slice string into numbers
+        coord_ints = [int(x) for x in re.findall(r"-?\d+", original)]
+        i_values, j_values = list(zip(coord_ints[:2], coord_ints[2:]))
+
+        # clip all i values (first in coordinate pair) to be within i_interval (min, max)
+        if i_interval:
+            i_min, i_max = i_interval
+            i_values = [np.clip(val, i_min, i_max) for val in i_values]
+
+        # clip all j values (first in coordinate pair) to be within j_extent (min, max)
+        if j_interval:
+            j_min, j_max = j_interval
+            j_values = [np.clip(val, j_min, j_max) for val in j_values]
+
+        # rebuild Python slice string format
+        return f"[{i_values[0]}:{j_values[0]},{i_values[1]}:{j_values[1]}]"
