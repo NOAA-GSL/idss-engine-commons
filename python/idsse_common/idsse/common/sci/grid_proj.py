@@ -380,7 +380,8 @@ class GridProj:
         """
         # disassemble stringified coordinates of slice string into numbers
         coord_ints = [int(x) for x in re.findall(r"-?\d+", original)]
-        i_values, j_values = list(zip(coord_ints[:2], coord_ints[2:]))
+        i_values = coord_ints[:2]
+        j_values = coord_ints[2:]
 
         # clip all i values (first in coordinate pair) to be within i_interval (min, max)
         if i_interval:
@@ -393,4 +394,4 @@ class GridProj:
             j_values = [np.clip(val, j_min, j_max) for val in j_values]
 
         # rebuild Python slice string format
-        return f"[{i_values[0]}:{j_values[0]},{i_values[1]}:{j_values[1]}]"
+        return f"[{i_values[0]}:{i_values[1]},{j_values[0]}:{j_values[1]}]"
