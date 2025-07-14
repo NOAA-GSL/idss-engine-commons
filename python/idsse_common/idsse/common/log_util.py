@@ -116,7 +116,7 @@ def get_default_log_config(
     if with_corr_id:
         format_str = (
             "%(asctime)-15s %(name)-5s %(levelname)-8s %(corr_id)s %(module)s::"
-            '%(funcName)s"(line %(lineno)d) %(message)s'
+            "%(funcName)s (line %(lineno)d) %(message)s"
         )
         filter_list = [
             "corr_id",
@@ -124,7 +124,7 @@ def get_default_log_config(
     else:
         format_str = (
             "%(asctime)-15s %(name)-5s %(levelname)-8s %(module)s::"
-            "%(funcName)s(line %(lineno)d) %(message)s"
+            "%(funcName)s (line %(lineno)d) %(message)s"
         )
         filter_list = []
 
