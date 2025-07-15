@@ -17,7 +17,7 @@
 from collections.abc import Sequence
 
 import numpy as np
-from pytest import approx, fixture, raises
+from pytest import approx, fixture, mark, raises
 
 from idsse.common.sci.grid_proj import GridProj
 from idsse.common.utils import round_, RoundingMethod
@@ -261,3 +261,88 @@ def test_unbalanced_pixel_or_crs_arrays_fail_to_transform(grid_proj: GridProj):
         bad_crs = (EXAMPLE_CRS[0], EXAMPLE_CRS[1][1])
         grid_proj.map_crs_to_pixel(*bad_crs, rounding=RoundingMethod.ROUND)
     assert "Cannot transpose CRS values" in exc.value.args[0]
+
+
+@mark.parametrize(
+    "slice_coords",
+    [
+        "[[-126.25, 19.27], [-126.22, 19.30]]",
+        [[-126.25, 19.27], [-126.22, 19.30]],
+    ],
+)
+def test_slice_coords_to_str(grid_proj: GridProj, slice_coords):
+    slice_str = grid_proj.slice_coords_to_slice_str(slice_coords)
+
+    assert slice_str == "[1:4,1:3]"
+
+
+@mark.parametrize("min_buffer", ["100", 100])
+def test_slice_coords_to_str_min_buffer(grid_proj: GridProj, min_buffer):
+    slice_coords = "[[-110,30],[-100,31]]"
+
+    slice_str = grid_proj.slice_coords_to_slice_str(slice_coords, min_buffer=min_buffer)
+
+    assert slice_str == "[618:1200,254:471]"
+
+
+def test_slice_coords_to_str_negative_buffer(grid_proj: GridProj):
+    slice_coords = "[[-100,30],[-109,31]]"
+    min_buffer = 1000
+
+    slice_str = grid_proj.slice_coords_to_slice_str(slice_coords, min_buffer=min_buffer)
+
+    assert slice_str == "[-240:2098,-674:1395]"
+
+
+@mark.parametrize("min_size", ["[400, 300]", [400, 300]])
+def test_slice_coords_to_str_min_size(grid_proj: GridProj, min_size):
+    slice_coords = "[[-110,30],[-100,35]]"
+
+    slice_str = grid_proj.slice_coords_to_slice_str(slice_coords, min_size=min_size)
+
+    assert slice_str == "[712:1112,301:601]"
+
+
+def test_clip_slice_str_min_max():
+    slice_str = "[-712:1112,-300:601]"
+    i_interval = (0, 1000)  # no i max specified
+    j_interval = (0, 500)  # no j max specified
+    expected = "[0:1000,0:500]"
+
+    result = GridProj.clip_slice_str(slice_str, i_interval, j_interval)
+
+    assert result == expected  # any i/j value above `max` or below `min` was limited
+
+
+def test_clip_slice_str_no_op():
+    slice_str = "[-712:1112,-301:601]"
+
+    result = GridProj.clip_slice_str(slice_str)
+
+    assert result == slice_str
+
+
+@mark.parametrize(
+    ["slice_str", "expected"],
+    [("[-712:1112,-301:-601]", "[0:1112,0:0]"), ("[712:1112,-301:601]", "[712:1112,0:601]")],
+)
+def test_clip_slice_str_min(slice_str, expected):
+    i_interval = (0, None)  # no i max specified
+    j_interval = (0, None)  # no j max specified
+
+    result = GridProj.clip_slice_str(slice_str, i_interval, j_interval)
+
+    assert result == expected  # any value below 0 was limited to 0
+
+
+@mark.parametrize(
+    ["slice_str", "expected"],
+    [("[712:1112,300:601]", "[712:1000,300:500]"), ("[-1:1112,-301:601]", "[-1:1000,-301:500]")],
+)
+def test_clip_slice_str_max(slice_str, expected):
+    i_interval = (None, 1000)  # no i min specified
+    j_interval = (None, 500)  # no j min specified
+
+    result = GridProj.clip_slice_str(slice_str, i_interval, j_interval)
+
+    assert result == expected  # any i/j value over 1000/500 (respectively) is limited to its `max`
