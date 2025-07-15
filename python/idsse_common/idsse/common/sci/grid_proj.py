@@ -14,6 +14,8 @@
 # pylint: disable=invalid-name
 # cspell:word fliplr, flipud
 
+import json
+import re
 from collections.abc import Sequence
 from enum import Enum
 from typing import Self, TypeVar, Iterable
@@ -22,7 +24,7 @@ import numpy as np
 from pyproj import CRS, Transformer
 from pyproj.enums import TransformDirection
 
-from idsse.common.utils import round_values, RoundingParam
+from idsse.common.utils import round_values, RoundingParam, RoundingMethod
 from idsse.common.sci.utils import coordinate_pairs_to_axes
 
 # type hints
@@ -297,3 +299,99 @@ class GridProj:
         raise TypeError(
             f"Cannot transpose CRS values of ({type(x).__name__})({type(y).__name__}) to pixel"
         )
+
+    def slice_coords_to_slice_str(
+        self,
+        slice_coords: str | tuple[tuple[float]],
+        min_buffer: str | int | None = None,
+        min_size: str | tuple[int, int] | None = None,
+        rounding_method: str = RoundingMethod.FLOOR.value,
+    ) -> str:
+        """Convert a Geographic (lat/lon) slice into a Cartesian slice string.
+
+        Args:
+            slice_coords (str | tuple[tuple[float]]): The start and end (e.g. bottom left and top
+                right corners) of a map slice in Geographic (lat/lon) space. E.g.
+                "[[-100, 30], [-90, 20]]". Can be tuple of lat/lon coordinates (tuple) or
+                stringified tuple of lat/lon coordinates.
+            min_buffer (str | dict | None, optional): Pixel buffer to add around slice
+                coordinates. E.g. "10" will add 10 pixels in the x and y direction to
+                `slice_coords`. Defaults to None.
+            min_size (str | dict | None, optional): Minimum size of total bounding box
+                of `slice_coords`. The resulting slice will be extended from `slice_coords`
+                until it is at least `min_size`. E.g. "[400, 300]" will ensure at least a
+                400px x 300px slice results, even if the lat/lon coordinates of `slice_coords`
+                do not cover this area. Defaults to None.
+            rounding_method (str | None, optional): RoundingMethod string. Defaults to "FLOOR".
+
+        Returns:
+            str: Slice string in Cartesian space, e.g. [1:10,100:200]. Coordinates are _not_
+                guaranteed to be non-negative or outside of GridProj bounds.
+        """
+        # pylint: disable=too-many-arguments
+        if isinstance(slice_coords, str):
+            slice_coords = json.loads(slice_coords)
+
+        rounding_method = RoundingMethod(rounding_method) if rounding_method else None
+
+        coords = self.map_geo_to_pixel(*zip(*slice_coords), rounding=rounding_method)
+        i_min, i_max = min(coords[0]), max(coords[0])
+        j_min, j_max = min(coords[1]), max(coords[1])
+
+        if min_buffer:
+            if isinstance(min_buffer, str):
+                min_buffer = json.loads(min_buffer)
+            i_min, i_max = i_min - min_buffer, i_max + min_buffer
+            j_min, j_max = j_min - min_buffer, j_max + min_buffer
+
+        if min_size:
+            if isinstance(min_size, str):
+                min_size = json.loads(min_size)
+            # since slice operator is inclusive on both ends subtract 1 from size
+            i_size, j_size = [size - 1 for size in min_size]
+            if i_max - i_min < i_size:
+                i_max += (i_size - i_max + i_min) >> 1
+                i_min = i_max - i_size
+            if j_max - j_min < j_size:
+                j_max += (j_size - j_max + j_min) >> 1
+                j_min = j_max - j_size
+
+        return f"[{i_min}:{i_max+1},{j_min}:{j_max+1}]"
+
+    @staticmethod
+    def clip_slice_str(
+        original: str,
+        i_interval: tuple[int | None, int | None] | None = None,
+        j_interval: tuple[int | None, int | None] | None = None,
+    ) -> str:
+        """
+        For a Python slice string, clip (limit) all i values outside of `i_interval` and
+        j values outside of `j_interval`, then return as Python slice string format.
+
+        Args:
+            original (str): A Python slice string (e.g. "[0:100,100:200]")
+            i_interval (tuple[int, int] | None): The min and max for all i (a.k.a. "row") values.
+                Can be None (no clipping) or either the min or max can be None.
+            j_interval (tuple[int, int] | None): The min and max for all j (a.k.a. "column") values.
+                Can be None (no clipping), or either the min or max can be None.
+
+        Returns:
+            str: Python slice string, with all values clipped to within i or j interval
+        """
+        # disassemble stringified coordinates of slice string into numbers
+        coord_ints = [int(x) for x in re.findall(r"-?\d+", original)]
+        i_values = coord_ints[:2]
+        j_values = coord_ints[2:]
+
+        # clip all i values (first in coordinate pair) to be within i_interval (min, max)
+        if i_interval:
+            i_min, i_max = i_interval
+            i_values = [np.clip(val, i_min, i_max) for val in i_values]
+
+        # clip all j values (first in coordinate pair) to be within j_extent (min, max)
+        if j_interval:
+            j_min, j_max = j_interval
+            j_values = [np.clip(val, j_min, j_max) for val in j_values]
+
+        # rebuild Python slice string format
+        return f"[{i_values[0]}:{i_values[1]},{j_values[0]}:{j_values[1]}]"

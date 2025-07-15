@@ -8,7 +8,7 @@
       "createdAt": { "type": "string" },
       "status": {
         "type": "string",
-        "enum": ["CREATED", "PROCESSING", "COMPLETE", "FAILED"]
+        "enum": ["CREATED", "PROCESSING", "COMPLETE", "CACHED", "FAILED"]
       }
     },
     "patternProperties": {
