@@ -59,7 +59,6 @@ def path_builder_leafdir() -> PathBuilder:
     return PathBuilder(
         "~",
         subdir=(
-            # TODO: do we need a `:s` arg added to leafdir? True Python `Template` doesn't need it
             "blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/{issue.hour:02d}/{leafdir}/"
         ),
         file_base="blend.t{issue.hour:02d}z.{leafdir}.f{lead.hour:03d}.{region:2s}",
@@ -127,7 +126,7 @@ def test_build_path(path_builder: PathBuilder):
 
 def test_build_path_leafdir(path_builder_leafdir: PathBuilder):
     result_filepath = path_builder_leafdir.build_path(
-        issue=EXAMPLE_ISSUE, valid=EXAMPLE_VALID, leafdir="leaf"
+        issue=EXAMPLE_ISSUE, valid=EXAMPLE_VALID, leafdir="leaf", region="co"
     )
     assert result_filepath == "~/blend.19701003/12/leaf/blend.t12z.leaf.f002.co.grib2.idx"
 

@@ -48,7 +48,7 @@ class PathBuilder:
         self._file_ext = file_ext
 
         # create a dictionary to hold lookup info
-        self._lookup_dict = {}
+        self._lookup_dict: dict[str, _FormatLookup] = {}
         self._update_lookup(self.path_fmt)
 
         # these are used for caching the most recent previously parsed paths (for optimization)
@@ -167,7 +167,6 @@ class PathBuilder:
         issue: datetime | None = None,
         valid: datetime | None = None,
         lead: timedelta | TimeDelta | None = None,
-        leafdir: str | None = None,
         **kwargs,
     ) -> str:
         """Attempts to build the directory with provided arguments
@@ -179,8 +178,6 @@ class PathBuilder:
                                         directory is dependant on it. . Defaults to None.
             lead (timedelta | TimeDelta | None, optional): Lead can be provided in addition
                                                           to issue or valid. Defaults to None.
-            leafdir (str | None, optional): Name of last directory in subdirectory path, if this
-                Path Builder's `subdir` fmt str supports multiple subdirectories. Defaults to None.
             **kwargs: Any additional key/word args (i.e. 'region'='co')
 
         Returns:
@@ -189,14 +186,13 @@ class PathBuilder:
         if issue is None:
             return None
         lead = self._ensure_lead(issue, valid, lead)
-        return self.dir_fmt.format(issue=issue, valid=valid, lead=lead, leafdir=leafdir, **kwargs)
+        return self.dir_fmt.format(issue=issue, valid=valid, lead=lead, **kwargs)
 
     def build_filename(
         self,
         issue: datetime | None = None,
         valid: datetime | None = None,
         lead: timedelta | TimeDelta | None = None,
-        leafdir: str | None = None,
         **kwargs,
     ) -> str:
         """Attempts to build the filename with provided arguments
@@ -208,24 +204,19 @@ class PathBuilder:
                                         filename is dependant on it. . Defaults to None.
             lead (timedelta | TimeDelta | None, optional): Lead can be provided in addition
                                                           to issue or valid. Defaults to None.
-            leafdir (str | None, optional): Name of last directory in subdirectory path, if this
-                Path Builder's `subdir` fmt str supports multiple subdirectories. Defaults to None.
             **kwargs: Any additional key/word args (i.e. 'region'='co')
 
         Returns:
             str: File name as a string
         """
         lead = self._ensure_lead(issue, valid, lead)
-        return self.filename_fmt.format(
-            issue=issue, valid=valid, lead=lead, leafdir=leafdir, **kwargs
-        )
+        return self.filename_fmt.format(issue=issue, valid=valid, lead=lead, **kwargs)
 
     def build_path(
         self,
         issue: datetime | None = None,
         valid: datetime | None = None,
         lead: timedelta | TimeDelta | None = None,
-        leafdir: str | None = None,
         **kwargs: dict,
     ) -> str:
         """Attempts to build the path with provided arguments
@@ -237,18 +228,13 @@ class PathBuilder:
                 path is dependant on it. Defaults to None.
             lead (timedelta | TimeDelta | None, optional): Lead can be provided in addition
                 to issue or valid. Defaults to None.
-            leafdir (str | None, optional): the last directory in the subdirectory path, e.g.
-                "core" or "qmd". Not needed if this PathBuilder's format string `subdir` contains
-                no `{leafdir}` argument. Defaults to None.
             **kwargs: Any additional key/word args (i.e. 'region'='co')
 
         Returns:
             str: Path as a string
         """
         lead = self._ensure_lead(issue, valid, lead)
-        return self._apply_format(
-            self.path_fmt, issue=issue, valid=valid, lead=lead, leafdir=leafdir, **kwargs
-        )
+        return self._apply_format(self.path_fmt, issue=issue, valid=valid, lead=lead, **kwargs)
 
     def parse_dir(self, dir_str: str) -> dict:
         """Extracts issue, valid, and/or lead information from the provided directory
@@ -346,39 +332,55 @@ class PathBuilder:
 
         for fmt_part in os.path.normpath(fmt_str).split(os.sep):
             remaining_fmt_part = fmt_part
-            lookup_info = []
+            lookup_infos: list[_LookupInfo] = []
             cum_start = 0
             while re_match := re.search(r"\{(.*?)\}", remaining_fmt_part):
                 arg_parts = re_match.group()[1:-1].split(":")
-                if len(arg_parts) != 2:
+
+                if len(arg_parts) == 1:
+                    # assume this arg is a string of arbitrary char length
+                    arg_type = self.STR
+                    # set start and end to None to skip any format string arg length verification
+                    arg_start = None
+                    arg_end = None
+
+                # otherwise arg has a digit part (e.g. "d:03"), so parse that with error checking
+                elif len(arg_parts) == 2:
+                    try:
+                        arg_size = int(re.search(r"^\d+", arg_parts[1]).group())
+                    except Exception:
+                        # pylint: disable=raise-missing-from
+                        raise ValueError(
+                            'Format string must have explicit size (must include a number after ":")'
+                        )
+                    arg_type = arg_parts[1][-1]
+                    if arg_parts[1][-1] not in [self.INT, self.FLOAT, self.STR]:
+                        raise ValueError(
+                            "Format string must have explicit type (must include one of "
+                            f'["{self.INT}", "{self.FLOAT}", "{self.STR}"] after ":")'
+                        )
+                    arg_start = re_match.start() + cum_start
+                    arg_end = cum_start = arg_start + arg_size
+                else:
                     raise ValueError(
                         'Format string must have explicit specification (must include a ":")'
                     )
-                try:
-                    arg_size = int(re.search(r"^\d+", arg_parts[1]).group())
-                except Exception:
-                    # pylint: disable=raise-missing-from
-                    raise ValueError(
-                        'Format string must have explicit size (must include a number after ":")'
-                    )
-                arg_type = arg_parts[1][-1]
-                if arg_parts[1][-1] not in [self.INT, self.FLOAT, self.STR]:
-                    raise ValueError(
-                        "Format string must have explicit type (must include one of "
-                        f'["{self.INT}", "{self.FLOAT}", "{self.STR}"] after ":")'
-                    )
 
-                arg_start = re_match.start() + cum_start
-                arg_end = cum_start = arg_start + arg_size
-                lookup_info.append(_LookupInfo(arg_parts[0], arg_start, arg_end, arg_type))
+                lookup_infos.append(_LookupInfo(arg_parts[0], arg_start, arg_end, arg_type))
                 # update the format str to find the next argument
                 remaining_fmt_part = remaining_fmt_part[re_match.end() :]
 
-            exp_len = sum(end - start for _, start, end, _ in lookup_info) + len(
-                re.sub(r"\{(.*?)\}", "", fmt_part)
+            # Calculate expected length of this string, after substitution of real values.
+            # Note: if any arg is of indeterminate length (whatever the input string is),
+            # then expected length will also be indeterminate and will bypass length error checking
+            exp_len = (
+                None
+                if any(info.start is None for info in lookup_infos)
+                else sum(info.end - info.start for info in lookup_infos)
+                + len(re.sub(r"\{(.*?)\}", "", fmt_part))
             )
 
-            self._lookup_dict[fmt_part] = _FormatLookup(exp_len, lookup_info)
+            self._lookup_dict[fmt_part] = _FormatLookup(exp_len, lookup_infos)
         # add default for empty string
         self._lookup_dict[""] = _FormatLookup(0, [])
 
@@ -429,7 +431,7 @@ class PathBuilder:
         parsed_arg_parts = {}
         for path_part, fmt_part in zip(path_parts, fmt_parts):
             expected_len, lookup_info = self._lookup_dict[fmt_part]
-            if (part_len := len(path_part)) != expected_len:
+            if expected_len is not None and (part_len := len(path_part)) != expected_len:
                 raise ValueError(
                     "Path is not expected length. Passed path part "
                     f"'{path_part}' doesn't match format '{fmt_part}'"
@@ -470,13 +472,14 @@ class PathBuilder:
         # struct such as a double separator (sometime this can be needed)
         for fmt_part in fmt_str.split(os.sep):
             path_part = fmt_part.format_map(kwargs)
-            if len(path_part) == self._lookup_dict[fmt_part].exp_len:
-                path_parts.append(path_part)
-            else:
+            expected_length = self._lookup_dict[fmt_part].exp_len
+            if expected_length is not None and len(path_part) != expected_length:
                 raise ValueError(
                     "Arguments generate a path that violate "
                     f"at least part of the format, part '{fmt_part}'"
                 )
+            path_parts.append(path_part)
+
         return os.path.sep.join(path_parts)
 
     @staticmethod
@@ -598,16 +601,22 @@ class PathBuilder:
 
 # Private utility classes
 class _LookupInfo(NamedTuple):
-    """Data class used to hold lookup info"""
+    """Data class used to hold lookup info. `start` and `end` may be None if arg is a string
+    of indetermine length.
+    """
 
     key: str
-    start: int
-    end: int
+    start: int | None
+    end: int | None
     type: str  # should be one of 'd', 'f', 's'
 
 
 class _FormatLookup(NamedTuple):
-    """Data class used to hold format and lookup info"""
+    """Data class used to hold format and lookup info.
+    exp_len (int | None): the expected character length of the string after all input values
+        are substituted for their fmt strings. May be None if one or more fmt string args are of
+        indeterminate length (whatever length the replacement string is).
+    """
 
-    exp_len: int
+    exp_len: int | None
     lookups: list[_LookupInfo]
