@@ -36,20 +36,35 @@ def local_path_builder() -> PathBuilder:
 
 @fixture
 def path_builder() -> PathBuilder:
-    subdirectory_pattern = (
-        "blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/{issue.hour:02d}/core/"
+    return PathBuilder(
+        "~",
+        subdir="blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/{issue.hour:02d}/core/",
+        file_base="blend.t{issue.hour:02d}z.core.f{lead.hour:03d}.co",
+        file_ext="grib2.idx",
     )
-    file_base_pattern = "blend.t{issue.hour:02d}z.core.f{lead.hour:03d}.co"
-    return PathBuilder("~", subdirectory_pattern, file_base_pattern, "grib2.idx")
 
 
 @fixture
-def path_builder_with_region() -> PathBuilder:
-    subdirectory_pattern = (
-        "blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/{issue.hour:02d}/core/"
+def path_builder_region() -> PathBuilder:
+    return PathBuilder(
+        "~",
+        subdir="blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/{issue.hour:02d}/core/",
+        file_base="blend.t{issue.hour:02d}z.core.f{lead.hour:03d}.{region:2s}",
+        file_ext="grib2.idx",
     )
-    file_base_pattern = "blend.t{issue.hour:02d}z.core.f{lead.hour:03d}.{region:2s}"
-    return PathBuilder("~", subdirectory_pattern, file_base_pattern, "grib2.idx")
+
+
+@fixture
+def path_builder_leafdir() -> PathBuilder:
+    return PathBuilder(
+        "~",
+        subdir=(
+            # TODO: do we need a `:s` arg added to leafdir? True Python `Template` doesn't need it
+            "blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/{issue.hour:02d}/{leafdir}/"
+        ),
+        file_base="blend.t{issue.hour:02d}z.{leafdir}.f{lead.hour:03d}.{region:2s}",
+        file_ext="grib2.idx",
+    )
 
 
 def test_from_dir_filename_creates_valid_path_builder():
@@ -110,33 +125,38 @@ def test_build_path(path_builder: PathBuilder):
     assert result_filepath == "~/blend.19701003/12/core/blend.t12z.core.f002.co.grib2.idx"
 
 
+def test_build_path_leafdir(path_builder_leafdir: PathBuilder):
+    result_filepath = path_builder_leafdir.build_path(
+        issue=EXAMPLE_ISSUE, valid=EXAMPLE_VALID, leafdir="leaf"
+    )
+    assert result_filepath == "~/blend.19701003/12/leaf/blend.t12z.leaf.f002.co.grib2.idx"
+
+
 def test_build_path_with_invalid_lead(path_builder: PathBuilder):
     # if lead needs more than 3 chars to be represented, ValueError will be raised
     with raises(ValueError):
         path_builder.build_path(issue=EXAMPLE_ISSUE, lead=EXAMPLE_LEAD * 1000)
 
 
-def test_build_path_with_region(path_builder_with_region: PathBuilder):
+def test_build_path_with_region(path_builder_region: PathBuilder):
     region = "co"
-    result = path_builder_with_region.build_path(
-        issue=EXAMPLE_ISSUE, lead=EXAMPLE_LEAD, region=region
-    )
-    result_dict = path_builder_with_region.parse_path(result)
+    result = path_builder_region.build_path(issue=EXAMPLE_ISSUE, lead=EXAMPLE_LEAD, region=region)
+    result_dict = path_builder_region.parse_path(result)
     assert result_dict["issue"] == EXAMPLE_ISSUE
     assert result_dict["lead"] == EXAMPLE_LEAD
     assert result_dict["region"] == region
 
 
-def test_build_path_with_invalid_region(path_builder_with_region: PathBuilder):
+def test_build_path_with_invalid_region(path_builder_region: PathBuilder):
     # if region is more than 2 chars, ValueError will be raised
     with raises(ValueError):
-        path_builder_with_region.build_path(issue=EXAMPLE_ISSUE, lead=EXAMPLE_LEAD, region="conus")
+        path_builder_region.build_path(issue=EXAMPLE_ISSUE, lead=EXAMPLE_LEAD, region="conus")
 
 
-def test_build_path_with_required_but_missing_region(path_builder_with_region: PathBuilder):
+def test_build_path_with_required_but_missing_region(path_builder_region: PathBuilder):
     # if a required variable (region) is not provided, KeyError will be raised
     with raises(KeyError):
-        path_builder_with_region.build_path(issue=EXAMPLE_ISSUE, lead=EXAMPLE_LEAD)
+        path_builder_region.build_path(issue=EXAMPLE_ISSUE, lead=EXAMPLE_LEAD)
 
 
 def test_parse_dir(path_builder: PathBuilder):

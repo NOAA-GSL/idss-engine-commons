@@ -3,19 +3,20 @@
 In this weather forecasting data context,
 - issue: the datetime when a given forecast was generated (or at least when generation began)
 - valid: the datetime when a given forecast "expires" or is superseded by newer forecasts
-- lead: the time duration (often in hours) between issue and valid, a sort of forecast "lifespan"
-
+- lead: the time duration (often in hours) between issue and valid
 """
 
-# -------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
 # Created on Thu Feb 16 2023
 #
-# Copyright (c) 2023 Regents of the University of Colorado. All rights reserved.
+# Copyright (c) 2023 Regents of the University of Colorado. All rights reserved. (1)
+# Copyright (c) 2025 Colorado State University. All rights reserved.             (2)
 #
 # Contributors:
-#     Geary J Layne
+#     Geary J Layne     (1)
+#     Mackenzie Grimes  (2)
 #
-# -------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
 
 import os
 import re
@@ -33,6 +34,7 @@ class PathBuilder:
     ISSUE: Final[str] = "issue"
     VALID: Final[str] = "valid"
     LEAD: Final[str] = "lead"
+    LEAFDIR: Final[str] = "leafdir"
     INT: Final[str] = "d"
     FLOAT: Final[str] = "f"
     STR: Final[str] = "s"
@@ -123,12 +125,12 @@ class PathBuilder:
         self._update_lookup(self.path_fmt)
 
     @property
-    def sub_dir(self):
+    def sub_dir(self) -> str:
         """Provides access to the file base directory format string"""
         return self._sub_dir
 
     @sub_dir.setter
-    def sub_dir(self, subdir):
+    def sub_dir(self, subdir: str):
         """Set the sub directory format string"""
         # update sub directory format
         self._sub_dir = subdir
@@ -165,6 +167,7 @@ class PathBuilder:
         issue: datetime | None = None,
         valid: datetime | None = None,
         lead: timedelta | TimeDelta | None = None,
+        leafdir: str | None = None,
         **kwargs,
     ) -> str:
         """Attempts to build the directory with provided arguments
@@ -176,6 +179,8 @@ class PathBuilder:
                                         directory is dependant on it. . Defaults to None.
             lead (timedelta | TimeDelta | None, optional): Lead can be provided in addition
                                                           to issue or valid. Defaults to None.
+            leafdir (str | None, optional): Name of last directory in subdirectory path, if this
+                Path Builder's `subdir` fmt str supports multiple subdirectories. Defaults to None.
             **kwargs: Any additional key/word args (i.e. 'region'='co')
 
         Returns:
@@ -184,13 +189,14 @@ class PathBuilder:
         if issue is None:
             return None
         lead = self._ensure_lead(issue, valid, lead)
-        return self.dir_fmt.format(issue=issue, valid=valid, lead=lead, **kwargs)
+        return self.dir_fmt.format(issue=issue, valid=valid, lead=lead, leafdir=leafdir, **kwargs)
 
     def build_filename(
         self,
         issue: datetime | None = None,
         valid: datetime | None = None,
         lead: timedelta | TimeDelta | None = None,
+        leafdir: str | None = None,
         **kwargs,
     ) -> str:
         """Attempts to build the filename with provided arguments
@@ -202,37 +208,47 @@ class PathBuilder:
                                         filename is dependant on it. . Defaults to None.
             lead (timedelta | TimeDelta | None, optional): Lead can be provided in addition
                                                           to issue or valid. Defaults to None.
+            leafdir (str | None, optional): Name of last directory in subdirectory path, if this
+                Path Builder's `subdir` fmt str supports multiple subdirectories. Defaults to None.
             **kwargs: Any additional key/word args (i.e. 'region'='co')
 
         Returns:
             str: File name as a string
         """
         lead = self._ensure_lead(issue, valid, lead)
-        return self.filename_fmt.format(issue=issue, valid=valid, lead=lead, **kwargs)
+        return self.filename_fmt.format(
+            issue=issue, valid=valid, lead=lead, leafdir=leafdir, **kwargs
+        )
 
     def build_path(
         self,
         issue: datetime | None = None,
         valid: datetime | None = None,
         lead: timedelta | TimeDelta | None = None,
+        leafdir: str | None = None,
         **kwargs: dict,
     ) -> str:
         """Attempts to build the path with provided arguments
 
         Args:
             issue (datetime | None, optional): Issue datetime, should be provided is the
-                                        path is dependant on it. Defaults to None.
+                path is dependant on it. Defaults to None.
             valid (datetime | None, optional): Valid datetime, should be provided is the
-                                        path is dependant on it. . Defaults to None.
+                path is dependant on it. Defaults to None.
             lead (timedelta | TimeDelta | None, optional): Lead can be provided in addition
-                                                          to issue or valid. Defaults to None.
+                to issue or valid. Defaults to None.
+            leafdir (str | None, optional): the last directory in the subdirectory path, e.g.
+                "core" or "qmd". Not needed if this PathBuilder's format string `subdir` contains
+                no `{leafdir}` argument. Defaults to None.
             **kwargs: Any additional key/word args (i.e. 'region'='co')
 
         Returns:
             str: Path as a string
         """
         lead = self._ensure_lead(issue, valid, lead)
-        return self._apply_format(self.path_fmt, issue=issue, valid=valid, lead=lead, **kwargs)
+        return self._apply_format(
+            self.path_fmt, issue=issue, valid=valid, lead=lead, leafdir=leafdir, **kwargs
+        )
 
     def parse_dir(self, dir_str: str) -> dict:
         """Extracts issue, valid, and/or lead information from the provided directory
@@ -294,13 +310,27 @@ class PathBuilder:
             path (str): A path consistent with this PathBuilder
 
         Returns:
-            datetime | None: After parsing the path, builds and returns the valid date/time if
+            str | None: After parsing the path, builds and returns the valid date/time if
                              possible else returns None if insufficient info is available to build
         """
         # do the core parsing
         self._parse_path(path, self.path_fmt)
         # return a the valid datetime, if determined
         return self._parsed_args.get(self.VALID, None)
+
+    def get_leafdir(self, path: str) -> str | None:
+        """Retrieves the leafdir (last directory in subdir) from the provided path
+
+        Args:
+            path (str): A path consistent with this PathBuilder
+
+        Returns:
+            str | None: After parsing the path, returns the leafdir (str), else returns None
+                if insufficient info is available to build.
+        """
+        # do the core parsing
+        self._parse_path(path, self.path_fmt)
+        return self._parsed_args.get(self.LEAFDIR, None)
 
     def _update_lookup(self, fmt_str: str) -> None:
         """This method should be called whenever some part of the format has been changed.
@@ -370,6 +400,8 @@ class PathBuilder:
                 parsed_arg_parts[self.VALID] = valid_dt
             if issue_dt and valid_dt:
                 parsed_arg_parts[self.LEAD] = TimeDelta(valid_dt - issue_dt)
+            if leaf_dir := self._get_leafdir_from_arg_parts(parsed_arg_parts):
+                parsed_arg_parts[self.LEAFDIR] = leaf_dir
 
             # cache this path and the parsed_arg_parts for repeat requests
             self._last_parsed_path = path
@@ -459,7 +491,7 @@ class PathBuilder:
             valid (datetime | None, optional): Depending on info found during parsing,
                                         valid date/time can be useful. Defaults to None.
             lead (timedelta | None, optional): Depending on info found during parsing, lead time
-                                        can be useful. . Defaults to None.
+                                        can be useful. Defaults to None.
 
         Returns:
             datetime: Issue date/time
@@ -520,7 +552,7 @@ class PathBuilder:
         return None
 
     @staticmethod
-    def _get_lead_from_time_args(time_args: dict) -> timedelta:
+    def _get_lead_from_time_args(time_args: dict) -> timedelta | None:
         """Static method for creating a lead time from parsed arguments and optional inputs
 
         Args:
@@ -528,7 +560,7 @@ class PathBuilder:
                                 a path, dir, or filename. Depending on info found during parsing,
                                 issue or valid date/time.
         Returns:
-            timedelta: Lead time
+            timedelta | None: Lead time, or None if lead.hour not in PathBuilder's format string
         """
         if "lead.hour" in time_args.keys():
             return timedelta(hours=time_args["lead.hour"])
@@ -555,6 +587,13 @@ class PathBuilder:
         if issue and valid:
             return TimeDelta(valid - issue)
         return None
+
+    @staticmethod
+    def _get_leafdir_from_arg_parts(parsed_args: dict) -> str | None:
+        """Static method to get optional `leafdir` from parsed format string arguments.
+        Returns the leafdir argument (str) or None if it does not exist.
+        """
+        return parsed_args.get("leafdir")
 
 
 # Private utility classes
