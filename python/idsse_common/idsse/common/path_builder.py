@@ -437,7 +437,9 @@ class PathBuilder:
                     f"'{path_part}' doesn't match format '{fmt_part}'"
                 )
             for lookup in lookup_info:
-                if not (0 <= lookup.start <= part_len and 0 <= lookup.end <= part_len):
+                if (lookup.start is not None and not 0 <= lookup.start <= part_len) or (
+                    lookup.end is not None and not 0 <= lookup.end <= part_len
+                ):
                     raise ValueError("Parse indices are out of range for path")
                 try:
                     match lookup.type:
@@ -450,6 +452,7 @@ class PathBuilder:
                                 path_part[lookup.start : lookup.end]
                             )
                         case self.STR:
+                            # TODO: cannot parse part here if contains indeterminate length arg
                             parsed_arg_parts[lookup.key] = path_part[lookup.start : lookup.end]
                 except ValueError as exc:
                     raise ValueError("Unable to apply formatting") from exc
