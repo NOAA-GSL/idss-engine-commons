@@ -80,7 +80,7 @@ class Queue(NamedTuple):
     """An internal data class for holding the RabbitMQ queue info"""
 
     name: str
-    route_key: str
+    route_key: str | list[str]
     durable: bool
     exclusive: bool
     auto_delete: bool
@@ -604,22 +604,17 @@ def _setup_exch_and_queue(channel: Channel, exch: Exch, queue: Queue):
         logger.debug("Declared queue: %s", queue_name)
 
     if exch.name != "":  # if using default exchange, skip binding queues (not allowed by RMQ)
-        if isinstance(queue.route_key, list):
-            for route_key in queue.route_key:
-                channel.queue_bind(queue_name, exchange=exch.name, routing_key=route_key)
-                logger.debug(
-                    "Bound queue(%s) to exchange(%s) with route_key(%s)",
-                    queue_name,
-                    exch.name,
-                    route_key,
-                )
-        else:
-            channel.queue_bind(queue_name, exchange=exch.name, routing_key=queue.route_key)
+        # force route key(s) to be list to simplify logic
+        route_key_list = (
+            queue.route_key if isinstance(queue.route_key, list) else [queue.route_key]
+        )
+        for route_key in route_key_list:
+            channel.queue_bind(queue_name, exchange=exch.name, routing_key=route_key)
             logger.debug(
                 "Bound queue(%s) to exchange(%s) with route_key(%s)",
                 queue_name,
                 exch.name,
-                queue.route_key,
+                route_key,
             )
 
 
@@ -677,8 +672,11 @@ def _publish(
                 logger.warning("Exception when removing message from private queue: %s", exc)
     except UnroutableError:
         logger.warning("Message was not delivered")
+    except ChannelWrongStateError as exc:
+        logger.warning("Message not published, cause: %s", str(exc))
+        success_flag[0] = False
     except Exception as exc:
-        logger.warning("Message not published, cause: %s", exc)
+        logger.warning("Message not published, cause: %s", str(exc))
         raise exc
     finally:
         if done_event:

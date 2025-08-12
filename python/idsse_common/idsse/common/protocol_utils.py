@@ -123,12 +123,12 @@ class ProtocolUtils(ABC):
         if not issue_end:
             issue_end = datetime.now(UTC)
         if issue_start:
-            datetimes = list(datetime_gen(issue_end, time_delta, issue_start, num_issues))
+            datetimes = datetime_gen(issue_end, time_delta, issue_start, num_issues)
         else:
             # check if time delta is positive, if so make negative
             if time_delta > zero_time_delta:
                 time_delta = timedelta(seconds=-1.0 * time_delta.total_seconds())
-            datetimes = list(datetime_gen(issue_end, time_delta))
+            datetimes = datetime_gen(issue_end, time_delta)
 
         # build list of filepaths on the server for each dt (ignoring ones earlier than issue_dt)
         issue_filepaths = [
@@ -138,7 +138,7 @@ class ProtocolUtils(ABC):
         ]
 
         issues_with_valid_dts = self._get_unique_issues(issue_filepaths, num_issues, max_workers)
-        return sorted(list(issues_with_valid_dts))[:num_issues]
+        return sorted(list(issues_with_valid_dts), reverse=True)[:num_issues]
 
     def get_valids(
         self,
@@ -198,7 +198,7 @@ class ProtocolUtils(ABC):
     def _get_unique_issues(
         self,
         dir_paths: list[str],
-        num_issues: int,
+        num_issues: int | None,
         max_workers: int,
     ) -> list[datetime]:
         """

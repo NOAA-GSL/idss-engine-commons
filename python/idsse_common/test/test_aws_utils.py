@@ -173,8 +173,8 @@ def test_check_for_does_not_find_valid(aws_utils: AwsUtils, mock_exec_cmd):
 def test_get_issues(aws_utils: AwsUtils, mock_exec_cmd):
     result = aws_utils.get_issues(issue_start=EXAMPLE_ISSUE, issue_end=EXAMPLE_VALID, num_issues=2)
     assert len(result) == 2
-    assert result[0] == EXAMPLE_VALID - timedelta(hours=1)
-    assert result[1] == EXAMPLE_VALID
+    assert result[0] == EXAMPLE_VALID
+    assert result[1] == EXAMPLE_VALID - timedelta(hours=1)
 
 
 def test_get_issues_with_same_start_stop(aws_utils: AwsUtils, mock_exec_cmd):
