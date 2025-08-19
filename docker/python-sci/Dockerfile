@@ -38,6 +38,7 @@ RUN conda config --set solver classic && \
     flask==2.3.2 \
     gunicorn==22.0.0 \
     python-logging-rabbitmq==2.0.0 \
+    scipy==1.16.0 \
     && conda clean -y --all
 
 # Get the latest package updates to keep security vulnerabilities down
