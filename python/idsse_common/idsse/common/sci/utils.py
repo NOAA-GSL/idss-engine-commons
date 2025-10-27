@@ -14,6 +14,7 @@
 import logging
 from collections.abc import Sequence
 from typing import NewType
+from datetime import datetime, timezone, UTC
 
 import numpy
 
@@ -42,3 +43,27 @@ def coordinate_pairs_to_axes(
             as all coordinates on x axis, followed by all coordinates on y axis
     """
     return tuple(numpy.array(dim_coord, dtype=dtype) for dim_coord in tuple(zip(*points)))
+
+
+def numpy_datetime_to_datetime(
+    _datetime: numpy.datetime64, dtype: numpy.dtype, tz: timezone = UTC
+) -> datetime:
+    """Convert a `numpy.datetime64` object to a timezone-aware Python `datetime`.
+
+    Args:
+        _datetime (numpy.datetime64): a numpy.datetime64 object
+        dtype (numpy.dtype): the dtype from the numpy datetime (usually `datetime64[ns]`)
+        tz (timezone, optional): Python timezone to assume, as numpy datetimes are timezone-naive.
+            Defaults to `datetime.UTC`.
+
+    Returns:
+        datetime: A timezone-aware Python `datetime` object.
+    """
+    # dt_parse(f'{np.datetime_as_string(file.valid_time)}Z')
+    time_since_epoch = _datetime - numpy.datetime64(0, "s")
+    if str(dtype).endswith("[ns]"):
+        # numpy units are nanoseconds, which Python datetime cannot handle; convert to seconds
+        timestamp = time_since_epoch / numpy.timedelta64(1, "s")
+    else:
+        timestamp = time_since_epoch
+    return datetime.fromtimestamp(timestamp).replace(tzinfo=tz)

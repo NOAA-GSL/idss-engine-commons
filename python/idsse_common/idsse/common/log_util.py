@@ -13,6 +13,7 @@
 # ------------------------------------------------------------------------------
 # pylint: disable=too-few-public-methods,missing-class-docstring
 
+import json
 import logging
 import time
 import uuid
@@ -163,3 +164,77 @@ def get_default_log_config(
             },
         },
     }
+
+
+def record_metric(
+    name: str, value: float, units: str | None = None, logger: logging.Logger | None = None
+):
+    """Print to logs a small, standardized 'metric' event that is easily searched and can be used
+    to gauage overall system performance. For example, some server responding or a thread
+    completing its chunk of work.
+
+    Uses the built-in `logger` from the Python context by default, or caller can pass in a specific
+    Logger instance to the `logger` arg.
+    """
+    metric_tag = "[METRICS]"
+    message = {"name": name, "value": value, "units": units}
+    if not logger:
+        logger = logging.getLogger(__name__)
+    logger.info("%s %s", metric_tag, json.dumps(message))
+
+
+class MetricTimer:
+
+    def __init__(self):
+        """Simple class to start, stop, and report out through logging, some system-level
+        performance or runtime metrics.
+
+        After creating a `MetricTimer` instance, you can start a new timer like so:
+        ```
+        metrics = MetricTimer()
+        metrics.start('EVENT_THAT_HAPPENED')
+        time.sleep(3)
+        metrics.stop('EVENT_THAT_HAPPENED')
+        # will have printed {'name': 'EVENT_THAT_HAPPENED', 'value': 3000} to logger
+        ```
+        """
+        self._running_timers: dict[str, int] = {}
+
+    @property
+    def timers(self):
+        """Return mapping of running timers (by created key/name) and the clock time
+        (ns since the epoch) when they started.
+
+        When a caller invokes `stop_time(<some key>)`, the associated timer will be stopped,
+        removed from this list, and the elapsed time logged.
+        """
+        return self._running_timers
+
+    def start(self, key: str):
+        """Start a timer, identified by the unique string provided, e.g. `SERVER_RESPONSE_TIME`.
+
+        Raises:
+            RuntimeError: if a timer is already running that uses the given `key`
+        """
+        if self._running_timers.get(key):
+            raise RuntimeError(f"Timer already running for key {key}")
+
+        self._running_timers[key] = time.perf_counter_ns()
+
+    def stop(self, key: str):
+        """Stop a timer, identified by the unique string provided, and post the elapsed time
+        to the Python logger in an IDSSE-standard metric message format.
+
+        Raises:
+            RuntimeError: if no timer is found running that uses the given `key`
+        """
+        end_time = time.perf_counter_ns()  # stop the timer
+        start_time = self._running_timers.pop(key, None)  # remove the start timer from the list
+
+        if not start_time:
+            raise RuntimeError(
+                f"Timer {key} not found in running list. May have already been stopped"
+            )
+        # calculate elapsed time in nanoseconds, convert to milliseconds
+        elapsed_time_ms = (end_time - start_time) / 1e6
+        record_metric(key, elapsed_time_ms, units="ms")
