@@ -37,7 +37,7 @@ RUN conda config --set solver classic && \
     pillow==10.4.0 \
     flask==2.3.3 \
     gunicorn==22.0.0 \
-    python-logging-rabbitmq==2.3.0 \
+    python-logging-rabbitmq==2.0.0 \
     scipy==1.16.3 \
     && conda clean -y --all
 

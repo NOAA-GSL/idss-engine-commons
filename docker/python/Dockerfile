@@ -26,7 +26,7 @@ RUN pip3 install --no-cache \
     pycouchdb==1.16.0 \
     gunicorn==22.0.0 \
     geojson==3.2.0 \
-    python-logging-rabbitmq==2.3.0 \
+    python-logging-rabbitmq==2.0.0 \
     flask-cors==4.0.2
 
 # Get the latest package updates to keep security vulnerabilities down
