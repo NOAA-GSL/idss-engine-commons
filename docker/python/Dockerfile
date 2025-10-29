@@ -19,15 +19,15 @@ FROM python:3.12.2-alpine
 # install additional packages base packages common among all microservices
 RUN pip3 install --no-cache \
     pika==1.3.1 \
-    requests==2.28.2 \
-    flask==2.3.2 \
+    requests==2.32.5 \
+    flask==2.3.3 \
     python-dateutil==2.9.0 \
-    jsonschema==4.19.0 \
-    pycouchdb==1.14.2 \
+    jsonschema==4.25.1 \
+    pycouchdb==1.16.0 \
     gunicorn==22.0.0 \
-    geojson==3.1.0 \
+    geojson==3.2.0 \
     python-logging-rabbitmq==2.3.0 \
-    flask-cors==4.0.0
+    flask-cors==4.0.2
 
 # Get the latest package updates to keep security vulnerabilities down
 RUN apk update && apk upgrade

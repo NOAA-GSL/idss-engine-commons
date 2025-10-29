@@ -19,7 +19,7 @@ from typing import Protocol
 
 from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 import h5netcdf as h5nc
-import numpy as np
+from numpy import ndarray
 
 logger = logging.getLogger(__name__)
 
@@ -55,10 +55,12 @@ def read_netcdf_global_attrs(filepath: str) -> dict:
     Returns:
         dict: Global attributes as dictionary
     """
-    return _read_attrs(Dataset(filepath))
+    with Dataset(filepath) as in_file:
+        attrs = _read_attrs(in_file)
+    return attrs
 
 
-def read_netcdf(filepath: str, use_h5_lib: bool = False) -> tuple[dict, np.ndarray]:
+def read_netcdf(filepath: str, use_h5_lib: bool = False) -> tuple[dict, ndarray]:
     """Reads DAS Netcdf file.
 
     Args:
@@ -67,7 +69,7 @@ def read_netcdf(filepath: str, use_h5_lib: bool = False) -> tuple[dict, np.ndarr
             If False, netCDF4 library will be used. Default is False (netcdf4 will be used).
 
     Returns:
-        tuple[dict, np.ndarray]: Global attributes and data
+        tuple[dict, ndarray]: Global attributes and data
     """
     if use_h5_lib:
         with h5nc.File(filepath, "r") as nc_file:
@@ -83,12 +85,12 @@ def read_netcdf(filepath: str, use_h5_lib: bool = False) -> tuple[dict, np.ndarr
         return global_attrs, grid
 
 
-def write_netcdf(attrs: dict, grid: np.ndarray, filepath: str, use_h5_lib: bool = False) -> str:
+def write_netcdf(attrs: dict, grid: ndarray, filepath: str, use_h5_lib: bool = False) -> str:
     """Store data and attributes to a Netcdf4 file
 
     Args:
         attrs (dict): Attribute relative to the data to be written
-        grid (np.array): Numpy array of data
+        grid (ndarray): Numpy array of data
         filepath (str): String representation of where to write the file
         use_h5_lib: (bool): if True, python library h5netcdf will be used to do file I/O.
             If False, netCDF4 library will be used. Default is False (netCDF4 will be used).

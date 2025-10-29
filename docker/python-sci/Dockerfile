@@ -24,21 +24,21 @@ RUN conda config --set solver classic && \
     conda install -y \
     pika==1.3.1 \
     python-dateutil==2.9.0 \
-    pint==0.23 \
+    pint==0.25 \
     numpy==1.26.4 \
-    netcdf4==1.6.5 \
-    h5netcdf==1.3.0 \
+    netcdf4==1.7.3 \
+    h5netcdf==1.7.3 \
     pygrib==2.1.6 \
-    awscli==1.32.41 \
-    jsonschema==4.21.1 \
-    s5cmd=2.2.2 \
-    geojson==3.1.0 \
-    shapely==2.0.2 \
-    pillow==10.2.0 \
-    flask==2.3.2 \
+    awscli==1.42.60 \
+    jsonschema==4.25.1 \
+    s5cmd=2.3.0 \
+    geojson==3.2.0 \
+    shapely==2.1.2 \
+    pillow==10.4.0 \
+    flask==2.3.3 \
     gunicorn==22.0.0 \
-    python-logging-rabbitmq==2.0.0 \
-    scipy==1.16.0 \
+    python-logging-rabbitmq==2.3.0 \
+    scipy==1.16.3 \
     && conda clean -y --all
 
 # Get the latest package updates to keep security vulnerabilities down
