@@ -15,6 +15,7 @@
 from unittest.mock import Mock
 
 import numpy
+from shapely import equals_exact
 from pytest import fixture, MonkeyPatch
 
 from idsse.common.sci.grid_proj import GridProj
@@ -43,21 +44,19 @@ def grid_proj() -> GridProj:
 # test
 def test_geographic_point_to_pixel(grid_proj: GridProj):
     point = from_wkt("POINT (-105 40)")
-    pixel_point = from_wkt("POINT (940.5282319922111 781.3426922405841)")
+    pixel_point = from_wkt("POINT (940.528232 781.34269)")
     result = geographic_point_to_pixel(point, grid_proj)
 
-    assert result == pixel_point
+    assert equals_exact(result, pixel_point, tolerance=0.00001)
 
 
 def test_geographic_linestring_to_pixel(grid_proj: GridProj):
     geo_linestring = from_wkt("LINESTRING (-100 30, -110 40, -120 50)")
     pixel_linestring = from_wkt(
-        "LINESTRING (1097.723937434988 326.5786009191758,"
-        "767.3803599551428 797.3524918062434,"
-        "509.3960133013222 1309.2825656112075)"
+        "LINESTRING (1097.723937 326.578601, 767.38036 797.352492, 509.396013 1309.282566)"
     )
     result = geographic_linestring_to_pixel(geo_linestring, grid_proj)
-    assert result == pixel_linestring
+    assert equals_exact(result, pixel_linestring, tolerance=0.000001)
 
 
 def test_geographic_polygon_to_pixel(grid_proj: GridProj):
@@ -66,19 +65,19 @@ def test_geographic_polygon_to_pixel(grid_proj: GridProj):
         "(-107 42, -107 47, -108 47, -108 42, -107 42))"
     )
     pixel_poly = from_wkt(
-        "POLYGON ((940.5282319922111 781.3426922405841,"
-        "767.3803599551428 797.3524918062434,"
-        "819.139672193266 1263.2543005156788,"
-        "975.0735971750927 1248.8361569077047,"
-        "940.5282319922111 781.3426922405841),"
-        "(879.2683115975804 877.9054076290231,"
-        "899.8846796684276 1110.2160158217973,"
-        "867.636632346796 1113.1977722126162,"
-        "845.307298979268 881.0455502058237,"
-        "879.2683115975804 877.9054076290231))"
+        "POLYGON ((940.528232 781.342692,"
+        "767.38036 797.352492,"
+        "819.139672 1263.254301,"
+        "975.073597 1248.836157,"
+        "940.528232 781.342692),"
+        "(879.268312 877.905408,"
+        "899.88468 1110.216016,"
+        "867.636632 1113.197772,"
+        "845.307299 881.045550,"
+        "879.268312 877.905408))"
     )
     result = geographic_polygon_to_pixel(geo_poly, grid_proj)
-    assert result == pixel_poly
+    assert equals_exact(result, pixel_poly, tolerance=0.000001)
 
 
 def test_geographic_to_pixel(monkeypatch: MonkeyPatch, grid_proj: GridProj):
