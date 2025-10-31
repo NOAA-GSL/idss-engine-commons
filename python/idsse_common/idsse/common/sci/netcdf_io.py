@@ -46,7 +46,7 @@ class HasNcAttr(Protocol):
         """
 
 
-def read_netcdf_global_attrs(filepath: str, use_h5_lib: bool = False) -> dict:
+def read_netcdf_global_attrs(filepath: str) -> dict:
     """Read the global attributes from a Netcdf file
 
     Args:
@@ -57,7 +57,7 @@ def read_netcdf_global_attrs(filepath: str, use_h5_lib: bool = False) -> dict:
     """
     # if use_h5_lib:
     with h5nc.File(filepath, "r") as nc_file:
-        attrs = _attrs_to_dict(nc_file, use_h5_lib=True)
+        attrs = _attrs_to_dict(nc_file)
         return attrs
 
     # with Dataset(filepath) as in_file:
@@ -65,7 +65,7 @@ def read_netcdf_global_attrs(filepath: str, use_h5_lib: bool = False) -> dict:
     # return attrs
 
 
-def read_netcdf(filepath: str, use_h5_lib: bool = False) -> tuple[dict, ndarray]:
+def read_netcdf(filepath: str) -> tuple[dict, ndarray]:
     """Reads DAS Netcdf file.
 
     Args:
@@ -79,7 +79,7 @@ def read_netcdf(filepath: str, use_h5_lib: bool = False) -> tuple[dict, ndarray]
     # if use_h5_lib:
     with h5nc.File(filepath, "r") as nc_file:
         grid = nc_file.variables["grid"][:]
-        attrs = _attrs_to_dict(nc_file, use_h5_lib=True)
+        attrs = _attrs_to_dict(nc_file)
     return attrs, grid
 
     # # otherwise, use netcdf4 library (default)
@@ -91,7 +91,7 @@ def read_netcdf(filepath: str, use_h5_lib: bool = False) -> tuple[dict, ndarray]
     #     return global_attrs, grid
 
 
-def write_netcdf(attrs: dict, grid: ndarray, filepath: str, use_h5_lib: bool = False) -> str:
+def write_netcdf(attrs: dict, grid: ndarray, filepath: str) -> str:
     """Store data and attributes to a Netcdf4 file
 
     Args:
@@ -138,7 +138,7 @@ def write_netcdf(attrs: dict, grid: ndarray, filepath: str, use_h5_lib: bool = F
     # return filepath
 
 
-def _attrs_to_dict(dataset: HasNcAttr | h5nc.File, use_h5_lib=False) -> dict:
-    if use_h5_lib:
-        return dict(dataset.attrs.items())
-    return {key: dataset.getncattr(key) for key in dataset.ncattrs()}
+def _attrs_to_dict(dataset: HasNcAttr | h5nc.File) -> dict:
+    # if use_h5_lib:
+    return dict(dataset.attrs.items())
+    # return {key: dataset.getncattr(key) for key in dataset.ncattrs()}
