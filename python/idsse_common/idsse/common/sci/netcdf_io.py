@@ -17,7 +17,7 @@ import os
 from collections.abc import Sequence
 from typing import Protocol
 
-from netCDF4 import Dataset  # pylint: disable=no-name-in-module
+# from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 import h5netcdf as h5nc
 from numpy import ndarray
 
@@ -55,14 +55,14 @@ def read_netcdf_global_attrs(filepath: str, use_h5_lib: bool = False) -> dict:
     Returns:
         dict: Global attributes as dictionary
     """
-    if use_h5_lib:
-        with h5nc.File(filepath, "r") as nc_file:
-            attrs = _attrs_to_dict(nc_file, use_h5_lib=True)
-            return attrs
+    # if use_h5_lib:
+    with h5nc.File(filepath, "r") as nc_file:
+        attrs = _attrs_to_dict(nc_file, use_h5_lib=True)
+        return attrs
 
-    with Dataset(filepath) as in_file:
-        attrs = _attrs_to_dict(in_file)
-    return attrs
+    # with Dataset(filepath) as in_file:
+    #     attrs = _attrs_to_dict(in_file)
+    # return attrs
 
 
 def read_netcdf(filepath: str, use_h5_lib: bool = False) -> tuple[dict, ndarray]:
@@ -76,19 +76,19 @@ def read_netcdf(filepath: str, use_h5_lib: bool = False) -> tuple[dict, ndarray]
     Returns:
         tuple[dict, ndarray]: Global attributes and data
     """
-    if use_h5_lib:
-        with h5nc.File(filepath, "r") as nc_file:
-            grid = nc_file.variables["grid"][:]
-            attrs = _attrs_to_dict(nc_file, use_h5_lib=True)
-            return attrs, grid
+    # if use_h5_lib:
+    with h5nc.File(filepath, "r") as nc_file:
+        grid = nc_file.variables["grid"][:]
+        attrs = _attrs_to_dict(nc_file, use_h5_lib=True)
+    return attrs, grid
 
-    # otherwise, use netcdf4 library (default)
-    with Dataset(filepath) as dataset:
-        dataset.set_auto_maskandscale(False)
-        grid = dataset.variables["grid"][:]
+    # # otherwise, use netcdf4 library (default)
+    # with Dataset(filepath) as dataset:
+    #     dataset.set_auto_maskandscale(False)
+    #     grid = dataset.variables["grid"][:]
 
-        global_attrs = _attrs_to_dict(dataset)
-        return global_attrs, grid
+    #     global_attrs = _attrs_to_dict(dataset)
+    #     return global_attrs, grid
 
 
 def write_netcdf(attrs: dict, grid: ndarray, filepath: str, use_h5_lib: bool = False) -> str:
@@ -109,33 +109,33 @@ def write_netcdf(attrs: dict, grid: ndarray, filepath: str, use_h5_lib: bool = F
     os.makedirs(dirname, exist_ok=True)
 
     logger.debug("Writing data to: %s", filepath)
-    if use_h5_lib:
-        with h5nc.File(filepath, "w") as file:
-            y_dimensions, x_dimensions = grid.shape
-            # set dimensions with a dictionary
-            file.dimensions = {"x": x_dimensions, "y": y_dimensions}
-
-            grid_var = file.create_variable("grid", ("y", "x"), "f4")
-            grid_var[:] = grid
-
-            for key, value in attrs.items():
-                file.attrs[key] = value
-
-        return filepath
-
-    # otherwise, write file using netCDF4 library (default)
-    with Dataset(filepath, "w", format="NETCDF4") as dataset:
+    # if use_h5_lib:
+    with h5nc.File(filepath, "w") as file:
         y_dimensions, x_dimensions = grid.shape
-        dataset.createDimension("x", x_dimensions)
-        dataset.createDimension("y", y_dimensions)
+        # set dimensions with a dictionary
+        file.dimensions = {"x": x_dimensions, "y": y_dimensions}
 
-        grid_var = dataset.createVariable("grid", "f4", ("y", "x"))
+        grid_var = file.create_variable("grid", ("y", "x"), "f4")
         grid_var[:] = grid
 
         for key, value in attrs.items():
-            setattr(dataset, key, str(value))
+            file.attrs[key] = value
 
     return filepath
+
+    # otherwise, write file using netCDF4 library (default)
+    # with Dataset(filepath, "w", format="NETCDF4") as dataset:
+    #     y_dimensions, x_dimensions = grid.shape
+    #     dataset.createDimension("x", x_dimensions)
+    #     dataset.createDimension("y", y_dimensions)
+
+    #     grid_var = dataset.createVariable("grid", "f4", ("y", "x"))
+    #     grid_var[:] = grid
+
+    #     for key, value in attrs.items():
+    #         setattr(dataset, key, str(value))
+
+    # return filepath
 
 
 def _attrs_to_dict(dataset: HasNcAttr | h5nc.File, use_h5_lib=False) -> dict:

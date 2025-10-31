@@ -51,11 +51,11 @@ def example_netcdf_data() -> tuple[dict[str, any], ndarray]:
 
 
 # tests
-def test_read_netcdf_global_attrs():
-    attrs = read_netcdf_global_attrs(EXAMPLE_NETCDF_FILEPATH)
+# def test_read_netcdf_global_attrs():
+#     attrs = read_netcdf_global_attrs(EXAMPLE_NETCDF_FILEPATH)
 
-    assert len(attrs) == len(EXAMPLE_ATTRIBUTES)
-    assert attrs == EXAMPLE_ATTRIBUTES
+#     assert len(attrs) == len(EXAMPLE_ATTRIBUTES)
+#     assert attrs == EXAMPLE_ATTRIBUTES
 
 
 def test_read_netcdf_global_attrs_with_h5nc():
@@ -65,15 +65,15 @@ def test_read_netcdf_global_attrs_with_h5nc():
     assert attrs == EXAMPLE_ATTRIBUTES
 
 
-def test_read_netcdf(example_netcdf_data: tuple[dict, ndarray]):
-    attrs, grid = example_netcdf_data
+# def test_read_netcdf(example_netcdf_data: tuple[dict, ndarray]):
+#     attrs, grid = example_netcdf_data
 
-    assert grid.shape == (1597, 2345)
-    y_max, x_max = grid.shape
-    assert grid[0, 0] == approx(72.80599)
-    assert grid[round(y_max / 2), round(x_max / 2)] == approx(26.005991)
-    assert grid[y_max - 1, x_max - 1] == approx(15.925991)
-    assert attrs == EXAMPLE_ATTRIBUTES
+#     assert grid.shape == (1597, 2345)
+#     y_max, x_max = grid.shape
+#     assert grid[0, 0] == approx(72.80599)
+#     assert grid[round(y_max / 2), round(x_max / 2)] == approx(26.005991)
+#     assert grid[y_max - 1, x_max - 1] == approx(15.925991)
+#     assert attrs == EXAMPLE_ATTRIBUTES
 
 
 def test_read_netcdf_with_h5nc():
@@ -108,21 +108,21 @@ def destination_nc_file() -> str:
         os.rmdir(parent_dir)
 
 
-def test_read_and_write_netcdf(
-    example_netcdf_data: tuple[dict[str, any], ndarray], destination_nc_file: str
-):
-    attrs, grid = example_netcdf_data
+# def test_read_and_write_netcdf(
+#     example_netcdf_data: tuple[dict[str, any], ndarray], destination_nc_file: str
+# ):
+#     attrs, grid = example_netcdf_data
 
-    # verify write_netcdf functionality
-    attrs["prodKey"] = EXAMPLE_PROD_KEY
-    attrs["prodSource"] = attrs["product"]
-    written_filepath = write_netcdf(attrs, grid, destination_nc_file)
-    assert written_filepath == destination_nc_file
-    assert os.path.exists(destination_nc_file)
+#     # verify write_netcdf functionality
+#     attrs["prodKey"] = EXAMPLE_PROD_KEY
+#     attrs["prodSource"] = attrs["product"]
+#     written_filepath = write_netcdf(attrs, grid, destination_nc_file)
+#     assert written_filepath == destination_nc_file
+#     assert os.path.exists(destination_nc_file)
 
-    new_file_attrs, new_file_grid = read_netcdf(written_filepath)
-    assert new_file_attrs == attrs
-    assert new_file_grid[123][321] == grid[123][321]
+#     new_file_attrs, new_file_grid = read_netcdf(written_filepath)
+#     assert new_file_attrs == attrs
+#     assert new_file_grid[123][321] == grid[123][321]
 
 
 def test_read_and_write_netcdf_with_h5nc(
