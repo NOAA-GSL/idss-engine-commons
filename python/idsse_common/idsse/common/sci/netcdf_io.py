@@ -15,11 +15,15 @@
 import logging
 import os
 from collections.abc import Sequence
+from datetime import datetime
 from typing import Protocol
 
 # from netCDF4 import Dataset  # pylint: disable=no-name-in-module
 import h5netcdf as h5nc
+from dateutil.parser import ParserError, parse as dt_parse
 from numpy import ndarray
+
+from idsse.common.utils import to_iso
 
 logger = logging.getLogger(__name__)
 
@@ -119,7 +123,11 @@ def write_netcdf(attrs: dict, grid: ndarray, filepath: str) -> str:
         grid_var[:] = grid
 
         for key, value in attrs.items():
-            file.attrs[key] = value
+            # write datetimes to ISO-8601; h5py.Attributes only understand numpy scalars/strings
+            if isinstance(value, datetime):
+                file.attrs[key] = to_iso(value)
+            else:
+                file.attrs[key] = value
 
     return filepath
 
@@ -140,5 +148,13 @@ def write_netcdf(attrs: dict, grid: ndarray, filepath: str) -> str:
 
 def _attrs_to_dict(dataset: HasNcAttr | h5nc.File) -> dict:
     # if use_h5_lib:
-    return dict(dataset.attrs.items())
+    attrs_dict = {}
+    for key, value in dataset.attrs.items():
+        # if an attribute is an ISO-8601 string, restore to Python datetime type
+        # HACK: no way to detect Attributes datatype from h5netcdf; attempts conversion blindly
+        try:
+            attrs_dict[key] = dt_parse(value)
+        except ParserError:
+            attrs_dict[key] = value  # must not have been an ISO-8601 string
+    return attrs_dict
     # return {key: dataset.getncattr(key) for key in dataset.ncattrs()}

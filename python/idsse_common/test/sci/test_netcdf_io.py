@@ -14,12 +14,13 @@
 # pylint: disable=missing-function-docstring,redefined-outer-name,protected-access,unused-argument
 
 import os
+from datetime import datetime
 
+from dateutil.parser import parse as dt_parse
 from pytest import fixture, approx
 from numpy import ndarray
 
 from idsse.common.sci.netcdf_io import read_netcdf, read_netcdf_global_attrs, write_netcdf
-
 
 # test data
 EXAMPLE_NETCDF_FILEPATH = f"{os.path.dirname(__file__)}/../resources/gridstore55657865.nc"
@@ -46,6 +47,28 @@ EXAMPLE_PROD_KEY = (
 )
 
 
+def is_attributes_equal(actual: dict, expected: dict) -> bool:
+    """Utility function to check if two attributes dictionaries match"""
+    if not len(actual) == len(expected):
+        return False
+
+    # each attribute should match expected by key,
+    # except any ISO strings may have been transformed to Python datetimes
+    for key, value in actual.items():
+        expected_value = expected[key]
+        if isinstance(value, datetime):
+            # if expected value is not datetime, transform to datetime before comparison
+            if isinstance(expected_value, str):
+                expected_value = dt_parse(expected_value)
+            if value != expected_value:  # now comparing two datetimes together
+                return False
+
+        if value != expected_value:
+            return False
+
+    return True
+
+
 # pytest fixtures
 @fixture
 def example_netcdf_data() -> tuple[dict[str, any], ndarray]:
@@ -55,8 +78,8 @@ def example_netcdf_data() -> tuple[dict[str, any], ndarray]:
 def test_read_netcdf_global_attrs():
     attrs = read_netcdf_global_attrs(EXAMPLE_NETCDF_FILEPATH)
 
-    assert len(attrs) == len(EXAMPLE_ATTRIBUTES)
-    assert attrs == EXAMPLE_ATTRIBUTES
+    # attrs should be same as input attrs, except any ISO strings transformed to Python datetimes
+    assert is_attributes_equal(attrs, EXAMPLE_ATTRIBUTES)
 
 
 def test_read_netcdf(example_netcdf_data: tuple[dict, ndarray]):
@@ -67,7 +90,7 @@ def test_read_netcdf(example_netcdf_data: tuple[dict, ndarray]):
     assert grid[0, 0] == approx(72.80599)
     assert grid[round(y_max / 2), round(x_max / 2)] == approx(26.005991)
     assert grid[y_max - 1, x_max - 1] == approx(15.925991)
-    assert attrs == EXAMPLE_ATTRIBUTES
+    assert is_attributes_equal(attrs, EXAMPLE_ATTRIBUTES)
 
 
 @fixture
@@ -104,5 +127,5 @@ def test_read_and_write_netcdf(
     assert os.path.exists(destination_nc_file)
 
     new_file_attrs, new_file_grid = read_netcdf(written_filepath)
-    assert new_file_attrs == attrs
+    assert is_attributes_equal(new_file_attrs, attrs)
     assert new_file_grid[123][321] == grid[123][321]
