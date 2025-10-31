@@ -16,11 +16,17 @@ import os
 from pytest import fixture, approx
 from numpy import ndarray
 
-from idsse.common.sci.netcdf_io import read_netcdf, read_netcdf_global_attrs, write_netcdf
+from idsse.common.sci.netcdf_io import (
+    read_netcdf,
+    read_netcdf_global_attrs,
+    write_netcdf,
+)
 
 
 # test data
-EXAMPLE_NETCDF_FILEPATH = f"{os.path.dirname(__file__)}/../resources/gridstore55657865.nc"
+EXAMPLE_NETCDF_FILEPATH = (
+    f"{os.path.dirname(__file__)}/../resources/gridstore55657865.nc"
+)
 
 EXAMPLE_ATTRIBUTES = {
     "product": "NBM.AWS.GRIB",
@@ -39,9 +45,7 @@ EXAMPLE_ATTRIBUTES = {
     "data_order": "latitude,longitude",
 }
 
-EXAMPLE_PROD_KEY = (
-    "product:NBM.AWS.GRIB-field:TEMP-issue:20221111140000-valid:20221112000000-units:Fahrenheit"
-)
+EXAMPLE_PROD_KEY = "product:NBM.AWS.GRIB-field:TEMP-issue:20221111140000-valid:20221112000000-units:Fahrenheit"
 
 
 # pytest fixtures
@@ -58,16 +62,32 @@ def test_read_netcdf_global_attrs():
     assert attrs == EXAMPLE_ATTRIBUTES
 
 
-def test_read_netcdf(example_netcdf_data: tuple[dict[str, any], ndarray]):
+def test_read_netcdf_global_attrs_with_h5nc():
+    attrs = read_netcdf_global_attrs(EXAMPLE_NETCDF_FILEPATH, use_h5_lib=True)
+
+    assert len(attrs) == len(EXAMPLE_ATTRIBUTES)
+    assert attrs == EXAMPLE_ATTRIBUTES
+
+
+def test_read_netcdf(example_netcdf_data: tuple[dict, ndarray]):
     attrs, grid = example_netcdf_data
 
     assert grid.shape == (1597, 2345)
     y_max, x_max = grid.shape
-
     assert grid[0, 0] == approx(72.80599)
     assert grid[round(y_max / 2), round(x_max / 2)] == approx(26.005991)
     assert grid[y_max - 1, x_max - 1] == approx(15.925991)
+    assert attrs == EXAMPLE_ATTRIBUTES
 
+
+def test_read_netcdf_with_h5nc():
+    attrs, grid = read_netcdf(EXAMPLE_NETCDF_FILEPATH, use_h5_lib=True)
+
+    assert grid.shape == (1597, 2345)
+    y_max, x_max = grid.shape
+    assert grid[0, 0] == approx(72.80599)
+    assert grid[round(y_max / 2), round(x_max / 2)] == approx(26.005991)
+    assert grid[y_max - 1, x_max - 1] == approx(15.925991)
     assert attrs == EXAMPLE_ATTRIBUTES
 
 
