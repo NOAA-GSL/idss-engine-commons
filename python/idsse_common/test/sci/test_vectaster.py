@@ -32,7 +32,9 @@ from idsse.common.sci.vectaster import (
 
 
 EXAMPLE_PROJ_SPEC = "+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +a=6371200"
-EXAMPLE_GRID_SPEC = "+dx=2539.703 +dy=2539.703 +w=2345 +h=1597 +lat_ll=19.229 +lon_ll=-126.2766"
+EXAMPLE_GRID_SPEC = (
+    "+dx=2539.703 +dy=2539.703 +w=2345 +h=1597 +lat_ll=19.229 +lon_ll=-126.2766"
+)
 
 
 @fixture
@@ -50,34 +52,34 @@ def test_geographic_point_to_pixel(grid_proj: GridProj):
 
 
 def test_geographic_linestring_to_pixel(grid_proj: GridProj):
-    linestring = from_wkt("LINESTRING (-100 30, -110 40, -120 50)")
+    geo_linestring = from_wkt("LINESTRING (-100 30, -110 40, -120 50)")
     pixel_linestring = from_wkt(
         "LINESTRING (1097.723937434988 326.5786009191758,"
-        "767.3803599551428 797.3524918062432,"
-        "509.3960133013222 1309.2825656112072)"
+        "767.3803599551428 797.3524918062434,"
+        "509.3960133013222 1309.2825656112075)"
     )
-    result = geographic_linestring_to_pixel(linestring, grid_proj)
+    result = geographic_linestring_to_pixel(geo_linestring, grid_proj)
     assert result == pixel_linestring
 
 
 def test_geographic_polygon_to_pixel(grid_proj: GridProj):
-    poly = from_wkt(
+    geo_poly = from_wkt(
         "POLYGON ((-105 40, -110 40, -110 50, -105 50, -105 40), "
         "(-107 42, -107 47, -108 47, -108 42, -107 42))"
     )
     pixel_poly = from_wkt(
         "POLYGON ((940.5282319922111 781.3426922405841,"
-        "767.3803599551428 797.3524918062432,"
-        "819.139672193266 1263.254300515678,"
-        "975.0735971750927 1248.836156907704,"
+        "767.3803599551428 797.3524918062434,"
+        "819.139672193266 1263.2543005156788,"
+        "975.0735971750927 1248.8361569077047,"
         "940.5282319922111 781.3426922405841),"
         "(879.2683115975804 877.9054076290231,"
-        "899.8846796684276 1110.2160158217966,"
-        "867.636632346796 1113.1977722126155,"
-        "845.307298979268 881.0455502058236,"
+        "899.8846796684276 1110.2160158217973,"
+        "867.636632346796 1113.1977722126162,"
+        "845.307298979268 881.0455502058237,"
         "879.2683115975804 877.9054076290231))"
     )
-    result = geographic_polygon_to_pixel(poly, grid_proj)
+    result = geographic_polygon_to_pixel(geo_poly, grid_proj)
     assert result == pixel_poly
 
 
@@ -89,9 +91,15 @@ def test_geographic_to_pixel(monkeypatch: MonkeyPatch, grid_proj: GridProj):
     point_mock = Mock()
     line_str_mock = Mock()
     polygon_mock = Mock()
-    monkeypatch.setattr("idsse.common.sci.vectaster.geographic_point_to_pixel", point_mock)
-    monkeypatch.setattr("idsse.common.sci.vectaster.geographic_linestring_to_pixel", line_str_mock)
-    monkeypatch.setattr("idsse.common.sci.vectaster.geographic_polygon_to_pixel", polygon_mock)
+    monkeypatch.setattr(
+        "idsse.common.sci.vectaster.geographic_point_to_pixel", point_mock
+    )
+    monkeypatch.setattr(
+        "idsse.common.sci.vectaster.geographic_linestring_to_pixel", line_str_mock
+    )
+    monkeypatch.setattr(
+        "idsse.common.sci.vectaster.geographic_polygon_to_pixel", polygon_mock
+    )
 
     _ = geographic_to_pixel(point, grid_proj)
     point_mock.assert_called_once_with(point, grid_proj, None)
@@ -286,8 +294,12 @@ def test_rasterize_polygon(grid_proj: GridProj):
 def test_rasterize_polygon_from_coords(grid_proj: GridProj):
     poly = (((-105, 40), (-105.1, 40), (-105.1, 40.1), (-105, 40)),)
     pixels = (
-        numpy.array([937, 937, 937, 937, 937, 937, 938, 938, 938, 938, 938, 939, 939, 939, 940]),
-        numpy.array([781, 782, 783, 784, 785, 786, 781, 782, 783, 784, 785, 781, 782, 783, 781]),
+        numpy.array(
+            [937, 937, 937, 937, 937, 937, 938, 938, 938, 938, 938, 939, 939, 939, 940]
+        ),
+        numpy.array(
+            [781, 782, 783, 784, 785, 786, 781, 782, 783, 784, 785, 781, 782, 783, 781]
+        ),
     )
     result = rasterize_polygon(poly, grid_proj)
     numpy.testing.assert_array_equal(result, pixels)
@@ -482,7 +494,9 @@ def test_rasterize(monkeypatch: MonkeyPatch, grid_proj: GridProj):
     linestring_mock = Mock()
     polygon_mock = Mock()
     monkeypatch.setattr("idsse.common.sci.vectaster.rasterize_point", point_mock)
-    monkeypatch.setattr("idsse.common.sci.vectaster.rasterize_linestring", linestring_mock)
+    monkeypatch.setattr(
+        "idsse.common.sci.vectaster.rasterize_linestring", linestring_mock
+    )
     monkeypatch.setattr("idsse.common.sci.vectaster.rasterize_polygon", polygon_mock)
 
     rasterize(point, grid_proj)
