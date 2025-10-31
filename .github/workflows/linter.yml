@@ -32,9 +32,9 @@ jobs:
           repository: NOAA-GSL/idss-engine-commons
           path: commons/
 
-      - name: Install IDSSE python commons
-        working-directory: commons/python/idsse_common
-        run: pip install .
+      # - name: Install IDSSE python commons
+      #   working-directory: commons/python/idsse_common
+      #   run: pip install .
 
       - name: Checkout idsse-testing
         uses: actions/checkout@v3
