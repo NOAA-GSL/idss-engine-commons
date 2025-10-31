@@ -16,17 +16,11 @@ import os
 from pytest import fixture, approx
 from numpy import ndarray
 
-from idsse.common.sci.netcdf_io import (
-    read_netcdf,
-    read_netcdf_global_attrs,
-    write_netcdf,
-)
+from idsse.common.sci.netcdf_io import read_netcdf, read_netcdf_global_attrs, write_netcdf
 
 
 # test data
-EXAMPLE_NETCDF_FILEPATH = (
-    f"{os.path.dirname(__file__)}/../resources/gridstore55657865.nc"
-)
+EXAMPLE_NETCDF_FILEPATH = f"{os.path.dirname(__file__)}/../resources/gridstore55657865.nc"
 
 EXAMPLE_ATTRIBUTES = {
     "product": "NBM.AWS.GRIB",
@@ -45,7 +39,9 @@ EXAMPLE_ATTRIBUTES = {
     "data_order": "latitude,longitude",
 }
 
-EXAMPLE_PROD_KEY = "product:NBM.AWS.GRIB-field:TEMP-issue:20221111140000-valid:20221112000000-units:Fahrenheit"
+EXAMPLE_PROD_KEY = (
+    "product:NBM.AWS.GRIB-field:TEMP-issue:20221111140000-valid:20221112000000-units:Fahrenheit"
+)
 
 
 # pytest fixtures

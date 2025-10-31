@@ -91,9 +91,7 @@ def read_netcdf(filepath: str, use_h5_lib: bool = False) -> tuple[dict, ndarray]
         return global_attrs, grid
 
 
-def write_netcdf(
-    attrs: dict, grid: ndarray, filepath: str, use_h5_lib: bool = False
-) -> str:
+def write_netcdf(attrs: dict, grid: ndarray, filepath: str, use_h5_lib: bool = False) -> str:
     """Store data and attributes to a Netcdf4 file
 
     Args:
@@ -142,5 +140,5 @@ def write_netcdf(
 
 def _attrs_to_dict(dataset: HasNcAttr | h5nc.File, use_h5_lib=False) -> dict:
     if use_h5_lib:
-        return {key: value for (key, value) in dataset.attrs.items()}
+        return dict(dataset.attrs.items())
     return {key: dataset.getncattr(key) for key in dataset.ncattrs()}
