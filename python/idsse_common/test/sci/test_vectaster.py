@@ -32,9 +32,7 @@ from idsse.common.sci.vectaster import (
 
 
 EXAMPLE_PROJ_SPEC = "+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +a=6371200"
-EXAMPLE_GRID_SPEC = (
-    "+dx=2539.703 +dy=2539.703 +w=2345 +h=1597 +lat_ll=19.229 +lon_ll=-126.2766"
-)
+EXAMPLE_GRID_SPEC = "+dx=2539.703 +dy=2539.703 +w=2345 +h=1597 +lat_ll=19.229 +lon_ll=-126.2766"
 
 
 @fixture
@@ -91,15 +89,9 @@ def test_geographic_to_pixel(monkeypatch: MonkeyPatch, grid_proj: GridProj):
     point_mock = Mock()
     line_str_mock = Mock()
     polygon_mock = Mock()
-    monkeypatch.setattr(
-        "idsse.common.sci.vectaster.geographic_point_to_pixel", point_mock
-    )
-    monkeypatch.setattr(
-        "idsse.common.sci.vectaster.geographic_linestring_to_pixel", line_str_mock
-    )
-    monkeypatch.setattr(
-        "idsse.common.sci.vectaster.geographic_polygon_to_pixel", polygon_mock
-    )
+    monkeypatch.setattr("idsse.common.sci.vectaster.geographic_point_to_pixel", point_mock)
+    monkeypatch.setattr("idsse.common.sci.vectaster.geographic_linestring_to_pixel", line_str_mock)
+    monkeypatch.setattr("idsse.common.sci.vectaster.geographic_polygon_to_pixel", polygon_mock)
 
     _ = geographic_to_pixel(point, grid_proj)
     point_mock.assert_called_once_with(point, grid_proj, None)
@@ -150,76 +142,22 @@ def test_rasterize_linestring(grid_proj: GridProj):
 
 def test_rasterize_polygon_as_linestring(grid_proj: GridProj):
     poly = from_wkt("POLYGON ((0 0, 0 5, 5 5, 5 0, 0 0), (1 1, 3 1, 3 4, 1 4, 1 1))")
+    # fmt: off
     pixels = (
         numpy.array(
             [
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                1,
-                1,
-                2,
-                2,
-                3,
-                3,
-                4,
-                4,
-                5,
-                5,
-                5,
-                5,
-                5,
-                5,
-                1,
-                1,
-                1,
-                1,
-                2,
-                2,
-                3,
-                3,
-                3,
-                3,
+                0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 5, 5, 5, 5, 1, 1, 1, 1, 2, 2, 3,
+                3, 3, 3,
             ]
         ),
         numpy.array(
             [
-                0,
-                1,
-                2,
-                3,
-                4,
-                5,
-                0,
-                5,
-                0,
-                5,
-                0,
-                5,
-                0,
-                5,
-                0,
-                1,
-                2,
-                3,
-                4,
-                5,
-                1,
-                2,
-                3,
-                4,
-                1,
-                4,
-                1,
-                2,
-                3,
-                4,
+                0, 1, 2, 3, 4, 5, 0, 5, 0, 5, 0, 5, 0, 5, 0, 1, 2, 3, 4, 5, 1, 2, 3, 4, 1, 4, 1,
+                2, 3, 4,
             ]
         ),
     )
+    # fmt: on
     result = rasterize_linestring(poly, grid_proj)
     numpy.testing.assert_array_equal(result, pixels)
 
@@ -233,60 +171,22 @@ def test_rasterize_linestring_from_coords(grid_proj: GridProj):
 
 def test_rasterize_polygon(grid_proj: GridProj):
     poly = "POLYGON ((-105 40, -105.1 40, -105.1 40.1, -105 40.1, -105 40))"
+    # fmt: off
     pixels = (
         numpy.array(
             [
-                937,
-                937,
-                937,
-                937,
-                937,
-                937,
-                938,
-                938,
-                938,
-                938,
-                938,
-                938,
-                939,
-                939,
-                939,
-                939,
-                939,
-                940,
-                940,
-                940,
-                940,
-                940,
+                937, 937, 937, 937, 937, 937, 938, 938, 938, 938, 938, 938, 939, 939, 939, 939,
+                939, 940, 940, 940, 940, 940,
             ]
         ),
         numpy.array(
             [
-                781,
-                782,
-                783,
-                784,
-                785,
-                786,
-                781,
-                782,
-                783,
-                784,
-                785,
-                786,
-                781,
-                782,
-                783,
-                784,
-                785,
-                781,
-                782,
-                783,
-                784,
-                785,
+                781, 782, 783, 784, 785, 786, 781, 782, 783, 784, 785, 786, 781, 782, 783, 784,
+                785, 781, 782, 783, 784, 785,
             ]
         ),
     )
+    # fmt: on
     result = rasterize_polygon(poly, grid_proj)
     numpy.testing.assert_array_equal(result, pixels)
 
@@ -294,12 +194,8 @@ def test_rasterize_polygon(grid_proj: GridProj):
 def test_rasterize_polygon_from_coords(grid_proj: GridProj):
     poly = (((-105, 40), (-105.1, 40), (-105.1, 40.1), (-105, 40)),)
     pixels = (
-        numpy.array(
-            [937, 937, 937, 937, 937, 937, 938, 938, 938, 938, 938, 939, 939, 939, 940]
-        ),
-        numpy.array(
-            [781, 782, 783, 784, 785, 786, 781, 782, 783, 784, 785, 781, 782, 783, 781]
-        ),
+        numpy.array([937, 937, 937, 937, 937, 937, 938, 938, 938, 938, 938, 939, 939, 939, 940]),
+        numpy.array([781, 782, 783, 784, 785, 786, 781, 782, 783, 784, 785, 781, 782, 783, 781]),
     )
     result = rasterize_polygon(poly, grid_proj)
     numpy.testing.assert_array_equal(result, pixels)
@@ -307,84 +203,22 @@ def test_rasterize_polygon_from_coords(grid_proj: GridProj):
 
 def test_rasterize_polygon_with_hole():
     poly = from_wkt("POLYGON ((0 0, 0 5, 5 5, 5 0, 0 0), (1 1, 3 1, 3 4, 1 4, 1 1))")
+    # fmt: off
     pixels = (
         numpy.array(
             [
-                0,
-                0,
-                0,
-                0,
-                0,
-                0,
-                1,
-                1,
-                1,
-                1,
-                1,
-                1,
-                2,
-                2,
-                2,
-                2,
-                3,
-                3,
-                3,
-                3,
-                3,
-                3,
-                4,
-                4,
-                4,
-                4,
-                4,
-                4,
-                5,
-                5,
-                5,
-                5,
-                5,
-                5,
+                0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4,
+                4, 5, 5, 5, 5, 5, 5,
             ]
         ),
         numpy.array(
             [
-                0,
-                1,
-                2,
-                3,
-                4,
-                5,
-                0,
-                1,
-                2,
-                3,
-                4,
-                5,
-                0,
-                1,
-                4,
-                5,
-                0,
-                1,
-                2,
-                3,
-                4,
-                5,
-                0,
-                1,
-                2,
-                3,
-                4,
-                5,
-                0,
-                1,
-                2,
-                3,
-                4,
-                5,
+                0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4,
+                5, 0, 1, 2, 3, 4, 5,
             ]
         ),
     )
+    # fmt: on
     result = rasterize_polygon(poly)
     numpy.testing.assert_array_equal(result, pixels)
 
@@ -395,92 +229,22 @@ def test_rasterize_multi_polygon():
         "((20 35, 19 34, 19 33, 22 33, 35 34, 20 35), "
         "(30 20, 28 18, 29 19, 30 20)))"
     )
+    # fmt: off
     pixels = (
         numpy.array(
             [
-                39,
-                40,
-                41,
-                19,
-                19,
-                20,
-                20,
-                20,
-                21,
-                21,
-                21,
-                22,
-                22,
-                22,
-                23,
-                23,
-                23,
-                24,
-                24,
-                24,
-                25,
-                25,
-                25,
-                26,
-                26,
-                26,
-                27,
-                27,
-                27,
-                28,
-                28,
-                29,
-                30,
-                31,
-                32,
-                33,
-                34,
-                35,
+                39, 40, 41, 19, 19, 20, 20, 20, 21, 21, 21, 22, 22, 22, 23, 23, 23, 24, 24, 24,
+                25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 29, 30, 31, 32, 33, 34, 35,
             ]
         ),
         numpy.array(
             [
-                41,
-                40,
-                39,
-                33,
-                34,
-                33,
-                34,
-                35,
-                33,
-                34,
-                35,
-                33,
-                34,
-                35,
-                33,
-                34,
-                35,
-                33,
-                34,
-                35,
-                33,
-                34,
-                35,
-                33,
-                34,
-                35,
-                33,
-                34,
-                35,
-                33,
-                34,
-                34,
-                34,
-                34,
-                34,
-                34,
-                34,
-                34,
+                41, 40, 39, 33, 34, 33, 34, 35, 33, 34, 35, 33, 34, 35, 33, 34, 35, 33, 34, 35,
+                33, 34, 35, 33, 34, 35, 33, 34, 35, 33, 34, 34, 34, 34, 34, 34, 34, 34,
             ]
         ),
     )
+    # fmt: on
     result = rasterize(multi_poly)
     numpy.testing.assert_array_equal(result, pixels)
 
@@ -494,9 +258,7 @@ def test_rasterize(monkeypatch: MonkeyPatch, grid_proj: GridProj):
     linestring_mock = Mock()
     polygon_mock = Mock()
     monkeypatch.setattr("idsse.common.sci.vectaster.rasterize_point", point_mock)
-    monkeypatch.setattr(
-        "idsse.common.sci.vectaster.rasterize_linestring", linestring_mock
-    )
+    monkeypatch.setattr("idsse.common.sci.vectaster.rasterize_linestring", linestring_mock)
     monkeypatch.setattr("idsse.common.sci.vectaster.rasterize_polygon", polygon_mock)
 
     rasterize(point, grid_proj)
