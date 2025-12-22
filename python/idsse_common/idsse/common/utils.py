@@ -1,14 +1,16 @@
 """A collection of useful classes and utility functions"""
 
-# -------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
 # Created on Wed Feb 15 2023
 #
-# Copyright (c) 2023 Regents of the University of Colorado. All rights reserved.
+# Copyright (c) 2023 Regents of the University of Colorado. All rights reserved. (1)
+# Copyright (c) 2023 Colorado State University. All rights reserved.             (2)
 #
 # Contributors:
-#     Geary J Layne
+#     Geary J Layne    (1)
+#     Mackenzie Grimes (2)
 #
-# -------------------------------------------------------------------------------
+# ----------------------------------------------------------------------------------
 
 import copy
 import logging
@@ -255,6 +257,21 @@ def to_iso(date_time: datetime) -> str:
 def to_compact(date_time: datetime) -> str:
     """Format a datetime instance to a compact string"""
     return date_time.strftime("%Y%m%d%H%M%S")
+
+
+def strtobool(value: str) -> bool:
+    """Convert string (such as environment variables 'TRUE' or 1) to Python bool. Somewhat replaces
+    functionality from built-in distutils, removed in Python 3.9.
+
+    Raises:
+        ValueError: if the provided string cannot be matched to any true/false values, e.g.
+            'true', 'f', '0', etc.
+    """
+    if value.lower() in ["true", "t", "yes", "y", "1"]:
+        return True
+    if value.lower() in ["false", "f", "no", "n", "0"]:
+        return False
+    raise ValueError(f"Cannot convert string {value} to boolean value")
 
 
 def hash_code(string: str) -> int:

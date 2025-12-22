@@ -126,6 +126,9 @@ def write_netcdf(attrs: dict, grid: ndarray, filepath: str) -> str:
             # write datetimes to ISO-8601; h5py.Attributes only understand numpy scalars/strings
             if isinstance(value, datetime):
                 file.attrs[key] = to_iso(value)
+            # force non-string attribute to be string (shouldn't be necessary anyway)
+            elif not isinstance(value, str):
+                file.attrs[key] = str(value)
             else:
                 file.attrs[key] = value
 
