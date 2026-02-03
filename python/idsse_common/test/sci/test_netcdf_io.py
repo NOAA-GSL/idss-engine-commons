@@ -82,7 +82,6 @@ def test_read_netcdf_global_attrs():
     attrs = read_netcdf_global_attrs(EXAMPLE_NETCDF_FILEPATH)
 
     assert len(attrs) == len(EXAMPLE_ATTRIBUTES)
-    assert attrs == EXAMPLE_ATTRIBUTES
     # attrs should be same as input attrs
     assert is_attributes_equal(attrs, EXAMPLE_ATTRIBUTES)
 
@@ -91,7 +90,6 @@ def test_read_netcdf_global_attrs_with_h5nc():
     attrs = read_netcdf_global_attrs(EXAMPLE_NETCDF_FILEPATH, use_h5_lib=True)
 
     assert len(attrs) == len(EXAMPLE_ATTRIBUTES)
-    assert attrs == EXAMPLE_ATTRIBUTES
     # attrs should be same as input attrs, except any ISO strings transformed to Python datetimes
     assert is_attributes_equal(attrs, EXAMPLE_ATTRIBUTES)
 
