@@ -84,7 +84,7 @@ def read_netcdf(filepath: str, use_h5_lib=False) -> tuple[dict, ndarray]:
         with h5nc.File(filepath, "r") as nc_file:
             grid = nc_file.variables["grid"][:]
             attrs = _attrs_to_dict(nc_file, use_h5_lib=True)
-            return attrs, grid
+        return attrs, grid
 
     # otherwise, use netcdf4 library (default)
     with Dataset(filepath) as dataset:
@@ -92,7 +92,7 @@ def read_netcdf(filepath: str, use_h5_lib=False) -> tuple[dict, ndarray]:
         grid = dataset.variables["grid"][:]
 
         global_attrs = _attrs_to_dict(dataset)
-        return global_attrs, grid
+    return global_attrs, grid
 
 
 def write_netcdf(attrs: dict, grid: ndarray, filepath: str, use_h5_lib=False) -> str:
@@ -131,6 +131,7 @@ def write_netcdf(attrs: dict, grid: ndarray, filepath: str, use_h5_lib=False) ->
                     file.attrs[key] = str(value)
                 else:
                     file.attrs[key] = value
+        return filepath
 
     # otherwise, write file using netCDF4 library (default)
     with Dataset(filepath, "w", format="NETCDF4") as dataset:
