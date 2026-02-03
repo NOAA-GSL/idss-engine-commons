@@ -15,9 +15,10 @@
 
 import os
 from datetime import datetime
+from typing import NamedTuple
 
 from dateutil.parser import parse as dt_parse
-from pytest import fixture, approx
+from pytest import approx, fail, fixture
 from numpy import ndarray
 
 from idsse.common.sci.netcdf_io import read_netcdf, read_netcdf_global_attrs, write_netcdf
@@ -170,3 +171,22 @@ def test_read_and_write_netcdf_with_h5nc(
     new_file_attrs, new_file_grid = read_netcdf(written_filepath, use_h5_lib=True)
     assert new_file_grid[123][321] == grid[123][321]
     assert is_attributes_equal(new_file_attrs, attrs)
+
+
+def test_write_netcdf_nonstring_attrs(
+    example_netcdf_data: tuple[dict[str, any], ndarray], destination_nc_file: str
+):
+    in_attrs, grid = example_netcdf_data
+    SpecialType = NamedTuple("SpecialType", [("field", str), ("data_type", str)])
+    # create non-string attribute of weird type
+    in_attrs["field"] = SpecialType(field="temperature", data_type="prctl_p025")
+
+    try:
+        # verify write_netcdf successfully writes non-string attrs (they shouldn't be anyway)
+        _ = write_netcdf(in_attrs, grid, destination_nc_file, use_h5_lib=True)
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        fail(f"Unable to write NetCDF to {destination_nc_file} due to exception: {str(exc)}")
+
+    out_attrs = read_netcdf_global_attrs(destination_nc_file, use_h5_lib=True)
+    for value in out_attrs.values():
+        assert isinstance(value, (str, datetime))

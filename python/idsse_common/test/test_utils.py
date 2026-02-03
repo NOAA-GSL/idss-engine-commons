@@ -30,6 +30,7 @@ from idsse.common.utils import (
     hash_code,
     round_,
     round_half_away,
+    strtobool,
     to_compact,
     to_iso,
 )
@@ -81,6 +82,13 @@ def test_exec_cmd():
     # verify that at least __init__ and this file were found
     assert "__init__.py" in result
     assert __file__.split(path.sep, maxsplit=-1)[-1] in result
+
+
+@pytest.mark.parametrize(
+    ["str_value", "bool_value"], [("TRUE", True), ("yes", True), ("f", False), ("0", False)]
+)
+def test_strtobool(str_value: str, bool_value: bool):
+    assert strtobool(str_value) == bool_value
 
 
 def test_to_iso():
