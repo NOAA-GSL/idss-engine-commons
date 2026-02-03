@@ -33,7 +33,6 @@ from idsse.common.rabbitmq_rpc import (
     RpcResponse,
 )
 
-
 # Example data objects
 CONN = Conn("localhost", "/", port=5672, username="user", password="password")
 RMQ_PARAMS = RabbitMqParams(
