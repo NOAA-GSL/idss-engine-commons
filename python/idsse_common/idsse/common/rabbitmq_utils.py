@@ -305,6 +305,7 @@ class Publisher(Thread):
         connection: BlockingConnection = self.channel.connection
         if connection and connection.is_open:
             connection.process_data_events(time_limit=1)
+            # BUG: this does not guarantee all data events are waited for
             threadsafe_call(self.channel, self.channel.close, connection.close)
 
     def _connect(self) -> BlockingChannel:
@@ -336,6 +337,7 @@ class Publisher(Thread):
         return channel
 
 
+# HACK: delete me, should be unused by all services now
 def subscribe_to_queue(
     connection: Conn | BlockingConnection,
     rmq_params: RabbitMqParams,

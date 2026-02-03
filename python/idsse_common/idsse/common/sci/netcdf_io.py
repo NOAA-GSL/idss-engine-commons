@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 # cSpell:ignore ncattrs, getncattr, maskandscale
 class HasNcAttr(Protocol):
-    """Protocol that allows retrieving attributes"""
+    """Protocol that allows retrieving attributes from a `netCDF4.Dataset` object"""
 
     def ncattrs(self) -> Sequence[str]:
         """Gives access to list of keys
@@ -46,7 +46,7 @@ class HasNcAttr(Protocol):
         """
 
 
-def read_netcdf_global_attrs(filepath: str) -> dict:
+def read_netcdf_global_attrs(filepath: str, use_h5_lib=False) -> dict:
     """Read the global attributes from a Netcdf file
 
     Args:
@@ -55,12 +55,17 @@ def read_netcdf_global_attrs(filepath: str) -> dict:
     Returns:
         dict: Global attributes as dictionary
     """
+    if use_h5_lib:
+        with h5nc.File(filepath, "r") as nc_file:
+            attrs = _attrs_to_dict(nc_file, use_h5_lib=True)
+            return attrs
+
     with Dataset(filepath) as in_file:
-        attrs = _read_attrs(in_file)
+        attrs = _attrs_to_dict(in_file)
     return attrs
 
 
-def read_netcdf(filepath: str, use_h5_lib: bool = False) -> tuple[dict, ndarray]:
+def read_netcdf(filepath: str, use_h5_lib=False) -> tuple[dict, ndarray]:
     """Reads DAS Netcdf file.
 
     Args:
@@ -74,18 +79,19 @@ def read_netcdf(filepath: str, use_h5_lib: bool = False) -> tuple[dict, ndarray]
     if use_h5_lib:
         with h5nc.File(filepath, "r") as nc_file:
             grid = nc_file.variables["grid"][:]
-            return nc_file.attrs, grid
+            attrs = _attrs_to_dict(nc_file, use_h5_lib=True)
+            return attrs, grid
 
     # otherwise, use netcdf4 library (default)
     with Dataset(filepath) as dataset:
         dataset.set_auto_maskandscale(False)
         grid = dataset.variables["grid"][:]
 
-        global_attrs = _read_attrs(dataset)
+        global_attrs = _attrs_to_dict(dataset)
         return global_attrs, grid
 
 
-def write_netcdf(attrs: dict, grid: ndarray, filepath: str, use_h5_lib: bool = False) -> str:
+def write_netcdf(attrs: dict, grid: ndarray, filepath: str, use_h5_lib=False) -> str:
     """Store data and attributes to a Netcdf4 file
 
     Args:
@@ -132,5 +138,7 @@ def write_netcdf(attrs: dict, grid: ndarray, filepath: str, use_h5_lib: bool = F
     return filepath
 
 
-def _read_attrs(has_nc_attr: HasNcAttr) -> dict:
-    return {key: has_nc_attr.getncattr(key) for key in has_nc_attr.ncattrs()}
+def _attrs_to_dict(dataset: HasNcAttr | h5nc.File, use_h5_lib=False) -> dict:
+    if use_h5_lib:
+        return dict(dataset.attrs.items())
+    return {key: dataset.getncattr(key) for key in dataset.ncattrs()}
