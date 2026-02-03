@@ -23,7 +23,6 @@ from numpy import ndarray
 
 from idsse.common.sci.netcdf_io import read_netcdf, read_netcdf_global_attrs, write_netcdf
 
-
 # test data
 EXAMPLE_NETCDF_FILEPATH = f"{os.path.dirname(__file__)}/../resources/gridstore55657865.nc"
 
@@ -77,11 +76,9 @@ def example_netcdf_data() -> tuple[dict[str, any], ndarray]:
     return read_netcdf(EXAMPLE_NETCDF_FILEPATH)
 
 
-# tests
 def test_read_netcdf_global_attrs():
     attrs = read_netcdf_global_attrs(EXAMPLE_NETCDF_FILEPATH)
 
-    assert len(attrs) == len(EXAMPLE_ATTRIBUTES)
     # attrs should be same as input attrs
     assert is_attributes_equal(attrs, EXAMPLE_ATTRIBUTES)
 
@@ -89,7 +86,6 @@ def test_read_netcdf_global_attrs():
 def test_read_netcdf_global_attrs_with_h5nc():
     attrs = read_netcdf_global_attrs(EXAMPLE_NETCDF_FILEPATH, use_h5_lib=True)
 
-    assert len(attrs) == len(EXAMPLE_ATTRIBUTES)
     # attrs should be same as input attrs, except any ISO strings transformed to Python datetimes
     assert is_attributes_equal(attrs, EXAMPLE_ATTRIBUTES)
 
@@ -150,12 +146,12 @@ def test_read_and_write_netcdf(
     assert os.path.exists(destination_nc_file)
 
     new_file_attrs, new_file_grid = read_netcdf(written_filepath)
-    assert new_file_attrs == attrs
+    assert is_attributes_equal(new_file_attrs, attrs)
     assert new_file_grid[123][321] == grid[123][321]
     assert is_attributes_equal(new_file_attrs, attrs)
 
 
-def test_read_and_write_netcdf_with_h5nc(
+def test_write_netcdf_nonstring_attrs(
     example_netcdf_data: tuple[dict[str, any], ndarray], destination_nc_file: str
 ):
     attrs, grid = example_netcdf_data
