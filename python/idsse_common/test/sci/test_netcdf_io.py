@@ -137,32 +137,38 @@ def test_read_and_write_netcdf(
     example_netcdf_data: tuple[dict[str, any], ndarray], destination_nc_file: str
 ):
     attrs, grid = example_netcdf_data
-
-    # verify write_netcdf functionality
     attrs["prodKey"] = EXAMPLE_PROD_KEY
     attrs["prodSource"] = attrs["product"]
+
+    # verify write_netcdf functionality
     written_filepath = write_netcdf(attrs, grid, destination_nc_file)
+
     assert written_filepath == destination_nc_file
     assert os.path.exists(destination_nc_file)
 
+    # verify read_netcdf functionality
     new_file_attrs, new_file_grid = read_netcdf(written_filepath)
+
     assert is_attributes_equal(new_file_attrs, attrs)
     assert new_file_grid[123][321] == grid[123][321]
     assert is_attributes_equal(new_file_attrs, attrs)
 
 
-def test_write_netcdf_nonstring_attrs(
+def test_read_and_write_netcdf_with_h5(
     example_netcdf_data: tuple[dict[str, any], ndarray], destination_nc_file: str
 ):
     attrs, grid = example_netcdf_data
-
-    # verify write_netcdf_with_h5nc functionality
     attrs["prodKey"] = EXAMPLE_PROD_KEY
     attrs["prodSource"] = attrs["product"]
+
+    # verify write_netcdf_with_h5nc functionality
     written_filepath = write_netcdf(attrs, grid, destination_nc_file, use_h5_lib=True)
+
     assert written_filepath == destination_nc_file
+
     # verify read_netcdf with h5nc functionality
     new_file_attrs, new_file_grid = read_netcdf(written_filepath, use_h5_lib=True)
+
     assert new_file_grid[123][321] == grid[123][321]
     assert is_attributes_equal(new_file_attrs, attrs)
 

@@ -90,7 +90,7 @@ def read_netcdf(filepath: str, use_h5_lib=False) -> tuple[dict, ndarray]:
     with Dataset(filepath) as dataset:
         dataset.set_auto_maskandscale(False)
         grid = dataset.variables["grid"][:]
-        
+
         global_attrs = _attrs_to_dict(dataset)
         return global_attrs, grid
 
