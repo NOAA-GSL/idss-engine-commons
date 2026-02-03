@@ -22,8 +22,7 @@ from pytest import approx, fail, fixture
 from numpy import ndarray
 
 from idsse.common.sci.netcdf_io import read_netcdf, read_netcdf_global_attrs, write_netcdf
-
-# from idsse.common.utils import FileBasedLock
+from idsse.common.utils import FileBasedLock
 
 # test data
 EXAMPLE_NETCDF_FILEPATH = f"{os.path.dirname(__file__)}/../resources/gridstore55657865.nc"
@@ -76,12 +75,14 @@ def is_attributes_equal(actual: dict, expected: dict) -> bool:
 @fixture
 def example_netcdf_data() -> tuple[dict[str, any], ndarray]:
     # file lock protects against other unit tests having NetCDF file open (HDF throws OSError 101)
-    result = read_netcdf(EXAMPLE_NETCDF_FILEPATH)
+    with FileBasedLock(EXAMPLE_NETCDF_FILEPATH, max_age=15):
+        result = read_netcdf(EXAMPLE_NETCDF_FILEPATH)
     return result
 
 
 def test_read_netcdf_global_attrs():
-    attrs = read_netcdf_global_attrs(EXAMPLE_NETCDF_FILEPATH)
+    with FileBasedLock(EXAMPLE_NETCDF_FILEPATH, max_age=15):
+        attrs = read_netcdf_global_attrs(EXAMPLE_NETCDF_FILEPATH)
 
     # attrs should be same as input attrs
     assert is_attributes_equal(attrs, EXAMPLE_ATTRIBUTES)

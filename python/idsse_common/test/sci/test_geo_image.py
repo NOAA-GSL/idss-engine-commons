@@ -394,7 +394,7 @@ def test_add_all_states(proj):
         "resources",
         "nbm_temp-202211111100-202211121300.nc",
     )
-    attrs, data = read_netcdf(filename)
+    attrs, data = read_netcdf(filename, use_h5_lib=True)
     if attrs["data_order"] == "latitude,longitude":
         data = numpy.transpose(data)
     geo_image = GeoImage.from_data_grid(proj, data)
