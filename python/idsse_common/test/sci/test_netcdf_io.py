@@ -15,12 +15,14 @@
 
 import os
 from datetime import datetime
+from typing import NamedTuple
 
 from dateutil.parser import parse as dt_parse
-from pytest import approx, fixture
+from pytest import approx, fail, fixture
 from numpy import ndarray
 
 from idsse.common.sci.netcdf_io import read_netcdf, read_netcdf_global_attrs, write_netcdf
+from idsse.common.utils import FileBasedLock
 
 # test data
 EXAMPLE_NETCDF_FILEPATH = f"{os.path.dirname(__file__)}/../resources/gridstore55657865.nc"
@@ -72,22 +74,26 @@ def is_attributes_equal(actual: dict, expected: dict) -> bool:
 # pytest fixtures
 @fixture
 def example_netcdf_data() -> tuple[dict[str, any], ndarray]:
-    result = read_netcdf(EXAMPLE_NETCDF_FILEPATH)
+    # file lock protects against other unit tests having NetCDF file open (HDF throws OSError 101)
+    with FileBasedLock(EXAMPLE_NETCDF_FILEPATH, max_age=15):
+        result = read_netcdf(EXAMPLE_NETCDF_FILEPATH)
     return result
 
 
 def test_read_netcdf_global_attrs():
-    attrs = read_netcdf_global_attrs(EXAMPLE_NETCDF_FILEPATH)
+    with FileBasedLock(EXAMPLE_NETCDF_FILEPATH, max_age=15):
+        attrs = read_netcdf_global_attrs(EXAMPLE_NETCDF_FILEPATH)
 
     # attrs should be same as input attrs
     assert is_attributes_equal(attrs, EXAMPLE_ATTRIBUTES)
 
 
-# def test_read_netcdf_global_attrs_with_h5nc():
-#     attrs = read_netcdf_global_attrs(EXAMPLE_NETCDF_FILEPATH, use_h5_lib=True)
+def test_read_netcdf_global_attrs_with_h5nc():
+    with FileBasedLock(EXAMPLE_NETCDF_FILEPATH, max_age=15):
+        attrs = read_netcdf_global_attrs(EXAMPLE_NETCDF_FILEPATH, use_h5_lib=True)
 
-#     # attrs should be same as input attrs, except any ISO strings transformed to Python datetimes
-#     assert is_attributes_equal(attrs, EXAMPLE_ATTRIBUTES)
+    # attrs should be same as input attrs, except any ISO strings transformed to Python datetimes
+    assert is_attributes_equal(attrs, EXAMPLE_ATTRIBUTES)
 
 
 def test_read_netcdf(example_netcdf_data: tuple[dict, ndarray]):
@@ -101,15 +107,16 @@ def test_read_netcdf(example_netcdf_data: tuple[dict, ndarray]):
     assert is_attributes_equal(attrs, EXAMPLE_ATTRIBUTES)
 
 
-# def test_read_netcdf_with_h5nc():
-#     attrs, grid = read_netcdf(EXAMPLE_NETCDF_FILEPATH, use_h5_lib=True)
+def test_read_netcdf_with_h5nc():
+    with FileBasedLock(EXAMPLE_NETCDF_FILEPATH, max_age=15):
+        attrs, grid = read_netcdf(EXAMPLE_NETCDF_FILEPATH, use_h5_lib=True)
 
-#     assert grid.shape == (1597, 2345)
-#     y_max, x_max = grid.shape
-#     assert grid[0, 0] == approx(72.80599)
-#     assert grid[round(y_max / 2), round(x_max / 2)] == approx(26.005991)
-#     assert grid[y_max - 1, x_max - 1] == approx(15.925991)
-#     assert is_attributes_equal(attrs, EXAMPLE_ATTRIBUTES)
+    assert grid.shape == (1597, 2345)
+    y_max, x_max = grid.shape
+    assert grid[0, 0] == approx(72.80599)
+    assert grid[round(y_max / 2), round(x_max / 2)] == approx(26.005991)
+    assert grid[y_max - 1, x_max - 1] == approx(15.925991)
+    assert is_attributes_equal(attrs, EXAMPLE_ATTRIBUTES)
 
 
 @fixture
@@ -154,39 +161,39 @@ def test_read_and_write_netcdf(
     assert is_attributes_equal(new_file_attrs, attrs)
 
 
-# def test_read_and_write_netcdf_with_h5(
-#     example_netcdf_data: tuple[dict[str, any], ndarray], destination_nc_file: str
-# ):
-#     attrs, grid = example_netcdf_data
-#     attrs["prodKey"] = EXAMPLE_PROD_KEY
-#     attrs["prodSource"] = attrs["product"]
+def test_read_and_write_netcdf_with_h5(
+    example_netcdf_data: tuple[dict[str, any], ndarray], destination_nc_file: str
+):
+    attrs, grid = example_netcdf_data
+    attrs["prodKey"] = EXAMPLE_PROD_KEY
+    attrs["prodSource"] = attrs["product"]
 
-#     # verify write_netcdf_with_h5nc functionality
-#     written_filepath = write_netcdf(attrs, grid, destination_nc_file, use_h5_lib=True)
+    # verify write_netcdf_with_h5nc functionality
+    written_filepath = write_netcdf(attrs, grid, destination_nc_file, use_h5_lib=True)
 
-#     assert written_filepath == destination_nc_file
+    assert written_filepath == destination_nc_file
 
-#     # verify read_netcdf with h5nc functionality
-#     new_file_attrs, new_file_grid = read_netcdf(written_filepath, use_h5_lib=True)
+    # verify read_netcdf with h5nc functionality
+    new_file_attrs, new_file_grid = read_netcdf(written_filepath, use_h5_lib=True)
 
-#     assert new_file_grid[123][321] == grid[123][321]
-#     assert is_attributes_equal(new_file_attrs, attrs)
+    assert new_file_grid[123][321] == grid[123][321]
+    assert is_attributes_equal(new_file_attrs, attrs)
 
 
-# def test_write_netcdf_nonstring_attrs(
-#     example_netcdf_data: tuple[dict[str, any], ndarray], destination_nc_file: str
-# ):
-#     in_attrs, grid = example_netcdf_data
-#     SpecialType = NamedTuple("SpecialType", [("field", str), ("data_type", str)])
-#     # create non-string attribute of weird type
-#     in_attrs["field"] = SpecialType(field="temperature", data_type="prctl_p025")
+def test_write_netcdf_nonstring_attrs(
+    example_netcdf_data: tuple[dict[str, any], ndarray], destination_nc_file: str
+):
+    in_attrs, grid = example_netcdf_data
+    SpecialType = NamedTuple("SpecialType", [("field", str), ("data_type", str)])
+    # create non-string attribute of weird type
+    in_attrs["field"] = SpecialType(field="temperature", data_type="prctl_p025")
 
-#     try:
-#         # verify write_netcdf successfully writes non-string attrs (they shouldn't be anyway)
-#         _ = write_netcdf(in_attrs, grid, destination_nc_file, use_h5_lib=True)
-#     except Exception as exc:  # pylint: disable=broad-exception-caught
-#         fail(f"Unable to write NetCDF to {destination_nc_file} due to exception: {str(exc)}")
+    try:
+        # verify write_netcdf successfully writes non-string attrs (they shouldn't be anyway)
+        _ = write_netcdf(in_attrs, grid, destination_nc_file, use_h5_lib=True)
+    except Exception as exc:  # pylint: disable=broad-exception-caught
+        fail(f"Unable to write NetCDF to {destination_nc_file} due to exception: {str(exc)}")
 
-#     out_attrs = read_netcdf_global_attrs(destination_nc_file, use_h5_lib=True)
-#     for value in out_attrs.values():
-#         assert isinstance(value, (str, datetime))
+    out_attrs = read_netcdf_global_attrs(destination_nc_file, use_h5_lib=True)
+    for value in out_attrs.values():
+        assert isinstance(value, (str, datetime))
