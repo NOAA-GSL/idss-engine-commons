@@ -22,7 +22,8 @@ from pytest import approx, fail, fixture
 from numpy import ndarray
 
 from idsse.common.sci.netcdf_io import read_netcdf, read_netcdf_global_attrs, write_netcdf
-from idsse.common.utils import FileBasedLock
+
+# from idsse.common.utils import FileBasedLock
 
 # test data
 EXAMPLE_NETCDF_FILEPATH = f"{os.path.dirname(__file__)}/../resources/gridstore55657865.nc"
@@ -75,22 +76,19 @@ def is_attributes_equal(actual: dict, expected: dict) -> bool:
 @fixture
 def example_netcdf_data() -> tuple[dict[str, any], ndarray]:
     # file lock protects against other unit tests having NetCDF file open (HDF throws OSError 101)
-    with FileBasedLock(EXAMPLE_NETCDF_FILEPATH, max_age=15):
-        result = read_netcdf(EXAMPLE_NETCDF_FILEPATH)
+    result = read_netcdf(EXAMPLE_NETCDF_FILEPATH)
     return result
 
 
 def test_read_netcdf_global_attrs():
-    with FileBasedLock(EXAMPLE_NETCDF_FILEPATH, max_age=15):
-        attrs = read_netcdf_global_attrs(EXAMPLE_NETCDF_FILEPATH)
+    attrs = read_netcdf_global_attrs(EXAMPLE_NETCDF_FILEPATH)
 
     # attrs should be same as input attrs
     assert is_attributes_equal(attrs, EXAMPLE_ATTRIBUTES)
 
 
 def test_read_netcdf_global_attrs_with_h5nc():
-    with FileBasedLock(EXAMPLE_NETCDF_FILEPATH, max_age=15):
-        attrs = read_netcdf_global_attrs(EXAMPLE_NETCDF_FILEPATH, use_h5_lib=True)
+    attrs = read_netcdf_global_attrs(EXAMPLE_NETCDF_FILEPATH, use_h5_lib=True)
 
     # attrs should be same as input attrs, except any ISO strings transformed to Python datetimes
     assert is_attributes_equal(attrs, EXAMPLE_ATTRIBUTES)
@@ -108,8 +106,7 @@ def test_read_netcdf(example_netcdf_data: tuple[dict, ndarray]):
 
 
 def test_read_netcdf_with_h5nc():
-    with FileBasedLock(EXAMPLE_NETCDF_FILEPATH, max_age=15):
-        attrs, grid = read_netcdf(EXAMPLE_NETCDF_FILEPATH, use_h5_lib=True)
+    attrs, grid = read_netcdf(EXAMPLE_NETCDF_FILEPATH, use_h5_lib=True)
 
     assert grid.shape == (1597, 2345)
     y_max, x_max = grid.shape
