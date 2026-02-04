@@ -27,7 +27,8 @@ RUN conda config --set solver classic && \
     pint==0.25 \
     numpy==1.26.4 \
     netcdf4==1.7.3 \
-    h5netcdf==1.7.3 \
+    h5netcdf==1.8.1 \
+    h5py==3.15.1 \
     pygrib==2.1.6 \
     pyproj==3.7.2 \
     awscli==1.42.60 \

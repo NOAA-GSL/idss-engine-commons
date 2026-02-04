@@ -21,7 +21,6 @@ from pytest_httpserver import HTTPServer
 from idsse.common.http_utils import HttpUtils
 from idsse.testing.utils.resources import get_resource_from_file
 
-
 EXAMPLE_ISSUE = datetime(2024, 10, 30, 20, 56, 40, tzinfo=UTC)
 EXAMPLE_VALID = datetime(2024, 10, 30, 20, 56, 40, tzinfo=UTC)
 

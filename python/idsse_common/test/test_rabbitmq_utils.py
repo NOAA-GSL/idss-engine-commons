@@ -38,7 +38,6 @@ from idsse.common.rabbitmq_utils import (
     threadsafe_nack,
 )
 
-
 # Example data objects
 CONN = Conn("localhost", "/", port=5672, username="user", password="password")
 RMQ_PARAMS = RabbitMqParams(

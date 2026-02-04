@@ -30,9 +30,9 @@ from idsse.common.utils import (
     hash_code,
     round_,
     round_half_away,
+    strtobool,
     to_compact,
     to_iso,
-    strtobool,
 )
 
 
