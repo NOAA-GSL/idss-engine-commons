@@ -22,7 +22,6 @@ from pytest import approx, fail, fixture
 from numpy import ndarray
 
 from idsse.common.sci.netcdf_io import read_netcdf, read_netcdf_global_attrs, write_netcdf
-from idsse.common.utils import FileBasedLock
 
 # test data
 EXAMPLE_NETCDF_FILEPATH = f"{os.path.dirname(__file__)}/../resources/gridstore55657865.nc"
@@ -72,16 +71,6 @@ def is_attributes_equal(actual: dict, expected: dict) -> bool:
 
 
 # pytest fixtures
-@fixture
-def netcdf_lock() -> FileBasedLock:
-    """Hack to avoid netCDF4 single-thread limitations; no two unit test can use the netCDF4
-    read/write NetCDFs (at any file path) at the same time
-    """
-    # pylint: disable=duplicate-code
-    global_lock_file = os.path.join(os.path.dirname(__file__), "..", "resources", "netcdf4")
-    return FileBasedLock(global_lock_file, max_age=15)
-
-
 @fixture
 def example_netcdf_data(netcdf_lock) -> tuple[dict[str, any], ndarray]:
     # file lock protects against other unit tests having NetCDF file open (HDF throws OSError 101)

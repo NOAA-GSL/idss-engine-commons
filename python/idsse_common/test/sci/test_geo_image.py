@@ -18,7 +18,6 @@ from pytest import fixture, approx
 from idsse.common.sci.geo_image import ColorPalette, GeoImage, normalize, scale_to_color_palette
 from idsse.common.sci.grid_proj import GridProj
 from idsse.common.sci.netcdf_io import read_netcdf
-from idsse.common.utils import FileBasedLock
 
 
 @fixture
@@ -26,16 +25,6 @@ def proj():
     proj_spec = "+proj=lcc +lat_0=25.0 +lon_0=-95.0 +lat_1=25.0 +a=6371200"
     grid_spec = "+dx=2539.703 +dy=2539.703 +w=2345 +h=1597 +lat_ll=19.229 +lon_ll=-126.2766"
     return GridProj.from_proj_grid_spec(proj_spec, grid_spec)
-
-
-@fixture
-def netcdf_lock() -> FileBasedLock:
-    """Hack to avoid netCDF4 single-thread limitations; no two unit test can use the netCDF4
-    read/write NetCDFs (at any file path) at the same time
-    """
-    # pylint: disable=duplicate-code
-    global_lock_file = os.path.join(os.path.dirname(__file__), "..", "resources", "netcdf4")
-    return FileBasedLock(global_lock_file, max_age=15)
 
 
 def test_geo_image_without_data_grid(proj):
@@ -398,7 +387,7 @@ def test_color_palette_with_anchor():
         assert idx == red == green == blue
 
 
-def test_add_all_states(proj, netcdf_lock):
+def test_add_all_states(proj):
     filename = os.path.join(
         os.path.dirname(os.path.realpath(__file__)),
         "..",
@@ -406,8 +395,7 @@ def test_add_all_states(proj, netcdf_lock):
         "nbm_temp-202211111100-202211121300.nc",
     )
 
-    with netcdf_lock:
-        attrs, data = read_netcdf(filename, use_h5_lib=True)
+    attrs, data = read_netcdf(filename, use_h5_lib=True)
     if attrs["data_order"] == "latitude,longitude":
         data = numpy.transpose(data)
     geo_image = GeoImage.from_data_grid(proj, data)
