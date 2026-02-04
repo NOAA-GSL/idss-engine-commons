@@ -73,15 +73,25 @@ def is_attributes_equal(actual: dict, expected: dict) -> bool:
 
 # pytest fixtures
 @fixture
-def example_netcdf_data() -> tuple[dict[str, any], ndarray]:
+def netcdf_lock() -> FileBasedLock:
+    """Hack to avoid netCDF4 single-thread limitations; no two unit test can use the netCDF4
+    read/write NetCDFs (at any file path) at the same time
+    """
+    # pylint: disable=duplicate-code
+    global_lock_file = os.path.join(os.path.dirname(__file__), "..", "resources", "netcdf4")
+    return FileBasedLock(global_lock_file, max_age=15)
+
+
+@fixture
+def example_netcdf_data(netcdf_lock) -> tuple[dict[str, any], ndarray]:
     # file lock protects against other unit tests having NetCDF file open (HDF throws OSError 101)
-    with FileBasedLock(EXAMPLE_NETCDF_FILEPATH, max_age=15):
+    with netcdf_lock:
         result = read_netcdf(EXAMPLE_NETCDF_FILEPATH)
     return result
 
 
-def test_read_netcdf_global_attrs():
-    with FileBasedLock(EXAMPLE_NETCDF_FILEPATH, max_age=15):
+def test_read_netcdf_global_attrs(netcdf_lock):
+    with netcdf_lock:
         attrs = read_netcdf_global_attrs(EXAMPLE_NETCDF_FILEPATH)
 
     # attrs should be same as input attrs
@@ -139,20 +149,22 @@ def destination_nc_file() -> str:
 
 
 def test_read_and_write_netcdf(
-    example_netcdf_data: tuple[dict[str, any], ndarray], destination_nc_file: str
+    example_netcdf_data: tuple[dict[str, any], ndarray], destination_nc_file: str, netcdf_lock
 ):
     attrs, grid = example_netcdf_data
     attrs["prodKey"] = EXAMPLE_PROD_KEY
     attrs["prodSource"] = attrs["product"]
 
     # verify write_netcdf functionality
-    written_filepath = write_netcdf(attrs, grid, destination_nc_file)
+    with netcdf_lock:
+        written_filepath = write_netcdf(attrs, grid, destination_nc_file)
 
     assert written_filepath == destination_nc_file
     assert os.path.exists(destination_nc_file)
 
     # verify read_netcdf functionality
-    new_file_attrs, new_file_grid = read_netcdf(written_filepath)
+    with netcdf_lock:
+        new_file_attrs, new_file_grid = read_netcdf(written_filepath)
 
     assert is_attributes_equal(new_file_attrs, attrs)
     assert new_file_grid[123][321] == grid[123][321]
