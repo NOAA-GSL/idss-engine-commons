@@ -29,7 +29,7 @@ RUN conda config --set solver classic && \
     netcdf4==1.7.3 \
     h5netcdf==1.8.1 \
     h5py==3.15.1 \
-    pygrib==2.1.8 \
+    pygrib==2.1.4 \
     pyproj==3.7.2 \
     awscli==1.42.60 \
     jsonschema==4.25.1 \
