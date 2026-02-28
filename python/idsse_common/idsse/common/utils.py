@@ -32,6 +32,7 @@ class RoundingMethod(Enum):
 
     ROUND = "ROUND"
     FLOOR = "FLOOR"
+    CEILING = "CEILING"
 
 
 RoundingParam = str | RoundingMethod
@@ -416,6 +417,8 @@ def round_(
         return round_half_away(number, precision)
     if rounding is RoundingMethod.FLOOR:
         return math.floor(number)
+    if rounding is RoundingMethod.CEILING:
+        return math.ceil(number)
     raise ValueError("rounding method cannot be None")
 
 

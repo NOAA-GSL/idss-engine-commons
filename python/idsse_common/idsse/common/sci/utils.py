@@ -13,6 +13,7 @@
 
 import logging
 from collections.abc import Sequence
+from datetime import datetime, UTC
 from typing import NewType
 
 import numpy
@@ -42,3 +43,15 @@ def coordinate_pairs_to_axes(
             as all coordinates on x axis, followed by all coordinates on y axis
     """
     return tuple(numpy.array(dim_coord, dtype=dtype) for dim_coord in tuple(zip(*points)))
+
+
+def numpy_datetime_to_datetime(np_datetime: numpy.datetime64, tz=UTC) -> datetime:
+    """Convert a numpy datetime64 to a timezone-aware Python `datetime` object.
+
+    Args:
+        np_datetime (numpy.datetime64): a numpy datetime, which will appear as a 0-dimension array
+            with a single float value. E.g. str representation is `array(123456, datetime64['ns'])`.
+        tz (optional, datetime.tz): the assumed timezone of the float value. Defaults to `UTC`
+    """
+    timestamp = (np_datetime - numpy.datetime64("1970-01-01")) / numpy.timedelta64(1, "s")
+    return datetime.fromtimestamp(timestamp, tz=tz)

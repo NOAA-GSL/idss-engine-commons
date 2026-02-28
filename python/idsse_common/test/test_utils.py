@@ -208,6 +208,9 @@ def test_round_half_away_with_precision(number: float, expected: float):
     assert result == expected
 
 
+# TODO: test round with CEILING
+
+
 def test_invalid_rounding_method_raises_error():
     with pytest.raises(ValueError) as exc:
         round_(123.456, rounding="MAGIC")
