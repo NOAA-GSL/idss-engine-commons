@@ -26,6 +26,9 @@ RUN conda config --set solver classic && \
     python-dateutil==2.9.0 \
     pint==0.25 \
     numpy==1.26.4 \
+    zarr==3.1.5 \
+    dask==2025.12.0 \
+    xarray==2025.12.0 \
     netcdf4==1.7.3 \
     h5netcdf==1.8.1 \
     h5py==3.15.1 \
