@@ -18,8 +18,6 @@ from typing import NewType
 
 import numpy
 
-# import shapely
-
 logger = logging.getLogger(__name__)
 
 # type aliases
@@ -45,6 +43,7 @@ def coordinate_pairs_to_axes(
     return tuple(numpy.array(dim_coord, dtype=dtype) for dim_coord in tuple(zip(*points)))
 
 
+# pylint: disable=invalid-name
 def numpy_datetime_to_datetime(np_datetime: numpy.datetime64, tz=UTC) -> datetime:
     """Convert a numpy datetime64 to a timezone-aware Python `datetime` object.
 
