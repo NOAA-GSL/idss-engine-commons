@@ -208,7 +208,11 @@ def test_round_half_away_with_precision(number: float, expected: float):
     assert result == expected
 
 
-# TODO: test round with CEILING
+@pytest.mark.parametrize("number, expected", [(100.01, 101), (-43.71, -43), (pi, 4)])
+def test_round_ceiling(number: float, expected: int):
+    result = round_(number, rounding="CEILING")
+    assert isinstance(result, int)
+    assert result == expected
 
 
 def test_invalid_rounding_method_raises_error():
