@@ -29,6 +29,7 @@ RUN conda config --set solver classic && \
     zarr==3.1.5 \
     dask==2025.12.0 \
     xarray==2025.12.0 \
+    pcodec==1.0.1 \
     netcdf4==1.7.3 \
     h5netcdf==1.8.1 \
     h5py==3.15.1 \
