@@ -28,7 +28,7 @@ from idsse.common.utils import round_values, RoundingParam, RoundingMethod
 from idsse.common.sci.utils import coordinate_pairs_to_axes
 
 # type hints
-Scalar = int | float | np.integer | np.float_
+Scalar = int | float | np.integer | np.float64
 ScalarPair = tuple[Scalar, Scalar]
 ScalarArray = Sequence[Scalar]
 Coordinate = Scalar | ScalarPair | ScalarArray | np.ndarray
