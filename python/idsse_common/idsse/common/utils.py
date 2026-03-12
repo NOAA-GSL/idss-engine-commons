@@ -361,7 +361,7 @@ def round_half_away(number: int | float, precision: int = 0) -> int | float:
     | -14.5 |     -14 |               -15 |
 
     Args:
-        number (int | float | numpy.int | numpy.float_): a scalar value from a Python/numpy array
+        number (int | float | numpy.int | numpy.float64): a scalar value from a Python/numpy array
         precision (int): number of decimal places to preserve.
 
     Returns:
@@ -395,7 +395,7 @@ def round_(
     | -14.5 |     -14 |               -15 |
 
     Args:
-        number (int | float | numpy.int | numpy.float_): a number, often from a Python/numpy array
+        number (int | float | numpy.int | numpy.float64): a number, often from a Python/numpy array
         precision (int): number of decimal places to preserve. Defaults to 0.
         rounding (RoundingMethod | str, optional): how number should be rounded. Either "nearest
             integer, ties away from zero", or math.floor(). Defaults to RoundingMethod.ROUND.

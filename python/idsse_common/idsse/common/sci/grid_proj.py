@@ -162,8 +162,8 @@ class GridProj:
             lon (T): single x geographic coordinate, or array of all x coordinates
             lat (T): single y geographic coordinate, or array of all y coordinates
             rounding ([RoundingParam | None]):
-                ROUND to apply round_() to pixel values,
-                FLOOR to apply math.floor().
+                ROUND to apply np.round() to pixel values,
+                FLOOR to apply np.floor().
                 Supports RoundingMethod enum value or str value (case insensitive).
                 By default, float pixels are not rounded and will be returned as floats
             precision (int): number of decimal places to round to. If rounding argument is None,
@@ -257,8 +257,8 @@ class GridProj:
             x (T): x scalar, or array/list of x scalars, in CRS dimensions
             y (T): y scalar, or array/list of y scalars, in CRS dimensions
             rounding ([RoundingParam | None]):
-                ROUND to apply round_() to pixel values,
-                FLOOR to apply math.floor().
+                ROUND to apply np.round() to pixel values,
+                FLOOR to apply np.floor().
                 Supports RoundingMethod enum value or str value (case insensitive).
                 By default, pixels are not rounded and will be returned as floats
             precision (int): number of decimal places to round to. If rounding arg is None,
