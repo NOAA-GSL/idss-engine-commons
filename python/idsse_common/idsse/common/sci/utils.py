@@ -14,6 +14,7 @@
 import logging
 import math
 from collections.abc import Sequence
+from datetime import datetime, UTC
 from typing import NewType
 
 import numpy as np
@@ -37,10 +38,10 @@ def coordinate_pairs_to_axes(
 
     Args:
         points (Sequence[Pixel]): list of (x,y) coordinates
-        dtype: (numpy.dtype | None): data type of resulting numpy arrays. Default: None
+        dtype: (np.dtype | None): data type of resulting numpy arrays. Default: None
 
     Returns:
-        tuple[numpy.ndarray]: Same coordinates but restructured
+        tuple[np.ndarray]: Same coordinates but restructured
             as all coordinates on x axis, followed by all coordinates on y axis
     """
     return tuple(np.stack(points).transpose().astype(dtype))
@@ -48,7 +49,7 @@ def coordinate_pairs_to_axes(
 
 def round_scalar(value: Scalar, rounding: RoundingParam) -> Scalar:
     """Round a Python int/float or numpy int/float, preserving the original type as much
-    as possible (e.g. numpy.float32 is rounded and returns numpy.integer)"""
+    as possible (e.g. np.float32 is rounded and returns np.integer)"""
     if isinstance(rounding, str):  # cast string rounding to constant RoundingMethod
         rounding = RoundingMethod.from_str(rounding)
 
@@ -62,3 +63,16 @@ def round_scalar(value: Scalar, rounding: RoundingParam) -> Scalar:
         return math.ceil(value) if is_py_scalar else np.ceil(value)
 
     raise ValueError(f"Unsupported rounding method: {rounding}")
+
+
+# pylint: disable=invalid-name
+def numpy_datetime_to_datetime(np_datetime: np.datetime64, tz=UTC) -> datetime:
+    """Convert a numpy datetime64 to a timezone-aware Python `datetime` object.
+
+    Args:
+        np_datetime (np.datetime64): a numpy datetime, which will appear as a 0-dimension array
+            with a single float value. E.g. str representation is `array(123456, datetime64['ns'])`.
+        tz (optional, datetime.tz): the assumed timezone of the float value. Defaults to `UTC`
+    """
+    timestamp = (np_datetime - np.datetime64("1970-01-01")) / np.timedelta64(1, "s")
+    return datetime.fromtimestamp(timestamp, tz=tz)
