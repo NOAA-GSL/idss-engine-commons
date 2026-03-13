@@ -24,11 +24,10 @@ import numpy as np
 from pyproj import CRS, Transformer
 from pyproj.enums import TransformDirection
 
-from idsse.common.utils import round_values, RoundingParam, RoundingMethod
-from idsse.common.sci.utils import coordinate_pairs_to_axes
+from idsse.common.utils import RoundingParam, RoundingMethod
+from idsse.common.sci.utils import coordinate_pairs_to_axes, round_scalar, Scalar
 
 # type hints
-Scalar = int | float | np.integer | np.float64
 ScalarPair = tuple[Scalar, Scalar]
 ScalarArray = Sequence[Scalar]
 Coordinate = Scalar | ScalarPair | ScalarArray | np.ndarray
@@ -273,13 +272,19 @@ class GridProj:
             TypeError: if x or y CRS values are type not supported by Coordinate
                 (a.k.a. int | float | Sequence[int | float] | np.ndarray)
         """
+        if isinstance(rounding, str):  # cast str to RoundingMethod enum
+            try:
+                rounding = RoundingMethod[rounding.upper()]
+            except KeyError as exc:
+                raise ValueError(f"Unsupported rounding method {rounding}") from exc
+
         if isinstance(x, Scalar) and isinstance(y, Scalar):
             # single CRS coordinate was provided (base case)
             i: float = (x - self._x_offset) / self._dx
             j: float = (y - self._y_offset) / self._dy
 
             if rounding is not None:
-                return tuple(round_values(i, j, rounding=rounding, precision=precision))
+                return round_scalar(i, rounding), round_scalar(j, rounding)
             return i, j
 
         if isinstance(x, Iterable) and isinstance(y, Iterable):

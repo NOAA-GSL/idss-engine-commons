@@ -12,24 +12,26 @@
 # ------------------------------------------------------------------------------------
 
 import logging
+import math
 from collections.abc import Sequence
 from typing import NewType
 
-import numpy
+import numpy as np
 
-# import shapely
+from idsse.common.utils import RoundingMethod
 
 logger = logging.getLogger(__name__)
 
 # type aliases
+Scalar = int | float | np.integer | np.float64
 Pixel = NewType("Pixel", Sequence[int])
 Coord = NewType("Coord", Sequence[float])
 Coords = NewType("Coords", Sequence[Coord])
 
 
 def coordinate_pairs_to_axes(
-    points: Sequence[Pixel] | Coords, dtype: numpy.dtype | None = None
-) -> tuple[numpy.ndarray]:
+    points: Sequence[Pixel] | Coords, dtype: np.dtype | None = None
+) -> tuple[np.ndarray]:
     """Convert a list of (x,y) tuples to a tuple of values on the x axis and values on the y axis,
         represented as numpy arrays.
 
@@ -41,4 +43,19 @@ def coordinate_pairs_to_axes(
         tuple[numpy.ndarray]: Same coordinates but restructured
             as all coordinates on x axis, followed by all coordinates on y axis
     """
-    return tuple(numpy.array(dim_coord, dtype=dtype) for dim_coord in tuple(zip(*points)))
+    return tuple(np.stack(points).transpose().astype(dtype))
+
+
+def round_scalar(value: Scalar, rounding: RoundingMethod) -> Scalar:
+    """Round a Python int/float or numpy int/float, preserving the original type as much
+    as possible (e.g. numpy.float32 is rounded and returns numpy.integer)"""
+    is_py_scalar = isinstance(value, (int, float))
+
+    if rounding == RoundingMethod.ROUND:
+        return round(value) if is_py_scalar else value.astype(int)
+    if rounding == RoundingMethod.FLOOR:
+        return math.floor(value) if is_py_scalar else np.floor(value)
+    if rounding == RoundingMethod.CEIL:
+        return math.ceil(value) if is_py_scalar else np.ceil(value)
+
+    raise ValueError(f"Unsupported rounding method: {rounding}")

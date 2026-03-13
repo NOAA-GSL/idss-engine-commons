@@ -32,6 +32,7 @@ class RoundingMethod(Enum):
 
     ROUND = "ROUND"
     FLOOR = "FLOOR"
+    CEIL = "CEIL"
 
 
 RoundingParam = str | RoundingMethod
@@ -376,7 +377,7 @@ def round_half_away(number: int | float, precision: int = 0) -> int | float:
         if is_less_than_half
         else _round_away_from_zero(factored_number)
     ) / factor
-    return int(rounded_number) if precision == 0 else float(rounded_number)
+    return int(float(rounded_number)) if precision == 0 else float(rounded_number)
 
 
 def round_(
@@ -413,7 +414,7 @@ def round_(
             raise ValueError(f"Unsupported rounding method {rounding}") from exc
 
     if rounding is RoundingMethod.ROUND:
-        return round_half_away(number, precision)
+        return round(number, ndigits=precision)
     if rounding is RoundingMethod.FLOOR:
         return math.floor(number)
     raise ValueError("rounding method cannot be None")
@@ -432,7 +433,7 @@ def round_values(
         precision (int): Number of decimal places to preserve. Default is 0.
     """
     if rounding is None:
-        return [int(v) for v in args]
+        return [int(float(v)) for v in args]
     return [round_(v, precision=precision, rounding=rounding) for v in args]
 
 
