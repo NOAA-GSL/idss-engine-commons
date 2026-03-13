@@ -18,7 +18,7 @@ from typing import NewType
 
 import numpy as np
 
-from idsse.common.utils import RoundingMethod
+from idsse.common.utils import RoundingMethod, RoundingParam
 
 logger = logging.getLogger(__name__)
 
@@ -46,9 +46,12 @@ def coordinate_pairs_to_axes(
     return tuple(np.stack(points).transpose().astype(dtype))
 
 
-def round_scalar(value: Scalar, rounding: RoundingMethod) -> Scalar:
+def round_scalar(value: Scalar, rounding: RoundingParam) -> Scalar:
     """Round a Python int/float or numpy int/float, preserving the original type as much
     as possible (e.g. numpy.float32 is rounded and returns numpy.integer)"""
+    if isinstance(rounding, str):  # cast string rounding to constant RoundingMethod
+        rounding = RoundingMethod.from_str(rounding)
+
     is_py_scalar = isinstance(value, (int, float))
 
     if rounding == RoundingMethod.ROUND:

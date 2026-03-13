@@ -273,10 +273,7 @@ class GridProj:
                 (a.k.a. int | float | Sequence[int | float] | np.ndarray)
         """
         if isinstance(rounding, str):  # cast str to RoundingMethod enum
-            try:
-                rounding = RoundingMethod[rounding.upper()]
-            except KeyError as exc:
-                raise ValueError(f"Unsupported rounding method {rounding}") from exc
+            rounding = RoundingMethod.from_str(rounding)
 
         if isinstance(x, Scalar) and isinstance(y, Scalar):
             # single CRS coordinate was provided (base case)

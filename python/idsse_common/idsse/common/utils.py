@@ -21,7 +21,7 @@ from datetime import datetime, timedelta, UTC
 from enum import Enum
 from subprocess import PIPE, Popen, TimeoutExpired
 from time import sleep
-from typing import Any, Generator
+from typing import Any, Generator, Self
 from uuid import UUID
 
 logger = logging.getLogger(__name__)
@@ -33,6 +33,14 @@ class RoundingMethod(Enum):
     ROUND = "ROUND"
     FLOOR = "FLOOR"
     CEIL = "CEIL"
+
+    @staticmethod
+    def from_str(value: str) -> Self:
+        """Cast a RoundingMethod or string to a `RoundingMethod` constant"""
+        try:
+            return RoundingMethod[value.upper()]
+        except KeyError as exc:
+            raise ValueError(f"Unsupported rounding method {value}") from exc
 
 
 RoundingParam = str | RoundingMethod
@@ -408,10 +416,7 @@ def round_(
         (int | float): rounded number as int if precision is 0, otherwise as float
     """
     if isinstance(rounding, str):  # cast str to RoundingMethod enum
-        try:
-            rounding = RoundingMethod[rounding.upper()]
-        except KeyError as exc:
-            raise ValueError(f"Unsupported rounding method {rounding}") from exc
+        RoundingMethod.from_str(rounding)
 
     if rounding is RoundingMethod.ROUND:
         return round(number, ndigits=precision)

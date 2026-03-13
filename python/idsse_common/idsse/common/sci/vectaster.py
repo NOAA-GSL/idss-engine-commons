@@ -29,8 +29,8 @@ from shapely import (
 )
 
 from idsse.common.sci.grid_proj import GridProj
-from idsse.common.sci.utils import Pixel, Coord, Coords, coordinate_pairs_to_axes
-from idsse.common.utils import round_, round_values, RoundingMethod, RoundingParam
+from idsse.common.sci.utils import Pixel, Coord, Coords, coordinate_pairs_to_axes, round_scalar
+from idsse.common.utils import RoundingMethod, RoundingParam
 
 logger = logging.getLogger(__name__)
 
@@ -115,7 +115,13 @@ def rasterize_point(
         )
 
     return coordinate_pairs_to_axes(
-        [tuple(round_values(*coord, rounding=rounding))], dtype=np.int64
+        [
+            (
+                round_scalar(coord[0], rounding=rounding),
+                round_scalar(coord[1], rounding=rounding),
+            )
+        ],
+        dtype=np.int64,
     )
 
 
@@ -172,7 +178,13 @@ def rasterize_linestring(
         linestring = geographic_linestring_to_pixel(coords, grid_proj, rounding)
     else:
         linestring = LineString(
-            [round_values(*coord, rounding=rounding) for coord in linestring.coords]
+            [
+                (
+                    round_scalar(coord[0], rounding=rounding),
+                    round_scalar(coord[1], rounding=rounding),
+                )
+                for coord in linestring.coords
+            ]
         )
 
     return pixels_for_linestring(linestring)
@@ -216,7 +228,16 @@ def rasterize_polygon(
     if grid_proj is not None:
         polygon = geographic_polygon_to_pixel(coords, grid_proj, rounding)
     else:
-        coords = [[round_values(*coord, rounding=rounding) for coord in ring] for ring in coords]
+        coords = [
+            [
+                (
+                    round_scalar(coord_pair[0], rounding=rounding),
+                    round_scalar(coord_pair[1], rounding=rounding),
+                )
+                for coord_pair in ring
+            ]
+            for ring in coords
+        ]
         polygon = Polygon(coords[0], holes=coords[1:])
 
     return pixels_in_polygon(polygon)
