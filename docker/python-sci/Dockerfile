@@ -34,7 +34,7 @@ RUN conda config --set solver classic && \
     zarr==3.1.5 \
     dask==2026.1.2 \
     xarray==2026.2.0 \
-    pcodec==1.0.1 \
+    #pcodec==1.0.1 \
     pygrib==2.1.8 \
     pyproj==3.7.2 \
     awscli==2.34.7 \
