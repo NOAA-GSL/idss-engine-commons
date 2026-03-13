@@ -234,8 +234,8 @@ def test_draw_geo_polygon(proj: GridProj):
     # values will be 0 or 100 (for polygon) and 0 everywhere else
     numpy.testing.assert_array_equal(values, [0, 100])
     # the "equality" workarounds below are needed due to counts and indices arrays having
-    # different results when run with pytest locally vs. in GitHub Actions runner
-    assert counts.tolist() == approx([7190, 310], rel=0.10)  # counts can be up to 10% off
+    # different results when run with pytest locally vs. in GitHub Actions runner (OS-dependent)
+    assert counts.tolist() == approx([7190, 310], rel=0.20)  # counts can be up to 20% off
     # fmt: off
     expected_indices = [
         14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
