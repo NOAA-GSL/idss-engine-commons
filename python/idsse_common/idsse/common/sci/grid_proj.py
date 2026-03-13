@@ -24,11 +24,10 @@ import numpy as np
 from pyproj import CRS, Transformer
 from pyproj.enums import TransformDirection
 
-from idsse.common.utils import round_values, RoundingParam, RoundingMethod
-from idsse.common.sci.utils import coordinate_pairs_to_axes
+from idsse.common.utils import RoundingParam, RoundingMethod
+from idsse.common.sci.utils import coordinate_pairs_to_axes, round_scalar, Scalar
 
 # type hints
-Scalar = int | float | np.integer | np.float64
 ScalarPair = tuple[Scalar, Scalar]
 ScalarArray = Sequence[Scalar]
 Coordinate = Scalar | ScalarPair | ScalarArray | np.ndarray
@@ -162,8 +161,8 @@ class GridProj:
             lon (T): single x geographic coordinate, or array of all x coordinates
             lat (T): single y geographic coordinate, or array of all y coordinates
             rounding ([RoundingParam | None]):
-                ROUND to apply round_() to pixel values,
-                FLOOR to apply math.floor().
+                ROUND to apply np.round() to pixel values,
+                FLOOR to apply np.floor().
                 Supports RoundingMethod enum value or str value (case insensitive).
                 By default, float pixels are not rounded and will be returned as floats
             precision (int): number of decimal places to round to. If rounding argument is None,
@@ -257,8 +256,8 @@ class GridProj:
             x (T): x scalar, or array/list of x scalars, in CRS dimensions
             y (T): y scalar, or array/list of y scalars, in CRS dimensions
             rounding ([RoundingParam | None]):
-                ROUND to apply round_() to pixel values,
-                FLOOR to apply math.floor().
+                ROUND to apply np.round() to pixel values,
+                FLOOR to apply np.floor().
                 Supports RoundingMethod enum value or str value (case insensitive).
                 By default, pixels are not rounded and will be returned as floats
             precision (int): number of decimal places to round to. If rounding arg is None,
@@ -273,13 +272,16 @@ class GridProj:
             TypeError: if x or y CRS values are type not supported by Coordinate
                 (a.k.a. int | float | Sequence[int | float] | np.ndarray)
         """
+        if isinstance(rounding, str):  # cast str to RoundingMethod enum
+            rounding = RoundingMethod.from_str(rounding)
+
         if isinstance(x, Scalar) and isinstance(y, Scalar):
             # single CRS coordinate was provided (base case)
             i: float = (x - self._x_offset) / self._dx
             j: float = (y - self._y_offset) / self._dy
 
             if rounding is not None:
-                return tuple(round_values(i, j, rounding=rounding, precision=precision))
+                return round_scalar(i, rounding), round_scalar(j, rounding)
             return i, j
 
         if isinstance(x, Iterable) and isinstance(y, Iterable):

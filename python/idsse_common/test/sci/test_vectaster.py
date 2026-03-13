@@ -122,7 +122,7 @@ def test_rasterize_point_without_grid_proj():
     result = rasterize_point(point)
     numpy.testing.assert_array_equal(result, pixels)
 
-    pixels = (numpy.array([1002]), numpy.array([1131]))
+    pixels = (numpy.array([1002]), numpy.array([1130]))
     # rounding='round' means round half away from zero (both even and odd)
     result = rasterize_point(point, rounding="round")
     numpy.testing.assert_array_equal(result, pixels)

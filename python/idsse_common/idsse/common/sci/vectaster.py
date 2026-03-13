@@ -16,7 +16,7 @@ from collections.abc import Iterable, Sequence
 from math import floor
 from numbers import Number
 
-import numpy
+import numpy as np
 from shapely import (
     Geometry,
     LinearRing,
@@ -29,8 +29,8 @@ from shapely import (
 )
 
 from idsse.common.sci.grid_proj import GridProj
-from idsse.common.sci.utils import Pixel, Coord, Coords, coordinate_pairs_to_axes
-from idsse.common.utils import round_, round_values, RoundingMethod, RoundingParam
+from idsse.common.sci.utils import Pixel, Coord, Coords, coordinate_pairs_to_axes, round_scalar
+from idsse.common.utils import RoundingMethod, RoundingParam
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ def rasterize(
     geometry: str | Geometry,
     grid_proj: GridProj | None = None,
     rounding: RoundingParam = RoundingMethod.FLOOR,
-) -> tuple[numpy.array]:
+) -> tuple[np.array]:
     """Takes a geographic geometry (specified with lon/lat) and determines all the
     associated pixels in the translated space (as specified by grid_proj).
 
@@ -54,7 +54,7 @@ def rasterize(
         TypeError: When the geometry type is not supported
 
     Returns:
-        tuple[numpy.array]: First array represent the x-coordinate and the seconde the y.
+        tuple[np.array]: First array represent the x-coordinate and the seconde the y.
     """
     if isinstance(geometry, str):
         geometry = from_wkt(geometry)
@@ -66,12 +66,12 @@ def rasterize(
     if isinstance(geometry, Polygon):
         return rasterize_polygon(geometry, grid_proj, rounding)
     if isinstance(geometry, MultiPolygon):
-        x_coords = numpy.empty(0, dtype=numpy.int32)
-        y_coords = numpy.empty(0, dtype=numpy.int32)
+        x_coords = np.empty(0, dtype=np.int32)
+        y_coords = np.empty(0, dtype=np.int32)
         for poly in geometry.geoms:
             poly_coords = rasterize_polygon(poly, grid_proj, rounding)
-            x_coords = numpy.concatenate((x_coords, poly_coords[0]))
-            y_coords = numpy.concatenate((y_coords, poly_coords[1]))
+            x_coords = np.concatenate((x_coords, poly_coords[0]))
+            y_coords = np.concatenate((y_coords, poly_coords[1]))
 
         return x_coords, y_coords
 
@@ -82,7 +82,7 @@ def rasterize_point(
     point: str | Coord | Point,
     grid_proj: GridProj | None = None,
     rounding: RoundingParam | None = RoundingMethod.FLOOR,
-) -> tuple[numpy.array]:
+) -> tuple[np.array]:
     """Takes a geographic Point (specified with lon/lat) and determines the
     associated pixel in the translated space (as specified by grid_proj).
 
@@ -97,7 +97,7 @@ def rasterize_point(
         TypeError: When the point arg does not represent a Point
 
     Returns:
-        Tuple[numpy.array]: First array represent the x-coordinate and the seconde the y.
+        Tuple[np.array]: First array represent the x-coordinate and the seconde the y.
     """
     if isinstance(point, str):
         point = from_wkt(point)
@@ -111,11 +111,17 @@ def rasterize_point(
 
     if grid_proj is not None:
         return coordinate_pairs_to_axes(
-            [grid_proj.map_geo_to_pixel(*coord, rounding)], dtype=numpy.int64
+            [grid_proj.map_geo_to_pixel(*coord, rounding)], dtype=np.int64
         )
 
     return coordinate_pairs_to_axes(
-        [tuple(round_values(*coord, rounding=rounding))], dtype=numpy.int64
+        [
+            (
+                round_scalar(coord[0], rounding=rounding),
+                round_scalar(coord[1], rounding=rounding),
+            )
+        ],
+        dtype=np.int64,
     )
 
 
@@ -123,7 +129,7 @@ def rasterize_linestring(
     linestring: str | Sequence[Coord] | LineString,
     grid_proj: GridProj | None = None,
     rounding: RoundingParam | None = RoundingMethod.FLOOR,
-) -> tuple[numpy.array]:
+) -> tuple[np.array]:
     """Takes a geographic LineString (specified with lon/lat) and determines all the
     associated pixels in the translated space (as specified by grid_proj).
 
@@ -139,7 +145,7 @@ def rasterize_linestring(
         TypeError: When the line_string arg does not represent a LineString
 
     Returns:
-        tuple[numpy.array]: First array represent the x-coordinate and the seconde the y.
+        tuple[np.array]: First array represent the x-coordinate and the seconde the y.
     """
     if isinstance(linestring, str):
         linestring = from_wkt(linestring)
@@ -148,17 +154,17 @@ def rasterize_linestring(
         x_coords, y_coords = rasterize_linestring(linestring.exterior)
         for interior in linestring.interiors:
             interior_coords = rasterize_linestring(interior)
-            x_coords = numpy.concatenate((x_coords, interior_coords[0]))
-            y_coords = numpy.concatenate((y_coords, interior_coords[1]))
+            x_coords = np.concatenate((x_coords, interior_coords[0]))
+            y_coords = np.concatenate((y_coords, interior_coords[1]))
         return x_coords, y_coords
 
     if isinstance(linestring, MultiPolygon):
-        x_coords = numpy.empty(0, dtype=numpy.int32)
-        y_coords = numpy.empty(0, dtype=numpy.int32)
+        x_coords = np.empty(0, dtype=np.int32)
+        y_coords = np.empty(0, dtype=np.int32)
         for poly in linestring.geoms:
             interior_coords = rasterize_linestring(poly)
-            x_coords = numpy.concatenate((x_coords, interior_coords[0]))
-            y_coords = numpy.concatenate((y_coords, interior_coords[1]))
+            x_coords = np.concatenate((x_coords, interior_coords[0]))
+            y_coords = np.concatenate((y_coords, interior_coords[1]))
         return x_coords, y_coords
 
     if isinstance(linestring, LineString):
@@ -172,7 +178,13 @@ def rasterize_linestring(
         linestring = geographic_linestring_to_pixel(coords, grid_proj, rounding)
     else:
         linestring = LineString(
-            [round_values(*coord, rounding=rounding) for coord in linestring.coords]
+            [
+                (
+                    round_scalar(coord[0], rounding=rounding),
+                    round_scalar(coord[1], rounding=rounding),
+                )
+                for coord in linestring.coords
+            ]
         )
 
     return pixels_for_linestring(linestring)
@@ -182,7 +194,7 @@ def rasterize_polygon(
     polygon: str | Sequence[Coords] | Polygon,
     grid_proj: GridProj | None = None,
     rounding: RoundingParam | None = RoundingMethod.FLOOR,
-) -> tuple[numpy.array]:
+) -> tuple[np.array]:
     """Takes a geographic Polygon (specified with lon/lat) and determines all the
     associated pixels in the translated space (as specified by grid_proj).
 
@@ -197,7 +209,7 @@ def rasterize_polygon(
         TypeError: When the polygon arg does not represent a Polygon
 
     Returns:
-        Tuple[numpy.array]: First array represent the x-coordinate and the seconde the y.
+        Tuple[np.array]: First array represent the x-coordinate and the seconde the y.
     """
     if isinstance(polygon, str):
         polygon = from_wkt(polygon)
@@ -216,7 +228,16 @@ def rasterize_polygon(
     if grid_proj is not None:
         polygon = geographic_polygon_to_pixel(coords, grid_proj, rounding)
     else:
-        coords = [[round_values(*coord, rounding=rounding) for coord in ring] for ring in coords]
+        coords = [
+            [
+                (
+                    round_scalar(coord_pair[0], rounding=rounding),
+                    round_scalar(coord_pair[1], rounding=rounding),
+                )
+                for coord_pair in ring
+            ]
+            for ring in coords
+        ]
         polygon = Polygon(coords[0], holes=coords[1:])
 
     return pixels_in_polygon(polygon)
@@ -338,26 +359,26 @@ def geographic_polygon_to_pixel(
     return Polygon(exterior, holes=interiors)
 
 
-def pixels_for_linestring(linestring: LineString) -> tuple[numpy.array]:
+def pixels_for_linestring(linestring: LineString) -> tuple[np.array]:
     """Determine the pixels that represent the specified LineString
 
     Args:
         linestring (LineString): Shapely geometry with vertices defined by x,y in pixel space
 
     Returns:
-        Tuple[numpy.array]: First array represent the x-coordinate and the seconde the y.
+        Tuple[np.array]: First array represent the x-coordinate and the seconde the y.
     """
-    return coordinate_pairs_to_axes(_pixels_for_linestring(linestring), dtype=numpy.int64)
+    return coordinate_pairs_to_axes(_pixels_for_linestring(linestring), dtype=np.int64)
 
 
-def pixels_in_polygon(poly: Polygon) -> tuple[numpy.ndarray]:
+def pixels_in_polygon(poly: Polygon) -> tuple[np.ndarray]:
     """Determine the pixels that represent the specified Polygon
 
     Args:
         poly (Polygon): Shapely geometry with vertices defined by x,y in pixel space
 
     Returns:
-        Tuple[numpy.array]: First array represent the x-coordinate and the seconde the y.
+        Tuple[np.array]: First array represent the x-coordinate and the seconde the y.
     """
     pixels = _pixels_for_polygon(poly.exterior)
     for inner in poly.interiors:
@@ -366,7 +387,7 @@ def pixels_in_polygon(poly: Polygon) -> tuple[numpy.ndarray]:
             if pixel not in pixels_on_inner_edge:
                 pixels.remove(pixel)
 
-    return coordinate_pairs_to_axes(pixels, dtype=numpy.int64)
+    return coordinate_pairs_to_axes(pixels, dtype=np.int64)
 
 
 def _pixels_for_linestring(linestring: LineString) -> list[Pixel]:
@@ -419,14 +440,14 @@ def _pixels_for_line_seg(
         step = 1 if x1 < x2 else -1
         if exclude_first:
             x1 += step
-        pixels = set((x, round_(slope * x + intercept)) for x in range(x1, x2 + step, step))
+        pixels = set((x, np.round(slope * x + intercept)) for x in range(x1, x2 + step, step))
     else:
         slope = dx / dy
         intercept = x1 - slope * y1
         step = 1 if y1 < y2 else -1
         if exclude_first:
             y1 += step
-        pixels = set((round_(slope * y + intercept), y) for y in range(y1, y2 + step, step))
+        pixels = set((np.round(slope * y + intercept), y) for y in range(y1, y2 + step, step))
 
     pixels = list(pixels)
     pixels.sort()

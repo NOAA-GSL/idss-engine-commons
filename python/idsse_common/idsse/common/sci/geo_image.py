@@ -21,7 +21,6 @@ import numpy as np
 from PIL import Image
 from shapely import from_geojson, from_wkt, Geometry, LineString, MultiPolygon, Polygon
 
-from idsse.common.utils import round_
 from idsse.common.sci.grid_proj import GridProj
 from idsse.common.sci.vectaster import geographic_to_pixel, rasterize
 
@@ -83,9 +82,9 @@ class ColorPalette(NamedTuple):
                 anchors = [x / max_value * 255 for x in anchors]
             xp = anchors
         else:
-            xp = [round_(pos, rounding="floor") for pos in np.linspace(0, 255, num=num)]
+            xp = [math.floor(float(pos)) for pos in np.linspace(0, 255, num=num)]
         lut = list(
-            (round_(r, 0, "floor"), round_(g, 0, "floor"), round_(b, 0, "floor"))
+            (math.floor(float(r)), math.floor(float(g)), math.floor(float(b)))
             for (r, g, b) in zip(*list(np.interp(range(256), xp, fp) for fp in np.array(colors).T))
         )
         return ColorPalette(lut, 256, 0, 255, 0, min_value, max_value)
@@ -364,8 +363,8 @@ class GeoImage:
         if geo:
             i, j = self.proj.map_geo_to_pixel(i, j)
 
-        i = math.floor(i) * self.scale
-        j = math.floor(j) * self.scale
+        i = math.floor(float(i)) * self.scale
+        j = math.floor(float(j)) * self.scale
         self.rgb_array[i : i + self.scale, j : j + self.scale] = color
 
     def set_pixel_for_shape(self, shape: Geometry, color: Color, geo: bool = True):

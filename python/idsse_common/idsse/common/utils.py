@@ -21,7 +21,7 @@ from datetime import datetime, timedelta, UTC
 from enum import Enum
 from subprocess import PIPE, Popen, TimeoutExpired
 from time import sleep
-from typing import Any, Generator
+from typing import Any, Generator, Self
 from uuid import UUID
 
 logger = logging.getLogger(__name__)
@@ -32,6 +32,15 @@ class RoundingMethod(Enum):
 
     ROUND = "ROUND"
     FLOOR = "FLOOR"
+    CEIL = "CEIL"
+
+    @staticmethod
+    def from_str(value: str) -> Self:
+        """Cast a RoundingMethod or string to a `RoundingMethod` constant"""
+        try:
+            return RoundingMethod[value.upper()]
+        except KeyError as exc:
+            raise ValueError(f"Unsupported rounding method {value}") from exc
 
 
 RoundingParam = str | RoundingMethod
@@ -361,7 +370,7 @@ def round_half_away(number: int | float, precision: int = 0) -> int | float:
     | -14.5 |     -14 |               -15 |
 
     Args:
-        number (int | float | numpy.int | numpy.float_): a scalar value from a Python/numpy array
+        number (int | float | numpy.int | numpy.float64): a scalar value from a Python/numpy array
         precision (int): number of decimal places to preserve.
 
     Returns:
@@ -376,7 +385,7 @@ def round_half_away(number: int | float, precision: int = 0) -> int | float:
         if is_less_than_half
         else _round_away_from_zero(factored_number)
     ) / factor
-    return int(rounded_number) if precision == 0 else float(rounded_number)
+    return int(float(rounded_number)) if precision == 0 else float(rounded_number)
 
 
 def round_(
@@ -395,7 +404,7 @@ def round_(
     | -14.5 |     -14 |               -15 |
 
     Args:
-        number (int | float | numpy.int | numpy.float_): a number, often from a Python/numpy array
+        number (int | float | numpy.int | numpy.float64): a number, often from a Python/numpy array
         precision (int): number of decimal places to preserve. Defaults to 0.
         rounding (RoundingMethod | str, optional): how number should be rounded. Either "nearest
             integer, ties away from zero", or math.floor(). Defaults to RoundingMethod.ROUND.
@@ -407,13 +416,10 @@ def round_(
         (int | float): rounded number as int if precision is 0, otherwise as float
     """
     if isinstance(rounding, str):  # cast str to RoundingMethod enum
-        try:
-            rounding = RoundingMethod[rounding.upper()]
-        except KeyError as exc:
-            raise ValueError(f"Unsupported rounding method {rounding}") from exc
+        RoundingMethod.from_str(rounding)
 
     if rounding is RoundingMethod.ROUND:
-        return round_half_away(number, precision)
+        return round(number, ndigits=precision)
     if rounding is RoundingMethod.FLOOR:
         return math.floor(number)
     raise ValueError("rounding method cannot be None")
@@ -432,7 +438,7 @@ def round_values(
         precision (int): Number of decimal places to preserve. Default is 0.
     """
     if rounding is None:
-        return [int(v) for v in args]
+        return [int(float(v)) for v in args]
     return [round_(v, precision=precision, rounding=rounding) for v in args]
 
 
