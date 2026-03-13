@@ -40,14 +40,14 @@ idsse/common/rabbitmq_rpc.py        110      2    98%
 idsse/common/rabbitmq_utils.py      226     31    86%
 idsse/common/sci/__init__.py          0      0   100%
 idsse/common/sci/bit_pack.py         85      3    96%
-idsse/common/sci/geo_image.py       236     17    93%
-idsse/common/sci/grid_proj.py       132      1    99%
+idsse/common/sci/geo_image.py       235     17    93%
+idsse/common/sci/grid_proj.py       133      1    99%
 idsse/common/sci/netcdf_io.py        69     38    45%
-idsse/common/sci/utils.py            10      0   100%
+idsse/common/sci/utils.py            28      5    82%
 idsse/common/sci/vectaster.py       190     17    91%
-idsse/common/utils.py               185     23    88%
+idsse/common/utils.py               189     25    87%
 idsse/common/validate_schema.py      40      0   100%
 -----------------------------------------------------
-TOTAL                              1802    173    90%
+TOTAL                              1824    180    90%
 
-============================= 275 passed in 6.27s ==============================
+============================= 275 passed in 6.63s ==============================
