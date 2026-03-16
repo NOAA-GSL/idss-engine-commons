@@ -31,9 +31,6 @@ RUN conda config --set solver classic && \
     netcdf4==1.7.4 \
     h5netcdf==1.8.1 \
     h5py==3.15.1 \
-    zarr==3.1.5 \
-    dask==2026.1.2 \
-    xarray==2026.2.0 \
     pygrib==2.1.8 \
     pyproj==3.7.2 \
     awscli==2.34.7 \
@@ -50,7 +47,7 @@ RUN conda config --set solver classic && \
 
 # Get the latest package updates to keep security vulnerabilities down
 #RUN apk update && apk upgrade # This is for alpine, but we are using miniconda which is debian based, so we use conda update --all instead
-RUN pip3 install --no-cache --upgrade pip pcodec
+RUN pip3 install --no-cache --upgrade pip zarr==3.1.5 dask==2026.1.2 xarray==2026.2.0 pcodec==1.0.1
 
 # Install idsse common python code
 WORKDIR /python/idsse_common
