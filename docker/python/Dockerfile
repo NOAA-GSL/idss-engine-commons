@@ -14,20 +14,24 @@
 #    pip3 install --no-cache --upgrade pip setuptools wheel && \
 #    if [ ! -e /usr/bin/pip ]; then ln -s pip3 /usr/bin/pip ; fi
 
-FROM python:3.12.2-alpine
+FROM python:3.13.12-alpine3.23
+# https://hub.docker.com/layers/library/python/3.13.12-alpine3.23/
 
 # install additional packages base packages common among all microservices
 RUN pip3 install --no-cache \
     pika==1.3.1 \
     requests==2.32.5 \
-    flask==2.3.3 \
+    flask==3.1.3 \
     python-dateutil==2.9.0 \
     jsonschema==4.25.1 \
     pycouchdb==1.16.0 \
-    gunicorn==22.0.0 \
+    gunicorn==25.1.0 \
     geojson==3.2.0 \
     python-logging-rabbitmq==2.0.0 \
-    flask-cors==4.0.2
+    flask-cors==6.0.2
+
+# setuptools no longer default dependency but is needed to install idsse common code
+RUN pip3 install --no-cache --upgrade setuptools
 
 # Get the latest package updates to keep security vulnerabilities down
 RUN apk update && apk upgrade
