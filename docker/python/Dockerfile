@@ -22,6 +22,7 @@ RUN pip3 install --no-cache \
     pika==1.3.1 \
     requests==2.32.5 \
     flask==3.1.3 \
+    pint==0.25 \
     python-dateutil==2.9.0 \
     jsonschema==4.25.1 \
     pycouchdb==1.16.0 \
