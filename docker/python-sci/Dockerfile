@@ -23,7 +23,8 @@ RUN pip3 install --no-cache --upgrade pip \
     dask==2026.1.2 \
     xarray==2026.2.0 \
     pcodec==1.0.1 \
-    setuptools==82.0.1
+    setuptools==82.0.1 \
+    requests==2.32.5
 
 # Install idsse common python code
 WORKDIR /python/idsse_common

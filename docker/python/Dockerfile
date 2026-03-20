@@ -29,7 +29,8 @@ RUN pip3 install --no-cache \
     gunicorn==25.1.0 \
     geojson==3.2.0 \
     python-logging-rabbitmq==2.0.0 \
-    flask-cors==6.0.2
+    flask-cors==6.0.2 \
+    requests==2.32.5
 
 # setuptools no longer default dependency but is needed to install idsse common code
 RUN pip3 install --no-cache --upgrade setuptools
