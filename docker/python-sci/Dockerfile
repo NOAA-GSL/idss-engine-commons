@@ -5,7 +5,7 @@ RUN pip3 install --no-cache --upgrade pip \
     python-dateutil==2.9.0 \
     pint==0.25 \
     numpy==2.4.2 \
-    netcdf4==1.7.4 \
+    netcdf4==1.7.2 \
     h5netcdf==1.8.1 \
     h5py==3.15.1 \
     pygrib==2.1.8 \
