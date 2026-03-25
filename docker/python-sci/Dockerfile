@@ -1,5 +1,16 @@
+# ------------------------------------------------------------------------------
+# !!! DON'T CHANGE VERSION NUMBERS* !!!
+#   * Managing security vulnerabilities in base images is a challenge and always
+#     changing. Any version update to python base should be done so to an image
+#     with no known vulnerabilities. Reference docker hub python tags for latest
+#     security issues.
+#       Also note that just because a base image doesn't have any current known
+#       vulnerabilities doesn't mean it won't have any in the future as new
+#       vulnerabilities are discovered.
+# ------------------------------------------------------------------------------
 FROM python:3.13.12-slim
 
+# Install explicit system dependency versions ONLY to avoid future breakage
 RUN pip3 install --no-cache --upgrade pip \
     pika==1.3.1 \
     python-dateutil==2.9.0 \
@@ -25,6 +36,7 @@ RUN pip3 install --no-cache --upgrade pip \
     pcodec==1.0.1 \
     setuptools==82.0.1 \
     requests==2.32.5
+
 
 # Install idsse common python code
 WORKDIR /python/idsse_common
