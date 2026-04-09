@@ -67,6 +67,8 @@ class GridProj:
         self._x_offset = 0.0
         self._y_offset = 0.0
         if lower_left_lat is not None and lower_left_lon is not None:
+            # longitude may be defined as positive East, e.g. 233 E instead of -126
+            # lower_left_lon = lower_left_lon if lower_left_lon <= 180 else lower_left_lon - 360
             self._x_offset, self._y_offset = self._transform(lower_left_lon, lower_left_lat)
         self._w = width
         self._h = height
@@ -102,6 +104,24 @@ class GridProj:
             grid_args["dy"],
         )
 
+    @classmethod
+    def from_desi_graphics_dict(cls, graphics_proj: dict[str, str]) -> Self:
+        """Create GridProj instance from a desi-graphics Projection dictionary"""
+        # build CRS from projection spec
+        crs = CRS.from_proj4(
+            f"+proj={graphics_proj['gridType']} +lat_0={graphics_proj['Latin1InDegrees']} "
+            f"+lat_1={graphics_proj['Latin2InDegrees']} +lon_0={graphics_proj['LoVInDegrees']}"
+        )
+        return GridProj(
+            crs,
+            lower_left_lat=graphics_proj["latitudeOfFirstGridPointInDegrees"],
+            lower_left_lon=graphics_proj["longitudeOfFirstGridPointInDegrees"],
+            width=graphics_proj["Nx"],
+            height=graphics_proj["Ny"],
+            dx=graphics_proj["DxInMetres"],
+            dy=graphics_proj["DyInMetres"],
+        )
+
     @property
     def width(self):
         """Provides access grid space width"""
@@ -116,6 +136,24 @@ class GridProj:
     def shape(self):
         """Provides access grid space shape: (width, height)"""
         return self._w, self._h
+
+    def to_proj_grid_spec(self) -> tuple[str, str]:
+        """Convert a GridProj instance to string representations (proj_spec and grid_spec).
+
+        These strings can be persisted, for example in attributes of a file, so future, disjointed
+        program can reconstruct this instance using `GridProj.from_proj_grid_spec()`.
+
+        Returns:
+            (tuple[str, str]): the `proj_spec` and `grid_spec` strings, respectively.
+        """
+        proj_str = self._trans.target_crs.to_proj4()
+        # calculate the 0,0 (a.k.a. lower left) pixel, which isn't accessible as a property
+        lat_ll, lon_ll = self.map_pixel_to_geo(0, 0)
+        grid_str = (
+            f"+dx={self._dx} +dy={self._dy} +w={self.width} +h={self.height} "
+            f"+lat_ll={lat_ll} +lon_ll={lon_ll}"
+        )
+        return proj_str, grid_str
 
     def flip(self, flip: Flip = Flip.BOTH):
         """Reverse the order of pixels for a given orientation
