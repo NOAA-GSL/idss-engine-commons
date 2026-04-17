@@ -15,6 +15,7 @@ RUN pip3 install --no-cache --upgrade pip \
     pika==1.3.1 \
     python-dateutil==2.9.0 \
     pint==0.25 \
+    pint-xarray==0.6.1 \
     numpy==2.4.2 \
     netcdf4==1.7.2 \
     h5netcdf==1.8.1 \
@@ -34,6 +35,7 @@ RUN pip3 install --no-cache --upgrade pip \
     dask==2026.1.2 \
     xarray==2026.2.0 \
     s3fs==2026.3.0 \
+    boto3==1.42.84 \
     pcodec==1.0.1 \
     setuptools==82.0.1 \
     requests==2.32.5
