@@ -148,7 +148,10 @@ class GridProj:
         """
         proj_str = self._trans.target_crs.to_proj4()
         # calculate the 0,0 (a.k.a. lower left) pixel, which isn't accessible as a property
+        # pylint: disable=unpacking-non-sequence
         lat_ll, lon_ll = self.map_pixel_to_geo(0, 0)
+        # pylint: enable=unpacking-non-sequence
+
         grid_str = (
             f"+dx={self._dx} +dy={self._dy} +w={self.width} +h={self.height} "
             f"+lat_ll={lat_ll} +lon_ll={lon_ll}"
