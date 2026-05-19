@@ -36,6 +36,7 @@ RUN pip3 install --no-cache --upgrade pip \
     xarray==2026.2.0 \
     s3fs==2026.3.0 \
     boto3==1.42.84 \
+    obstore==0.9.4 \
     pcodec==1.0.1 \
     setuptools==82.0.1 \
     requests==2.32.5
