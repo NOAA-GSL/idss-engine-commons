@@ -12,6 +12,7 @@
 # -------------------------------------------------------------------------------
 import fnmatch
 import os
+import re
 
 from abc import abstractmethod, ABC
 from collections.abc import Sequence
@@ -52,7 +53,7 @@ class ProtocolUtils(ABC):
             bool: Returns True if copy is successful
         """
 
-    def get_path(self, issue: datetime, valid: datetime, **kwargs) -> str:
+    def get_path(self, issue: datetime, valid: datetime | None, **kwargs) -> str:
         """Delegates to instant PathBuilder to get full path given issue and valid
 
         Args:
@@ -63,11 +64,11 @@ class ProtocolUtils(ABC):
         Returns:
             str: Absolute path to file or object
         """
-        lead = TimeDelta(valid - issue)
+        lead = TimeDelta(valid - issue) if issue and valid else None
         return self.path_builder.build_path(issue=issue, valid=valid, lead=lead, **kwargs)
 
     def check_for(self, issue: datetime, valid: datetime, **kwargs) -> tuple[datetime, str] | None:
-        """Checks if an object passed issue/valid exists
+        """Checks if a remote (HTTP server, S3, etc.) file exists, based on issueDt and validDt.
 
         Args:
             issue (datetime): The issue date/time used to format the path to the object's location
@@ -76,8 +77,7 @@ class ProtocolUtils(ABC):
 
         Returns:
             [tuple[datetime, str] | None]: A tuple of the valid date/time (indicated by object's
-                                            location) and location (path) of an object, or None
-                                            if object does not exist
+            location) and location (path) of an object, or None if object does not exist
         """
         lead = TimeDelta(valid - issue)
         file_path = self.get_path(issue, valid)
@@ -196,24 +196,21 @@ class ProtocolUtils(ABC):
         return valid_and_file
 
     def _get_unique_issues(
-        self,
-        dir_paths: list[str],
-        num_issues: int | None,
-        max_workers: int,
+        self, filepaths: list[str], num_issues: int | None, max_workers: int
     ) -> list[datetime]:
         """
-        Based on a list of server directory paths, find all issue_dts on the server
-        that seem ready (have valid_dt files). Server network calls will be made in parallel,
-        up to `max_workers` number of threads at a time.
+        Based on a list of server filepaths, find all issue_dts on the server
+        that seem ready (have 1 or more valid_dt files). Server network calls will be made in
+        parallel, up to `max_workers` number of threads at a time.
 
         Returns:
             list[datetime]: A list of unique issue_dts confirmed to be ready on the server
         """
         ready_issues: set[datetime] = set()
-        paths_to_request = dir_paths  # create local copy, because we're going to mutate
+        paths_to_request = filepaths  # create local copy, because we're going to mutate
 
         target_num_issues = num_issues if num_issues else len(paths_to_request)
-        # if caller only asked for 1, 2, 6, etc. issue_dts, we don't need to use 24 threads
+        # if caller only asked for 2 or 3 issue_dts, we don't need to use 24 threads
         thread_count = min(max_workers, target_num_issues)
 
         with ThreadPoolExecutor(thread_count, "AwsLsThread") as pool:
@@ -247,14 +244,16 @@ class ProtocolUtils(ABC):
 
         Returns:
             Sequence[tuple[datetime, str]]: A sequence of tuples with valid date/time (indicated by
-                                            object's location) and the object's location (path).
-                                            Empty Sequence if no valids found for given time range.
+                object's location) and the object's location (path). Empty Sequence if no valids
+                found for given time range.
         """
         issues_set: set[datetime] = set()
-        # sort files alphabetically in reverse; this should give us the longest lead time first
-        # which is more indicative that the issueDt is fully available on this server
+        # sort files alphabetically in reverse; this should give us the longest lead time first...
+        # not that that tells us the issueDt is fully available on this server
+        # Target child filepaths that end in <file_ext> or <file_ext>/, and get their issuance
         valid_filepaths_in_dir = sorted(
-            (f for f in self.ls(dir_path) if f.endswith(self.path_builder.file_ext)), reverse=True
+            (f for f in self.ls(dir_path) if re.search(rf"{self.path_builder.file_ext}/?$", f)),
+            reverse=True,
         )
 
         for valid_file_path in valid_filepaths_in_dir:
