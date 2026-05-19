@@ -9,6 +9,7 @@
 #     Mackenzie Grimes (1)
 #
 # -------------------------------------------------------------------------------
+# pylint: disable=invalid-name
 
 import logging
 import os
