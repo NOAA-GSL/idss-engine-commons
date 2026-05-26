@@ -1,23 +1,24 @@
 ============================= test session starts ==============================
-platform linux -- Python 3.11.15, pytest-9.0.2, pluggy-1.6.0
+platform linux -- Python 3.11.15, pytest-9.0.3, pluggy-1.6.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
-plugins: cov-4.1.0, pytest_httpserver-1.1.5
-collected 275 items
+plugins: zarr-3.1.5, pytest_httpserver-1.1.5, cov-4.1.0
+collected 280 items
 
 test/sci/test_bit_pack.py ........                                       [  2%]
 test/sci/test_geo_image.py ......................                        [ 10%]
-test/sci/test_grid_proj.py ....................................          [ 24%]
-test/sci/test_vectaster.py ...............                               [ 29%]
-test/test_aws_utils.py ...................                               [ 36%]
-test/test_config.py ............                                         [ 40%]
-test/test_http_utils.py .............                                    [ 45%]
-test/test_json_message.py ...........                                    [ 49%]
+test/sci/test_grid_proj.py ....................................          [ 23%]
+test/sci/test_vectaster.py ...............                               [ 28%]
+test/test_aws_utils.py ....................                              [ 36%]
+test/test_boto3_utils.py ....                                            [ 37%]
+test/test_config.py ............                                         [ 41%]
+test/test_http_utils.py .............                                    [ 46%]
+test/test_json_message.py ...........                                    [ 50%]
 test/test_log_util.py .......                                            [ 52%]
-test/test_path_builder.py ...................                            [ 58%]
+test/test_path_builder.py ...................                            [ 59%]
 test/test_rabbitmq_rpc.py .........                                      [ 62%]
-test/test_rabbitmq_utils.py ........................                     [ 70%]
+test/test_rabbitmq_utils.py ........................                     [ 71%]
 test/test_utils.py ...................................                   [ 83%]
-test/test_validate_criteria_schema.py ......                             [ 85%]
+test/test_validate_criteria_schema.py ......                             [ 86%]
 test/test_validate_das_schema.py ...............                         [ 91%]
 test/test_validate_das_web_schema.py .........                           [ 94%]
 test/test_validate_event_port_schema.py ......                           [ 96%]
@@ -30,24 +31,25 @@ Name                              Stmts   Miss  Cover
 -----------------------------------------------------
 idsse/common/__init__.py              0      0   100%
 idsse/common/aws_utils.py            43      2    95%
+idsse/common/boto3_utils.py          77     30    61%
 idsse/common/config.py               69      5    93%
 idsse/common/http_utils.py           40      4    90%
 idsse/common/json_message.py         24      1    96%
 idsse/common/log_util.py             41      3    93%
 idsse/common/path_builder.py        211     22    90%
-idsse/common/protocol_utils.py       91      4    96%
+idsse/common/protocol_utils.py       92      4    96%
 idsse/common/rabbitmq_rpc.py        110      2    98%
 idsse/common/rabbitmq_utils.py      226     31    86%
 idsse/common/sci/__init__.py          0      0   100%
 idsse/common/sci/bit_pack.py         85      3    96%
 idsse/common/sci/geo_image.py       235     17    93%
-idsse/common/sci/grid_proj.py       133      1    99%
+idsse/common/sci/grid_proj.py       142      7    95%
 idsse/common/sci/netcdf_io.py        69     38    45%
-idsse/common/sci/utils.py            28      5    82%
+idsse/common/sci/utils.py            31      7    77%
 idsse/common/sci/vectaster.py       190     17    91%
 idsse/common/utils.py               189     25    87%
 idsse/common/validate_schema.py      40      0   100%
 -----------------------------------------------------
-TOTAL                              1824    180    90%
+TOTAL                              1914    218    89%
 
-============================= 275 passed in 6.60s ==============================
+============================= 280 passed in 6.63s ==============================
