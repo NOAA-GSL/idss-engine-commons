@@ -37,26 +37,34 @@ EXAMPLE_FILES = [
 # fixtures
 @fixture
 def aws_utils() -> AwsUtils:
-    EXAMPLE_BASE_DIR = "s3://noaa-nbm-grib2-pds/"
-    EXAMPLE_SUB_DIR = (
-        "blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/{issue.hour:02d}/core/"
+    return AwsUtils(
+        basedir="s3://noaa-nbm-grib2-pds/",
+        subdir="blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/{issue.hour:02d}/core/",
+        file_base="blend.t{issue.hour:02d}z.core.f{lead.hour:03d}",
+        file_ext=".co.grib2",
     )
-    EXAMPLE_FILE_BASE = "blend.t{issue.hour:02d}z.core.f{lead.hour:03d}"
-    EXAMPLE_FILE_EXT = ".co.grib2"
-
-    return AwsUtils(EXAMPLE_BASE_DIR, EXAMPLE_SUB_DIR, EXAMPLE_FILE_BASE, EXAMPLE_FILE_EXT)
 
 
 @fixture
 def aws_utils_with_wild() -> AwsUtils:
-    EXAMPLE_BASE_DIR = "s3://noaa-nbm-grib2-pds/"
-    EXAMPLE_SUB_DIR = (
-        "blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/{issue.hour:02d}/core/"
+    return AwsUtils(
+        basedir="s3://noaa-nbm-grib2-pds/",
+        subdir="blend.{issue.year:04d}{issue.month:02d}{issue.day:02d}/{issue.hour:02d}/core/",
+        file_base="blend.t{issue.hour:02d}z.core.f?{lead.hour:02d}",
+        file_ext=".co.grib2",
     )
-    EXAMPLE_FILE_BASE = "blend.t{issue.hour:02d}z.core.f?{lead.hour:02d}"
-    EXAMPLE_FILE_EXT = ".co.grib2"
 
-    return AwsUtils(EXAMPLE_BASE_DIR, EXAMPLE_SUB_DIR, EXAMPLE_FILE_BASE, EXAMPLE_FILE_EXT)
+
+@fixture
+def aws_utils_issue_file() -> AwsUtils:
+    return AwsUtils(
+        basedir="s3://gsl-desi-2/",
+        subdir="NBM/{issue.year:04d}-{issue.month:02d}-{issue.day:02d}/",
+        file_base=(
+            "{issue.year:04d}{issue.month:02d}{issue.day:02d}_{issue.hour:02d}{issue.minute:02d}"
+        ),
+        file_ext=".zarr",
+    )
 
 
 @fixture
@@ -75,6 +83,13 @@ def mock_exec_cmd(monkeypatch: MonkeyPatch) -> Mock:
     mock_function = Mock(side_effect=get_files_for_dir)
     monkeypatch.setattr("idsse.common.aws_utils.exec_cmd", mock_function)
     return mock_function
+
+
+@fixture
+def mock_datetime(monkeypatch: MonkeyPatch) -> Mock:
+    mock_obj = Mock(name="mock_datetime", spec=datetime, now=Mock())
+    monkeypatch.setattr("idsse.common.protocol_utils.datetime", mock_obj)
+    return mock_obj
 
 
 # test class methods
@@ -213,6 +228,30 @@ def test_get_issues_latest_issue_default_today(
     # should have ls'd the 13Z directory in AWS
     aws_dir = mock_exec_cmd.call_args[0][0][3]
     assert aws_utils.path_builder.parse_dir(aws_dir)["issue.hour"] == example_datetimes[1].hour
+
+
+def test_get_issues_unique_issue_file(
+    aws_utils_issue_file: AwsUtils, mock_exec_cmd: Mock, mock_datetime: Mock
+):
+    ls_results = [
+        "PRE 20250101_1300.zarr/",
+        "PRE 20250101_1200.zarr/",
+        "PRE 20250101_1000.zarr/",
+        "PRE 20250101_0900.zarr/",
+    ]
+    # 1st and 3rd ls() calls return file list, 2nd returns nothing
+    mock_exec_cmd.side_effect = [ls_results, ls_results, [], ls_results]
+    # simulate datetime at fixed time for testing purposes
+    example_datetime = datetime(2025, 1, 1, 13, 59, tzinfo=UTC)
+    mock_datetime.now = Mock(side_effect=None, return_value=example_datetime)
+    expected_issues_count = 3
+
+    result = aws_utils_issue_file.get_issues(num_issues=expected_issues_count, max_workers=1)
+
+    assert len(result) == expected_issues_count
+    assert result[0] == datetime(2025, 1, 1, 13, 0, tzinfo=UTC)
+    assert result[1] == datetime(2025, 1, 1, 12, 0, tzinfo=UTC)
+    assert result[2] == datetime(2025, 1, 1, 10, 0, tzinfo=UTC)  # 11z issuance wasn't available
 
 
 def test_get_valids_all(aws_utils: AwsUtils, mock_exec_cmd):

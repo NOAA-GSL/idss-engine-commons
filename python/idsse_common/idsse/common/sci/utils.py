@@ -65,8 +65,9 @@ def round_scalar(value: Scalar, rounding: RoundingParam) -> Scalar:
     raise ValueError(f"Unsupported rounding method: {rounding}")
 
 
+# NumPy/Zarr utilities that don't require their own module yet
 # pylint: disable=invalid-name
-def numpy_datetime_to_datetime(np_datetime: np.datetime64, tz=UTC) -> datetime:
+def np_datetime_to_datetime(np_datetime: np.datetime64, tz=UTC) -> datetime:
     """Convert a numpy datetime64 to a timezone-aware Python `datetime` object.
 
     Args:
@@ -76,3 +77,18 @@ def numpy_datetime_to_datetime(np_datetime: np.datetime64, tz=UTC) -> datetime:
     """
     timestamp = (np_datetime - np.datetime64("1970-01-01")) / np.timedelta64(1, "s")
     return datetime.fromtimestamp(timestamp, tz=tz)
+
+
+def datetime_to_np_datetime(datetime_: datetime) -> np.datetime64:
+    """Convert a numpy datetime64 to a timezone-aware Python `datetime` object.
+
+    Args:
+        np_datetime
+        tz (optional, datetime.tz): the assumed timezone of the float value. Defaults to `UTC`
+
+    Returns:
+        (np.datetime64): a numpy datetime, which will stringify as a 0-dimension array with a
+            single float value. E.g. str representation is `array(123456, datetime64['ns'])`.
+    """
+    seconds_since_epoch = datetime_.timestamp() * np.timedelta64(1, "s")
+    return np.datetime64("1970-01-01") + seconds_since_epoch
