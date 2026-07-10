@@ -13,7 +13,6 @@
 # ----------------------------------------------------------------------------------
 import contextvars
 import logging
-import logging.config
 import uuid
 
 from collections.abc import Callable
@@ -34,7 +33,6 @@ from pika.exceptions import (
     StreamLostError,
 )
 from pika.frame import Method
-from pika.spec import Basic
 
 logger = logging.getLogger(__name__)
 
@@ -211,13 +209,7 @@ class Publisher(Thread):
     methods should be called from the same thread as the one used to create the instance.
     """
 
-    def __init__(
-        self,
-        conn_params: Conn,
-        exch_params: Exch,
-        *args,
-        **kwargs,
-    ):
+    def __init__(self, conn_params: Conn, exch_params: Exch, *args, **kwargs):
         """
         Args:
             conn_params (Conn): RabbitMQ Conn parameters to create a new RabbitMQ connection
@@ -337,54 +329,6 @@ class Publisher(Thread):
         return channel
 
 
-# HACK: delete me, should be unused by all services now
-def subscribe_to_queue(
-    connection: Conn | BlockingConnection,
-    rmq_params: RabbitMqParams,
-    on_message_callback: Callable[[Channel, Basic.Deliver, BasicProperties, bytes], None],
-    channel: Channel | None = None,
-) -> tuple[BlockingConnection, BlockingChannel]:
-    """
-    Function that handles setup of consumer of RabbitMQ queue messages, declaring the exchange and
-    queue if needed, and invoking the provided callback when a message is received.
-
-    If an existing BlockingConnection or BlockingChannel are passed, they are used to
-    set up the subscription, but by default a new connection and channel will be established and
-    returned, which the caller can immediately begin doing RabbitMQ operations with.
-
-    For example: start a blocking consume of messages with channel.start_consuming(), or
-    close gracefully with connection.close()
-
-    Args:
-        connection (Conn | BlockingConnection): connection parameters to establish new
-            RabbitMQ connection, or existing RabbitMQ connection to reuse for this consumer.
-        rmq_params (RabbitMqParams): parameters for the RabbitMQ exchange and queue from which to
-            consume messages.
-        on_message_callback (Callable[
-            [BlockingChannel, Basic.Deliver, BasicProperties, bytes], None]):
-            function to handle messages that are received over the subscribed exchange and queue.
-        channel (Channel | None): optional existing (open) RabbitMQ channel to reuse. Default is
-            to create unique channel for this consumer.
-
-    Returns:
-        tuple[BlockingConnection, BlockingChannel]: the connection and channel, which are now open
-            and subscribed to the provided queue.
-    """
-    _connection, _channel, queue_name = _initialize_connection_and_channel(
-        connection, rmq_params, channel
-    )
-
-    # begin consuming messages
-    auto_ack = queue_name == DIRECT_REPLY_QUEUE
-    logger.info("Consuming messages from queue %s with auto_ack: %s", queue_name, auto_ack)
-
-    _channel.basic_qos(prefetch_count=1)
-    _channel.basic_consume(
-        queue=queue_name, on_message_callback=on_message_callback, auto_ack=auto_ack
-    )
-    return _connection, _channel
-
-
 def threadsafe_call(channel: Channel, *functions: Callable):
     """
     This function provides a thread safe way to call pika functions (or functions that call
@@ -434,11 +378,7 @@ def threadsafe_call(channel: Channel, *functions: Callable):
     channel.connection.add_callback_threadsafe(call_if_channel_is_open)
 
 
-def threadsafe_ack(
-    channel: Channel,
-    delivery_tag: int,
-    extra_func: Callable = None,
-):
+def threadsafe_ack(channel: Channel, delivery_tag: int, extra_func: Callable = None):
     """
     This is just a convenance function that acks a message via threadsafe_call
 
@@ -456,10 +396,7 @@ def threadsafe_ack(
 
 
 def threadsafe_nack(
-    channel: Channel,
-    delivery_tag: int,
-    extra_func: Callable = None,
-    requeue: bool = False,
+    channel: Channel, delivery_tag: int, extra_func: Callable = None, requeue: bool = False
 ):
     """
     This is just a convenance function that nacks a message via threadsafe_call
@@ -509,72 +446,6 @@ def blocking_publish(
     )
     done_event.wait()
     return success_flag[0]
-
-
-def _initialize_exchange_and_queue(channel: Channel, params: RabbitMqParams) -> str:
-    """Declare and bind RabbitMQ exchange and queue using the provided channel.
-
-    Returns:
-        str: the name of the newly-initialized queue.
-    """
-    exch, queue = params
-    logger.info("Subscribing to exchange: %s", exch.name)
-
-    # Do not try to declare the default exchange. It already exists
-    if exch.name != "":
-        channel.exchange_declare(exchange=exch.name, exchange_type=exch.type, durable=exch.durable)
-
-    # Do not try to declare or bind built-in queues. They are pseudo-queues that already exist
-    if queue.name.startswith("amq.rabbitmq."):
-        return queue.name
-
-    # If we have a 'private' queue, i.e. one used to support message publishing, not consumed
-    # Set message time-to-live (TTL) to 10 seconds
-    if queue.name.startswith("_"):
-        queue.arguments["x-message-ttl"] = 10 * 1000
-    frame: Method = channel.queue_declare(
-        queue=queue.name,
-        exclusive=queue.exclusive,
-        durable=queue.durable,
-        auto_delete=queue.auto_delete,
-        arguments=queue.arguments,
-    )
-
-    # Bind queue to exchange with routing_key. May need to support multiple keys in the future
-    if exch.name != "":
-        logger.info("    binding key %s to queue: %s", queue.route_key, queue.name)
-        channel.queue_bind(queue.name, exch.name, queue.route_key)
-    return frame.method.queue
-
-
-def _initialize_connection_and_channel(
-    connection: Conn,
-    params: RabbitMqParams,
-    channel: Channel | None = None,
-) -> tuple[BlockingConnection, BlockingChannel, str]:
-    """Establish RabbitMQ connection, and declare exchange and queue on new Channel"""
-    if not isinstance(connection, Conn):
-        # connection of unsupported type passed
-        raise ValueError(
-            (
-                f"Cannot use or create new RabbitMQ connection using type {type(connection)}. "
-                "Should be type Conn (a dict with connection parameters)"
-            )
-        )
-
-    _connection = BlockingConnection(connection.connection_parameters)
-    logger.info(
-        "Established new RabbitMQ connection to %s on port %i", connection.host, connection.port
-    )
-
-    if channel is None:
-        logger.info("Creating new RabbitMQ channel")
-        _channel = _connection.channel()
-    else:
-        _channel = channel
-
-    queue_name = _initialize_exchange_and_queue(_channel, params)
-    return _connection, _channel, queue_name
 
 
 def _setup_exch_and_queue(channel: Channel, exch: Exch, queue: Queue):

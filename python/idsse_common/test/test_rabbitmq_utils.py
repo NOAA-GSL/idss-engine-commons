@@ -30,7 +30,6 @@ from idsse.common.rabbitmq_utils import (
     RabbitMqParams,
     RabbitMqParamsAndCallback,
     RabbitMqMessage,
-    subscribe_to_queue,
     _publish,
     _setup_exch_and_queue,
     threadsafe_call,
@@ -88,122 +87,6 @@ def mock_connection(mock_channel: Mock) -> Mock:
 
 
 # tests
-def test_connection_params_works(monkeypatch: MonkeyPatch, mock_connection: Mock):
-    mock_blocking_connection = Mock(return_value=mock_connection)
-    monkeypatch.setattr("idsse.common.rabbitmq_utils.BlockingConnection", mock_blocking_connection)
-
-    # run method
-    mock_callback_function = Mock()
-    _connection, _channel = subscribe_to_queue(CONN, RMQ_PARAMS, mock_callback_function)
-
-    # assert correct (mocked) pika calls were made
-    mock_blocking_connection.assert_called_once()
-    _connection.channel.assert_called_once()  # pylint: disable=no-member
-
-    _channel.basic_qos.assert_called_once()
-    _channel.basic_consume.assert_called_once()
-
-    # assert exchange was declared
-    _channel.exchange_declare.assert_called_once_with(
-        exchange=RMQ_PARAMS.exchange.name,
-        exchange_type=RMQ_PARAMS.exchange.type,
-        durable=RMQ_PARAMS.exchange.durable,
-    )
-
-    # assert queue was declared and bound
-    _channel.queue_declare.assert_called_once_with(
-        queue=RMQ_PARAMS.queue.name,
-        exclusive=RMQ_PARAMS.queue.exclusive,
-        durable=RMQ_PARAMS.queue.durable,
-        auto_delete=RMQ_PARAMS.queue.auto_delete,
-        arguments={},
-    )
-
-    _channel.queue_bind.assert_called_once_with(
-        RMQ_PARAMS.queue.name, RMQ_PARAMS.exchange.name, RMQ_PARAMS.queue.route_key
-    )
-
-    # assert queue connected to message callback
-    _channel.basic_consume.assert_called_once_with(
-        queue=RMQ_PARAMS.queue.name, on_message_callback=mock_callback_function, auto_ack=False
-    )
-
-
-def test_private_queue_sets_ttl(monkeypatch: MonkeyPatch, mock_connection: Mock):
-    mock_blocking_connection = Mock(return_value=mock_connection)
-    monkeypatch.setattr("idsse.common.rabbitmq_utils.BlockingConnection", mock_blocking_connection)
-    example_queue = Queue("_my_private_queue", "route_key", True, False, True)
-
-    # run method
-    mock_callback_function = Mock()
-    _connection, _channel = subscribe_to_queue(
-        CONN, RabbitMqParams(RMQ_PARAMS.exchange, example_queue), mock_callback_function
-    )
-
-    # assert correct (mocked) pika calls were made
-    mock_blocking_connection.assert_called_once()
-    _channel.basic_consume.assert_called_once()
-
-    # assert queue was declared with message time-to-live of 10 seconds
-    _channel.queue_declare.assert_called_once_with(
-        queue=example_queue.name,
-        exclusive=example_queue.exclusive,
-        durable=example_queue.durable,
-        auto_delete=example_queue.auto_delete,
-        arguments={"x-message-ttl": 10000},
-    )
-
-
-def test_passing_connection_does_not_create_new(mock_connection: Mock, monkeypatch: MonkeyPatch):
-    mock_callback_function = Mock(name="on_message_callback")
-    mock_blocking_connection = Mock(return_value=mock_connection)
-    monkeypatch.setattr("idsse.common.rabbitmq_utils.BlockingConnection", mock_blocking_connection)
-
-    new_connection, new_channel = subscribe_to_queue(CONN, RMQ_PARAMS, mock_callback_function)
-
-    mock_connection.assert_not_called()
-    assert new_connection == mock_connection
-    # confirm that all channel setup proceeds normally
-    new_channel.basic_consume.assert_called_once_with(
-        queue=RMQ_PARAMS.queue.name, on_message_callback=mock_callback_function, auto_ack=False
-    )
-
-
-def test_passing_unsupported_connection_type_fails():
-    with raises(ValueError) as exc:
-        subscribe_to_queue("bad connection", RMQ_PARAMS, Mock(name="on_message_callback"))
-    assert exc is not None
-
-
-def test_direct_reply_does_not_declare_queue(monkeypatch: MonkeyPatch, mock_connection: Mock):
-    params = RabbitMqParams(
-        Exch("test_criteria_exch", "topic"), Queue("amq.rabbitmq.reply-to", "", True, False, True)
-    )
-
-    mock_blocking_connection = Mock(return_value=mock_connection)
-    monkeypatch.setattr("idsse.common.rabbitmq_utils.BlockingConnection", mock_blocking_connection)
-
-    _, new_channel = subscribe_to_queue(CONN, params, Mock(name="mock_callback"))
-
-    # assert that built-in Direct Reply-to queue was not recreated (pika would fail)
-    new_channel.queue_declare.assert_not_called()
-    new_channel.queue_bind.assert_not_called()
-    new_channel.basic_consume.assert_called_once()
-
-
-def test_default_exchange_does_not_declare_exchange(
-    monkeypatch: MonkeyPatch, mock_connection: Mock
-):
-    params = RabbitMqParams(Exch("", "topic"), Queue("something", "", True, False, True))
-
-    mock_blocking_connection = Mock(return_value=mock_connection)
-    monkeypatch.setattr("idsse.common.rabbitmq_utils.BlockingConnection", mock_blocking_connection)
-
-    _, new_channel = subscribe_to_queue(CONN, params, Mock())
-
-    new_channel.exchange_declare.assert_not_called()
-    new_channel.queue_declare.assert_called_once()
-    new_channel.basic_consume.assert_called_once()
 
 
 def test_simple_publisher(monkeypatch: MonkeyPatch, mock_connection: Mock, mock_channel: Mock):
