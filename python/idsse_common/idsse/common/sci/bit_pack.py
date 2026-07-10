@@ -109,7 +109,7 @@ def pack_to_list(
     pack_info: PackInfo | None = None,
     decimals: int | None = None,
     in_place: bool = True,
-):
+) -> PackData:
     """Preform bit packing of input data, utilizing the the pack_info if provided or
     a derived pack_info if not.
 

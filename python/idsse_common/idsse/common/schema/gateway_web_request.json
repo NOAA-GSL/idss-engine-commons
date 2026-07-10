@@ -1,6 +1,6 @@
 {
   "GatewayWebRequest": {
-    "description": "Definition of an NWSC Gateway request via the web API to publish new Support Profile/Criteria",
+    "description": "Definition of an NWSC Gateway request via the web API to publish new Support Profile/Vulnerability/Criteria",
     "type": "object",
     "properties": {
       "issueDt": { "$ref": "timing.json#/TimeString" },
@@ -12,10 +12,14 @@
       },
       "originator": { "type": "string" },
       "criteria": { "$ref": "criteria.json#/Criteria" },
-      "supportProfile": { "$ref": "support_profile.json#/SupportProfile" }
+      "supportProfile": { "$ref": "support_profile.json#/SupportProfile" },
+      "vulnerability": {
+        "$ref": "partner_vulnerability.json#/PartnerVulnerability"
+      }
     },
     "oneOf": [
       { "required": ["supportProfile", "issueDt"] },
+      { "required": ["vulnerability", "issueDt"] },
       { "required": ["criteria"] }
     ]
   }

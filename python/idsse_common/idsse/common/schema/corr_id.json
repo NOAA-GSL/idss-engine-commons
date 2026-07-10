@@ -1,22 +1,18 @@
 {
-    "CorrId": {
-        "description": "Correlation identification used to track flow through the microservices",
-        "type": "object",
-        "properties": {
-            "originator": {
-                "type": "string",
-                "enum": ["IDSSe", "IMS", "CriteriaBuilder"]
-            },
-            "uuid": {
-                "type": "string",
-                "format": "uuid"
-            },
-            "issueDt": {"$ref": "timing.json#/TimeString"}
-        },
-        "required": [
-            "originator",
-            "uuid",
-            "issueDt"
-        ]
-    }
+  "CorrId": {
+    "description": "Correlation identification used to track flow through the microservices",
+    "type": "object",
+    "properties": {
+      "originator": {
+        "type": "string",
+        "enum": ["IDSSe", "IMS", "NWSConnect", "CriteriaBuilder"]
+      },
+      "uuid": {
+        "type": "string",
+        "format": "uuid"
+      },
+      "issueDt": { "$ref": "timing.json#/TimeString" }
+    },
+    "required": ["originator", "uuid", "issueDt"]
+  }
 }
