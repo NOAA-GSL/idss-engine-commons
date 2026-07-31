@@ -23,6 +23,9 @@ from .protocol_utils import ProtocolUtils
 
 logger = logging.getLogger(__name__)
 
+# all request S3 costs (if any) should be assumed by the AWS account running this code
+REQUEST_PAYER = "requester"
+
 
 class Boto3Utils(ProtocolUtils):
     """Boto3 (AWS) utility class that supports AWS IAM authentication"""
@@ -60,7 +63,9 @@ class Boto3Utils(ProtocolUtils):
         bucket, prefix = path.replace(self.PROTOCOL, "").split("/", maxsplit=1)
         s3 = self._session.client("s3")
         try:
-            response: dict = s3.list_objects_v2(Bucket=bucket, Prefix=prefix, Delimiter="/")
+            response: dict = s3.list_objects_v2(
+                Bucket=bucket, Prefix=prefix, Delimiter="/", RequestPayer=REQUEST_PAYER
+            )
         except PermissionError:
             return []
 
@@ -94,7 +99,12 @@ class Boto3Utils(ProtocolUtils):
 
         s3 = self._session.client("s3")
         try:
-            s3.download_file(Bucket=bucket, Key=object_key, Filename=dest)
+            s3.download_file(
+                Bucket=bucket,
+                Key=object_key,
+                Filename=dest,
+                ExtraArgs={"RequestPayer": REQUEST_PAYER},
+            )
             return True
         except PermissionError:
             return False
