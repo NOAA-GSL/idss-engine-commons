@@ -1,7 +1,7 @@
 ============================= test session starts ==============================
 platform linux -- Python 3.11.15, pytest-9.1.1, pluggy-1.6.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
-plugins: zarr-3.1.5, cov-4.1.0, pytest_httpserver-1.1.5
+plugins: pytest_httpserver-1.1.5, cov-4.1.0, zarr-3.1.5
 collected 280 items
 
 test/sci/test_bit_pack.py ........                                       [  2%]
@@ -31,7 +31,7 @@ Name                              Stmts   Miss  Cover
 -----------------------------------------------------
 idsse/common/__init__.py              0      0   100%
 idsse/common/aws_utils.py            43      2    95%
-idsse/common/boto3_utils.py          77     30    61%
+idsse/common/boto3_utils.py          78     30    62%
 idsse/common/config.py               69      5    93%
 idsse/common/http_utils.py           40      4    90%
 idsse/common/json_message.py         24      1    96%
@@ -50,6 +50,6 @@ idsse/common/sci/vectaster.py       190     17    91%
 idsse/common/utils.py               189     25    87%
 idsse/common/validate_schema.py      40      0   100%
 -----------------------------------------------------
-TOTAL                              1914    218    89%
+TOTAL                              1915    218    89%
 
-============================= 280 passed in 7.14s ==============================
+============================= 280 passed in 6.99s ==============================
