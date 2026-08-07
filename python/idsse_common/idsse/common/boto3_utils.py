@@ -18,6 +18,7 @@ from datetime import datetime, timedelta
 
 import boto3
 import botocore.credentials
+import botocore.exceptions
 
 from .protocol_utils import ProtocolUtils
 
@@ -180,29 +181,39 @@ class AwsSession:
     @staticmethod
     def _assume_role() -> tuple[boto3.Session, datetime]:
         """
-        Assume role specified by `role_arn`, in AWS region `region` and creates new Session.
+        Assume Role specified by `role_arn` in AWS region `region` and creates new Session.
+
+        If no IAM User access key id & secret access key in environment variables, or process is
+        already running under an IAM Role, just returns Session without assuming Role manually.
 
         Returns:
             tuple[boto3.Session, datetime]: Session object (with fresh credentials) and expiration.
         """
         region = os.getenv("AWS_REGION", "us-east-1")
 
+        # look for explicit AWS secrets (nulling out if env var doesn't exist or is empty string)
+        access_key_id = os.getenv("AWS_ACCESS_KEY_ID") or None
+        secret_access_key = os.getenv("AWS_SECRET_ACCESS_KEY") or None
+
         # create session using access keys (may be for an AWS User), then use those temporary
         # user credentials to assume the associated Role
         sts = boto3.client(
             "sts",
             region_name=region,
-            aws_access_key_id=os.getenv("AWS_ACCESS_KEY_ID"),
-            aws_secret_access_key=os.getenv("AWS_SECRET_ACCESS_KEY"),
+            aws_access_key_id=access_key_id,
+            aws_secret_access_key=secret_access_key,
         )
 
-        # infer the role ARN attached to the access key ID in our environment
-        caller_identity: dict = sts.get_caller_identity()
+        try:
+            # infer the role ARN attached to the access key ID in our environment
+            caller_identity: dict = sts.get_caller_identity()
+            # get_caller_identity() succeeded; confirm our identity isn't already a Role
+            assert "assumed-role" not in caller_identity["Arn"]
+        except (botocore.exceptions.ClientError, AssertionError):
+            # may not need ARN at all, if running with assumed role like on an EC2, e.g.
+            # arn:aws:iam:<account>:assumed-role/<role_name>/i-12345
 
-        # may not need ARN at all, if running on assumed role like on an EC2, e.g.
-        # arn:aws:iam:<account>:assumed-role/<role_name>/i-12345
-        if "assumed-role" in caller_identity["Arn"]:
-            # HACK: how to look up sts expiration? this blindly refreshes once every 30 minutes
+            # HACK: look up sts expiration? this blindly refreshes once every 30 minutes
             expiration = datetime.now() + timedelta(minutes=30)
             return (boto3.Session(region_name=region), expiration)
 
