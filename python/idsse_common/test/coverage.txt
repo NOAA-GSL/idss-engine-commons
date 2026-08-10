@@ -31,13 +31,13 @@ Name                              Stmts   Miss  Cover
 -----------------------------------------------------
 idsse/common/__init__.py              0      0   100%
 idsse/common/aws_utils.py            43      2    95%
-idsse/common/boto3_utils.py          83     30    64%
+idsse/common/boto3_utils.py          81     31    62%
 idsse/common/config.py               69      5    93%
 idsse/common/http_utils.py           40      4    90%
 idsse/common/json_message.py         24      1    96%
 idsse/common/log_util.py             41      3    93%
 idsse/common/path_builder.py        211     22    90%
-idsse/common/protocol_utils.py       92      4    96%
+idsse/common/protocol_utils.py       93      4    96%
 idsse/common/rabbitmq_rpc.py        110      2    98%
 idsse/common/rabbitmq_utils.py      226     31    86%
 idsse/common/sci/__init__.py          0      0   100%
@@ -50,6 +50,6 @@ idsse/common/sci/vectaster.py       190     17    91%
 idsse/common/utils.py               189     25    87%
 idsse/common/validate_schema.py      40      0   100%
 -----------------------------------------------------
-TOTAL                              1920    218    89%
+TOTAL                              1919    219    89%
 
-============================= 280 passed in 6.78s ==============================
+============================= 280 passed in 6.65s ==============================
