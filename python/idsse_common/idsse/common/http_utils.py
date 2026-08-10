@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 class HttpUtils(ProtocolUtils):
     """http Utility Class - Used by DAS for file downloads"""
 
-    def ls(self, path: str, prepend_path: bool = True) -> Sequence[str]:
+    def ls(self, path: str, prepend_path: bool = True, **kwargs) -> Sequence[str]:
         """Execute a 'ls' on the http(s) server
         Args:
             path (str): path
@@ -59,7 +59,12 @@ class HttpUtils(ProtocolUtils):
 
     # pylint: disable=unused-argument
     def cp(
-        self, path: str, dest: str, concurrency: int | None = None, chunk_size: int | None = None
+        self,
+        path: str,
+        dest: str,
+        concurrency: int | None = None,
+        chunk_size: int | None = None,
+        **kwargs,
     ) -> bool:
         """Execute http request download from path to dest.
 

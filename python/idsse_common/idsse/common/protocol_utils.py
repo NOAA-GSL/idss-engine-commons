@@ -31,7 +31,7 @@ class ProtocolUtils(ABC):
 
     # pylint: disable=invalid-name
     @abstractmethod
-    def ls(self, path: str, prepend_path: bool = True) -> Sequence[str]:
+    def ls(self, path: str, prepend_path: bool = True, **kwargs) -> Sequence[str]:
         """Execute a 'ls' on the specified path
 
         Args:
@@ -43,7 +43,7 @@ class ProtocolUtils(ABC):
         """
 
     @abstractmethod
-    def cp(self, path: str, dest: str) -> bool:
+    def cp(self, path: str, dest: str, **kwargs) -> bool:
         """Execute download from path to dest.
 
         Args:
@@ -111,7 +111,8 @@ class ProtocolUtils(ABC):
             time_delta (timedelta): The time step size. Defaults to 1 hour.
             max_workers (int): The number of Python threads to use to make server ls() calls.
                 Defaults to 24, which is reasonable. More threads will not necessarily run faster.
-            kwargs: Additional arguments, e.g. region
+            kwargs: Additional arguments to pass to path_builder, ls(), or cp(), e.g. region,
+                AwsSession, etc.
 
         Returns:
             Sequence[datetime]: A sequence of issue date/times
@@ -137,7 +138,9 @@ class ProtocolUtils(ABC):
             if not (issue_start and dt < issue_start)
         ]
 
-        issues_with_valid_dts = self._get_unique_issues(issue_filepaths, num_issues, max_workers)
+        issues_with_valid_dts = self._get_unique_issues(
+            issue_filepaths, num_issues, max_workers, **kwargs
+        )
         return sorted(list(issues_with_valid_dts), reverse=True)[:num_issues]
 
     def get_valids(
@@ -196,7 +199,7 @@ class ProtocolUtils(ABC):
         return valid_and_file
 
     def _get_unique_issues(
-        self, filepaths: list[str], num_issues: int | None, max_workers: int
+        self, filepaths: list[str], num_issues: int | None, max_workers: int, **kwargs
     ) -> list[datetime]:
         """
         Based on a list of server filepaths, find all issue_dts on the server
@@ -222,7 +225,7 @@ class ProtocolUtils(ABC):
                 filepaths_chunk = paths_to_request[:thread_count]
                 paths_to_request = paths_to_request[thread_count:]
                 futures = [
-                    pool.submit(self._get_issue, dir_path, num_issues)
+                    pool.submit(self._get_issue, dir_path, num_issues, **kwargs)
                     for dir_path in filepaths_chunk
                 ]
 
@@ -236,11 +239,13 @@ class ProtocolUtils(ABC):
 
         return list(ready_issues)
 
-    def _get_issue(self, dir_path: str, num_issues: int = 1) -> list[datetime]:
+    def _get_issue(self, dir_path: str, num_issues: int = 1, **kwargs) -> list[datetime]:
         """Get all objects consistent with the passed directory path and filter by valid range
 
         Args:
             dir_path (str): The directory path
+            num_issues (optional, int): Number of discovered issueDts to return, sorted by most
+                recent first. Defaults to 1.
 
         Returns:
             Sequence[tuple[datetime, str]]: A sequence of tuples with valid date/time (indicated by
@@ -248,13 +253,15 @@ class ProtocolUtils(ABC):
                 found for given time range.
         """
         issues_set: set[datetime] = set()
-        # sort files alphabetically in reverse; this should give us the longest lead time first...
-        # not that that tells us the issueDt is fully available on this server
         # Target child filepaths that end in <file_ext> or <file_ext>/, and get their issuance
-        valid_filepaths_in_dir = sorted(
-            (f for f in self.ls(dir_path) if re.search(rf"{self.path_builder.file_ext}/?$", f)),
-            reverse=True,
+        valid_filepaths_in_dir = (
+            f
+            for f in self.ls(dir_path, **kwargs)
+            if re.search(rf"{self.path_builder.file_ext}/?$", f)
         )
+        # sort files alphabetically in reverse; this should give us the longest lead time first...
+        # note that that tells us the issueDt is fully available on this server
+        valid_filepaths_in_dir = sorted(valid_filepaths_in_dir, reverse=True)
 
         for valid_file_path in valid_filepaths_in_dir:
             try:

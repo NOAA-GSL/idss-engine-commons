@@ -24,92 +24,6 @@ from .protocol_utils import ProtocolUtils
 
 logger = logging.getLogger(__name__)
 
-# all request S3 costs (if any) should be assumed by the AWS account running this code
-REQUEST_PAYER = "requester"
-
-
-class Boto3Utils(ProtocolUtils):
-    """Boto3 (AWS) utility class that supports AWS IAM authentication"""
-
-    PROTOCOL = "s3://"
-
-    def __init__(self, basedir: str, subdir: str, file_base: str, file_ext: str):
-        # create new Session which holds AWS IAM Tokens, if needed, to authenticate with S3 bucket
-        self._session = AwsSession()
-        super().__init__(basedir, subdir, file_base, file_ext)
-
-    @property
-    def credentials(self) -> botocore.credentials.Credentials | None:
-        """Current AWS Credentials dictionary for this active Session, if IAM Role assumed. None if
-        no AWS_* environment variables present (bucket doesn't require manual IAM Role)
-        """
-        return self._session.credentials
-
-    def ls(self, path: str, prepend_path: bool = True) -> Sequence[str]:
-        """Execute a 'ls' on the AWS s3 bucket specified by path
-
-        Args:
-            path (str): path to S3 bucket directory, e.g. s3://my-bucket/
-            prepend_path (bool): Add the full s3 bucket path to any returned filenames.
-                Defaults to True.
-
-        Returns:
-            Sequence[str]: The results sent to stdout from executing a 'ls' on passed path
-        """
-        if path[-1] != "/":
-            path = path + "/"  # ensure a trailing slash, which is expected by S3
-
-        # example: (s3://my-bucket-name/deeply/nested/object/here.txt)
-        # ignore protocol (s3://), then everything up until the first / is the bucket name
-        bucket, prefix = path.replace(self.PROTOCOL, "").split("/", maxsplit=1)
-        s3 = self._session.client("s3")
-        try:
-            response: dict = s3.list_objects_v2(
-                Bucket=bucket, Prefix=prefix, Delimiter="/", RequestPayer=REQUEST_PAYER
-            )
-        except PermissionError:
-            return []
-
-        # boto3 returns children under .zarr directory as well as *.zarr/; combine any files
-        # and directories at this level into general "objects"
-        found_objects: list[str] = [
-            file["Prefix"] for file in response.get("CommonPrefixes", [])
-        ] + [file["Key"] for file in response.get("Contents", [])]
-
-        if prepend_path:
-            return [os.path.join(self.PROTOCOL, bucket, obj) for obj in found_objects]
-        # boto3 returns full object path; drop everything except last level
-        return [file.split("/")[-1] for file in found_objects]
-
-    def cp(self, path: str, dest: str) -> bool:
-        """Execute a 'cp' on the AWS s3 bucket specified by path, destination. Note: this uses the
-        basic `boto3.download_file()` and may be quite slow.
-
-        Args:
-            path (str): Relative or Absolute path to the object to be copied
-            dest (str): The destination location
-
-        Returns:
-            bool: Returns True if copy is successful
-        """
-        if path[-1] != "/":
-            path = path + "/"  # ensure a trailing slash, which is expected by S3
-
-        # ignore protocol (s3://), then everything up until the first / is the bucket name
-        bucket, object_key = path.replace(self.PROTOCOL, "").split("/", maxsplit=1)
-
-        s3 = self._session.client("s3")
-        try:
-            s3.download_file(
-                Bucket=bucket,
-                Key=object_key,
-                Filename=dest,
-                ExtraArgs={"RequestPayer": REQUEST_PAYER},
-            )
-            return True
-        except PermissionError:
-            return False
-
 
 class AwsSession:
     """Persist an AWS session in memory, refreshing credentials when needed"""
@@ -232,3 +146,92 @@ class AwsSession:
             ),
             creds["Expiration"],
         )
+
+
+class Boto3Utils(ProtocolUtils):
+    """Boto3 (AWS) utility class that supports AWS IAM authentication"""
+
+    PROTOCOL = "s3://"
+    # all request S3 costs (if any) should be assumed by the AWS account running this code
+    REQUEST_PAYER = "requester"
+
+    def ls(self, path: str, prepend_path: bool = True, **kwargs) -> Sequence[str]:
+        """Execute a 'ls' on the AWS s3 bucket specified by path
+
+        Args:
+            path (str): path to S3 bucket directory, e.g. s3://my-bucket/
+            prepend_path (bool): Add the full s3 bucket path to any returned filenames.
+                Defaults to True.
+            kwargs (optional, kwargs): `aws_session=AwsSession` instance if AWS authentication is
+                needed to access this S3 bucket
+
+        Returns:
+            Sequence[str]: The results sent to stdout from executing a 'ls' on passed path
+        """
+        if path[-1] != "/":
+            path = path + "/"  # ensure a trailing slash, which is expected by S3
+
+        # example: (s3://my-bucket-name/deeply/nested/object/here.txt)
+        # ignore protocol (s3://), then everything up until the first / is the bucket name
+        bucket, prefix = path.replace(self.PROTOCOL, "").split("/", maxsplit=1)
+
+        # if caller passed existing AwsSession, reuse that to call S3 with needed credentials;
+        # otherwise create a Session and authenticate on the fly
+        if not (session := kwargs.get("aws_session")):
+            # create new Session which holds IAM Tokens, if needed, to authenticate with S3 bucket
+            session = AwsSession()
+
+        s3 = session.client("s3")
+        try:
+            response: dict = s3.list_objects_v2(
+                Bucket=bucket, Prefix=prefix, Delimiter="/", RequestPayer=self.REQUEST_PAYER
+            )
+        except PermissionError:
+            return []
+
+        # boto3 returns children under .zarr directory as well as *.zarr/; combine any files
+        # and directories at this level into general "objects"
+        found_objects: list[str] = [
+            file["Prefix"] for file in response.get("CommonPrefixes", [])
+        ] + [file["Key"] for file in response.get("Contents", [])]
+
+        if prepend_path:
+            return [os.path.join(self.PROTOCOL, bucket, obj) for obj in found_objects]
+        # boto3 returns full object path; drop everything except last level
+        return [file.split("/")[-1] for file in found_objects]
+
+    def cp(self, path: str, dest: str, **kwargs) -> bool:
+        """Execute a 'cp' on the AWS s3 bucket specified by path, destination. Note: this uses the
+        basic `boto3.download_file()` and may be quite slow.
+
+        Args:
+            path (str): Relative or Absolute path to the object to be copied
+            dest (str): The destination location
+            kwargs (optional, kwargs): `aws_session=AwsSession` instance if AWS authentication is
+                needed to access this S3 bucket
+
+        Returns:
+            bool: Returns True if copy is successful
+        """
+        if path[-1] != "/":
+            path = path + "/"  # ensure a trailing slash, which is expected by S3
+
+        # ignore protocol (s3://), then everything up until the first / is the bucket name
+        bucket, object_key = path.replace(self.PROTOCOL, "").split("/", maxsplit=1)
+
+        # if caller passed existing AwsSession, reuse that to call S3 with needed credentials;
+        # otherwise create a Session and authenticate on the fly
+        if not (session := kwargs.get("aws_session")):
+            session = AwsSession()
+
+        s3 = session.client("s3")
+        try:
+            s3.download_file(
+                Bucket=bucket,
+                Key=object_key,
+                Filename=dest,
+                ExtraArgs={"RequestPayer": self.REQUEST_PAYER},
+            )
+            return True
+        except PermissionError:
+            return False
