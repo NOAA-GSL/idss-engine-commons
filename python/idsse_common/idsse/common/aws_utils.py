@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 class AwsUtils(ProtocolUtils):
     """AWS Utility Class"""
 
-    def ls(self, path: str, prepend_path: bool = True) -> Sequence[str]:
+    def ls(self, path: str, prepend_path: bool = True, **kwargs) -> Sequence[str]:
         """Execute a 'ls' on the AWS s3 bucket specified by path
 
         Args:
@@ -52,7 +52,12 @@ class AwsUtils(ProtocolUtils):
         return [filename.split(" ")[-1] for filename in commands_result]
 
     def cp(
-        self, path: str, dest: str, concurrency: int | None = None, chunk_size: int | None = None
+        self,
+        path: str,
+        dest: str,
+        concurrency: int | None = None,
+        chunk_size: int | None = None,
+        **kwargs,
     ) -> bool:
         """Execute a 'cp' on the AWS s3 bucket specified by path, dest. Attempts to use
         [s5cmd](https://github.com/peak/s5cmd) to copy the file from S3 with parallelization,
