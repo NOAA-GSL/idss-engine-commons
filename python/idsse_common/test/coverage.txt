@@ -1,7 +1,7 @@
 ============================= test session starts ==============================
 platform linux -- Python 3.11.15, pytest-9.1.1, pluggy-1.6.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
-plugins: pytest_httpserver-1.1.5, cov-4.1.0, zarr-3.1.5
+plugins: pytest_httpserver-1.1.5, zarr-3.1.5, cov-4.1.0
 collected 280 items
 
 test/sci/test_bit_pack.py ........                                       [  2%]
@@ -52,4 +52,4 @@ idsse/common/validate_schema.py      40      0   100%
 -----------------------------------------------------
 TOTAL                              1919    219    89%
 
-============================= 280 passed in 6.91s ==============================
+============================= 280 passed in 5.96s ==============================
