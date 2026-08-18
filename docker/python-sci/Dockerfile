@@ -7,8 +7,15 @@
 #       Also note that just because a base image doesn't have any current known
 #       vulnerabilities doesn't mean it won't have any in the future as new
 #       vulnerabilities are discovered.
+#
+# Addressing CVE's
+#   - s5cmd=0.3.3: this could be problematic, latest release was 0.3.3 from Sept 2025, doesn't
+#                  appear to be maintained anymore
 # ------------------------------------------------------------------------------
 FROM python:3.13.12-slim
+
+# Upgrade system packages to get latest security patches
+RUN apt-get update && apt-get upgrade -y && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install explicit system dependency versions ONLY to avoid future breakage
 RUN pip3 install --no-cache --upgrade pip \
@@ -26,7 +33,7 @@ RUN pip3 install --no-cache --upgrade pip \
     s5cmd==0.3.3 \
     geojson==3.2.0 \
     shapely==2.1.2 \
-    pillow==12.1.1 \
+    pillow==12.3.0 \
     flask==3.1.3 \
     gunicorn==25.1.0 \
     python-logging-rabbitmq==2.0.0 \
@@ -36,7 +43,7 @@ RUN pip3 install --no-cache --upgrade pip \
     xarray==2026.2.0 \
     s3fs==2026.3.0 \
     boto3==1.42.84 \
-    obstore==0.9.4 \
+    obstore==0.11.0 \
     pcodec==1.0.1 \
     setuptools==82.0.1 \
     requests==2.32.5
