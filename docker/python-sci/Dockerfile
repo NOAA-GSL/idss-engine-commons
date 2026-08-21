@@ -15,7 +15,11 @@
 FROM python:3.13.12-slim
 
 # Upgrade system packages to get latest security patches
-RUN apt-get update && apt-get upgrade -y && apt-get clean && rm -rf /var/lib/apt/lists/*
+# remove perl to reduce CVE issues
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get remove --purge -y perl perl-base && \
+    apt-get autoremove -y && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install explicit system dependency versions ONLY to avoid future breakage
 RUN pip3 install --no-cache --upgrade pip \
