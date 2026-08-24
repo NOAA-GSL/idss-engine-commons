@@ -8,6 +8,7 @@
 #       vulnerabilities doesn't mean it won't have any in the future as new
 #       vulnerabilities are discovered.
 # ------------------------------------------------------------------------------
+# Keep this the same base image as sci Dockerfile to reduce CVE blast radius
 FROM python:3.13.12-alpine3.23
 
 # Install explicit system dependency versions ONLY to avoid future breakage
