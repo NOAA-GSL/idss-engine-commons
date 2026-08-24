@@ -1,7 +1,10 @@
-name: Build and Package the CouchDB Loader Util to Dev Registry
+name: Build and Package the Python commons base image
+
 on:
   push:
     branches: [ main ]
+  workflow_dispatch:
+
 env:
   DEV_REGISTRY: ghcr.io/noaa-gsl/idss/commons/python
 jobs:
@@ -11,11 +14,11 @@ jobs:
       fail-fast: true
       matrix:
         app:
-          - couch-loader
+          - base
     steps:
 
     - name: Checkout Code
-      uses: actions/checkout@v2
+      uses: actions/checkout@v3
 
     - name: Set ENV Variables
       shell: bash
@@ -58,7 +61,7 @@ jobs:
           --build-arg COMMITBRANCH=${{env.BRANCH}} \
           --build-arg COMMITSHA=${{github.sha}} \
           -t ${{env.DEV_REGISTRY}}/${{env.APP_LOWERCASE}}:${{env.BRANCH}} \
-          -f ./couchdb/uat/loader/Dockerfile .
+          -f ./docker/Dockerfile .
 
     - name: Run Trivy vulnerability scanner
       uses: aquasecurity/trivy-action@master
@@ -70,7 +73,7 @@ jobs:
         vuln-type: 'os,library'
         severity: 'CRITICAL,HIGH'
         scanners: 'vuln'
-      continue-on-error: true
+        continue-on-error: true
 
         # this requires public repo / additional config
         #format: 'sarif'
