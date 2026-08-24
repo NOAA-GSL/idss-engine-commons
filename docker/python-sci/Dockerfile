@@ -14,13 +14,15 @@
 # ------------------------------------------------------------------------------
 # Use alpine as a base because it's lighter weight, the Debian based images (i.e. slim) have CRIT and HIGH CVEs
 # Keep this the same base image as non-sci Dockerfile to reduce CVE blast radius
-FROM python:3.13.12-alpine3.23
+FROM python:3.13.15-alpine3.24
 
 # setuptools no longer default dependency but is needed to install idsse common code
 RUN pip3 install --no-cache --upgrade pip setuptools
 
-# Get the latest package updates to keep security vulnerabilities down
-RUN apk update && apk upgrade
+# be careful with apk upgrade, it changes the underlying Alpine library versions underneath 
+# the pinned (FROM) version, which may change for better or worse, the CRIT/HIGH CVEs as listed
+# from docker hub
+#RUN apk upgrade --no-cache
 
 # Install build dependencies for pip libraries
 RUN apk add --no-cache \

@@ -9,7 +9,15 @@
 #       vulnerabilities are discovered.
 # ------------------------------------------------------------------------------
 # Keep this the same base image as sci Dockerfile to reduce CVE blast radius
-FROM python:3.13.12-alpine3.23
+FROM python:3.13.15-alpine3.24
+
+# setuptools no longer default dependency but is needed to install idsse common code
+RUN pip3 install --no-cache --upgrade pip setuptools
+
+# be careful with apk upgrade, it changes the underlying Alpine library versions underneath 
+# the pinned (FROM) version, which may change for better or worse, the CRIT/HIGH CVEs as listed
+# from docker hub
+#RUN apk upgrade --no-cache
 
 # Install explicit system dependency versions ONLY to avoid future breakage
 RUN pip3 install --no-cache \
@@ -25,12 +33,6 @@ RUN pip3 install --no-cache \
     python-logging-rabbitmq==2.0.0 \
     flask-cors==6.0.2 \
     requests==2.32.5
-
-# setuptools no longer default dependency but is needed to install idsse common code
-RUN pip3 install --no-cache --upgrade setuptools
-
-# Get the latest package updates to keep security vulnerabilities down
-RUN apk update && apk upgrade
 
 # Install idsse common python code
 WORKDIR /python/idsse_common
