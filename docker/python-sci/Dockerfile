@@ -8,9 +8,6 @@
 #       vulnerabilities doesn't mean it won't have any in the future as new
 #       vulnerabilities are discovered.
 #
-# Fixable CVEs
-#   - s5cmd:        0.3.3 from September 2025, no long supported?
-#                       - 3 CRIT / 20 HIGH, a bulk of our CVEs are from here
 # Upstream CVEs
 #   from python:3.13.15-alpine3.24:
 #   - msgpack:      1.1.2  no fix yet available
@@ -60,7 +57,6 @@ RUN pip3 install --no-cache \
     h5netcdf==1.8.1 \
     h5py==3.15.1 \
     pyproj==3.7.2 \
-    s5cmd==0.3.3 \
     shapely==2.1.2 \
     pillow==12.3.0 \
     scipy==1.17.1 \

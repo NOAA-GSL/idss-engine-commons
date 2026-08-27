@@ -35,7 +35,6 @@ RUN conda config --set solver classic && \
     pyproj==3.7.2 \
     awscli==2.34.7 \
     jsonschema==4.25.1 \
-    s5cmd==2.2.2 \
     geojson==3.2.0 \
     shapely==2.1.2 \
     pillow==12.1.1 \
