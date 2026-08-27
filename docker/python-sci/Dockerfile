@@ -23,7 +23,6 @@ RUN pip3 install --no-cache --upgrade pip \
     pygrib==2.1.8 \
     pyproj==3.7.2 \
     jsonschema==4.25.1 \
-    s5cmd==0.3.3 \
     geojson==3.2.0 \
     shapely==2.1.2 \
     pillow==12.1.1 \
