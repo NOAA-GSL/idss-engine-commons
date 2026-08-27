@@ -60,8 +60,6 @@ RUN pip3 install --no-cache \
     h5netcdf==1.8.1 \
     h5py==3.15.1 \
     pyproj==3.7.2 \
-    jsonschema==4.25.1 \
-    geojson==3.2.0 \
     shapely==2.1.2 \
     pillow==12.3.0 \
     scipy==1.17.1 \
