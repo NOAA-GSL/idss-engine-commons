@@ -8,9 +8,16 @@
 #       vulnerabilities doesn't mean it won't have any in the future as new
 #       vulnerabilities are discovered.
 #
-# Addressing CVE's
-#   - s5cmd=0.3.3: this could be problematic, latest release was 0.3.3 from Sept 2025, doesn't
-#                  appear to be maintained anymore
+# Fixable CVEs
+#   - s5cmd:        0.3.3 from September 2025, no long supported?
+#                       - 3 CRIT / 20 HIGH, a bulk of our CVEs are from here
+# Upstream CVEs
+#   from python:3.13.15-alpine3.24:
+#   - msgpack:      1.1.2  no fix yet available
+#   - setuptools:   70.3.0 no fix yet available
+#   from Dockerfile
+#   - libssh2:      1.11.1 no fix yet available
+#   - binutils:     2.45.1 no fix yet available
 # ------------------------------------------------------------------------------
 # Use alpine as a base because it's lighter weight, the Debian based images (i.e. slim) have CRIT and HIGH CVEs
 # Keep this the same base image as non-sci Dockerfile to reduce CVE blast radius
@@ -18,11 +25,6 @@ FROM python:3.13.15-alpine3.24
 
 # setuptools no longer default dependency but is needed to install idsse common code
 RUN pip3 install --no-cache --upgrade pip setuptools
-
-# be careful with apk upgrade, it changes the underlying Alpine library versions underneath 
-# the pinned (FROM) version, which may change for better or worse, the CRIT/HIGH CVEs as listed
-# from docker hub
-#RUN apk upgrade --no-cache
 
 # Install build dependencies for pip libraries
 RUN apk add --no-cache \
@@ -34,6 +36,11 @@ RUN apk add --no-cache \
     netcdf-dev \
     rust \
     cargo
+
+# be careful with apk upgrade, it changes the underlying Alpine library versions underneath 
+# the pinned (FROM) version, which may change for better or worse, the CRIT/HIGH CVEs as listed
+# from docker hub
+RUN apk upgrade --no-cache
 
 # Install explicit system dependency versions ONLY to avoid future breakage
 RUN pip3 install --no-cache \
@@ -62,7 +69,7 @@ RUN pip3 install --no-cache \
     xarray==2026.2.0 \
     s3fs==2026.3.0 \
     boto3==1.42.84 \
-    obstore==0.11.0 \
+    obstore==0.11.1 \
     pcodec==1.0.3
 
 RUN pip3 install --no-cache \

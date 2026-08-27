@@ -7,6 +7,15 @@
 #       Also note that just because a base image doesn't have any current known
 #       vulnerabilities doesn't mean it won't have any in the future as new
 #       vulnerabilities are discovered.
+#
+# Fixable CVEs
+#   - 
+# Upstream CVEs
+#   from python:3.13.15-alpine3.24:
+#   - msgpack:      1.1.2  no fix yet available
+#   - setuptools:   70.3.0 no fix yet available
+#   from Dockerfile
+#   - 
 # ------------------------------------------------------------------------------
 # Keep this the same base image as sci Dockerfile to reduce CVE blast radius
 FROM python:3.13.15-alpine3.24
@@ -32,7 +41,8 @@ RUN pip3 install --no-cache \
     geojson==3.2.0 \
     python-logging-rabbitmq==2.0.0 \
     flask-cors==6.0.2 \
-    requests==2.32.5
+    requests==2.32.5 \
+    shapely==2.1.2
 
 # Install idsse common python code
 WORKDIR /python/idsse_common
