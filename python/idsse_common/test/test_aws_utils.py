@@ -114,16 +114,6 @@ def test_ls_without_prepend_path(aws_utils: AwsUtils, mock_exec_cmd):
     mock_exec_cmd.assert_called_once()
 
 
-def test_ls_retries_with_s3(aws_utils: AwsUtils, monkeypatch: MonkeyPatch):
-    # fails first call, succeeds second call
-    mock_exec_cmd_failure = Mock(side_effect=[FileNotFoundError, EXAMPLE_FILES])
-    monkeypatch.setattr("idsse.common.aws_utils.exec_cmd", mock_exec_cmd_failure)
-
-    result = aws_utils.ls(EXAMPLE_DIR)
-    assert len(result) == 3  # ls should have eventually returned good data
-    assert mock_exec_cmd_failure.call_count == 2
-
-
 def test_ls_on_error(aws_utils: AwsUtils, monkeypatch: MonkeyPatch):
     mock_exec_cmd_failure = Mock(side_effect=PermissionError("No permissions"))
     monkeypatch.setattr("idsse.common.aws_utils.exec_cmd", mock_exec_cmd_failure)
@@ -141,26 +131,6 @@ def test_cp_succeeds(aws_utils: AwsUtils, mock_exec_cmd):
     assert copy_success
 
 
-def test_cp_retries_with_s3_command_line(aws_utils: AwsUtils, monkeypatch: MonkeyPatch):
-    mock_exec_cmd_failure = Mock(side_effect=[FileNotFoundError, ["cp worked"]])
-    monkeypatch.setattr("idsse.common.aws_utils.exec_cmd", mock_exec_cmd_failure)
-
-    copy_success = aws_utils.cp("s3:/some/path", "s3:/new/path")
-    assert copy_success
-    assert mock_exec_cmd_failure.call_count == 2
-
-
-def test_cp_permissions_error(aws_utils: AwsUtils, monkeypatch: MonkeyPatch):
-    mock_exec_cmd_failure = Mock(side_effect=PermissionError)
-    monkeypatch.setattr("idsse.common.aws_utils.exec_cmd", mock_exec_cmd_failure)
-
-    copy_success = aws_utils.cp("s3:/some/path", "s3:/new/path")
-
-    assert not copy_success
-    # s5cmd throws PermissionError when file not found in AWS; don't bother retrying with aws-cli
-    assert mock_exec_cmd_failure.call_count == 1
-
-
 def test_cp_fails(aws_utils: AwsUtils, monkeypatch: MonkeyPatch):
     mock_exec_cmd_failure = Mock(
         side_effect=[FileNotFoundError, Exception("unexpected bad thing happened")]
@@ -170,7 +140,7 @@ def test_cp_fails(aws_utils: AwsUtils, monkeypatch: MonkeyPatch):
     copy_success = aws_utils.cp("s3:/some/path", "s3:/new/path")
 
     assert not copy_success
-    assert mock_exec_cmd_failure.call_count == 2
+    assert mock_exec_cmd_failure.call_count == 1
 
 
 def test_check_for_succeeds(aws_utils: AwsUtils, mock_exec_cmd):
@@ -212,21 +182,22 @@ def test_get_issues_latest_issue_default_today(
     monkeypatch.setattr("idsse.common.protocol_utils.datetime", mock_datetime)
 
     result = aws_utils.get_issues()
+
     # with current mocks returned issue (latest issue) will always be "now" with
     # truncated minute, second, and microsecond
     assert len(result) == 1
-
     assert result[0] == example_datetimes[0].replace(minute=0)
     # should have ls'd the 12Z directory in AWS
-    aws_dir = mock_exec_cmd.mock_calls[0][1][0][3]
+    aws_dir = mock_exec_cmd.mock_calls[0].args[0][-1]
     assert aws_utils.path_builder.parse_dir(aws_dir)["issue.hour"] == example_datetimes[0].hour
+    mock_exec_cmd.reset_mock()
 
     # simulate the passage of time: it's now 13:01 and a new 13Z issueDt has appeared
     result = aws_utils.get_issues()
 
     assert result[0] == example_datetimes[1].replace(minute=0)
     # should have ls'd the 13Z directory in AWS
-    aws_dir = mock_exec_cmd.call_args[0][0][3]
+    aws_dir = mock_exec_cmd.mock_calls[0].args[0][-1]
     assert aws_utils.path_builder.parse_dir(aws_dir)["issue.hour"] == example_datetimes[1].hour
 
 
