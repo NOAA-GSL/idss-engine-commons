@@ -26,7 +26,8 @@ RUN pip3 install --no-cache --upgrade pip setuptools
 # be careful with apk upgrade, it changes the underlying Alpine library versions underneath 
 # the pinned (FROM) version, which may change for better or worse, the CRIT/HIGH CVEs as listed
 # from docker hub
-#RUN apk upgrade --no-cache
+RUN apk upgrade --no-cache \
+    bind-tools
 
 # Install explicit system dependency versions ONLY to avoid future breakage
 RUN pip3 install --no-cache \
