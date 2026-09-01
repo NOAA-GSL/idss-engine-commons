@@ -103,7 +103,7 @@ class AwsSession:
         Returns:
             tuple[boto3.Session, datetime]: Session object (with fresh credentials) and expiration.
         """
-        region = os.getenv("AWS_REGION", "us-east-1")
+        region = os.getenv("AWS_REGION")
 
         # look for explicit AWS secrets (nulling out if env var doesn't exist or is empty string)
         access_key_id = os.getenv("AWS_ACCESS_KEY_ID") or None
@@ -113,7 +113,8 @@ class AwsSession:
         # user credentials to assume the associated Role
         sts = boto3.client(
             "sts",
-            region_name=region,
+            # workaround: STS regional endpoint not resolving in all regions
+            region_name="us-east-1",
             aws_access_key_id=access_key_id,
             aws_secret_access_key=secret_access_key,
         )
