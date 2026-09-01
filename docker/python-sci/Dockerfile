@@ -33,7 +33,7 @@ RUN apk add --no-cache \
     netcdf-dev \
     rust \
     cargo \
-    bind-tools
+    gcompat
 
 # be careful with apk upgrade, it changes the underlying Alpine library versions underneath 
 # the pinned (FROM) version, which may change for better or worse, the CRIT/HIGH CVEs as listed
