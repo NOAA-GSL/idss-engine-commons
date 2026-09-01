@@ -9,36 +9,18 @@
 #       vulnerabilities are discovered.
 #
 # Upstream CVEs
-#   from python:3.13.15-alpine3.24:
+#   from python:3.13.15-slim:
 #   - msgpack:      1.1.2  no fix yet available
 #   - setuptools:   70.3.0 no fix yet available
 #   from Dockerfile
 #   - libssh2:      1.11.1 no fix yet available
 #   - binutils:     2.45.1 no fix yet available
 # ------------------------------------------------------------------------------
-# Use alpine as a base because it's lighter weight, the Debian based images (i.e. slim) have CRIT and HIGH CVEs
 # Keep this the same base image as non-sci Dockerfile to reduce CVE blast radius
-FROM python:3.13.15-alpine3.24
+FROM python:3.13.15-slim
 
 # setuptools no longer default dependency but is needed to install idsse common code
 RUN pip3 install --no-cache --upgrade pip setuptools
-
-# Install build dependencies for pip libraries
-RUN apk add --no-cache \
-    gcc \
-    g++ \
-    musl-dev \
-    libgcc \
-    hdf5-dev \
-    netcdf-dev \
-    rust \
-    cargo \
-    gcompat
-
-# be careful with apk upgrade, it changes the underlying Alpine library versions underneath 
-# the pinned (FROM) version, which may change for better or worse, the CRIT/HIGH CVEs as listed
-# from docker hub
-RUN apk upgrade --no-cache
 
 # Install explicit system dependency versions ONLY to avoid future breakage
 RUN pip3 install --no-cache \
