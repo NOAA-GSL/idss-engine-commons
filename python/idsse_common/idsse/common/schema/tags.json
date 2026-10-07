@@ -1,22 +1,37 @@
 {
   "KeyValues": {
-    "description": "List of key,value pairs that are meaningful to user",
+    "description": "List of key,value pairs that are meaningful to the user and/or system",
     "type": "object",
     "properties": {
-      "name": { "type": "string" },
-      "nwsOffice": { "type": "string" },
-      "createdAt": { "type": "string" },
+      "name": {
+        "type": "string"
+      },
+      "nwsOffice": {
+        "type": "string"
+      },
+      "createdAt": {
+        "type": "string"
+      },
       "status": {
         "type": "string",
-        "enum": ["CREATED", "PROCESSING", "COMPLETE", "CACHED", "FAILED"]
+        "enum": [
+          "CREATED",
+          "PROCESSING",
+          "COMPLETE",
+          "CACHED",
+          "FAILED",
+          "SCHEDULED",
+          "ARCHIVED"
+        ]
       }
     },
     "patternProperties": {
-      "": { "type": "string" }
+      "": {
+        "type": "string"
+      }
     },
     "required": ["name", "nwsOffice"]
   },
-
   "Tags": {
     "description": "List of values and/or key,value pairs that are meaningful to user",
     "type": "object",
@@ -24,10 +39,14 @@
       "values": {
         "description": "List of values that are meaningful to user",
         "type": ["array", "null"],
-        "items": { "type": "string" },
+        "items": {
+          "type": "string"
+        },
         "required": false
       },
-      "keyValues": { "$ref": "#/KeyValues" }
+      "keyValues": {
+        "$ref": "#/KeyValues"
+      }
     },
     "required": ["keyValues"]
   }

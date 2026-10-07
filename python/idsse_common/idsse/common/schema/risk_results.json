@@ -6,12 +6,12 @@
         "type": "string"
       },
       "dataName": {
-        "type": "string"
+        "type": ["string", "null"]
       },
       "dataLocation": {
-        "type": "string"
+        "type": ["string", "null"]
       },
-      "issueDt": { "$ref": "timing.json#/TimeString" }
+      "issueDt": { "type": ["string", "null"], "format": "date-time" }
     },
     "required": ["partName", "dataName", "dataLocation", "issueDt"]
   },
@@ -22,8 +22,7 @@
     "patternProperties": {
       "[+-]?(?:0|[1-9]d*)(?:.d+)?(?:[eE][+-]?d+)?": { "type": "integer" },
       "[^0-9.+-E]": { "not": {} }
-    },
-    "minProperties": 1
+    }
   },
 
   "DataType": {
@@ -55,10 +54,9 @@
     "properties": {
       "validDt": {
         "type": "array",
-        "items": { "$ref": "timing.json#/TimeString" },
-        "minItems": 1
+        "items": { "type": ["string", "null"], "format": "date-time" }
       },
-      "data": { "type": "array", "items": { "$ref": "#/Data" }, "minItems": 1 }
+      "data": { "type": "array", "items": { "$ref": "#/Data" } }
     },
     "required": ["validDt", "data"]
   },
@@ -103,8 +101,7 @@
       "type": { "$ref": "#/DataType" },
       "states": {
         "type": "array",
-        "items": { "$ref": "#/State" },
-        "minItems": 1
+        "items": { "$ref": "#/State" }
       }
     },
     "required": ["name", "type", "states"]
@@ -116,8 +113,8 @@
     "properties": {
       "evaluatedAt": { "$ref": "timing.json#/TimeString" },
       "conditionKey": { "type": "string" },
-      "locationKey": { "type": "string" },
-      "productKey": { "type": "string" },
+      "locationKey": { "type": ["string", "null"] },
+      "productKey": { "type": ["string", "null"] },
       "dataDescript": {
         "type": "array",
         "items": { "$ref": "#/DataDescription" },
@@ -130,8 +127,7 @@
       },
       "metaData": {
         "type": "array",
-        "items": { "$ref": "#/MetaData" },
-        "minItems": 1
+        "items": { "$ref": "#/MetaData" }
       }
     },
     "required": [
