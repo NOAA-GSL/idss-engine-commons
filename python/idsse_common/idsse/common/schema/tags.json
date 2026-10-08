@@ -10,7 +10,8 @@
         "type": "string"
       },
       "createdAt": {
-        "type": "string"
+        "type": "string",
+        "format": "date-time"
       },
       "status": {
         "type": "string",
@@ -30,7 +31,7 @@
         "type": "string"
       }
     },
-    "required": ["name", "nwsOffice", "status"]
+    "required": ["name", "nwsOffice"]
   },
   "Tags": {
     "description": "List of values and/or key,value pairs that are meaningful to user",
