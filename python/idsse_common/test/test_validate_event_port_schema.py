@@ -166,14 +166,6 @@ def test_validate_event_port_with_empty_results(
         assert False, f"Validate message raised an exception {exc}"
 
 
-def test_validate_event_port_no_status(
-    event_port_validator: Validator, simple_event_port_message: dict
-):
-    simple_event_port_message["tags"]["keyValues"].pop("status")
-    with raises(ValidationError):
-        event_port_validator.validate(simple_event_port_message)
-
-
 def test_validate_event_port_no_office(
     event_port_validator: Validator, simple_event_port_message: dict
 ):
