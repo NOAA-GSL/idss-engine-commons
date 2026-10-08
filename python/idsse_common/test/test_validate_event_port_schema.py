@@ -65,7 +65,10 @@ def simple_event_port_message() -> dict:
                 "mapping": {"min": 0.0, "max": 75.0, "clip": "true"},
             }
         ],
-        "tags": {"values": ["Abq Temp"], "keyValues": {"name": "Abq TEMP", "nwsOffice": "BOU"}},
+        "tags": {
+            "values": ["Abq Temp"],
+            "keyValues": {"name": "Abq TEMP", "nwsOffice": "BOU", "status": "COMPLETE"},
+        },
         "riskResults": [
             {
                 "evaluatedAt": "2022-11-11T14:54:32.100Z",
@@ -161,6 +164,22 @@ def test_validate_event_port_with_empty_results(
         event_port_validator.validate(simple_event_port_message)
     except ValidationError as exc:
         assert False, f"Validate message raised an exception {exc}"
+
+
+def test_validate_event_port_no_status(
+    event_port_validator: Validator, simple_event_port_message: dict
+):
+    simple_event_port_message["tags"]["keyValues"].pop("status")
+    with raises(ValidationError):
+        event_port_validator.validate(simple_event_port_message)
+
+
+def test_validate_event_port_no_office(
+    event_port_validator: Validator, simple_event_port_message: dict
+):
+    simple_event_port_message["tags"]["keyValues"].pop("nwsOffice")
+    with raises(ValidationError):
+        event_port_validator.validate(simple_event_port_message)
 
 
 def test_validate_event_port_message_without_results(

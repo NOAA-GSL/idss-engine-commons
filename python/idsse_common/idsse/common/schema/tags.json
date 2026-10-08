@@ -30,7 +30,7 @@
         "type": "string"
       }
     },
-    "required": ["name", "nwsOffice"]
+    "required": ["name", "nwsOffice", "status"]
   },
   "Tags": {
     "description": "List of values and/or key,value pairs that are meaningful to user",
