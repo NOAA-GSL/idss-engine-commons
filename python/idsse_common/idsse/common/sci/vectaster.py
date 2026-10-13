@@ -343,7 +343,7 @@ def geographic_polygon_to_pixel(
     """
     if isinstance(poly, Polygon):
         exterior = poly.exterior.coords
-        interiors = poly.interiors
+        interiors = [list(interior.coords) for interior in poly.interiors]
     elif all(_is_coords(coords) for coords in poly):
         exterior = poly[0]
         interiors = poly[1:]
@@ -352,7 +352,7 @@ def geographic_polygon_to_pixel(
 
     exterior = list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*exterior)), rounding)))
     interiors = [
-        list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*interior.coords)), rounding)))
+        list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*interior)), rounding)))
         for interior in interiors
     ]
 
