@@ -1,8 +1,8 @@
 ============================= test session starts ==============================
-platform linux -- Python 3.11.16, pytest-9.1.1, pluggy-1.6.0
+platform linux -- Python 3.11.17, pytest-9.1.1, pluggy-1.6.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
-plugins: pytest_httpserver-1.1.5, zarr-3.1.5, cov-4.1.0
-collected 277 items
+plugins: zarr-3.1.5, platformdirs-4.13.0, pytest_httpserver-1.2.0, cov-4.1.0
+collected 278 items
 
 test/sci/test_bit_pack.py ........                                       [  2%]
 test/sci/test_geo_image.py ......................                        [ 10%]
@@ -14,19 +14,19 @@ test/test_config.py ............                                         [ 41%]
 test/test_http_utils.py .............                                    [ 45%]
 test/test_json_message.py ...........                                    [ 49%]
 test/test_log_util.py .......                                            [ 52%]
-test/test_path_builder.py ...................                            [ 59%]
+test/test_path_builder.py ...................                            [ 58%]
 test/test_rabbitmq_rpc.py .........                                      [ 62%]
-test/test_rabbitmq_utils.py ........................                     [ 71%]
+test/test_rabbitmq_utils.py ........................                     [ 70%]
 test/test_utils.py ...................................                   [ 83%]
 test/test_validate_criteria_schema.py ......                             [ 85%]
 test/test_validate_das_schema.py ...............                         [ 91%]
 test/test_validate_das_web_schema.py .........                           [ 94%]
-test/test_validate_event_port_schema.py ......                           [ 96%]
+test/test_validate_event_port_schema.py .......                          [ 96%]
 test/test_validate_new_data_schema.py .........                          [100%]
 
 - generated xml file: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/pytest.xml -
 
----------- coverage: platform linux, python 3.11.16-final-0 ----------
+---------- coverage: platform linux, python 3.11.17-final-0 ----------
 Name                              Stmts   Miss  Cover
 -----------------------------------------------------
 idsse/common/__init__.py              0      0   100%
@@ -52,4 +52,4 @@ idsse/common/validate_schema.py      40      0   100%
 -----------------------------------------------------
 TOTAL                              1903    217    89%
 
-============================= 277 passed in 6.66s ==============================
+============================= 278 passed in 6.48s ==============================
