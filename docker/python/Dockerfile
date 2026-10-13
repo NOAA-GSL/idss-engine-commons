@@ -7,17 +7,9 @@
 #       Also note that just because a base image doesn't have any current known
 #       vulnerabilities doesn't mean it won't have any in the future as new
 #       vulnerabilities are discovered.
-#
-# Fixable CVEs
-#   - 
-# Upstream CVEs
-#   from python:3.13.15-alpine3.24:
-#   - msgpack:      1.1.2  no fix yet available
-#   - setuptools:   70.3.0 no fix yet available
-#   from Dockerfile
-#   - 
 # ------------------------------------------------------------------------------
 # Keep this the same base image as sci Dockerfile to reduce CVE blast radius
+# https://hub.docker.com/layers/library/python/3.13.15-alpine3.24
 FROM python:3.13.15-alpine3.24
 
 # setuptools no longer default dependency but is needed to install idsse common code

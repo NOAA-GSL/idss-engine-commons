@@ -7,17 +7,10 @@
 #       Also note that just because a base image doesn't have any current known
 #       vulnerabilities doesn't mean it won't have any in the future as new
 #       vulnerabilities are discovered.
-#
-# Upstream CVEs
-#   from python:3.13.15-alpine3.24:
-#   - msgpack:      1.1.2  no fix yet available
-#   - setuptools:   70.3.0 no fix yet available
-#   from Dockerfile
-#   - libssh2:      1.11.1 no fix yet available
-#   - binutils:     2.45.1 no fix yet available
 # ------------------------------------------------------------------------------
 # Use alpine as a base because it's lighter weight, the Debian based images (i.e. slim) have CRIT and HIGH CVEs
 # Keep this the same base image as non-sci Dockerfile to reduce CVE blast radius
+# https://hub.docker.com/layers/library/python/3.13.15-alpine3.24
 FROM python:3.13.15-alpine3.24
 
 # setuptools no longer default dependency but is needed to install idsse common code
