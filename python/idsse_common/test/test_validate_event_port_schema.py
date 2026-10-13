@@ -65,7 +65,10 @@ def simple_event_port_message() -> dict:
                 "mapping": {"min": 0.0, "max": 75.0, "clip": "true"},
             }
         ],
-        "tags": {"values": ["Abq Temp"], "keyValues": {"name": "Abq TEMP", "nwsOffice": "BOU"}},
+        "tags": {
+            "values": ["Abq Temp"],
+            "keyValues": {"name": "Abq TEMP", "nwsOffice": "BOU", "status": "COMPLETE"},
+        },
         "riskResults": [
             {
                 "evaluatedAt": "2022-11-11T14:54:32.100Z",
@@ -163,6 +166,14 @@ def test_validate_event_port_with_empty_results(
         assert False, f"Validate message raised an exception {exc}"
 
 
+def test_validate_event_port_no_office(
+    event_port_validator: Validator, simple_event_port_message: dict
+):
+    simple_event_port_message["tags"]["keyValues"].pop("nwsOffice")
+    with raises(ValidationError):
+        event_port_validator.validate(simple_event_port_message)
+
+
 def test_validate_event_port_message_without_results(
     event_port_validator: Validator, simple_event_port_message: dict
 ):
@@ -181,17 +192,35 @@ def test_validate_event_port_message_with_bad_geo_dist(
         event_port_validator.validate(simple_event_port_message)
 
 
-def test_validate_event_port_message_with_missing_metadata(
-    event_port_validator: Validator, simple_event_port_message: dict
-):
-    simple_event_port_message["riskResults"][0]["metaData"][0]["states"].clear()
-    with raises(ValidationError):
-        event_port_validator.validate(simple_event_port_message)
-
-
 def test_validate_event_port_message_with_missing_type_in_metadata(
     event_port_validator: Validator, simple_event_port_message: dict
 ):
     simple_event_port_message["riskResults"][0]["metaData"][0].pop("type")
     with raises(ValidationError):
         event_port_validator.validate(simple_event_port_message)
+
+
+def test_validate_event_port_message_scheduled(
+    event_port_validator: Validator, simple_event_port_message: dict
+):
+    # some Event Portfolios have no weather data to evaluate yet, and that's ok
+    empty_result = simple_event_port_message["riskResults"][0]
+    empty_result["dataSummary"] = [{"validDt": [], "data": []}]
+    empty_result["metaData"] = []
+    empty_result["dataDescript"] = [
+        {
+            "partName": d["partName"],
+            "productName": None,
+            "dataName": None,
+            "dataLocation": None,
+            "issueDt": None,
+        }
+        for d in empty_result["dataDescript"]
+    ]
+    simple_event_port_message["riskResults"] = [empty_result]
+    simple_event_port_message["tags"]["keyValues"]["status"] = "SCHEDULED"
+
+    try:
+        event_port_validator.validate(simple_event_port_message)
+    except ValidationError as exc:
+        assert False, f"Validate message raised an exception {exc}"
