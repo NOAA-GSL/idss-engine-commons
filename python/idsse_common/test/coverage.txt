@@ -1,20 +1,20 @@
 ============================= test session starts ==============================
-platform linux -- Python 3.11.17, pytest-9.1.1, pluggy-1.6.0
+platform linux -- Python 3.11.17, pytest-9.1.1, pluggy-1.7.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
 plugins: zarr-3.1.5, platformdirs-4.13.0, pytest_httpserver-1.2.0, cov-4.1.0
-collected 278 items
+collected 279 items
 
 test/sci/test_bit_pack.py ........                                       [  2%]
 test/sci/test_geo_image.py ......................                        [ 10%]
 test/sci/test_grid_proj.py ....................................          [ 23%]
-test/sci/test_vectaster.py ...............                               [ 29%]
+test/sci/test_vectaster.py ................                              [ 29%]
 test/test_aws_utils.py .................                                 [ 35%]
 test/test_boto3_utils.py ....                                            [ 36%]
 test/test_config.py ............                                         [ 41%]
 test/test_http_utils.py .............                                    [ 45%]
 test/test_json_message.py ...........                                    [ 49%]
 test/test_log_util.py .......                                            [ 52%]
-test/test_path_builder.py ...................                            [ 58%]
+test/test_path_builder.py ...................                            [ 59%]
 test/test_rabbitmq_rpc.py .........                                      [ 62%]
 test/test_rabbitmq_utils.py ........................                     [ 70%]
 test/test_utils.py ...................................                   [ 83%]
@@ -46,10 +46,10 @@ idsse/common/sci/geo_image.py       235     17    93%
 idsse/common/sci/grid_proj.py       142      7    95%
 idsse/common/sci/netcdf_io.py        69     38    45%
 idsse/common/sci/utils.py            31      7    77%
-idsse/common/sci/vectaster.py       190     17    91%
+idsse/common/sci/vectaster.py       189     17    91%
 idsse/common/utils.py               189     25    87%
 idsse/common/validate_schema.py      40      0   100%
 -----------------------------------------------------
-TOTAL                              1903    217    89%
+TOTAL                              1902    217    89%
 
-============================= 278 passed in 5.73s ==============================
+============================= 279 passed in 7.25s ==============================
