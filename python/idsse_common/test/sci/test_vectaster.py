@@ -14,7 +14,7 @@
 
 from unittest.mock import Mock
 
-import numpy
+import numpy as np
 from shapely import equals_exact
 from pytest import fixture, MonkeyPatch
 
@@ -103,52 +103,52 @@ def test_geographic_to_pixel(monkeypatch: MonkeyPatch, grid_proj: GridProj):
 
 def test_rasterize_point(grid_proj: GridProj):
     point = "POINT (-100.5 30.5)"
-    pixels = (numpy.array([1079]), numpy.array([349]))
+    pixels = (np.array([1079]), np.array([349]))
     result = rasterize_point(point, grid_proj)
-    numpy.testing.assert_array_equal(result, pixels)
+    np.testing.assert_array_equal(result, pixels)
 
 
 def test_rasterize_point_from_coord(grid_proj: GridProj):
     point = (-100.5, 30.5)
-    pixels = (numpy.array([1079]), numpy.array([349]))
+    pixels = (np.array([1079]), np.array([349]))
     result = rasterize_point(point, grid_proj)
-    numpy.testing.assert_array_equal(result, pixels)
+    np.testing.assert_array_equal(result, pixels)
 
 
 def test_rasterize_point_without_grid_proj():
     point = from_wkt("POINT (1001.5 1130.5)")
-    pixels = (numpy.array([1001]), numpy.array([1130]))
+    pixels = (np.array([1001]), np.array([1130]))
     # default round in floor
     result = rasterize_point(point)
-    numpy.testing.assert_array_equal(result, pixels)
+    np.testing.assert_array_equal(result, pixels)
 
-    pixels = (numpy.array([1002]), numpy.array([1130]))
+    pixels = (np.array([1002]), np.array([1130]))
     # rounding='round' means round half away from zero (both even and odd)
     result = rasterize_point(point, rounding="round")
-    numpy.testing.assert_array_equal(result, pixels)
+    np.testing.assert_array_equal(result, pixels)
 
 
 def test_rasterize_linestring(grid_proj: GridProj):
     linestring = "LINESTRING (-100 30, -100.1 30.1, -100.2 30)"
     pixels = (
-        numpy.array([1090, 1091, 1092, 1092, 1093, 1094, 1095, 1095, 1096, 1096, 1097]),
-        numpy.array([326, 327, 328, 329, 330, 331, 329, 330, 327, 328, 326]),
+        np.array([1090, 1091, 1092, 1092, 1093, 1094, 1095, 1095, 1096, 1096, 1097]),
+        np.array([326, 327, 328, 329, 330, 331, 329, 330, 327, 328, 326]),
     )
     result = rasterize_linestring(linestring, grid_proj)
-    numpy.testing.assert_array_equal(result, pixels)
+    np.testing.assert_array_equal(result, pixels)
 
 
 def test_rasterize_polygon_as_linestring(grid_proj: GridProj):
     poly = from_wkt("POLYGON ((0 0, 0 5, 5 5, 5 0, 0 0), (1 1, 3 1, 3 4, 1 4, 1 1))")
     # fmt: off
     pixels = (
-        numpy.array(
+        np.array(
             [
                 0, 0, 0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 5, 5, 5, 5, 1, 1, 1, 1, 2, 2, 3,
                 3, 3, 3,
             ]
         ),
-        numpy.array(
+        np.array(
             [
                 0, 1, 2, 3, 4, 5, 0, 5, 0, 5, 0, 5, 0, 5, 0, 1, 2, 3, 4, 5, 1, 2, 3, 4, 1, 4, 1,
                 2, 3, 4,
@@ -157,27 +157,29 @@ def test_rasterize_polygon_as_linestring(grid_proj: GridProj):
     )
     # fmt: on
     result = rasterize_linestring(poly, grid_proj)
-    numpy.testing.assert_array_equal(result, pixels)
+    np.testing.assert_array_equal(result, pixels)
 
 
 def test_rasterize_linestring_from_coords(grid_proj: GridProj):
     linestring = [(-100, 30), (-100.01, 30.02), (-100.02, 30)]
-    pixels = (numpy.array([1096, 1097, 1097]), numpy.array([326, 326, 327]))
+    pixels = (np.array([1096, 1097, 1097]), np.array([326, 326, 327]))
+
     result = rasterize_linestring(linestring, grid_proj)
-    numpy.testing.assert_array_equal(result, pixels)
+
+    np.testing.assert_array_equal(result, pixels)
 
 
 def test_rasterize_polygon(grid_proj: GridProj):
     poly = "POLYGON ((-105 40, -105.1 40, -105.1 40.1, -105 40.1, -105 40))"
     # fmt: off
     pixels = (
-        numpy.array(
+        np.array(
             [
                 937, 937, 937, 937, 937, 937, 938, 938, 938, 938, 938, 938, 939, 939, 939, 939,
                 939, 940, 940, 940, 940, 940,
             ]
         ),
-        numpy.array(
+        np.array(
             [
                 781, 782, 783, 784, 785, 786, 781, 782, 783, 784, 785, 786, 781, 782, 783, 784,
                 785, 781, 782, 783, 784, 785,
@@ -185,31 +187,61 @@ def test_rasterize_polygon(grid_proj: GridProj):
         ),
     )
     # fmt: on
+
     result = rasterize_polygon(poly, grid_proj)
-    numpy.testing.assert_array_equal(result, pixels)
+
+    np.testing.assert_array_equal(result, pixels)
 
 
 def test_rasterize_polygon_from_coords(grid_proj: GridProj):
     poly = (((-105, 40), (-105.1, 40), (-105.1, 40.1), (-105, 40)),)
     pixels = (
-        numpy.array([937, 937, 937, 937, 937, 937, 938, 938, 938, 938, 938, 939, 939, 939, 940]),
-        numpy.array([781, 782, 783, 784, 785, 786, 781, 782, 783, 784, 785, 781, 782, 783, 781]),
+        np.array([937, 937, 937, 937, 937, 937, 938, 938, 938, 938, 938, 939, 939, 939, 940]),
+        np.array([781, 782, 783, 784, 785, 786, 781, 782, 783, 784, 785, 781, 782, 783, 781]),
     )
+
     result = rasterize_polygon(poly, grid_proj)
-    numpy.testing.assert_array_equal(result, pixels)
+
+    np.testing.assert_array_equal(result, pixels)
 
 
-def test_rasterize_polygon_with_hole():
+def test_rasterize_polygon_with_hole(grid_proj: GridProj):
+    poly = (
+        "POLYGON ((-105 40, -105.1 40, -105.1 40.1, -105 40.1, -105 40), "
+        "(-105.01 40.01, -105.01 40.09, -105.09 40.09, -105.09 40.01, -105.01 40.01))"
+    )
+    xy_pairs_interior = [(938, 783), (938, 784), (939, 782), (939, 783), (939, 784)]
+    pixels = (
+        np.array(
+            [937, 937, 937, 937, 937, 937, 938, 938, 938, 938, 939, 939, 940, 940, 940, 940, 940]
+        ),
+        np.array(
+            [781, 782, 783, 784, 785, 786, 781, 782, 785, 786, 781, 785, 781, 782, 783, 784, 785]
+        ),
+    )
+
+    result = rasterize_polygon(poly, grid_proj)
+
+    np.testing.assert_array_equal(result, pixels)
+    # should have dropped any pixels inside the Polygon hole/interior
+    result_xy_pairs = set(zip(result[0], result[1]))
+    result_interior_pxs = result_xy_pairs.intersection(xy_pairs_interior)
+    assert (
+        not result_interior_pxs
+    ), f"Pixels inside polygon interior were not dropped: {result_interior_pxs}"
+
+
+def test_rasterize_geographic_polygon_with_hole():
     poly = from_wkt("POLYGON ((0 0, 0 5, 5 5, 5 0, 0 0), (1 1, 3 1, 3 4, 1 4, 1 1))")
     # fmt: off
     pixels = (
-        numpy.array(
+        np.array(
             [
                 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4, 4,
                 4, 5, 5, 5, 5, 5, 5,
             ]
         ),
-        numpy.array(
+        np.array(
             [
                 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 4, 5, 0, 1, 2, 3, 4, 5, 0, 1, 2, 3, 4,
                 5, 0, 1, 2, 3, 4, 5,
@@ -218,7 +250,7 @@ def test_rasterize_polygon_with_hole():
     )
     # fmt: on
     result = rasterize_polygon(poly)
-    numpy.testing.assert_array_equal(result, pixels)
+    np.testing.assert_array_equal(result, pixels)
 
 
 def test_rasterize_multi_polygon():
@@ -229,13 +261,13 @@ def test_rasterize_multi_polygon():
     )
     # fmt: off
     pixels = (
-        numpy.array(
+        np.array(
             [
                 39, 40, 41, 19, 19, 20, 20, 20, 21, 21, 21, 22, 22, 22, 23, 23, 23, 24, 24, 24,
                 25, 25, 25, 26, 26, 26, 27, 27, 27, 28, 28, 29, 30, 31, 32, 33, 34, 35,
             ]
         ),
-        numpy.array(
+        np.array(
             [
                 41, 40, 39, 33, 34, 33, 34, 35, 33, 34, 35, 33, 34, 35, 33, 34, 35, 33, 34, 35,
                 33, 34, 35, 33, 34, 35, 33, 34, 35, 33, 34, 34, 34, 34, 34, 34, 34, 34,
@@ -244,7 +276,7 @@ def test_rasterize_multi_polygon():
     )
     # fmt: on
     result = rasterize(multi_poly)
-    numpy.testing.assert_array_equal(result, pixels)
+    np.testing.assert_array_equal(result, pixels)
 
 
 def test_rasterize(monkeypatch: MonkeyPatch, grid_proj: GridProj):

@@ -383,9 +383,8 @@ def pixels_in_polygon(poly: Polygon) -> tuple[np.ndarray]:
     pixels = _pixels_for_polygon(poly.exterior)
     for inner in poly.interiors:
         pixels_on_inner_edge = _pixels_for_linestring(inner)
-        for pixel in _pixels_for_polygon(inner):
-            if pixel not in pixels_on_inner_edge:
-                pixels.remove(pixel)
+        excluded_pixels = [p for p in _pixels_for_polygon(inner) if p not in pixels_on_inner_edge]
+        pixels = [p for p in pixels if p not in excluded_pixels]
 
     return coordinate_pairs_to_axes(pixels, dtype=np.int64)
 
