@@ -343,7 +343,7 @@ def geographic_polygon_to_pixel(
     """
     if isinstance(poly, Polygon):
         exterior = poly.exterior.coords
-        interiors = poly.interiors
+        interiors = [list(interior.coords) for interior in poly.interiors]
     elif all(_is_coords(coords) for coords in poly):
         exterior = poly[0]
         interiors = poly[1:]
@@ -352,7 +352,7 @@ def geographic_polygon_to_pixel(
 
     exterior = list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*exterior)), rounding)))
     interiors = [
-        list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*interior.coords)), rounding)))
+        list(zip(*grid_proj.map_geo_to_pixel(*list(zip(*interior)), rounding)))
         for interior in interiors
     ]
 
@@ -383,9 +383,8 @@ def pixels_in_polygon(poly: Polygon) -> tuple[np.ndarray]:
     pixels = _pixels_for_polygon(poly.exterior)
     for inner in poly.interiors:
         pixels_on_inner_edge = _pixels_for_linestring(inner)
-        for pixel in _pixels_for_polygon(inner):
-            if pixel not in pixels_on_inner_edge:
-                pixels.remove(pixel)
+        excluded_pixels = [p for p in _pixels_for_polygon(inner) if p not in pixels_on_inner_edge]
+        pixels = [p for p in pixels if p not in excluded_pixels]
 
     return coordinate_pairs_to_axes(pixels, dtype=np.int64)
 
