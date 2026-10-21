@@ -8,9 +8,12 @@
 #       vulnerabilities doesn't mean it won't have any in the future as new
 #       vulnerabilities are discovered.
 # ------------------------------------------------------------------------------
+
 # Keep this the same base image as sci Dockerfile to reduce CVE blast radius
-# https://hub.docker.com/layers/library/python/3.13.15-alpine3.24
-FROM python:3.13.15-alpine3.24
+#FROM python:3.13.15-alpine3.24
+
+# Use the Docker Hardened Image to help improve security and reduce vulnerabilities
+FROM dhi.io/python:3-alpine-dev
 
 # setuptools no longer default dependency but is needed to install idsse common code
 RUN pip3 install --no-cache --upgrade pip setuptools

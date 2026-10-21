@@ -8,16 +8,19 @@
 #       vulnerabilities doesn't mean it won't have any in the future as new
 #       vulnerabilities are discovered.
 # ------------------------------------------------------------------------------
-# Use alpine as a base because it's lighter weight, the Debian based images (i.e. slim) have CRIT and HIGH CVEs
+
 # Keep this the same base image as non-sci Dockerfile to reduce CVE blast radius
-# https://hub.docker.com/layers/library/python/3.13.15-alpine3.24
-FROM python:3.13.15-alpine3.24
+#FROM python:3.13.15-alpine3.24
+
+# Use the Docker Hardened Image to help improve security and reduce vulnerabilities
+FROM dhi.io/python:3-alpine-dev
 
 # setuptools no longer default dependency but is needed to install idsse common code
 RUN pip3 install --no-cache --upgrade pip setuptools
 
 # Install build dependencies for pip libraries
 RUN apk add --no-cache \
+    python3-dev \
     gcc \
     g++ \
     musl-dev \
@@ -38,6 +41,7 @@ RUN pip3 install --no-cache \
     requests==2.32.5 \
     flask==3.1.3 \
     flask-cors==6.0.2 \
+    flask-compress==1.23 \
     pint==0.25 \
     pint-xarray==0.6.1 \
     python-dateutil==2.9.0 \
