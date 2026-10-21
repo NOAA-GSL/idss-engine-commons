@@ -13,7 +13,7 @@
 #FROM python:3.13.15-alpine3.24
 
 # Use the Docker Hardened Image to help improve security and reduce vulnerabilities
-FROM dhi.io/python:3-alpine-dev
+FROM dhi.io/python:3.13-alpine-dev
 
 # setuptools no longer default dependency but is needed to install idsse common code
 RUN pip3 install --no-cache --upgrade pip setuptools
@@ -28,8 +28,7 @@ RUN apk add --no-cache \
     hdf5-dev \
     netcdf-dev \
     rust \
-    cargo \
-    zstd-libs zstd-dev
+    cargo
 
 # be careful with apk upgrade, it changes the underlying Alpine library versions underneath 
 # the pinned (FROM) version, which may change for better or worse, the CRIT/HIGH CVEs as listed
