@@ -12,24 +12,37 @@
       "CLOUDCOVER",
       "CloudCover",
       "CREF",
+      "CompositeRef",
       "DEWPOINT",
       "DewPoint",
       "ECHOTOP",
       "EchoTop",
-      "ICE1HR",
+      "FreezingSpray",
+      "FREEZINGSPRAY",
       "ICE:1HR",
-      "Ice:1HR",
       "ICE:6HR",
-      "Ice:6HR",
       "ICE:24HR",
-      "Ice:24HR",
+      "FreezingRain:1HR",
+      "FREEZINGRAIN:1HR",
+      "FreezingRain:6HR",
+      "FREEZINGRAIN:6HR",
+      "FreezingRain:24HR",
+      "FREEZINGRAIN:24HR",
+      "FreezingRain:48HR",
+      "FREEZINGRAIN:48HR",
+      "FreezingRain:72HR",
+      "FREEZINGRAIN:72HR",
       "LIGHTNING",
+      "MaxRef",
       "MAXREF",
       "MaxRH",
+      "MAXRH",
       "MaxTemp",
-      "MaxRef",
+      "MAXTEMP",
       "MinRH",
+      "MINRH",
       "MinTemp",
+      "MINTEMP",
       "PRECIP1HR",
       "PRECIP:1HR",
       "Precip:1HR",
@@ -45,6 +58,14 @@
       "ProbThdr:6HR",
       "PROBTHDR:12HR",
       "ProbThdr:12HR",
+      "ProbIce",
+      "PROBICE",
+      "ProbSnow",
+      "PROBSNOW",
+      "ProbFreezingRain",
+      "PROBFREEZINGRAIN",
+      "ProbRain",
+      "PROBRAIN",
       "RAIN1HR",
       "RAIN:1HR",
       "Rain:1HR",
@@ -60,15 +81,18 @@
       "Snow:24HR",
       "Snow:48HR",
       "SNOW:48HR",
+      "Snow:72HR",
+      "SNOW:72HR",
+      "SnowLevel",
+      "SNOWLEVEL",
       "TEMP",
       "Temp",
-      "VIL",
       "VISIBILITY",
       "Visibility",
       "WAVEHEIGHT",
       "WaveHeight",
       "WBGT",
-      "WET_BULB",
+      "WetBulb",
       "WINDDIR",
       "WindDir",
       "WINDGUST",
@@ -77,15 +101,22 @@
       "WindSpeed"
     ]
   },
-
   "FieldList": {
     "description": "A list of specific field(s)",
     "type": "array",
-    "items": { "$ref": "#/FieldName" }
+    "items": {
+      "$ref": "#/FieldName"
+    }
   },
-
   "Field": {
     "description": "Either a FieldName, or FieldList",
-    "oneOf": [{ "$ref": "#/FieldName" }, { "$ref": "#/FieldList" }]
+    "oneOf": [
+      {
+        "$ref": "#/FieldName"
+      },
+      {
+        "$ref": "#/FieldList"
+      }
+    ]
   }
 }
