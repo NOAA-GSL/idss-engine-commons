@@ -1,7 +1,7 @@
 ============================= test session starts ==============================
-platform linux -- Python 3.11.17, pytest-9.1.1, pluggy-1.7.0
+platform linux -- Python 3.11.18, pytest-9.2.0, pluggy-1.7.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
-plugins: cov-4.1.0, platformdirs-4.13.5, pytest_httpserver-1.2.0, zarr-3.1.5
+plugins: platformdirs-4.14.5, zarr-3.1.5, cov-4.1.0, pytest_httpserver-1.2.0
 collected 279 items
 
 test/sci/test_bit_pack.py ........                                       [  2%]
@@ -24,9 +24,14 @@ test/test_validate_das_web_schema.py .........                           [ 94%]
 test/test_validate_event_port_schema.py .......                          [ 96%]
 test/test_validate_new_data_schema.py .........                          [100%]
 
+=============================== warnings summary ===============================
+<frozen importlib._bootstrap>:241
+  <frozen importlib._bootstrap>:241: RuntimeWarning: numpy.ndarray size changed, may indicate binary incompatibility. Expected 16 from C header, got 96 from PyObject
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
 - generated xml file: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common/test/pytest.xml -
 
----------- coverage: platform linux, python 3.11.17-final-0 ----------
+---------- coverage: platform linux, python 3.11.18-final-0 ----------
 Name                              Stmts   Miss  Cover
 -----------------------------------------------------
 idsse/common/__init__.py              0      0   100%
@@ -52,4 +57,4 @@ idsse/common/validate_schema.py      40      0   100%
 -----------------------------------------------------
 TOTAL                              1902    217    89%
 
-============================= 279 passed in 4.54s ==============================
+======================== 279 passed, 1 warning in 6.68s ========================
