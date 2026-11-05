@@ -8,14 +8,22 @@
             },
             "severity": {
                 "type": "string",
-                "enum": ["MINOR", "MODERATE", "SEVERE", "EXTREME"]
+                "enum": [
+                    "MINOR",
+                    "MODERATE",
+                    "SEVERE",
+                    "MAJOR",
+                    "EXTREME"
+                ]
             },
             "combined": {
                 "type": "string"
             },
             "partsUsed": {
                 "type": "array",
-                "items": {"type": "string"},
+                "items": {
+                    "type": "string"
+                },
                 "minItems": 1
             }
         },
