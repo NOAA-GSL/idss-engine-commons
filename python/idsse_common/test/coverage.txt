@@ -1,8 +1,8 @@
 ============================= test session starts ==============================
 platform linux -- Python 3.11.18, pytest-9.2.0, pluggy-1.7.0
 rootdir: /home/runner/work/idss-engine-commons/idss-engine-commons/python/idsse_common
-plugins: platformdirs-4.14.5, zarr-3.1.5, cov-4.1.0, pytest_httpserver-1.2.0
-collected 279 items
+plugins: pytest_httpserver-1.2.1, platformdirs-4.14.5, cov-4.1.0, zarr-3.1.5
+collected 280 items
 
 test/sci/test_bit_pack.py ........                                       [  2%]
 test/sci/test_geo_image.py ......................                        [ 10%]
@@ -14,11 +14,11 @@ test/test_config.py ............                                         [ 41%]
 test/test_http_utils.py .............                                    [ 45%]
 test/test_json_message.py ...........                                    [ 49%]
 test/test_log_util.py .......                                            [ 52%]
-test/test_path_builder.py ...................                            [ 59%]
+test/test_path_builder.py ...................                            [ 58%]
 test/test_rabbitmq_rpc.py .........                                      [ 62%]
 test/test_rabbitmq_utils.py ........................                     [ 70%]
 test/test_utils.py ...................................                   [ 83%]
-test/test_validate_criteria_schema.py ......                             [ 85%]
+test/test_validate_criteria_schema.py .......                            [ 85%]
 test/test_validate_das_schema.py ...............                         [ 91%]
 test/test_validate_das_web_schema.py .........                           [ 94%]
 test/test_validate_event_port_schema.py .......                          [ 96%]
@@ -57,4 +57,4 @@ idsse/common/validate_schema.py      40      0   100%
 -----------------------------------------------------
 TOTAL                              1902    217    89%
 
-======================== 279 passed, 1 warning in 6.76s ========================
+======================== 280 passed, 1 warning in 6.80s ========================
