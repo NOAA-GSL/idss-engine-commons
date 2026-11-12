@@ -84,8 +84,7 @@
       "field",
       "units",
       "relational",
-      "thresh",
-      "mapping"
+      "thresh"
     ]
   }
 }

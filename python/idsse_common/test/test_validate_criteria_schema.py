@@ -182,3 +182,13 @@ def test_validate_criteria_message_with_bad_mapping(
     mapping["smallest"] = mapping.pop("min")
     with raises(ValidationError):
         criteria_validator.validate(criteria_message)
+
+
+def test_validate_criteria_no_mapping(criteria_validator: Validator, criteria_message: dict):
+    # remove mapping for all parts (it is now optional thanks to Prob of Exceedance)
+    for part in criteria_message["parts"]:
+        part.pop("mapping")
+    try:
+        criteria_validator.validate(criteria_message)
+    except ValidationError as exc:
+        assert False, f"Validate message raised an exception {exc}"
