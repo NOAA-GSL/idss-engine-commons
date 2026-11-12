@@ -2,7 +2,7 @@
 
 <!-- Replace both "IDSSE-xxx" strings below with your Task/Story, e.g. "IDSSE-123" -->
 
-[IDSSE-354](https://nco-jira.atlassian.net/browse/IDSSE-354)
+[IDSSE-xxx](https://nco-jira.atlassian.net/browse/IDSSE-xxx)
 
 ### Changes
 
